@@ -55,6 +55,7 @@ def do_parse(p_fpath, o_retlist, elemfilter=None, dodebug=False):
 
 	del o_retlist[:]
 	parsed = extract_comments_from_str(open(p_fpath).read(), 'application/javascript')
+
 	for ei, elem in enumerate(parsed):
 
 		if not elemfilter is None:
@@ -125,12 +126,22 @@ def do_parse(p_fpath, o_retlist, elemfilter=None, dodebug=False):
 def gendoc_fromparsed_comments(p_coderootpath, p_docsout_rootpath, debug=False):
 
 	parsed_objs = []
+
+	if debug:
+		print("code path:", p_coderootpath)
+
 	for entry in scandir(p_coderootpath):
 		if entry.is_file():
+
+			if debug:
+				print("  parsing file:", entry.name)
+
 			basenm, sext = splitext(entry.name)
-			if basenm.startswith("_") or sext.lower() != ".js":
+			if basenm.startswith("_") or not sext.lower() in (".js", ".mjs"):
 				continue
 			do_parse(entry.path, parsed_objs, dodebug=debug)
+			if debug:
+				print("   num parsed objs:", len(parsed_objs))
 			if len(parsed_objs) > 0:
 
 				docsrc_name = f"{basenm}.rst"
@@ -146,7 +157,7 @@ def gendoc_fromparsed_comments(p_coderootpath, p_docsout_rootpath, debug=False):
 
 						requireds = []
 						optionals = []
-						for pi, parm in enumerate(po.params):
+						for parm in po.params:
 							optional = False
 							if not parm[2] is None:
 								for opstr in OPTSTR:
