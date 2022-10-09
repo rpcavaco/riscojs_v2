@@ -29,7 +29,6 @@
 		this.canvases = {};
 
 		let keys = ['base', 'normal', 'temporary', 'transient'];
-
 		for (let i=0; i<keys.length; i++) {
 
 			this.canvases[keys[i]] = document.createElement('canvas');

@@ -18,3 +18,22 @@ HTML5 Canvas
 
 .. include:: generated\html5canvas.rst	
 
+
+Utilities
+=========
+
+Coordinate transformations
+--------------------------
+
+.. include:: generated\transformations.rst		
+
+
+Geometry methods
+---------------
+
+.. include:: generated\geom.rst	
+
+Matrix operations
+-----------------
+
+.. include:: generated\matrices3.rst
