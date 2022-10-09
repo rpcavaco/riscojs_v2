@@ -1,6 +1,6 @@
 
 # Parse dos comentarios jsdoc
-python .\parsejsdoc.py
+python .\tools\parsejsdoc.py
 
 # Build dos docs
 Remove-Item "docs\build" -Recurse -Force
