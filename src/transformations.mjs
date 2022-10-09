@@ -246,4 +246,27 @@ class TransformsQueue {
 		out_pt[0] = v2[0];
 		out_pt[1] = v2[1];
 	}	
+
+	/**
+	 * Method getScreenPt
+	 * @param {object} p_terrpt - Array of coordinates for a terrain point 
+	 * @param {float} out_pt - Out parameter: array of coordinates for a screen point 
+	 */
+	getScreenPt(p_terrpt, out_pt) {
+		if (p_scrpt === null || typeof p_scrpt != 'object' || p_scrpt.length != 2) {
+			throw "Class Transform2DMgr, getScreenPt, invalid terrain point";
+		}
+		
+		let v1=[], v2=[], mx1=[];
+		let trans = this.transformsQueue.currentTransform;
+
+		out_pt.length = 2;
+		v1 = [parseFloat(p_terrpt[0]), parseFloat(p_terrpt[1]), 1];
+		// get screen coords from current transformation
+		trans.getMatrix(mx1);
+		vectorMultiply(v1, mx1, v2);
+		
+		out_pt[0] = v2[0];
+		out_pt[1] = v2[1];
+	}	
 }
