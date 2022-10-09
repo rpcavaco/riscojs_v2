@@ -36,9 +36,12 @@
 	</div>
 
 	<script src="risco_config.js"></script>
-	<script src="js/riscojs_v2/main.js" type="module"></script>
-	<script>
-		var RiscoInst = new RiscoJS(RISCOJS_CFG, "RiscoPanelDiv");
+	<script type="module">
+
+		import {RiscoMapOverlay, RiscoJS} from './js/riscojs_v2/main.mjs';
+
+		var RiscoOVInst = new RiscoMapOverlay("RiscoPanelDiv");
+
 	</script>
 
 </body> 
