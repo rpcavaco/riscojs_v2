@@ -143,3 +143,19 @@ export function rotation(angleInRadians, out_result) {
 export function getCartoScaling(m) {
 	return (m[0]-m[4])/2.0;
 }
+
+export function vectorMultiply(v, m, out_result) {
+	out_result.length = 3;
+	//console.log('vector:'+v);
+	for (var i = 0; i < 3; i++) 
+	{
+		out_result[i] = 0.0;
+		for (var j = 0; j < 3; j++) {
+			out_result[i] += v[j] * m[j * 3 + i];
+		//console.log(dst[i]+ " += " + v[j] + " * " + m[j * 4 + i]);
+	  }
+	  //console.log('dst['+i+'] = '+dst[i]);
+	  
+	}
+	//console.log('resultado:'+dst);
+}

@@ -15,40 +15,69 @@
  */
  export class HTML5CanvasMgr {
 
-	constructor(p_paneldiv, opt_base_zindex) {
+	constructor(p_mapctx, opt_base_zindex) {
 
-		if (p_paneldiv == null) {
+		if (p_mapctx == null) {
 			throw "Class HTML5CanvasMgr, null p_paneldiv";
 		}
-		this.paneldiv = p_paneldiv;
+		this.paneldiv = p_mapctx.panelwidget;
 
 		// Cleanup DIV contents
 		while (this.paneldiv.firstChild) {
 			this.paneldiv.removeChild(this.paneldiv.firstChild);
 		}
 
-		let bounds = this.paneldiv.getBoundingClientRect();
 		this.canvases = {};
 
 		let keys = ['base', 'normal', 'temporary', 'transient'];
 		for (let i=0; i<keys.length; i++) {
 
 			this.canvases[keys[i]] = document.createElement('canvas');
-			this.canvases[keys[i]].height = parseInt(bounds.height);
-			this.canvases[keys[i]].width = parseInt(bounds.width);
+			this.canvases[keys[i]].style.position = "absolute";
+			this.canvases[keys[i]].style.top = 0;
+			this.canvases[keys[i]].style.left = 0;
 
 			if (opt_base_zindex != null && !isNaN(opt_base_zindex)) {
-				this.canvases[keys[i]].setAttribute('style', `position:absolute;top:0;left:0;z-index:${parseInt(opt_base_zindex)+i}`);
+				this.canvases[keys[i]].style.zIndex = parseInt(opt_base_zindex)+i;
 			}
 			// this.canvases[keys[i]].setAttribute('id', keys[i]);
-			this.canvases[keys[i]].setAttribute('width', parseInt(bounds.width));
-			this.canvases[keys[i]].setAttribute('height', parseInt(bounds.height));
-
+			this.paneldiv.appendChild(this.canvases[keys[i]]);
 		}
+
+		this.init();
+
+		// Attech ancestor DIV resize event to init() method
+		(function(p_paneldiv, p_this, pp_mapctx) { 
+			p_paneldiv.addEventListener("resize", function(e) { console.log("konichiwa!") }); 
+			//pp_mapctx.mapPanelWasResized();
+		})(this.paneldiv, this, p_mapctx);
 
 		console.log("canvases created");
 	}
-	getCanvasDims() {
+
+	/**
+	 * Method init
+	 * Initialization of  Canvas(es) manager or reset
+	 */
+	init() {
+
+		let bounds = this.paneldiv.getBoundingClientRect();
+
+		let keys = ['base', 'normal', 'temporary', 'transient'];
+		for (let i=0; i<keys.length; i++) {
+			this.canvases[keys[i]].setAttribute('width', parseInt(bounds.width));
+			this.canvases[keys[i]].setAttribute('height', parseInt(bounds.height));
+		}
+
+	}	
+
+	/**
+	 * Method setCenter
+	 * Define center of map from terrain coordinates
+	 * @param {float} p_cx 
+	 * @param {float} p_cy 
+	 */
+	 getCanvasDims() {
 		let bounds = this.paneldiv.getBoundingClientRect();	
 		return [bounds.width, bounds.height];
 	}

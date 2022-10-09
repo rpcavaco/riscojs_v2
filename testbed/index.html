@@ -43,8 +43,15 @@
 		let RiscoOVInst = new RiscoMapOverlay("PanelDiv");
 		let mapctx = RiscoOVInst.newMapCtx(RISCOJS_CFG, "base");
 
-		// mapctx.transformmgr.
 
+		// check top left corner
+		let terrainPt = [];
+		mapctx.transformmgr.getTerrainPt([0, 0], terrainPt)
+
+		console.log("terrainPt for screen(0,0):", terrainPt);
+
+
+	
 
 	</script>
 

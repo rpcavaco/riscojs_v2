@@ -109,9 +109,22 @@ export class RiscoMapCtx {
 			throw `Class RiscoMapCtx, panel widget must be DIV, not ${this.panelwidget.tagName}`;
 		}	
 
-		this.canvasmgr = new HTML5CanvasMgr(this.panelwidget);
+		this.canvasmgr = new HTML5CanvasMgr(this);
 		this.transformmgr = new Transform2DMgr(p_config_var, this.canvasmgr);
 
+		// Attach resizing method to window resize event
+		(function(p_mapctx) {
+			addEventListener("resize", function(e) { 
+				p_mapctx.resize();
+			 }); 
+		})(this);		
+	}
+
+	/**
+	 * Method resize - to be fired on window resize
+	 */	
+	resize() {
+		this.canvasmgr.init();
 	}
 }
 

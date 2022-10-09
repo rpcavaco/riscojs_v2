@@ -1,7 +1,7 @@
 import {GlobalConst} from './constants.js';
 import {rad2Deg} from './geom.mjs';
 
-import {identity, multiply, inverse, scaling, translation, twod_shift, rotation, getCartoScaling} from './matrices3.mjs';
+import {identity, multiply, inverse, scaling, translation, twod_shift, rotation, getCartoScaling, vectorMultiply} from './matrices3.mjs';
 
 /** 
  * Class MapAffineTransformation
@@ -222,5 +222,28 @@ class TransformsQueue {
 
 		ctrans.setTranslating(-ox, -(oy + fheight));
 		//ctrans.setTranslating(-ox, -oy);
-	}		
+	}	
+	
+	/**
+	 * Method getTerrainPt
+	 * @param {object} p_scrpt - Array of coordinates for a screen point 
+	 * @param {float} out_pt - Out parameter: array of coordinates for a terrain point 
+	 */
+	getTerrainPt(p_scrpt, out_pt) {
+		if (p_scrpt === null || typeof p_scrpt != 'object' || p_scrpt.length != 2) {
+			throw "Class Transform2DMgr, getTerrainPt, invalid screen point";
+		}
+		
+		let v1=[], v2=[], mx1=[];
+		let ctrans = this.transformsQueue.currentTransform;
+
+		out_pt.length = 2;
+		v1 = [parseFloat(p_scrpt[0]), parseFloat(p_scrpt[1]), 1];
+		// get terrain coords from the inverse of current transformation
+		ctrans.getInvMatrix(mx1);
+		vectorMultiply(v1, mx1, v2);
+		
+		out_pt[0] = v2[0];
+		out_pt[1] = v2[1];
+	}	
 }
