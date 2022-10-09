@@ -13,3 +13,8 @@ In case of stacking map contexts, map contexts must be intatiated through **Risc
 
 .. include:: generated\main.rst
 
+HTML5 Canvas
+------------
+
+.. include:: generated\html5canvas.rst	
+

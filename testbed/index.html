@@ -11,7 +11,7 @@
 	<meta name="author" content="Rui Cavaco, CM-Porto, DMSI-SIG"> 
 
 	<style>
-		#RiscoPanelDiv {
+		#PanelDiv {
 			position: absolute;
 			top: 0;
 			left: 0;
@@ -32,7 +32,7 @@
 </head> 
 <body> 
 
-	<div id="RiscoPanelDiv">
+	<div id="PanelDiv">
 	</div>
 
 	<script src="risco_config.js"></script>
@@ -40,7 +40,7 @@
 
 		import {RiscoMapOverlay} from './js/riscojs_v2/main.mjs';
 
-		var RiscoOVInst = new RiscoMapOverlay("RiscoPanelDiv");
+		var RiscoOVInst = new RiscoMapOverlay("PanelDiv");
 		RiscoOVInst.newCtx(RISCOJS_CFG, "base");
 
 	</script>

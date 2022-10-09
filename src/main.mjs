@@ -1,8 +1,10 @@
+import {HTML5CanvasMgr} from './html5canvas.mjs';
+
+
 /**
  * Class RiscoMapOverlay
  * 
  * Overlaying or stacking of more than one RiscoMap context
- * Alows over
  * 
  * @param {string} p_paneldiv_id 	- Id of HTML DIV element to act as RiscoJS map panel
  * 
@@ -19,8 +21,11 @@ export class RiscoMapOverlay {
 		if (this.panelwidget == null) {
 			throw `Class RiscoMapOverlay, panel widget search, no div found with for id ${p_paneldiv_id}`;
 		}		
+		if (this.panelwidget.tagName.toLowerCase() != 'div') {
+			throw `Class RiscoMapOverlay, panel widget must be DIV, not ${this.panelwidget.tagName}`;
+		}	
 
-		this.contexts = {};
+		this.mapcontexts = {};
 	}
 
 	/**
@@ -39,9 +44,9 @@ export class RiscoMapOverlay {
 			throw "Class RiscoMapOverlay, null context id";
 		}	
 
-		this.contexts[p_ctx_id] = new RiscoMapCtx(p_config_var, this.panelwidget);
+		this.mapcontexts[p_ctx_id] = new RiscoMapCtx(p_config_var, this.panelwidget);
 
-		return this.contexts[p_ctx_id];
+		return this.mapcontexts[p_ctx_id];
 	}
 
 
@@ -54,7 +59,6 @@ export class RiscoMapOverlay {
  * 
  * @param {string} p_config_var - Name of  variable containing configuration JSON dictionary
  * @param {object} p_paneldiv 	- String Id or object reference to HTML DIV element to act as RiscoJS map panel
- * @returns {string}
  * 
  */
 export class RiscoMapCtx {
@@ -73,13 +77,18 @@ export class RiscoMapCtx {
 		} else if (typeof p_paneldiv == 'object') {
 			this.panelwidget = p_paneldiv;
 		} else 	{
-			throw 'invalid type for paneldiv';
+			throw 'invalid type for paneldiv parameter';
 		}
 
 		if (this.panelwidget == null) {
-			throw `Class RiscoMapCtx, panel widget search, no div found with for id ${p_paneldiv_id}`;
+			throw "Class RiscoMapCtx, no panel widget";
 		}		
+		if (this.panelwidget.tagName.toLowerCase() != 'div') {
+			throw `Class RiscoMapCtx, panel widget must be DIV, not ${this.panelwidget.tagName}`;
+		}	
 
+
+		this.canvasctxmgr = new HTML5CanvasMgr(this.panelwidget);
 
 	}
 }
