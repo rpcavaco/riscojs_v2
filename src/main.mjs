@@ -1,5 +1,5 @@
 import {HTML5CanvasMgr} from './html5canvas.mjs';
-import {Simple2DTransformMgr} from './transformations.mjs';
+import {Transform2DMgr} from './transformations.mjs';
 
 
 /**
@@ -39,10 +39,10 @@ export class RiscoMapOverlay {
 	newMapCtx(p_config_var, p_ctx_id) {
 
 		if (p_config_var == null) {
-			throw "Class RiscoMapOverlay, null config_var";
+			throw "Class RiscoMapOverlay, newMapCtx, null config_var";
 		}
 		if (p_ctx_id == null) {
-			throw "Class RiscoMapOverlay, null context id";
+			throw "Class RiscoMapOverlay, newMapCtx, null context id";
 		}	
 
 		this.mapcontexts[p_ctx_id] = new RiscoMapCtx(p_config_var, this.panelwidget);
@@ -50,6 +50,24 @@ export class RiscoMapOverlay {
 		return this.mapcontexts[p_ctx_id];
 	}
 
+	/**
+	 * Method getMapCtx
+	 * Return exisitng map context attached to this overlay
+	 * @param {string} p_ctx_id - Identification of this context
+	 * @returns - The context for the given id
+	 */
+	 getMapCtx(p_ctx_id) {
+		if (p_ctx_id == null) {
+			throw "Class RiscoMapOverlay, getMapCtx, null context id";
+		}	
+		let ret = null;
+		if (this.mapcontexts[p_ctx_id] !== undefined) {
+			ret = this.mapcontexts[p_ctx_id];
+		} else {
+			console.warn(`context with id '${p_ctx_id}' not in this map overlay mgr (widget id:'${this.panelwidget.id}'`);
+		}
+		return ret;
+	}	
 
 }
 
@@ -91,8 +109,8 @@ export class RiscoMapCtx {
 			throw `Class RiscoMapCtx, panel widget must be DIV, not ${this.panelwidget.tagName}`;
 		}	
 
-		this.transformmgr = new Simple2DTransformMgr(p_config_var);
-		this.canvasctxmgr = new HTML5CanvasMgr(this.panelwidget);
+		this.canvasmgr = new HTML5CanvasMgr(this.panelwidget);
+		this.transformmgr = new Transform2DMgr(p_config_var, this.canvasmgr);
 
 	}
 }

@@ -40,8 +40,11 @@
 
 		import {RiscoMapOverlay} from './js/riscojs_v2/main.mjs';
 
-		var RiscoOVInst = new RiscoMapOverlay("PanelDiv");
-		RiscoOVInst.newMapCtx(RISCOJS_CFG, "base");
+		let RiscoOVInst = new RiscoMapOverlay("PanelDiv");
+		let mapctx = RiscoOVInst.newMapCtx(RISCOJS_CFG, "base");
+
+		// mapctx.transformmgr.
+
 
 	</script>
 

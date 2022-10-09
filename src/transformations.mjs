@@ -98,27 +98,32 @@ class TransformsQueue {
 }
 
 /**
- * Class Simple2DTransformMgr
+ * Class Transform2DMgr
  * 
  * Manager class for simple linear geometric coordinate transforms in 2D space (avoiding geographic projection systems).
  * 
- * @param {object} p_mapctx_config_var - Variable object containing configuration JSON dictionary
+ * @param {object} p_mapctx_config_var - Variable object containing configuration JSON dictionary~
+ * @param {object} p_canvasmgr - HTML5 Canvases manager
  * 
  */
- export class Simple2DTransformMgr {
+ export class Transform2DMgr {
 
-	constructor(p_mapctx_config_var) {
+	constructor(p_mapctx_config_var, p_canvasmgr) {
 
 		if (p_mapctx_config_var == null) {
-			throw "Class Simple2DTransforms, null mapctx_config_var";
+			throw "Class Transform2DMgr, null mapctx_config_var";
 		}
+		if (p_canvasmgr == null) {
+			throw "Class Transform2DMgr, null canvasmgr";
+		}		
 		this.mapctx_config_var = p_mapctx_config_var;
+		this.canvasmgr = p_canvasmgr;
 		
 		let keys = ["terrain_center", "scale"];
 		for (let i=0; i<keys.length; i++) {
 
 			if (p_mapctx_config_var[keys[i]] === undefined) {
-				throw `Class Simple2DTransforms, mapctx_config is missing mandatory '${keys[i]}' entry`;
+				throw `Class Transform2DMgr, mapctx_config is missing mandatory '${keys[i]}' entry`;
 			}
 	
 		}	
@@ -136,10 +141,11 @@ class TransformsQueue {
 	init() {
 
 		if (this.mapctx_config_var["scale"] === undefined) {
-			throw "Class Simple2DTransforms, init, configuration JSON dictionary contains no 'scale' value";
+			throw "Class Transform2DMgr, init, configuration JSON dictionary contains no 'scale' value";
 		}
 
 		this.setScale(this.mapctx_config_var["scale"]);
+		this.setCenter(...this.mapctx_config_var["terrain_center"]);
 	}
 	/**
 	 * Method setScale
@@ -147,12 +153,12 @@ class TransformsQueue {
 	 */
 	setScale(p_scale) {
 
-		if (p_scale === null) {
-			throw "Class Simple2DTransforms, setScale, invalid null value was passed for scale";
+		if (p_scale === null || isNaN(p_scale)) {
+			throw "Class Transform2DMgr, setScale, invalid value was passed for scale";
 		}
 		let vscale, p1_scale = parseFloat(p_scale);
 		if (p1_scale <= 0) {
-			throw "Class Simple2DTransforms, setScale, invalid negative or zero value was passed for scale";
+			throw "Class Transform2DMgr, setScale, invalid negative or zero value was passed for scale";
 		}
 		
 		// Arredondar
@@ -182,4 +188,39 @@ class TransformsQueue {
 		ctrans.setScaleFromCartoScale(vscale, GlobalConst.MMPD);
 		
 	}	
+
+	/**
+	 * Method setCenter
+	 * @param {float} p_cx 
+	 * @param {float} p_cy 
+	 */
+	 setCenter(p_cx, p_cy) {
+
+		if (p_cx === null || isNaN(p_cx)) {
+			throw "Class Transform2DMgr, setCenter, invalid value was passed for cx";
+		}
+		if (p_cy === null || isNaN(p_cy)) {
+			throw "Class Transform2DMgr, setCenter, invalid value was passed for cy";
+		}
+
+		let ox, oy, ctrans = this.transformsQueue.currentTransform;		
+		var k, hwidth, hheight, fheight, cdims = this.canvasmgr.getCanvasDims();
+	
+		k = ctrans.getScaling();
+
+		hwidth = (cdims[0] / 2.0) / k;
+		fheight = cdims[1] / k;
+		hheight = fheight / 2.0;
+		
+		/*console.log(['814 -- ', k, cdims[0], hwidth, p_cx]);
+		console.log(['815 -- ', k, cdims[1], hheight, p_cy]); */
+		
+		ox = p_cx - hwidth;
+		oy = p_cy - hheight;
+
+		//console.log([ox, oy]);
+
+		ctrans.setTranslating(-ox, -(oy + fheight));
+		//ctrans.setTranslating(-ox, -oy);
+	}		
 }
