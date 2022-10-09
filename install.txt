@@ -1,0 +1,6 @@
+
+pip install sphinx
+pip install groundwork-sphinx-theme
+
+pip install python-magic-bin
+pip install comment-parser  

@@ -1,0 +1,30 @@
+@import 'groundwork.css';
+
+.highlight .p {
+	color: #cccccc;
+	font-weight: bold;
+}
+
+.highlight .nt {
+	color: #2c7da0;
+	font-weight: bold;
+}
+
+.highlight .w {
+	color: #f8f8f8;
+	text-decoration: none;
+ }
+
+ .highlight .nx {
+	color: #c99f68;
+} 
+
+.highlight .kd {
+	color: #165dad;
+	font-weight: bold;
+}
+
+.highlight .ow {
+	color: #336fa7;
+	font-weight: bold;
+}

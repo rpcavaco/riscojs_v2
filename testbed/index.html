@@ -1,0 +1,45 @@
+<!DOCTYPE html> 
+<html lang="en"> 
+
+<head> 
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+
+
+	<title>Teste RiscoJS V2</title> 
+	<meta name="description" content="Teste RiscoJS V2<"> 
+	<meta name="author" content="Rui Cavaco, CM-Porto, DMSI-SIG"> 
+
+	<style>
+		#RiscoPanelDiv {
+			position: absolute;
+			top: 0;
+			left: 0;
+			padding: 0;
+			margin: 0;
+			height: 100%;
+			width: 100%;
+			background: radial-gradient(#b6c3cc, #6aa5cc);			
+		}
+	</style>
+	
+    <!-- 
+	<link rel="stylesheet" href="css/mapctrls.css">
+    <link rel="stylesheet" href="css/layout.css">
+
+    <link rel="stylesheet" href="css/layout.css"/> -->
+
+</head> 
+<body> 
+
+	<div id="RiscoPanelDiv">
+	</div>
+
+	<script src="risco_config.js"></script>
+	<script src="js/riscojs_v2/main.js" type="module"></script>
+	<script>
+		var RiscoInst = new RiscoJS(RISCOJS_CFG, "RiscoPanelDiv");
+	</script>
+
+</body> 
+</html> 
