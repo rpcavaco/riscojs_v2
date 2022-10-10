@@ -8,6 +8,7 @@
  *  b) 'normal' vector drawing
  *  c) 'temporary' vector, like highlights
  *  d) 'transient' vectors, e.g.: mouse interaction or viewport manipulation artifacts
+ *  e) 'service' for servicing warnings and messages
  * 
  * @param {object} p_paneldiv - Non-null reference to panel's DIV DOM object
  * @param {integer} opt_base_zindex - Optional z-index for bottom canvas
@@ -29,28 +30,22 @@
 
 		this.canvases = {};
 
-		let keys = ['base', 'normal', 'temporary', 'transient'];
-		for (let i=0; i<keys.length; i++) {
+		this.canvaskeys = ['base', 'normal', 'temporary', 'transient', 'service'];
+		for (let i=0; i<this.canvaskeys.length; i++) {
 
-			this.canvases[keys[i]] = document.createElement('canvas');
-			this.canvases[keys[i]].style.position = "absolute";
-			this.canvases[keys[i]].style.top = 0;
-			this.canvases[keys[i]].style.left = 0;
+			this.canvases[this.canvaskeys[i]] = document.createElement('canvas');
+			this.canvases[this.canvaskeys[i]].style.position = "absolute";
+			this.canvases[this.canvaskeys[i]].style.top = 0;
+			this.canvases[this.canvaskeys[i]].style.left = 0;
 
 			if (opt_base_zindex != null && !isNaN(opt_base_zindex)) {
-				this.canvases[keys[i]].style.zIndex = parseInt(opt_base_zindex)+i;
+				this.canvases[this.canvaskeys[i]].style.zIndex = parseInt(opt_base_zindex)+i;
 			}
 			// this.canvases[keys[i]].setAttribute('id', keys[i]);
-			this.paneldiv.appendChild(this.canvases[keys[i]]);
+			this.paneldiv.appendChild(this.canvases[this.canvaskeys[i]]);
 		}
 
 		this.init();
-
-		// Attech ancestor DIV resize event to init() method
-		(function(p_paneldiv, p_this, pp_mapctx) { 
-			p_paneldiv.addEventListener("resize", function(e) { console.log("konichiwa!") }); 
-			//pp_mapctx.mapPanelWasResized();
-		})(this.paneldiv, this, p_mapctx);
 
 		console.log("canvases created");
 	}
@@ -63,10 +58,9 @@
 
 		let bounds = this.paneldiv.getBoundingClientRect();
 
-		let keys = ['base', 'normal', 'temporary', 'transient'];
-		for (let i=0; i<keys.length; i++) {
-			this.canvases[keys[i]].setAttribute('width', parseInt(bounds.width));
-			this.canvases[keys[i]].setAttribute('height', parseInt(bounds.height));
+		for (let i=0; i<this.canvaskeys.length; i++) {
+			this.canvases[this.canvaskeys[i]].setAttribute('width', parseInt(bounds.width));
+			this.canvases[this.canvaskeys[i]].setAttribute('height', parseInt(bounds.height));
 		}
 
 	}	
@@ -93,4 +87,17 @@
 		out_pt[0] = Math.round(bounds.width/2.0);
 		out_pt[1] = Math.round(bounds.height/2.0);
 	}	
+	/**
+	 * Method getDrwCtx
+	 * @param {string} p_canvaskey - Canvas key
+	 * @param {string} opt_dims - Optional '2d' (default) or else for WebGL 
+	 * @returns {object} drawing context
+	 */
+	 getDrwCtx(p_canvaskey, opt_dims) {
+		if (this.canvases[p_canvaskey] === undefined) {
+			throw new Error(`Class HTML5CanvasMgr, getDrawingContext, found no canvas for ${p_canvaskey}`);
+		}
+		return this.canvases[p_canvaskey].getContext(opt_dims);
+	}	
 }	
+

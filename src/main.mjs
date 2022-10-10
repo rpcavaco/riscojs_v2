@@ -1,6 +1,6 @@
 import {HTML5CanvasMgr} from './html5canvas.mjs';
 import {Transform2DMgr} from './transformations.mjs';
-
+import {ToolManager} from './interactions.mjs';
 
 /**
  * Class RiscoMapOverlay
@@ -27,18 +27,20 @@ export class RiscoMapOverlay {
 		}	
 
 		this.mapcontexts = {};
-
 		// Attach resizing method to window resize event
 		(function(p_mapovrly) {
 			addEventListener("resize", function(e) { 
 				let mapctx;
 				for (let key in p_mapovrly.mapcontexts) { 
-					mapctx = p_mapovrly.mapcontexts[key];
-					mapctx.resize();
+					if (p_mapovrly.mapcontexts.hasOwnProperty(key)) {
+						mapctx = p_mapovrly.mapcontexts[key];
+						mapctx.resize();
+					}
 				}
 			 }); 
 		})(this);			
 	}
+
 
 	/**
 	 * Method newMapCtx
@@ -122,6 +124,17 @@ export class RiscoMapCtx {
 
 		this.canvasmgr = new HTML5CanvasMgr(this);
 		this.transformmgr = new Transform2DMgr(p_config_var, this.canvasmgr);	
+		this.toolmgr = new ToolManager();
+
+		// Attach event listeners to this map context panel
+		(function(p_mapctx) {
+			const evttypes = ["mouseup", "mousedown", "mousemove", "mouseover", "mouseout", "mouseleave"];
+			for (let i=0; i<evttypes.length; i++) {
+				p_mapctx.panelwidget.addEventListener(evttypes[i], function(e) { 
+					p_mapctx.onEvent(p_mapctx, e);
+				}); 
+			}
+		})(this);	
 	}
 
 	/**
@@ -133,11 +146,26 @@ export class RiscoMapCtx {
 	}
 
 	/**
-	 * Method userResize - Abstract, must be implemented to execute customized tasks on fired on window resize
+	 * Method customResize - Abstract, must be implemented to execute customized tasks on fired on window resize
  	 * @param {object} p_this_mapctx - This map context
  	 */	
 	customResize(p_this_mapctx) {
 		// To be implemented 
-	}		
+	}
+
+	/**
+	 * Method onEvent
+	 * Fired on every listened event 
+	 * @param {object} p_mapctx - Map context for which interactions managing is needed
+s 	 * @param {object} p_evt Event (user event expected)
+	 */
+	 onEvent(p_mapctx, p_evt) {
+
+		if (!this.toolmgr.onEvent(p_mapctx, p_evt)) {
+			p_evt.stopPropagation();
+		}
+		
+	}	
+
 }
 
