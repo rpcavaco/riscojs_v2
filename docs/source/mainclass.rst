@@ -29,7 +29,7 @@ Coordinate transformations
 
 
 Geometry methods
----------------
+----------------
 
 .. include:: generated\geom.rst	
 

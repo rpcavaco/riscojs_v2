@@ -11,12 +11,14 @@ from comment_parser.comment_parser import extract_comments_from_str
 # * @param {string} p_paneldiv_id 	- Id of HTML DIV element to act as RiscoJS map panel
 
 
-DOCS_SOURCE_OUTPUT = "docs\source\generated"
-CODE_SOURCE = "src"
+DOCS_SOURCE_OUTPUT = "..\docs\source\generated"
+CODE_SOURCE = "..\src"
 
 
 
 META_TYPES = ["@param", "@throws", "@returns"]
+
+CODE_TYPES = ["method", "class", "function"]
 
 PATT_1 = "[\s]+\{([^\}]+)\}[\s]+([\S]+)\s(.*)$"
 PATT_2 = "[\s]+\{([^\}]+)\}[\s]+([\S]+)"
@@ -30,8 +32,15 @@ class ParseException(Exception):
 class OptArgsException(Exception):
 	pass
 
+class InvalidCodeTypeException(Exception):
+	pass
+
 class CodeObj:
 	def __init__(self, p_type, p_name) -> None:
+
+		if p_type not in CODE_TYPES:
+			raise InvalidCodeTypeException(f"invalid type: {p_type}")
+
 		self.type = p_type
 		self.name = p_name
 		self.desclines = []
@@ -72,8 +81,18 @@ def do_parse(p_fpath, o_retlist, elemfilter=None, dodebug=False):
 
 			if len(ln) > 0:
 				if currentobj is None:
+					
 					splits = ln.split()
-					currentobj = CodeObj(splits[0].lower(), splits[1])
+					if len(splits) < 2:
+						continue
+
+					try:
+						currentobj = CodeObj(splits[0].lower(), splits[1])
+					except InvalidCodeTypeException:
+						continue
+					except:
+						print("splits:", splits)
+						raise
 				else:
 					if not ln.startswith("@"):
 						currentobj.addDescline(ln.strip())
