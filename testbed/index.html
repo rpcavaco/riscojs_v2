@@ -35,8 +35,13 @@
 	<div id="PanelDiv">
 	</div>
 
-	<script src="risco_config.js"></script>
+	<script src="risco_basic_config.js"></script>
 	<script type="module">
+
+		let RISCO_MAP_CFG = {
+			"basic": RISCOJS_BASIC_CFG,
+			"layers": null
+		}
 
 		// check corners
 		function checkPoints(p_mapctx) {
@@ -63,7 +68,7 @@
 		import {MapCustomizations} from './js/riscojs_v2/default_customizations.mjs';
 
 		let RiscoOVInst = new RiscoMapOverlay("PanelDiv");
-		let mapctx = RiscoOVInst.newMapCtx(RISCOJS_CFG, "base");
+		let mapctx = RiscoOVInst.newMapCtx(RISCO_MAP_CFG, "base");
 
 		mapctx.customResize = function(p_mapctx) {
 			checkPoints(p_mapctx);

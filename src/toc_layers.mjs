@@ -23,7 +23,7 @@ class RasterLayer extends Layer {
 export class TOCManager {
 	
 	layers = [];
-	constructor(p_mapctx) {
+	constructor(p_mapctx, p_layers_config) {
 		this.mapctx = p_mapctx;
 	}
 
