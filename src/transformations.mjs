@@ -270,4 +270,26 @@ class TransformsQueue {
 		out_pt[0] = v2[0];
 		out_pt[1] = v2[1];
 	}	
+
+	getMapBounds(p_canvasdims, out_env) {
+
+		if (p_canvasdims === null || typeof p_canvasdims != 'object' || p_canvasdims.length != 2) {
+			throw new Error(`Class Transform2DMgr, getMapBounds, canvas dims: ${p_canvasdims}`);
+		}
+
+		const terrainPtUL = [];
+		this.getTerrainPt([0, 0], terrainPtUL);
+		const terrainPtLR = [];
+		this.getTerrainPt(p_canvasdims, terrainPtLR);
+
+		out_env.length = 4;
+		
+		// minx, miny, maxx, maxy
+		out_env[0] = terrainPtUL[0];
+		out_env[1] = terrainPtLR[1];		
+		out_env[2] = terrainPtLR[0];
+		out_env[3] = terrainPtUL[1];		
+	}	
+
+
 }

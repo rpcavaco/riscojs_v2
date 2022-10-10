@@ -1,6 +1,7 @@
 import {HTML5CanvasMgr} from './html5canvas.mjs';
 import {Transform2DMgr} from './transformations.mjs';
 import {ToolManager} from './interactions.mjs';
+import {TOCManager} from './toc_layers.mjs';
 
 /**
  * Class RiscoMapOverlay
@@ -95,7 +96,7 @@ export class RiscoMapOverlay {
  */
 export class RiscoMapCtx {
 
-	#customization_class
+	#customization_class;
 
 	constructor(p_config_var, p_paneldiv) {
 
@@ -127,6 +128,7 @@ export class RiscoMapCtx {
 		this.canvasmgr = new HTML5CanvasMgr(this);
 		this.transformmgr = new Transform2DMgr(p_config_var, this.canvasmgr);	
 		this.toolmgr = new ToolManager();
+		this.tocmgr = new TOCManager();
 		this.#customization_class = null;
 
 		// Attach event listeners to this map context panel
@@ -177,6 +179,12 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			p_evt.stopPropagation();
 		}		
 	}	
+
+	getMapBounds(out_env) {
+		const canvasDims = [];
+		this.canvasmgr.getCanvasDims(canvasDims);
+		this.transformmgr.getMapBounds(canvasDims, out_env)
+	}
 
 	printMouseCoords(p_x, py) {
 		const cc = this.getCustomizationClass();

@@ -42,6 +42,7 @@
 		function checkPoints(p_mapctx) {
 			let terrainPt = [];
 			let canvasPt = [];
+			let bounds = [];
 			p_mapctx.transformmgr.getTerrainPt([0, 0], terrainPt);
 			console.log("terrainPt for canvas(0,0):", terrainPt);
 
@@ -52,6 +53,9 @@
 			p_mapctx.canvasmgr.getCanvasDims(canvasPt);
 			p_mapctx.transformmgr.getTerrainPt(canvasPt, terrainPt);
 			console.log("terrainPt for canvas lower right:", terrainPt);
+
+			p_mapctx.getMapBounds(bounds);
+			console.log("map bounds:", bounds);
 		}
 
 
