@@ -71,7 +71,6 @@
 	 */
 	getCanvasDims(out_dims) {
 		let bounds = this.paneldiv.getBoundingClientRect();	
-
 		out_dims.length = 2;
 		out_dims[0] = bounds.width;
 		out_dims[1] = bounds.height;
@@ -93,11 +92,13 @@
 	 * @param {string} opt_dims - Optional '2d' (default) or else for WebGL 
 	 * @returns {object} drawing context
 	 */
-	 getDrwCtx(p_canvaskey, opt_dims) {
+	getDrwCtx(p_canvaskey, opt_dims) {
 		if (this.canvases[p_canvaskey] === undefined) {
 			throw new Error(`Class HTML5CanvasMgr, getDrawingContext, found no canvas for ${p_canvaskey}`);
 		}
+
 		return this.canvases[p_canvaskey].getContext(opt_dims);
 	}	
+
 }	
 

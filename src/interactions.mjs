@@ -1,5 +1,5 @@
 
-class BaseTool {
+export class BaseTool {
 
 	constructor(p_joinstogglegroup) {
 		this.enabled = true;
@@ -21,8 +21,12 @@ class DefaultTool extends BaseTool {
 
 	onEvent(p_mapctx, p_evt) {
 		if (p_evt.type == 'mousemove') {
-			console.log("mousemove:", p_evt);
+			p_mapctx.printMouseCoords(p_evt.clientX, p_evt.clientY);
 		}
+		if (p_evt.type == 'mouseout' || p_evt.type == "mouseleave") {
+			p_mapctx.removeMouseCoords();
+		}
+		
 	}	
 }
 

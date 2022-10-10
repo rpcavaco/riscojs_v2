@@ -95,6 +95,8 @@ export class RiscoMapOverlay {
  */
 export class RiscoMapCtx {
 
+	#customization_class
+
 	constructor(p_config_var, p_paneldiv) {
 
 		if (p_config_var == null) {
@@ -125,18 +127,28 @@ export class RiscoMapCtx {
 		this.canvasmgr = new HTML5CanvasMgr(this);
 		this.transformmgr = new Transform2DMgr(p_config_var, this.canvasmgr);	
 		this.toolmgr = new ToolManager();
+		this.#customization_class = null;
 
 		// Attach event listeners to this map context panel
 		(function(p_mapctx) {
 			const evttypes = ["mouseup", "mousedown", "mousemove", "mouseover", "mouseout", "mouseleave"];
 			for (let i=0; i<evttypes.length; i++) {
 				p_mapctx.panelwidget.addEventListener(evttypes[i], function(e) { 
-					p_mapctx.onEvent(p_mapctx, e);
+					p_mapctx.onEvent(e);
 				}); 
 			}
 		})(this);	
 	}
 
+	/**
+	 * @param {any} p_cclass
+	 */
+	setCustomizationClass(p_cclass) {
+		this.#customization_class = p_cclass;
+	}
+	getCustomizationClass() {
+		return this.#customization_class;
+	}
 	/**
 	 * Method resize - to be automatically fired on window resize
 	 */	
@@ -157,14 +169,31 @@ export class RiscoMapCtx {
 	 * Method onEvent
 	 * Fired on every listened event 
 	 * @param {object} p_mapctx - Map context for which interactions managing is needed
-s 	 * @param {object} p_evt Event (user event expected)
+s 	 * @param {object} p_evt - Event (user event expected)
 	 */
-	 onEvent(p_mapctx, p_evt) {
+	onEvent(p_evt) {
 
-		if (!this.toolmgr.onEvent(p_mapctx, p_evt)) {
+		if (!this.toolmgr.onEvent(this, p_evt)) {
 			p_evt.stopPropagation();
+		}		
+	}	
+
+	printMouseCoords(p_x, py) {
+		const cc = this.getCustomizationClass();
+		if (cc) {
+			if (cc.printMouseCoords !== undefined) {
+				cc.printMouseCoords(this, p_x, py);
+			}			
 		}
-		
+	}
+
+	removeMouseCoords() {
+		const cc = this.getCustomizationClass();
+		if (cc) {
+			if (cc.removeMouseCoords !== undefined) {
+				cc.removeMouseCoords(this);
+			}			
+		}
 	}	
 
 }

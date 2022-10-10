@@ -56,6 +56,7 @@
 
 
 		import {RiscoMapOverlay} from './js/riscojs_v2/main.mjs';
+		import {MapCustomizations} from './js/riscojs_v2/default_customizations.mjs';
 
 		let RiscoOVInst = new RiscoMapOverlay("PanelDiv");
 		let mapctx = RiscoOVInst.newMapCtx(RISCOJS_CFG, "base");
@@ -63,6 +64,8 @@
 		mapctx.customResize = function(p_mapctx) {
 			checkPoints(p_mapctx);
 		};
+
+		mapctx.setCustomizationClass(MapCustomizations);
 
 
 
