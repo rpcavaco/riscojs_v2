@@ -5,8 +5,8 @@ import {identity, multiply, inverse, scaling, translation, twod_shift, rotation,
 
 /** 
  * Class MapAffineTransformation
- * Transformation from ground length into screen dots.
- * Screen to terrain achieved aplying inverse matrix.
+ * Transformation from ground length into canvas dots.
+ * Canvas to terrain achieved aplying inverse matrix.
  * @param {string} opt_name - Optional name
  */
 export class MapAffineTransformation {
@@ -111,10 +111,10 @@ class TransformsQueue {
 	constructor(p_mapctx_config_var, p_canvasmgr) {
 
 		if (p_mapctx_config_var == null) {
-			throw "Class Transform2DMgr, null mapctx_config_var";
+			throw new Error("Class Transform2DMgr, null mapctx_config_var");
 		}
 		if (p_canvasmgr == null) {
-			throw "Class Transform2DMgr, null canvasmgr";
+			throw new Error("Class Transform2DMgr, null canvasmgr");
 		}		
 		this.mapctx_config_var = p_mapctx_config_var;
 		this.canvasmgr = p_canvasmgr;
@@ -123,7 +123,7 @@ class TransformsQueue {
 		for (let i=0; i<keys.length; i++) {
 
 			if (p_mapctx_config_var[keys[i]] === undefined) {
-				throw `Class Transform2DMgr, mapctx_config is missing mandatory '${keys[i]}' entry`;
+				throw new Error(`Class Transform2DMgr, mapctx_config is missing mandatory '${keys[i]}' entry`);
 			}
 	
 		}	
@@ -141,7 +141,7 @@ class TransformsQueue {
 	init() {
 
 		if (this.mapctx_config_var["scale"] === undefined) {
-			throw "Class Transform2DMgr, init, configuration JSON dictionary contains no 'scale' value";
+			throw new Error("Class Transform2DMgr, init, configuration JSON dictionary contains no 'scale' value");
 		}
 
 		this.setScale(this.mapctx_config_var["scale"]);
@@ -154,11 +154,11 @@ class TransformsQueue {
 	setScale(p_scale) {
 
 		if (p_scale === null || isNaN(p_scale)) {
-			throw "Class Transform2DMgr, setScale, invalid value was passed for scale";
+			throw new Error("Class Transform2DMgr, setScale, invalid value was passed for scale");
 		}
 		let vscale, p1_scale = parseFloat(p_scale);
 		if (p1_scale <= 0) {
-			throw "Class Transform2DMgr, setScale, invalid negative or zero value was passed for scale";
+			throw new Error("Class Transform2DMgr, setScale, invalid negative or zero value was passed for scale");
 		}
 		
 		// Arredondar
@@ -197,15 +197,16 @@ class TransformsQueue {
 	 setCenter(p_cx, p_cy) {
 
 		if (p_cx === null || isNaN(p_cx)) {
-			throw "Class Transform2DMgr, setCenter, invalid value was passed for cx";
+			throw new Error("Class Transform2DMgr, setCenter, invalid value was passed for cx");
 		}
 		if (p_cy === null || isNaN(p_cy)) {
-			throw "Class Transform2DMgr, setCenter, invalid value was passed for cy";
+			throw new Error("Class Transform2DMgr, setCenter, invalid value was passed for cy");
 		}
 
 		let ox, oy, ctrans = this.transformsQueue.currentTransform;		
-		var k, hwidth, hheight, fheight, cdims = this.canvasmgr.getCanvasDims();
-	
+		var k, hwidth, hheight, fheight, cdims = [];
+
+		this.canvasmgr.getCanvasDims(cdims);
 		k = ctrans.getScaling();
 
 		hwidth = (cdims[0] / 2.0) / k;
@@ -226,12 +227,12 @@ class TransformsQueue {
 	
 	/**
 	 * Method getTerrainPt
-	 * @param {object} p_scrpt - Array of coordinates for a screen point 
+	 * @param {object} p_scrpt - Array of coordinates for a canvas point 
 	 * @param {float} out_pt - Out parameter: array of coordinates for a terrain point 
 	 */
 	getTerrainPt(p_scrpt, out_pt) {
 		if (p_scrpt === null || typeof p_scrpt != 'object' || p_scrpt.length != 2) {
-			throw "Class Transform2DMgr, getTerrainPt, invalid screen point";
+			throw new Error(`Class Transform2DMgr, getTerrainPt, invalid canvas point: ${p_scrpt}`);
 		}
 		
 		let v1=[], v2=[], mx1=[];
@@ -248,13 +249,13 @@ class TransformsQueue {
 	}	
 
 	/**
-	 * Method getScreenPt
+	 * Method getCanvasPt
 	 * @param {object} p_terrpt - Array of coordinates for a terrain point 
-	 * @param {float} out_pt - Out parameter: array of coordinates for a screen point 
+	 * @param {float} out_pt - Out parameter: array of coordinates for a canvas point 
 	 */
-	getScreenPt(p_terrpt, out_pt) {
+	getCanvasPt(p_terrpt, out_pt) {
 		if (p_scrpt === null || typeof p_scrpt != 'object' || p_scrpt.length != 2) {
-			throw "Class Transform2DMgr, getScreenPt, invalid terrain point";
+			throw new Error(`Class Transform2DMgr, getTerrainPt, invalid terrain point: ${p_terrpt}`);
 		}
 		
 		let v1=[], v2=[], mx1=[];
@@ -262,7 +263,7 @@ class TransformsQueue {
 
 		out_pt.length = 2;
 		v1 = [parseFloat(p_terrpt[0]), parseFloat(p_terrpt[1]), 1];
-		// get screen coords from current transformation
+		// get canvas coords from current transformation
 		trans.getMatrix(mx1);
 		vectorMultiply(v1, mx1, v2);
 		

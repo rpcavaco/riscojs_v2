@@ -18,7 +18,7 @@
 	constructor(p_mapctx, opt_base_zindex) {
 
 		if (p_mapctx == null) {
-			throw "Class HTML5CanvasMgr, null p_paneldiv";
+			throw new Error("Class HTML5CanvasMgr, null p_paneldiv");
 		}
 		this.paneldiv = p_mapctx.panelwidget;
 
@@ -72,13 +72,25 @@
 	}	
 
 	/**
-	 * Method setCenter
-	 * Define center of map from terrain coordinates
-	 * @param {float} p_cx 
-	 * @param {float} p_cy 
+	 * Method getCanvasDims
+	 * @param {float} out_pt - Out parameter: array of width x height 
 	 */
-	 getCanvasDims() {
+	getCanvasDims(out_dims) {
 		let bounds = this.paneldiv.getBoundingClientRect();	
-		return [bounds.width, bounds.height];
+
+		out_dims.length = 2;
+		out_dims[0] = bounds.width;
+		out_dims[1] = bounds.height;
 	}
+	/**
+	 * Method getCanvasCenter
+	 * @param {float} out_pt - Out parameter: array of coordinates for a canvas point 
+	 */
+	getCanvasCenter(out_pt) {
+		let bounds = this.paneldiv.getBoundingClientRect();	
+
+		out_pt.length = 2;
+		out_pt[0] = Math.round(bounds.width/2.0);
+		out_pt[1] = Math.round(bounds.height/2.0);
+	}	
 }	

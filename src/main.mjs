@@ -15,18 +15,29 @@ export class RiscoMapOverlay {
 	constructor(p_paneldiv_id) {
 
 		if (p_paneldiv_id == null) {
-			throw "Class RiscoMapOverlay, null paneldiv_id";
+			throw new Error("Class RiscoMapOverlay, null paneldiv_id");
 		}		
 
 		this.panelwidget = document.getElementById(p_paneldiv_id);
 		if (this.panelwidget == null) {
-			throw `Class RiscoMapOverlay, panel widget search, no div found with for id ${p_paneldiv_id}`;
+			throw new Error(`Class RiscoMapOverlay, panel widget search, no div found with for id ${p_paneldiv_id}`);
 		}		
 		if (this.panelwidget.tagName.toLowerCase() != 'div') {
-			throw `Class RiscoMapOverlay, panel widget must be DIV, not ${this.panelwidget.tagName}`;
+			throw new Error(`Class RiscoMapOverlay, panel widget must be DIV, not ${this.panelwidget.tagName}`);
 		}	
 
 		this.mapcontexts = {};
+
+		// Attach resizing method to window resize event
+		(function(p_mapovrly) {
+			addEventListener("resize", function(e) { 
+				let mapctx;
+				for (let key in p_mapovrly.mapcontexts) { 
+					mapctx = p_mapovrly.mapcontexts[key];
+					mapctx.resize();
+				}
+			 }); 
+		})(this);			
 	}
 
 	/**
@@ -39,10 +50,10 @@ export class RiscoMapOverlay {
 	newMapCtx(p_config_var, p_ctx_id) {
 
 		if (p_config_var == null) {
-			throw "Class RiscoMapOverlay, newMapCtx, null config_var";
+			throw new Error("Class RiscoMapOverlay, newMapCtx, null config_var");
 		}
 		if (p_ctx_id == null) {
-			throw "Class RiscoMapOverlay, newMapCtx, null context id";
+			throw new Error("Class RiscoMapOverlay, newMapCtx, null context id");
 		}	
 
 		this.mapcontexts[p_ctx_id] = new RiscoMapCtx(p_config_var, this.panelwidget);
@@ -58,7 +69,7 @@ export class RiscoMapOverlay {
 	 */
 	 getMapCtx(p_ctx_id) {
 		if (p_ctx_id == null) {
-			throw "Class RiscoMapOverlay, getMapCtx, null context id";
+			throw new Error("Class RiscoMapOverlay, getMapCtx, null context id");
 		}	
 		let ret = null;
 		if (this.mapcontexts[p_ctx_id] !== undefined) {
@@ -68,7 +79,7 @@ export class RiscoMapOverlay {
 		}
 		return ret;
 	}	
-
+	
 }
 
 /**
@@ -85,13 +96,13 @@ export class RiscoMapCtx {
 	constructor(p_config_var, p_paneldiv) {
 
 		if (p_config_var == null) {
-			throw "Class RiscoMapCtx, null config_var";
+			throw new Error("Class RiscoMapCtx, null config_var");
 		}
 		if (typeof p_config_var != 'object') {
-			throw `Class RiscoMapCtx, config_var must be 'object' not '${typeof p_config_var}'`;
+			throw new Error(`Class RiscoMapCtx, config_var must be 'object' not '${typeof p_config_var}'`);
 		}		
 		if (p_paneldiv == null) {
-			throw "Class RiscoMapCtx, null paneldiv";
+			throw new Error("Class RiscoMapCtx, null paneldiv");
 		}		
 
 		if (typeof p_paneldiv == 'string') {
@@ -99,32 +110,34 @@ export class RiscoMapCtx {
 		} else if (typeof p_paneldiv == 'object') {
 			this.panelwidget = p_paneldiv;
 		} else 	{
-			throw 'invalid type for paneldiv parameter';
+			throw new Error('invalid type for paneldiv parameter');
 		}
 
 		if (this.panelwidget == null) {
-			throw "Class RiscoMapCtx, no panel widget";
+			throw new Error("Class RiscoMapCtx, no panel widget");
 		}		
 		if (this.panelwidget.tagName.toLowerCase() != 'div') {
-			throw `Class RiscoMapCtx, panel widget must be DIV, not ${this.panelwidget.tagName}`;
+			throw new Error(`Class RiscoMapCtx, panel widget must be DIV, not ${this.panelwidget.tagName}`);
 		}	
 
 		this.canvasmgr = new HTML5CanvasMgr(this);
-		this.transformmgr = new Transform2DMgr(p_config_var, this.canvasmgr);
-
-		// Attach resizing method to window resize event
-		(function(p_mapctx) {
-			addEventListener("resize", function(e) { 
-				p_mapctx.resize();
-			 }); 
-		})(this);		
+		this.transformmgr = new Transform2DMgr(p_config_var, this.canvasmgr);	
 	}
 
 	/**
-	 * Method resize - to be fired on window resize
+	 * Method resize - to be automatically fired on window resize
 	 */	
 	resize() {
 		this.canvasmgr.init();
+		this.customResize(this);
 	}
+
+	/**
+	 * Method userResize - Abstract, must be implemented to execute customized tasks on fired on window resize
+ 	 * @param {object} p_this_mapctx - This map context
+ 	 */	
+	customResize(p_this_mapctx) {
+		// To be implemented 
+	}		
 }
 
