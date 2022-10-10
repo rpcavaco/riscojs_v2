@@ -128,7 +128,7 @@ export class RiscoMapCtx {
 		this.canvasmgr = new HTML5CanvasMgr(this);
 		this.transformmgr = new Transform2DMgr(p_config_var, this.canvasmgr);	
 		this.toolmgr = new ToolManager();
-		this.tocmgr = new TOCManager();
+		this.tocmgr = new TOCManager(this);
 		this.#customization_class = null;
 
 		// Attach event listeners to this map context panel

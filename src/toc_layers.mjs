@@ -21,8 +21,19 @@ class RasterLayer extends Layer {
 */
 
 export class TOCManager {
+	
 	layers = [];
+	constructor(p_mapctx) {
+		this.mapctx = p_mapctx;
+	}
 
-	addTool(p_toolinstance) {
+	initFromConfig(p_configvar) {
+	}
+
+	appendGraticuleLayer(p_spacing) {
+		let x, bounds = [];
+		this.mapctx.getMapBounds(bounds);
+
+		x = Math.floor();
 	}
 }
