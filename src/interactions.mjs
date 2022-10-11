@@ -42,18 +42,16 @@ class DefaultTool extends BaseTool {
 // pan, zoom wheel, info
 class MultiTool extends BaseTool {
 
-	started = false;
-	
 	constructor() {
 		super(true, true); // part of general toggle group, default in toogle
+		this.start_screen = null;
 	}
 
-	/*
-	static finishPan(p_mapctx, p_x, p_y, p_start_screen, opt_origin) {
+	finishPan(p_transfmgr, p_x, p_y, opt_origin) {
 		
 		let dx=0, dy=0;
-		let deltascrx =  Math.abs(p_start_screen[0] - p_x);
-		let deltascry =  Math.abs(p_start_screen[1] - p_y);
+		let deltascrx =  Math.abs(this.start_screen[0] - p_x);
+		let deltascry =  Math.abs(this.start_screen[1] - p_y);
 
 		//console.log(dx, '<', deltascrx, dy, '<', deltascry);
 		
@@ -61,14 +59,18 @@ class MultiTool extends BaseTool {
 			dx = 6;
 			dy = 6;
 		}
-		if (deltascrx > dx || deltascry > dy) {					
+
+		console.log([deltascrx, dx, deltascry, dy]);
+
+		if (deltascrx > dx || deltascry > dy) {		
+
+			console.log("======== antes do PAn ==========");
 			
-			// usar p_mapctx
-			// this.refresh(false);	
-			// this.applyRegisteredsOnPanZoom();			
-			
+			p_transfmgr.doPan(this.start_screen, [p_x, p_y], true);
 		}
 	}
+
+	/*
 
 	static transientPan(p_mapctx, p_x, p_y, p_start_terrain, p_start_screen) {
 
@@ -96,50 +98,49 @@ class MultiTool extends BaseTool {
 	onEvent(p_mapctx, p_evt) {
 		let ret = true;
 
-		switch(p_evt.type) {
 
-			case 'mousedown':
-				if (!this.started) {
-					if ((p_evt.buttons & 1) == 1) {
-						
-						const terr_pt = [];
-						this.last_pt = [];
+		try {
+			switch(p_evt.type) {
 
-						p_mapctx.transformmgr.getTerrainPt([p_evt.clientX, p_evt.clientY], terr_pt);	
-						this.start_screen = [p_evt.clientX, p_evt.clientY];
-						this.start_terrain = [terr_pt[0], terr_pt[1]];
-						this.started = true;									
-						ret = false;
+				case 'mousedown':
+					console.log(p_evt, "start:", this.start_screen, (p_evt.buttons & 1) == 1);
+					if (this.start_screen == null) {
+						if ((p_evt.buttons & 1) == 1) {						
+							this.start_screen = [p_evt.clientX, p_evt.clientY];		
+							console.log("start_screen:", this.start_screen);					
+							ret = false;
+						}
 					}
-				}
-			break;
+					break;
 
-			case 'mouseup':
-				if (this.started) {
-					if ((p_evt.buttons & 1) == 1) {
-
-						this.finishPan(p_mapctx, (p_evt.clientX==0 ? this.last_pt[0] : p_evt.clientX), (p_evt.clientY==0 ? this.last_pt[1] : p_evt.clientY), this.start_screen, 'mouse');	
-
-						this.last_pt = [];
-						this.start_screen = null;
-						this.start_terrain = null;
-						this.started = false;	
-
-						ret = false;
+				case 'mouseup':
+				case 'mouseout':
+				case 'mouseleave':
+					console.log(p_evt, "start:", this.start_screen, (p_evt.buttons & 1) == 1);
+					if (this.start_screen != null) {
+						// if ((p_evt.buttons & 1) == 1) {
+							this.finishPan(p_mapctx.transformmgr, p_evt.clientX, p_evt.clientY, 'mouse');	
+							this.start_screen = null;
+							ret = false;
+						// }
 					}
-				}
-			break;
+					break;
 
-			case 'mousemove':
-				if (this.started) {
-					if ((p_evt.buttons & 1) == 1) {
+				/*
+				case 'mousemove':
+					if (this.started) {
+						if ((p_evt.buttons & 1) == 1) {
 
-						this.last_pt = [p_evt.clientX, p_evt.clientY];
+							this.last_pt = [p_evt.clientX, p_evt.clientY];
 
-						ret = false;
+							ret = false;
+						}
 					}
-				}
-			break;
+					break; */
+			}
+		} catch(e) {
+			this.start_screen = null;
+			throw e;
 		}
 		
 		return ret;

@@ -74,7 +74,7 @@ export class MapAffineTransformation extends MapAffineTransformationMxColl {
 			console.trace(['2dshift', p_dx, p_dy]);
 		}
 	}
-	getTranslate(out_res) {
+	getTranslating(out_res) {
 		out_res.length = 2;
 		out_res[0] = this.translating[6];
 		out_res[1] = this.translating[7];
@@ -246,7 +246,7 @@ class TransformsQueue {
 	 * @param {float} p_cx
 	 * @param {float} p_cy 
 	 */
-	 setCenter(p_cx, p_cy, opt_do_store) {
+	setCenter(p_cx, p_cy, opt_do_store) {
 
 		if (p_cx === null || isNaN(p_cx)) {
 			throw new Error("Class Transform2DMgr, setCenter, invalid value was passed for cx");
@@ -270,11 +270,6 @@ class TransformsQueue {
 		
 		ox = p_cx - hwidth;
 		oy = p_cy - hheight;
-
-		if (Math.abs(ox) < GlobalConst.MINCENTERCOORDDIFF || Math.abs(oy) < GlobalConst.MINCENTERCOORDDIFF) {
-			console.log("saida");
-			return;
-		}
 
 		ctrans.setTranslating(-ox, -(oy + fheight));
 
@@ -307,6 +302,43 @@ class TransformsQueue {
 		out_pt[0] = v2[0];
 		out_pt[1] = v2[1];
 	}	
+
+	getTerrainTranslation(p_scrpt_a, p_scrpt_b, out_diff_pt) {
+		
+		if (p_scrpt_a === null || typeof p_scrpt_a != 'object' || p_scrpt_a.length != 2) {
+			throw new Error(`Class Transform2DMgr, getTerrainTranslation, invalid canvas point A: ${p_scrpt_a}`);
+		}
+		if (p_scrpt_b === null || typeof p_scrpt_b != 'object' || p_scrpt_b.length != 2) {
+			throw new Error(`Class Transform2DMgr, getTerrainTranslation, invalid canvas point B: ${p_scrpt_b}`);
+		}
+		
+		let v1=[], v2=[], v3=[], v4=[], mx1=[];
+		let ctrans = this.transformsQueue.currentTransform;
+
+		out_diff_pt.length = 2;
+		v1 = [parseFloat(p_scrpt_a[0]), parseFloat(p_scrpt_a[1]), 1];
+		v3 = [parseFloat(p_scrpt_b[0]), parseFloat(p_scrpt_b[1]), 1];
+		// get terrain coords from the inverse of current transformation
+		ctrans.getInvMatrix(mx1);
+		vectorMultiply(v1, mx1, v2);
+		vectorMultiply(v3, mx1, v4);
+		
+		out_diff_pt[0] = v4[0] - v2[0];
+		out_diff_pt[1] = v4[1] - v2[1];
+	}	
+
+	doPan(p_scrpt_a, p_scrpt_b, opt_do_store) {
+
+		let ctrans, diff_pt = [];
+		this.getTerrainTranslation(p_scrpt_a, p_scrpt_b, diff_pt);
+
+		ctrans = this.transformsQueue.currentTransform;
+		ctrans.translate(diff_pt[0], diff_pt[1]);
+
+		if (opt_do_store) {
+			this.transformsQueue.store();
+		}
+	}
 
 	/**
 	 * Method getCanvasPt
