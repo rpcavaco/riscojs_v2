@@ -126,7 +126,7 @@ export class RiscoMapCtx {
 		}	
 
 		this.canvasmgr = new HTML5CanvasMgr(this);
-		this.transformmgr = new Transform2DMgr(p_config_var["basic"], this.canvasmgr);	
+		this.transformmgr = new Transform2DMgr(this, p_config_var["basic"]);	
 		this.toolmgr = new ToolManager();
 		this.tocmgr = new TOCManager(this, p_config_var["layers"], 'canvas');
 		this.#customization_class = null;
@@ -191,7 +191,15 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	}
 
 	draw() {
-		this.tocmgr.draw(this.transformmgr.getScale());
+		console.log(">>>>>        draw      <<<<<");
+		this.tocmgr.draw(this.transformmgr.getReadableCartoScale());
+	}
+
+	transformsChanged(b_dodraw) {
+		console.log(">>>>> transformsChanged <<<<<");
+		if (b_dodraw) {
+			this.draw();
+		}
 	}
 
 	printMouseCoords(p_x, py) {

@@ -3,30 +3,44 @@ import {rad2Deg} from './geom.mjs';
 
 import {identity, multiply, inverse, scaling, translation, twod_shift, rotation, getCartoScaling, vectorMultiply} from './matrices3.mjs';
 
+class MapAffineTransformationMxColl {
+
+	constructor() {
+		this.scaling = [];
+		this.translating = [];
+		this.rotating = [];
+	}	
+	copy () {
+		const ret = new MapAffineTransformationMxColl();
+		ret.scaling = [...this.scaling];
+		ret.translating = [...this.translating];
+		ret.rotating = [...this.rotating];
+
+		return ret;
+	}
+}
 /** 
  * Class MapAffineTransformation
  * Transformation from ground length into canvas dots.
  * Canvas to terrain achieved aplying inverse matrix.
  * @param {string} opt_name - Optional name
  */
-export class MapAffineTransformation {
+export class MapAffineTransformation extends MapAffineTransformationMxColl {
 
-	constructor(opt_name) {
-		this.scaling = [];
+	constructor() {
+		super();
 		identity(this.scaling);
-		this.translating = [];
 		identity(this.translating);
-		this.rotating = [];
 		identity(this.rotating);
-		this._rotval = null;
-		this._transval = [];
-		this._name = opt_name;
 		this.trace = false;
 	}
 
-	setName(p_name) {
-		this._name = p_name;
-	}	
+	fromOther(p_other) {
+		this.scaling = [...p_other.scaling];
+		this.translating = [...p_other.scaling];
+		this.rotating = [...p_other.rotating];
+	}
+
 	getMatrix(out_m) {
 		multiply(this.scaling, this.rotating, out_m);
 		multiply(out_m, this.translating, out_m);
@@ -45,7 +59,7 @@ export class MapAffineTransformation {
 	setScaling(p_scalingf) {
 		scaling(p_scalingf, -p_scalingf, this.scaling);
 		if (this.trace) {
-			console.log("setScaling "+p_scalingf+" 1:"+this.getCartoScaleVal(GlobalConst.MMPD));
+			console.log("setScaling "+p_scalingf+" 1:"+this.getReadableCartoScale(GlobalConst.MMPD));
 		}
 	}
 	setTranslating(p_tx, p_ty) {
@@ -68,11 +82,12 @@ export class MapAffineTransformation {
 	setRotating(p_deg) {
 		rotation(rad2Deg(p_deg), this.rotating);
 	}
-	getScaling() {
+	getScalingFactor() {
 		return getCartoScaling(this.scaling);
 	}
-	getCartoScaleVal(p_mmpd) {
-		return Math.round(1000.0 / (getCartoScaling(this.scaling) * p_mmpd));
+	getReadableCartoScale(p_mmpd) {
+		let ret = Math.round(1000.0 / (getCartoScaling(this.scaling) * p_mmpd));
+		return ret;
 	}
 	setScaleFromCartoScale(p_scaleval, p_mmpd) {		
 		this.setScaling(1000.0 / (p_scaleval * p_mmpd));
@@ -80,21 +95,43 @@ export class MapAffineTransformation {
 }
 
 class TransformsQueue {
-	constructor() {
-		this._queue = [],
+	constructor(p_mapctx) {
+		this.mapctx = p_mapctx;
+		this.queue = [],
+		this.currentpos = -1;
 		this.currentTransform = new MapAffineTransformation();
 	}
-	checkToStore() {
-		this._queue.push(structuredClone(this.currentTransform));
-		this._queue[this._queue.length-1].setName(String.format("trans n.º {0}", this._queue.length));
+	store() {
+		this.queue.push(this.currentTransform.copy());
+		this.currentpos = this.queue.length-1;
+		this.mapctx.transformsChanged(this.queue.length > 1);
 	}
-	getLastStored() {
-		let ret = null;
-		if (this._queue.length > 0) {
-			ret = this._queue[this._queue.length-1];
+	back() {
+		let ret = false;
+
+		if (this.queue.length > 0) {
+			if (this.currentpos > 0) {
+				this.currentpos--;
+				this.currentTransform.fromOther(this.queue[this.currentpos]);
+				ret = true;
+			}
 		}
+
 		return ret;
 	}
+	forth() {
+		let ret = false;
+
+		if (this.queue.length > 0) {
+			if (this.currentpos < (this.queue.length-1)) {
+				this.currentpos++;
+				this.currentTransform.fromOther(this.queue[this.currentpos]);
+				ret = true;
+			}
+		}
+
+		return ret;
+	}	
 }
 
 /**
@@ -108,16 +145,17 @@ class TransformsQueue {
  */
  export class Transform2DMgr {
 
-	constructor(p_mapctx_config_var, p_canvasmgr) {
+	constructor(p_mapctx, p_mapctx_config_var) {
 
 		if (p_mapctx_config_var == null) {
 			throw new Error("Class Transform2DMgr, null mapctx_config_var");
 		}
-		if (p_canvasmgr == null) {
-			throw new Error("Class Transform2DMgr, null canvasmgr");
+		if (p_mapctx == null) {
+			throw new Error("Class Transform2DMgr, null mapctx");
 		}		
+
+		this.mapctx = p_mapctx;
 		this.mapctx_config_var = p_mapctx_config_var;
-		this.canvasmgr = p_canvasmgr;
 		
 		let keys = ["terrain_center", "scale"];
 		for (let i=0; i<keys.length; i++) {
@@ -128,10 +166,10 @@ class TransformsQueue {
 	
 		}	
 		
-		this.transformsQueue = new TransformsQueue();		
+		this.transformsQueue = new TransformsQueue(this.mapctx);		
 		this.init();
 
-		console.log("2D transforms prepared");
+		console.log("2D transform env prepared");
 
 	}
 	/**
@@ -144,14 +182,19 @@ class TransformsQueue {
 			throw new Error("Class Transform2DMgr, init, configuration JSON dictionary contains no 'scale' value");
 		}
 
-		this.setScale(this.mapctx_config_var["scale"]);
-		this.setCenter(...this.mapctx_config_var["terrain_center"]);
+		this.setScale(this.mapctx_config_var["scale"], false);
+		this.setCenter(...this.mapctx_config_var["terrain_center"], true);
+
 	}
 	/**
 	 * Method setScale
 	 * @param {float} p_scale 
 	 */
-	setScale(p_scale) {
+	setScale(p_scale, opt_do_store) {
+
+		if (Math.abs(this.getReadableCartoScale() - p_scale) <= GlobalConst.MINSCALEDIFF) { 
+			return;
+		}
 
 		if (p_scale === null || isNaN(p_scale)) {
 			throw new Error("Class Transform2DMgr, setScale, invalid value was passed for scale");
@@ -186,20 +229,24 @@ class TransformsQueue {
 		
 		const ctrans = this.transformsQueue.currentTransform;	
 		ctrans.setScaleFromCartoScale(vscale, GlobalConst.MMPD);
+
+		if (opt_do_store) {
+			this.transformsQueue.store();
+		}
 		
 	}	
 
-	getScale() {
+	getReadableCartoScale() {
 		const ctrans = this.transformsQueue.currentTransform;		
-		return ctrans.getScaling();
+		return ctrans.getReadableCartoScale(GlobalConst.MMPD);
 	}
 
 	/**
-	 * Method setCenter
-	 * @param {float} p_cx 
+	 * Method setCenter in terrain coordinates
+	 * @param {float} p_cx
 	 * @param {float} p_cy 
 	 */
-	 setCenter(p_cx, p_cy) {
+	 setCenter(p_cx, p_cy, opt_do_store) {
 
 		if (p_cx === null || isNaN(p_cx)) {
 			throw new Error("Class Transform2DMgr, setCenter, invalid value was passed for cx");
@@ -211,8 +258,8 @@ class TransformsQueue {
 		let ox, oy, ctrans = this.transformsQueue.currentTransform;		
 		var k, hwidth, hheight, fheight, cdims = [];
 
-		this.canvasmgr.getCanvasDims(cdims);
-		k = ctrans.getScaling();
+		this.mapctx.canvasmgr.getCanvasDims(cdims);
+		k = ctrans.getScalingFactor();
 
 		hwidth = (cdims[0] / 2.0) / k;
 		fheight = cdims[1] / k;
@@ -224,10 +271,17 @@ class TransformsQueue {
 		ox = p_cx - hwidth;
 		oy = p_cy - hheight;
 
-		//console.log([ox, oy]);
+		if (Math.abs(ox) < GlobalConst.MINCENTERCOORDDIFF || Math.abs(oy) < GlobalConst.MINCENTERCOORDDIFF) {
+			console.log("saida");
+			return;
+		}
 
 		ctrans.setTranslating(-ox, -(oy + fheight));
-		//ctrans.setTranslating(-ox, -oy);
+
+		if (opt_do_store) {
+			this.transformsQueue.store();
+		}
+
 	}	
 	
 	/**

@@ -1,7 +1,9 @@
 
+import {GlobalConst} from './constants.js';
+
 export class Layer {
 
-	minscale = 0;
+	minscale = GlobalConst.MINSCALE;
 	maxscale = Number.MAX_SAFE_INTEGER;
 	defaultvisible = true;
 	checkScaleVisibility(p_scaleval) {

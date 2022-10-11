@@ -85,7 +85,7 @@ export class TOCManager {
 	}
 
 	draw(p_scaleval) {
-		console.log("TOCManager draw, layers: ", this.layers.length);
+		console.log("TOCManager draw, layers: ", this.layers.length, "scale:", p_scaleval);
 		for (let li=0; li < this.layers.length; li++) {
 
 			this.layers[li].draw2D(this.mapctx, p_scaleval);
