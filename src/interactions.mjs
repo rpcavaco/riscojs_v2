@@ -53,19 +53,12 @@ class MultiTool extends BaseTool {
 		let deltascrx =  Math.abs(this.start_screen[0] - p_x);
 		let deltascry =  Math.abs(this.start_screen[1] - p_y);
 
-		//console.log(dx, '<', deltascrx, dy, '<', deltascry);
-		
 		if (opt_origin == 'touch') {
 			dx = 6;
 			dy = 6;
 		}
 
-		console.log([deltascrx, dx, deltascry, dy]);
-
 		if (deltascrx > dx || deltascry > dy) {		
-
-			console.log("======== antes do PAn ==========");
-			
 			p_transfmgr.doPan(this.start_screen, [p_x, p_y], true);
 		}
 	}
@@ -96,18 +89,18 @@ class MultiTool extends BaseTool {
 	}	*/
 
 	onEvent(p_mapctx, p_evt) {
-		let ret = true;
 
+		let ret = true;
 
 		try {
 			switch(p_evt.type) {
 
 				case 'mousedown':
-					console.log(p_evt, "start:", this.start_screen, (p_evt.buttons & 1) == 1);
+					// console.log(p_evt, "start:", this.start_screen, (p_evt.buttons & 1) == 1);
 					if (this.start_screen == null) {
 						if ((p_evt.buttons & 1) == 1) {						
 							this.start_screen = [p_evt.clientX, p_evt.clientY];		
-							console.log("start_screen:", this.start_screen);					
+							// console.log("start_screen:", this.start_screen);					
 							ret = false;
 						}
 					}
@@ -116,13 +109,10 @@ class MultiTool extends BaseTool {
 				case 'mouseup':
 				case 'mouseout':
 				case 'mouseleave':
-					console.log(p_evt, "start:", this.start_screen, (p_evt.buttons & 1) == 1);
 					if (this.start_screen != null) {
-						// if ((p_evt.buttons & 1) == 1) {
-							this.finishPan(p_mapctx.transformmgr, p_evt.clientX, p_evt.clientY, 'mouse');	
-							this.start_screen = null;
-							ret = false;
-						// }
+						this.finishPan(p_mapctx.transformmgr, p_evt.clientX, p_evt.clientY, 'mouse');	
+						this.start_screen = null;
+						ret = false;
 					}
 					break;
 

@@ -68,9 +68,9 @@ export class TOCManager {
 					}
 
 					this.layers.push(currentLayer[0]);
-					currentLayer.length = 0;
+					console.log(`[init RISCO] TOCManager, layer '${lyk}' (${currentLayer[0].constructor.name}) prepared`);
 
-					console.log(`TOCManager, layer '${lyk}' (${currentLayer.constructor.name}) prepared`);
+					currentLayer.length = 0;
 
 				} else {
 					console.warn(`TOCManager, layer with key '${lyk}' has no type, cannot be read.`);
@@ -81,15 +81,31 @@ export class TOCManager {
 			}
 		}
 
-		console.log("TOCManager, layers init finished");
+		console.log("[init RISCO] TOCManager, layers init finished");
 	}
 
 	draw(p_scaleval) {
-		console.log("TOCManager draw, layers: ", this.layers.length, "scale:", p_scaleval);
-		for (let li=0; li < this.layers.length; li++) {
+		//console.log("TOCManager draw, layers: ", this.layers.length, "scale:", p_scaleval);
+		let gfctx;
+		const ckeys = new Set();
+		const canvas_dims = [];
 
+		this.mapctx.canvasmgr.getCanvasDims(canvas_dims);
+
+		for (let li=0; li < this.layers.length; li++) {
+			ckeys.add(this.layers[li].canvasKey);
+		}
+
+		for (const ck of ckeys) {
+			gfctx = this.mapctx.canvasmgr.getDrwCtx(ck, '2d');
+			// console.log("clear ck:", ck);
+			gfctx.clearRect(0, 0, ...canvas_dims); 
+		}
+
+		for (let li=0; li < this.layers.length; li++) {
 			this.layers[li].draw2D(this.mapctx, p_scaleval);
 		}
+
 	}
 
 }

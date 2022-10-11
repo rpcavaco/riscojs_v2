@@ -96,7 +96,7 @@ export class RiscoMapOverlay {
  */
 export class RiscoMapCtx {
 
-	#customization_class;
+	#customization_instance;
 
 	constructor(p_config_var, p_paneldiv) {
 
@@ -129,7 +129,7 @@ export class RiscoMapCtx {
 		this.transformmgr = new Transform2DMgr(this, p_config_var["basic"]);	
 		this.toolmgr = new ToolManager(p_config_var["basic"]);
 		this.tocmgr = new TOCManager(this, p_config_var["layers"], 'canvas');
-		this.#customization_class = null;
+		this.#customization_instance = null;
 
 		// Attach event listeners to this map context panel
 		(function(p_mapctx) {
@@ -149,11 +149,11 @@ export class RiscoMapCtx {
 	/**
 	 * @param {any} p_cclass
 	 */
-	setCustomizationClass(p_cclass) {
-		this.#customization_class = p_cclass;
+	setCustomizationObj(p_instance) {
+		this.#customization_instance = p_instance;
 	}
-	getCustomizationClass() {
-		return this.#customization_class;
+	getCustomizationInstance() {
+		return this.#customization_instance;
 	}
 	/**
 	 * Method resize - to be automatically fired on window resize
@@ -191,31 +191,33 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	}
 
 	draw() {
-		console.log(">>>>>        draw      <<<<<");
+		// console.log(">>>>>        draw      <<<<<");
 		this.tocmgr.draw(this.transformmgr.getReadableCartoScale());
 	}
 
 	transformsChanged(b_dodraw) {
-		console.log(">>>>> transformsChanged <<<<<");
+		// console.log(">>>>> transformsChanged <<<<<");
 		if (b_dodraw) {
 			this.draw();
 		}
 	}
 
 	printMouseCoords(p_x, py) {
-		const cc = this.getCustomizationClass();
-		if (cc) {
-			if (cc.printMouseCoords !== undefined) {
-				cc.printMouseCoords(this, p_x, py);
+		const ci = this.getCustomizationInstance();
+		if (ci) {
+			const mpc = ci.instances["mousecoordsprint"];
+			if (mpc.printMouseCoords !== undefined) {
+				mpc.printMouseCoords(this, p_x, py);
 			}			
 		}
 	}
 
 	removeMouseCoords() {
-		const cc = this.getCustomizationClass();
-		if (cc) {
-			if (cc.removeMouseCoords !== undefined) {
-				cc.removeMouseCoords(this);
+		const ci = this.getCustomizationInstance();
+		if (ci) {
+			const mpc = ci.instances["mousecoordsprint"];
+			if (mpc.printMouseCoords !== undefined) {
+				mpc.removeMouseCoords(this);
 			}			
 		}
 	}	

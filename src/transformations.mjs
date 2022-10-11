@@ -169,7 +169,7 @@ class TransformsQueue {
 		this.transformsQueue = new TransformsQueue(this.mapctx);		
 		this.init();
 
-		console.log("2D transform env prepared");
+		console.log("[init RISCO]  2D transform env prepared");
 
 	}
 	/**
