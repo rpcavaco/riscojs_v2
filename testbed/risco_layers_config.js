@@ -3,7 +3,9 @@ var RISCOJS_LAYERS_CFG = {
 	"layers": {
 		"grat": {
 			"type": "graticule",
-			"separation": 100
+			"separation": 100,
+			"strokeStyle": "white",
+			"lineWidth": 1
 		}
 	}
 
