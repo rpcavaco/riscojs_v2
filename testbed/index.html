@@ -36,11 +36,13 @@
 	</div>
 
 	<script src="risco_basic_config.js"></script>
+	<script src="risco_layers_config.js"></script>
+
 	<script type="module">
 
 		let RISCO_MAP_CFG = {
 			"basic": RISCOJS_BASIC_CFG,
-			"layers": null
+			"layers": RISCOJS_LAYERS_CFG
 		}
 
 		// check corners
@@ -49,18 +51,19 @@
 			let canvasPt = [];
 			let bounds = [];
 			p_mapctx.transformmgr.getTerrainPt([0, 0], terrainPt);
-			console.log("terrainPt for canvas(0,0):", terrainPt);
+			console.log("[TEST] terrainPt for canvas(0,0):", terrainPt);
 
 			p_mapctx.canvasmgr.getCanvasCenter(canvasPt);
 			p_mapctx.transformmgr.getTerrainPt(canvasPt, terrainPt);
-			console.log("terrainPt for canvas center:", terrainPt);
+			console.log("[TEST] terrainPt for canvas center:", terrainPt);
 
 			p_mapctx.canvasmgr.getCanvasDims(canvasPt);
 			p_mapctx.transformmgr.getTerrainPt(canvasPt, terrainPt);
-			console.log("terrainPt for canvas lower right:", terrainPt);
+			console.log("[TEST] canvas dims:", canvasPt);
+			console.log("[TEST] terrainPt for canvas lower right:", terrainPt);
 
 			p_mapctx.getMapBounds(bounds);
-			console.log("map bounds:", bounds);
+			console.log("[TEST] map bounds:", bounds);
 		}
 
 
@@ -80,8 +83,6 @@
 
 		checkPoints(mapctx);
 
-		// Graticule
-		mapctx.tocmgr.appendGraticuleLayer(100);
 	
 
 	</script>

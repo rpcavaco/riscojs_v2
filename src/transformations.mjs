@@ -189,6 +189,11 @@ class TransformsQueue {
 		
 	}	
 
+	getScale() {
+		const ctrans = this.transformsQueue.currentTransform;		
+		return ctrans.getScaling();
+	}
+
 	/**
 	 * Method setCenter
 	 * @param {float} p_cx 
@@ -231,6 +236,7 @@ class TransformsQueue {
 	 * @param {float} out_pt - Out parameter: array of coordinates for a terrain point 
 	 */
 	getTerrainPt(p_scrpt, out_pt) {
+		
 		if (p_scrpt === null || typeof p_scrpt != 'object' || p_scrpt.length != 2) {
 			throw new Error(`Class Transform2DMgr, getTerrainPt, invalid canvas point: ${p_scrpt}`);
 		}
@@ -253,8 +259,9 @@ class TransformsQueue {
 	 * @param {object} p_terrpt - Array of coordinates for a terrain point 
 	 * @param {float} out_pt - Out parameter: array of coordinates for a canvas point 
 	 */
+
 	getCanvasPt(p_terrpt, out_pt) {
-		if (p_scrpt === null || typeof p_scrpt != 'object' || p_scrpt.length != 2) {
+		if (p_terrpt === null || typeof p_terrpt != 'object' || p_terrpt.length != 2) {
 			throw new Error(`Class Transform2DMgr, getTerrainPt, invalid terrain point: ${p_terrpt}`);
 		}
 		
@@ -267,8 +274,8 @@ class TransformsQueue {
 		trans.getMatrix(mx1);
 		vectorMultiply(v1, mx1, v2);
 		
-		out_pt[0] = v2[0];
-		out_pt[1] = v2[1];
+		out_pt[0] = Math.round(v2[0]);
+		out_pt[1] = Math.floor(v2[1]);
 	}	
 
 	getMapBounds(p_canvasdims, out_env) {

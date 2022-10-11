@@ -140,6 +140,10 @@ export class RiscoMapCtx {
 				}); 
 			}
 		})(this);	
+
+		this.draw();
+
+		console.log(`=== End of map context init for '${this.panelwidget.id}' ===`);
 	}
 
 	/**
@@ -184,6 +188,10 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		const canvasDims = [];
 		this.canvasmgr.getCanvasDims(canvasDims);
 		this.transformmgr.getMapBounds(canvasDims, out_env)
+	}
+
+	draw() {
+		this.tocmgr.draw(this.transformmgr.getScale());
 	}
 
 	printMouseCoords(p_x, py) {
