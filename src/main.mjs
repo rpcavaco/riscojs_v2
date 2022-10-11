@@ -127,7 +127,7 @@ export class RiscoMapCtx {
 
 		this.canvasmgr = new HTML5CanvasMgr(this);
 		this.transformmgr = new Transform2DMgr(this, p_config_var["basic"]);	
-		this.toolmgr = new ToolManager();
+		this.toolmgr = new ToolManager(p_config_var["basic"]);
 		this.tocmgr = new TOCManager(this, p_config_var["layers"], 'canvas');
 		this.#customization_class = null;
 
