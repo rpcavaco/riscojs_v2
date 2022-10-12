@@ -121,8 +121,11 @@ class MultiTool extends BaseTool {
 					if (GlobalConst.MAXSCALE !== undefined) {
 						scale = Math.min(scale, GlobalConst.MAXSCALE);
 					}
-					this.wheelscale = scale;
-					console.log(this.wheelscale);
+					if (this.wheelscale != scale) {
+						this.wheelscale = scale;
+						console.log(this.wheelscale);
+						p_mapctx.transformmgr.setScaleFromReadableCartoScale(this.wheelscale, true); // storing transformation
+					}
 					break;
 
 			}
