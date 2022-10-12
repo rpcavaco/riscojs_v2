@@ -197,6 +197,10 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		this.transformmgr.getMapBounds(canvasDims, out_env)
 	}
 
+	getCenter(out_pt) {
+		this.transformmgr.getCenter(out_pt);
+	}
+
 	draw() {
 		// console.info(">>>>>           draw            <<<<<");
 		const sv = this.transformmgr.getReadableCartoScale();

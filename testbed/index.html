@@ -50,6 +50,8 @@
 			let terrainPt = [];
 			let canvasPt = [];
 			let bounds = [];
+			let cen = [];
+
 			p_mapctx.transformmgr.getTerrainPt([0, 0], terrainPt);
 			console.info("[TEST] terrainPt for canvas(0,0):", terrainPt);
 
@@ -64,6 +66,11 @@
 
 			p_mapctx.getMapBounds(bounds);
 			console.info("[TEST] map bounds:", bounds);
+
+			p_mapctx.getCenter(cen);
+			console.info("[TEST] map center:", cen);
+
+
 		}
 
 

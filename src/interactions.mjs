@@ -123,6 +123,7 @@ class MultiTool extends BaseTool {
 					if (this.wheelscale != scale) {
 						this.wheelscale = scale;
 						//console.log(this.wheelscale);
+						p_mapctx.transformmgr.setScaleCenteredAtPoint(this.wheelscale, [p_evt.clientX, p_evt.clientY])
 						p_mapctx.transformmgr.setScaleFromReadableCartoScale(this.wheelscale, true); // storing transformation
 					}
 					break;

@@ -253,14 +253,15 @@ class TransformsQueue {
 	setCenter(p_cx, p_cy, opt_do_store) {
 
 		if (p_cx === null || isNaN(p_cx)) {
-			throw new Error("Class Transform2DMgr, setCenter, invalid value was passed for cx");
+			throw new Error("Class Transform2DMgr, setCenter, invalid value was passed for cx", p_cx);
 		}
 		if (p_cy === null || isNaN(p_cy)) {
-			throw new Error("Class Transform2DMgr, setCenter, invalid value was passed for cy");
+			throw new Error("Class Transform2DMgr, setCenter, invalid value was passed for cy", p_cy);
 		}
 
-		let ox, oy, ctrans = this.transformsQueue.currentTransform;		
-		var k, hwidth, hheight, fheight, cdims = [];
+		let ox, oy;
+		const ctrans = this.transformsQueue.currentTransform;		
+		let k, hwidth, hheight, fheight, cdims = [];
 
 		this.mapctx.canvasmgr.getCanvasDims(cdims);
 		k = ctrans.getScalingFactor();
@@ -282,6 +283,49 @@ class TransformsQueue {
 		}
 
 	}	
+
+	getCenter(out_ret) {
+
+		out_ret.length = 2;
+
+		let k, trpt = [], cdims = [], hwidth, hheight, fheight, ox, oy;
+
+		this.mapctx.canvasmgr.getCanvasDims(cdims);
+
+		const ctrans = this.transformsQueue.currentTransform;	
+		k = ctrans.getScalingFactor();	
+
+		hwidth = (cdims[0] / 2.0) / k;
+		fheight = cdims[1] / k;
+		hheight = fheight / 2.0;
+
+		ctrans.getTranslating(trpt);
+		ox = -trpt[0];
+		oy = -trpt[1] - fheight;
+
+		out_ret[0] = ox + hwidth;
+		out_ret[1] = oy + hheight;
+
+
+	}
+
+	setScaleCenteredAtPoint(p_scaleval, p_screen_pt) {
+
+		const cen= [], terr_pt_from = [], terr_pt_to = [], newpt = [];
+
+		this.getTerrainPt(p_screen_pt, terr_pt_from);
+
+		this.setScaleFromReadableCartoScale(p_scaleval, false);
+
+		this.getTerrainPt(p_screen_pt, terr_pt_to);
+		this.getCenter(cen);
+
+		newpt.length = 2;
+		newpt[0] = cen[0] + terr_pt_from[0] - terr_pt_to[0];
+		newpt[1] = cen[1] + terr_pt_from[1] - terr_pt_to[1];	
+
+		this.setCenter(newpt[0], newpt[1], true);		
+	}
 	
 	/**
 	 * Method getTerrainPt
