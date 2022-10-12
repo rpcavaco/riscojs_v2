@@ -89,7 +89,7 @@ export class MapAffineTransformation extends MapAffineTransformationMxColl {
 		let ret = Math.round(1000.0 / (getCartoScaling(this.scaling) * p_mmpd));
 		return ret;
 	}
-	setScaleFromCartoScale(p_scaleval, p_mmpd) {		
+	setScaleFromReadableCartoScale(p_scaleval, p_mmpd) {		
 		this.setScaling(1000.0 / (p_scaleval * p_mmpd));
 	}
 }
@@ -182,26 +182,26 @@ class TransformsQueue {
 			throw new Error("Class Transform2DMgr, init, configuration JSON dictionary contains no 'scale' value");
 		}
 
-		this.setScaleFromCartoScale(this.mapctx_config_var["scale"], false);
+		this.setScaleFromReadableCartoScale(this.mapctx_config_var["scale"], false);
 		this.setCenter(...this.mapctx_config_var["terrain_center"], true);
 
 	}
 	/**
-	 * Method setScaleFromCartoScale
+	 * Method setScaleFromReadableCartoScale
 	 * @param {float} p_scale 
 	 */
-	 setScaleFromCartoScale(p_scale, opt_do_store) {
+	 setScaleFromReadableCartoScale(p_scale, opt_do_store) {
 
 		if (Math.abs(this.getReadableCartoScale() - p_scale) <= GlobalConst.MINSCALEDIFF) { 
 			return;
 		}
 
 		if (p_scale === null || isNaN(p_scale)) {
-			throw new Error("Class Transform2DMgr, setScaleFromCartoScale, invalid value was passed for scale");
+			throw new Error("Class Transform2DMgr, setScaleFromReadableCartoScale, invalid value was passed for scale");
 		}
 		let vscale, p1_scale = parseFloat(p_scale);
 		if (p1_scale <= 0) {
-			throw new Error("Class Transform2DMgr, setScaleFromCartoScale, invalid negative or zero value was passed for scale");
+			throw new Error("Class Transform2DMgr, setScaleFromReadableCartoScale, invalid negative or zero value was passed for scale");
 		}
 		
 		// Constrain value
@@ -232,7 +232,7 @@ class TransformsQueue {
 		}
 		
 		const ctrans = this.transformsQueue.currentTransform;	
-		ctrans.setScaleFromCartoScale(vscale, GlobalConst.MMPD);
+		ctrans.setScaleFromReadableCartoScale(vscale, GlobalConst.MMPD);
 
 		if (opt_do_store) {
 			this.transformsQueue.store();
