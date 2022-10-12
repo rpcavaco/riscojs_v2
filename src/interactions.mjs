@@ -45,6 +45,7 @@ class MultiTool extends BaseTool {
 	constructor() {
 		super(true, true); // part of general toggle group, default in toogle
 		this.start_screen = null;
+		this.imgs_dict={};
 	}
 
 	finishPan(p_transfmgr, p_x, p_y, opt_origin) {
@@ -63,13 +64,11 @@ class MultiTool extends BaseTool {
 		}
 	}
 
-	/*
-
-	static transientPan(p_mapctx, p_x, p_y, p_start_terrain, p_start_screen) {
+	transientPan(p_canvasmgr, p_x, p_y, p_start_terrain, p_start_screen) {
 
 		const terrain_pt=[];
 
-		p_mapctx.transformmgr.getTerrainPt([p_x, p_y], terrain_pt);	
+		p_mapctx.canvasmgr .getTerrainPt([p_x, p_y], terrain_pt);	
 
 		let deltax = p_start_terrain[0] - terrain_pt[0];
 		let deltay = p_start_terrain[1] - terrain_pt[1];
@@ -86,7 +85,7 @@ class MultiTool extends BaseTool {
 			// this.redraw(true);
 		}
 
-	}	*/
+	}
 
 	onEvent(p_mapctx, p_evt) {
 
@@ -100,7 +99,7 @@ class MultiTool extends BaseTool {
 					if (this.start_screen == null) {
 						if ((p_evt.buttons & 1) == 1) {						
 							this.start_screen = [p_evt.clientX, p_evt.clientY];		
-							// console.log("start_screen:", this.start_screen);					
+							p_mapctx.canvasmgr.getImages(this.imgs_dict);
 							ret = false;
 						}
 					}
@@ -116,17 +115,15 @@ class MultiTool extends BaseTool {
 					}
 					break;
 
-				/*
 				case 'mousemove':
-					if (this.started) {
+					if (this.start_screen != null) {
+						console.log(p_evt.buttons);
 						if ((p_evt.buttons & 1) == 1) {
-
-							this.last_pt = [p_evt.clientX, p_evt.clientY];
-
+							p_mapctx.canvasmgr.putImages(this.imgs_dict, [p_evt.clientX-this.start_screen[0], p_evt.clientY-this.start_screen[1]]);
 							ret = false;
 						}
 					}
-					break; */
+					break;
 			}
 		} catch(e) {
 			this.start_screen = null;

@@ -96,9 +96,32 @@
 		if (this.canvases[p_canvaskey] === undefined) {
 			throw new Error(`Class HTML5CanvasMgr, getDrawingContext, found no canvas for ${p_canvaskey}`);
 		}
-
-		return this.canvases[p_canvaskey].getContext(opt_dims);
+		let dims = '2d';
+		if (opt_dims) {
+			dims = opt_dims;
+		}
+		return this.canvases[p_canvaskey].getContext(dims);
 	}	
+
+	getImages(out_dict) {
+		const canvaskeys = ['base', 'normal', 'temporary'], dims=[];
+		this.getCanvasDims(dims);
+		for (let ctx, i=0; i<canvaskeys.length; i++) {
+			ctx = this.canvases[canvaskeys[i]].getContext('2d');
+			out_dict[canvaskeys[i]] = ctx.getImageData(0, 0, ...dims);
+		}
+	}
+
+	putImages(p_imgdata_dict, p_ins_scrcoords) {
+		let ctx;
+		const dims=[];
+		this.getCanvasDims(dims);
+		for (const key in p_imgdata_dict) {
+			ctx = this.canvases[key].getContext('2d');
+			ctx.clearRect(0, 0, ...dims); 
+			ctx.putImageData(p_imgdata_dict[key], ...p_ins_scrcoords);
+		}
+	}
 
 }	
 
