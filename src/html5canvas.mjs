@@ -47,7 +47,7 @@
 
 		this.init();
 
-		console.log("[init RISCO] canvases created");
+		console.info("[init RISCO] canvases created");
 	}
 
 	/**

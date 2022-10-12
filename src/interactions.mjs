@@ -35,7 +35,7 @@ class DefaultTool extends BaseTool {
 			p_mapctx.printMouseCoords(p_evt.clientX, p_evt.clientY);
 		}
 		if (p_evt.type == 'mouseout' || p_evt.type == "mouseleave") {
-			p_mapctx.removeMouseCoords();
+			p_mapctx.removePrint("mousecoordsprint");
 		}
 		
 	}	
@@ -100,7 +100,6 @@ class MultiTool extends BaseTool {
 
 				case 'mousemove':
 					if (this.start_screen != null) {
-						console.log(p_evt.buttons);
 						if ((p_evt.buttons & 1) == 1) {
 							p_mapctx.canvasmgr.putImages(this.imgs_dict, [p_evt.clientX-this.start_screen[0], p_evt.clientY-this.start_screen[1]]);
 							ret = false;
@@ -123,7 +122,7 @@ class MultiTool extends BaseTool {
 					}
 					if (this.wheelscale != scale) {
 						this.wheelscale = scale;
-						console.log(this.wheelscale);
+						//console.log(this.wheelscale);
 						p_mapctx.transformmgr.setScaleFromReadableCartoScale(this.wheelscale, true); // storing transformation
 					}
 					break;
@@ -179,7 +178,7 @@ export class ToolManager {
 		if (existing_classnames.indexOf(p_toolinstance.constructor.name) < 0) { 
 			this.maptools.push(p_toolinstance);
 		} else {
-			console.warn(`Class ToolManager, addTool, foiled attempt to add duplicate instance of: ${p_toolinstance.constructor.name}`);
+			console.error(`Class ToolManager, addTool, foiled attempt to add duplicate instance of: ${p_toolinstance.constructor.name}`);
 		}	
 	}
 

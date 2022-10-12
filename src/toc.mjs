@@ -68,20 +68,20 @@ export class TOCManager {
 					}
 
 					this.layers.push(currentLayer[0]);
-					console.log(`[init RISCO] TOCManager, layer '${lyk}' (${currentLayer[0].constructor.name}) prepared`);
+					console.info(`[init RISCO] TOCManager, layer '${lyk}' (${currentLayer[0].constructor.name}) prepared`);
 
 					currentLayer.length = 0;
 
 				} else {
-					console.warn(`TOCManager, layer with key '${lyk}' has no type, cannot be read.`);
+					console.error(`TOCManager, layer with key '${lyk}' has no type, cannot be read.`);
 				}
 
 			} else {
-				console.warn(`TOCManager, no layer with key '${lyk}' found in config.`);
+				console.error(`TOCManager, no layer with key '${lyk}' found in config.`);
 			}
 		}
 
-		console.log("[init RISCO] TOCManager, layers init finished");
+		console.info("[init RISCO] TOCManager, layers init finished");
 	}
 
 	draw(p_scaleval) {

@@ -50,7 +50,7 @@ export class RiscoMapOverlay {
 	 * @param {string} p_ctx_id - Identification of this context
 	 * @returns - the context just created
 	 */
-	newMapCtx(p_config_var, p_ctx_id) {
+	newMapCtx(p_config_var, p_ctx_id, b_wait_for_customization_avail) {
 
 		if (p_config_var == null) {
 			throw new Error("Class RiscoMapOverlay, newMapCtx, null config_var");
@@ -59,7 +59,7 @@ export class RiscoMapOverlay {
 			throw new Error("Class RiscoMapOverlay, newMapCtx, null context id");
 		}	
 
-		this.mapcontexts[p_ctx_id] = new RiscoMapCtx(p_config_var, this.panelwidget);
+		this.mapcontexts[p_ctx_id] = new RiscoMapCtx(p_config_var, this.panelwidget, b_wait_for_customization_avail);
 
 		return this.mapcontexts[p_ctx_id];
 	}
@@ -78,7 +78,7 @@ export class RiscoMapOverlay {
 		if (this.mapcontexts[p_ctx_id] !== undefined) {
 			ret = this.mapcontexts[p_ctx_id];
 		} else {
-			console.warn(`context with id '${p_ctx_id}' not in this map overlay mgr (widget id:'${this.panelwidget.id}'`);
+			console.error(`context with id '${p_ctx_id}' not in this map overlay mgr (widget id:'${this.panelwidget.id}'`);
 		}
 		return ret;
 	}	
@@ -98,7 +98,9 @@ export class RiscoMapCtx {
 
 	#customization_instance;
 
-	constructor(p_config_var, p_paneldiv) {
+	constructor(p_config_var, p_paneldiv, b_wait_for_customization_avail) {
+
+		this.wait_for_customization_avail = b_wait_for_customization_avail;
 
 		if (p_config_var == null) {
 			throw new Error("Class RiscoMapCtx, null config_var");
@@ -141,9 +143,11 @@ export class RiscoMapCtx {
 			}
 		})(this);	
 
-		this.draw();
+		if (!this.wait_for_customization_avail) {
+			this.draw();
+		}
 
-		console.log(`=== End of map context init for '${this.panelwidget.id}' ===`);
+		console.info(`=== End of map context init for '${this.panelwidget.id}' ===`);
 	}
 
 	/**
@@ -151,6 +155,9 @@ export class RiscoMapCtx {
 	 */
 	setCustomizationObj(p_instance) {
 		this.#customization_instance = p_instance;
+		if (this.wait_for_customization_avail) {
+			this.draw();
+		}		
 	}
 	getCustomizationInstance() {
 		return this.#customization_instance;
@@ -191,12 +198,14 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	}
 
 	draw() {
-		// console.log(">>>>>        draw      <<<<<");
-		this.tocmgr.draw(this.transformmgr.getReadableCartoScale());
+		// console.info(">>>>>           draw            <<<<<");
+		const sv = this.transformmgr.getReadableCartoScale();
+		this.printScale(sv);
+		this.tocmgr.draw(sv);
 	}
 
 	transformsChanged(b_dodraw) {
-		// console.log(">>>>> transformsChanged <<<<<");
+		// console.info(">>>>>     transformsChanged     <<<<<");
 		if (b_dodraw) {
 			this.draw();
 		}
@@ -206,18 +215,33 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		const ci = this.getCustomizationInstance();
 		if (ci) {
 			const mpc = ci.instances["mousecoordsprint"];
-			if (mpc.printMouseCoords !== undefined) {
-				mpc.printMouseCoords(this, p_x, py);
+			if (mpc.print !== undefined) {
+				mpc.print(this, p_x, py);
 			}			
 		}
 	}
 
-	removeMouseCoords() {
+	printScale(p_scaleval) {
 		const ci = this.getCustomizationInstance();
 		if (ci) {
-			const mpc = ci.instances["mousecoordsprint"];
-			if (mpc.printMouseCoords !== undefined) {
-				mpc.removeMouseCoords(this);
+			const mpc = ci.instances["mapscaleprint"];
+			if (mpc.print !== undefined) {
+				mpc.print(this, p_scaleval);
+			} else {
+				console.error(`mapscaleprint customization unavailable, cannot print scale value of ${p_scaleval}`);
+
+			}	
+		} else {
+			console.error("printScale, no map customizations available");
+		}
+	}
+
+	removePrint(p_type) {
+		const ci = this.getCustomizationInstance();
+		if (ci) {
+			const mpc = ci.instances[p_type];
+			if (mpc.remove !== undefined) {
+				mpc.remove(this);
 			}			
 		}
 	}	

@@ -49,7 +49,7 @@ export class MapAffineTransformation extends MapAffineTransformationMxColl {
 	logMx() {
 		let outmx = [];
 		this.getMatrix(outmx);
-		console.log("logMx:", outmx);
+		console.info("logMx:", outmx);
 	}
 	getInvMatrix(out_m) {
 		let tmp = [];
@@ -59,7 +59,7 @@ export class MapAffineTransformation extends MapAffineTransformationMxColl {
 	setScaling(p_scalingf) {
 		scaling(p_scalingf, -p_scalingf, this.scaling);
 		if (this.trace) {
-			console.log("setScaling "+p_scalingf+" 1:"+this.getReadableCartoScale(GlobalConst.MMPD));
+			console.info("setScaling "+p_scalingf+" 1:"+this.getReadableCartoScale(GlobalConst.MMPD));
 		}
 	}
 	setTranslating(p_tx, p_ty) {
@@ -169,7 +169,7 @@ class TransformsQueue {
 		this.transformsQueue = new TransformsQueue(this.mapctx);		
 		this.init();
 
-		console.log("[init RISCO]  2D transform env prepared");
+		console.info("[init RISCO]  2D transform env prepared");
 
 	}
 	/**
