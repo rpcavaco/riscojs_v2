@@ -182,35 +182,39 @@ class TransformsQueue {
 			throw new Error("Class Transform2DMgr, init, configuration JSON dictionary contains no 'scale' value");
 		}
 
-		this.setScale(this.mapctx_config_var["scale"], false);
+		this.setScaleFromCartoScale(this.mapctx_config_var["scale"], false);
 		this.setCenter(...this.mapctx_config_var["terrain_center"], true);
 
 	}
 	/**
-	 * Method setScale
+	 * Method setScaleFromCartoScale
 	 * @param {float} p_scale 
 	 */
-	setScale(p_scale, opt_do_store) {
+	 setScaleFromCartoScale(p_scale, opt_do_store) {
 
 		if (Math.abs(this.getReadableCartoScale() - p_scale) <= GlobalConst.MINSCALEDIFF) { 
 			return;
 		}
 
 		if (p_scale === null || isNaN(p_scale)) {
-			throw new Error("Class Transform2DMgr, setScale, invalid value was passed for scale");
+			throw new Error("Class Transform2DMgr, setScaleFromCartoScale, invalid value was passed for scale");
 		}
 		let vscale, p1_scale = parseFloat(p_scale);
 		if (p1_scale <= 0) {
-			throw new Error("Class Transform2DMgr, setScale, invalid negative or zero value was passed for scale");
+			throw new Error("Class Transform2DMgr, setScaleFromCartoScale, invalid negative or zero value was passed for scale");
 		}
 		
-		// Arredondar
-		if (p1_scale < GlobalConst.MINSCALE) {
-			vscale = GlobalConst.MINSCALE;
+		// Constrain value
+		if (GlobalConst.MINSCALE !== undefined) {
+			vscale = Math.max(GlobalConst.MINSCALE, p1_scale);
 		} else {
 			vscale = p1_scale;
 		}
+		if (GlobalConst.MAXSCALE !== undefined) {
+			vscale = Math.min(vscale, GlobalConst.MAXSCALE);
+		}
 		
+		// Round
 		if (vscale < 250) {
 			vscale = parseInt(Math.round(vscale));
 		} else if (vscale < 500) {

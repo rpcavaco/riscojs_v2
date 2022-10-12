@@ -133,7 +133,7 @@ export class RiscoMapCtx {
 
 		// Attach event listeners to this map context panel
 		(function(p_mapctx) {
-			const evttypes = ["mouseup", "mousedown", "mousemove", "mouseover", "mouseout", "mouseleave"];
+			const evttypes = ["mouseup", "mousedown", "mousemove", "mouseover", "mouseout", "mouseleave", "wheel"];
 			for (let i=0; i<evttypes.length; i++) {
 				p_mapctx.panelwidget.addEventListener(evttypes[i], function(e) { 
 					p_mapctx.onEvent(e);
