@@ -86,14 +86,154 @@ class CanvasGraticuleLayer extends CanvasVectorLayer {
 }
 
 /*
-class RasterLayer extends Layer {
+class CanvasSplitterLayer extends CanvasVectorLayer {
 
-	//super(false);
+	divnumh;
+	constructor(p_divnum_w, p_divnum_h) {
+		super();
+	}
+	* items(p_mapctxt) {
+
+	}
+
+	draw2D(p_mapctxt, p_scaleval) {
+
+
+	}	
 }
 */
 
+class CanvasRasterLayer extends Layer {
+
+	canvasKey = 'base';
+	image_filter = "none";
+	constructor() {
+		super();
+	}	
+}
+
+class CanvasOGCRasterLayer extends CanvasRasterLayer {
+
+	url; // get capabilities or URL missing getcapabilities command
+	#servmetadata;
+	#metadata_or_root_url;
+	constructor() { 
+		super();
+	}
+
+	init() {
+
+		if (this.url == null || this.url.length < 1) {
+			throw new Error("Class CanvasOGCRasterLayer, null or empty p_metadata_or_root_url");
+		}
+
+		this.#servmetadata = {};
+		this.#metadata_or_root_url = new URL(this.url);
+
+		if (this.#metadata_or_root_url) {
+			const sp = this.#metadata_or_root_url.searchParams;
+			const checkitems = {
+				"service_wms": false,
+				"req_getcapabilities": false
+			}
+
+			for (const [key, value] of sp.entries()) {
+				if (key.toLowerCase() == 'service' && value.toLowerCase() == 'wms') {
+					checkitems["service_wms"] = true;
+				}
+				if (key.toLowerCase() == 'request' && value.toLowerCase() == 'getcapabilities') {
+					checkitems["req_getcapabilities"] = true;
+				}
+			}
+
+			if (!checkitems["service_wms"]) {
+				sp.append('service', 'wms');
+			}
+			if (!checkitems["req_getcapabilities"]) {
+				sp.append('request', 'getcapabilities');
+			}
+		} 
+		
+		const that = this;
+
+		fetch(this.#metadata_or_root_url.toString())
+			.then(response => response.text())
+			.then(
+				function(responsetext, servmetadata) {
+
+					const parser = new DOMParser();
+					//const ret = response.json();
+					const xmlDoc = parser.parseFromString(responsetext, "text/xml");
+
+					const srvc = xmlDoc.getElementsByTagName("Service")[0];
+					let velem = srvc.getElementsByTagName("MaxWidth")[0].textContent;
+
+					that.#servmetadata["maxw"] = velem;
+					velem = srvc.getElementsByTagName("MaxHeight")[0].textContent;
+					that.#servmetadata["maxh"] = velem;
+
+					that.#servmetadata["formats"] = [];
+
+					const getmap = xmlDoc.querySelector("Capability Request GetMap");
+					velem = getmap.getElementsByTagName("Format");
+					for (let fi=0; fi<velem.length; fi++) {
+						that.#servmetadata["formats"].push(velem[fi].textContent);
+					}
+
+					velem = getmap.querySelector("DCPType HTTP Get OnlineResource");
+					that.#servmetadata["getmapurl"] = new URL(velem.getAttributeNS("http://www.w3.org/1999/xlink", 'href'));
+
+					const lyrs = xmlDoc.querySelectorAll("Capability Layer");
+					that.#servmetadata["layers"] = {}
+
+					let lname, ly;
+					for (let li=0; li<lyrs.length; li++) {
+
+						ly = lyrs[li];
+						lname = ly.querySelector("Name").textContent;
+						that.#servmetadata["layers"][lname] = {}
+						velem = ly.querySelector("Abstract")
+						if (velem) {
+							that.#servmetadata["layers"][lname]["abstract"] = velem.textContent;
+						}
+						
+						velem = ly.querySelectorAll("CRS");
+						if (velem.length>0) {
+							that.#servmetadata["layers"][lname]["crs"] = [];
+							for (let crsi=0; crsi<velem.length; crsi++) {
+								that.#servmetadata["layers"][lname]["crs"].push(velem[crsi].textContent);
+							}							
+						}
+
+					}
+				}
+			)
+	}
+
+	draw2D () {
+		console.log("drawing ...")
+	}
+	/*readMetadata() {
+		
+		fetch(,
+			
+		);
+	}*/
+
+}
+
+
+class CanvasWMSLayer extends CanvasOGCRasterLayer {
+
+	constructor(p_metadata_url) {
+		super(p_metadata_url);
+	}
+
+}
+
 const canvas_layer_classes = {
-    "graticule": CanvasGraticuleLayer
+    "graticule": CanvasGraticuleLayer,
+    "wms": CanvasWMSLayer
 };
 
 export class DynamicCanvasLayer {

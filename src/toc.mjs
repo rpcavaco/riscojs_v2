@@ -34,20 +34,27 @@ export class TOCManager {
 
 					switch (p_configvar.layers[lyk]["type"]) {
 					
+						case "wms":
 						case "graticule":
 
 							if (this.mode == 'canvas')	{
-								currentLayer.push(new DynamicCanvasLayer("graticule"));
+								currentLayer.push(new DynamicCanvasLayer(p_configvar.layers[lyk]["type"]));
 							}
 							break;
-							
+
+								
 					}
 
 					if (currentLayer.length == 0) {
-						throw new Error(`TOCManager, layer '${lyk}' type not known: '${p_configvar.lorder[lyk]["type"]}'`);
+						throw new Error(`TOCManager, layer '${lyk}' type not known: '${p_configvar.layers[lyk]["type"]}'`);
 					}
 
-					const scaneables = [currentLayer[0], currentLayer[0].default_stroke_symbol];
+					const scaneables = [currentLayer[0]];
+					
+					if (currentLayer[0].default_stroke_symbol !== undefined) {
+						scaneables.push(currentLayer[0].default_stroke_symbol);
+					}
+
 					for (let si=0; si < scaneables.length; si++) {
 
 						items = Object.keys(scaneables[si]);
@@ -66,6 +73,12 @@ export class TOCManager {
 						}						
 
 					}
+
+					if (currentLayer[0].init !== undefined) {
+						currentLayer[0].init();
+					}
+
+					currentLayer[0].setKey(lyk);
 
 					this.layers.push(currentLayer[0]);
 					console.info(`[init RISCO] TOCManager, layer '${lyk}' (${currentLayer[0].constructor.name}) prepared`);
@@ -103,6 +116,7 @@ export class TOCManager {
 		}
 
 		for (let li=0; li < this.layers.length; li++) {
+			console.log(".. drawing lyr", this.layers[li].getKey());
 			this.layers[li].draw2D(this.mapctx, p_scaleval);
 		}
 
