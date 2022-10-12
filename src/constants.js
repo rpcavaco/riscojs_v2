@@ -1,5 +1,8 @@
 
 var GlobalConst = {
+
+	GENERALDEBUG: false,
+
 	MMPD: 25.4 / 96.0,
 	ACCPTBLE_LYRREDRAW_DELAY_MSEC: 10,
 	MAPCHANGE_TIMEOUT_MSEC: 8000,
@@ -8,7 +11,6 @@ var GlobalConst = {
 	MAXSCALE: 1000000,
 	MINSCALEDIFF: 1,
 	MAXLAYERCOUNT: 100
-	
 };
 
 export {GlobalConst}

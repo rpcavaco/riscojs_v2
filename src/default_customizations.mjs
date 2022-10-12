@@ -1,5 +1,5 @@
 
-
+import {I18n} from './i18n.mjs';
 
 class MapPrintInRect {
 
@@ -10,6 +10,10 @@ class MapPrintInRect {
 	fillStyleBack = "rgb(216, 216, 216)"; 
 	fillStyleFront = "rgb(65, 65, 65)"; 
 	font = "8pt Arial ";
+
+	constructor() {
+		this.i18n = new I18n();
+	}
 
 	print(p_mapctx, p_x, py) {
 		// To be implemented
@@ -97,7 +101,7 @@ class MapScalePrint extends MapPrintInRect {
 			ctx.fillStyle = this.fillStyleFront;
 			ctx.font = this.font;
 
-			ctx.fillText("Escala 1:"+p_scaleval, this.right-this.boxw+12, this.bottom-6);		
+			ctx.fillText(this.i18n.msg('ESCL', true) + " 1:"+p_scaleval, this.right-this.boxw+12, this.bottom-6);		
 
 		} catch(e) {
 			throw e;
