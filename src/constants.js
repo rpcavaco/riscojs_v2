@@ -6,9 +6,11 @@ var SUBKEYS = {
 
 // 'layers' and other keys in SUBKEYS are group keys: whenever DEBUG: "LAYERS", code marked with debug for "WMS" is also debugged
 
+// DISENG_WHEEL - "disengage wheel" desliga a mousewheel das respetivas acoes, apenas gera msgs de debug
+
 var GlobalConst = {
 
-	DEBUG: "LAYERS",    // ALL, I18N, LAYERS, WMS
+	DEBUG: "WMS",    // ALL, I18N, LAYERS, WMS, DISENG_WHEEL
 
 	MMPD: 25.4 / 96.0,
 	ACCPTBLE_LYRREDRAW_DELAY_MSEC: 10,
@@ -18,6 +20,7 @@ var GlobalConst = {
 	MAXSCALE: 1000000,
 	MINSCALEDIFF: 1,
 	MAXLAYERCOUNT: 100,
+	MOUSEWHEEL_THROTTLE: 100,  // millisecs, interval between wheel events must span more than this interval for each event to be listened
 
 	getDebug: function(p_dbgkey) {
 		let ret = false, all = false;

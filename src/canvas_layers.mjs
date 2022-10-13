@@ -429,20 +429,23 @@ class CanvasWMSLayer extends CanvasRasterLayer {
 
 		const img = new Image();
 		img.crossOrigin = "anonymous";
-		img.onload = function() {
+		(function(pp_mapctxt, p_this, p_img, p_dims) {
+			p_img.onload = function() {
 
-			const gfctx = p_mapctxt.canvasmgr.getDrwCtx('base');
-			gfctx.save();
-			try {
-				gfctx.clearRect(0, 0, ...dims);
-				gfctx.drawImage(img, 0, 0);
-			} catch(e) {
-				throw e;
-			} finally {
-				gfctx.restore();
+				const gfctx = pp_mapctxt.canvasmgr.getDrwCtx(p_this.canvasKey);
+				gfctx.save();
+				try {
+					gfctx.clearRect(0, 0, ...p_dims);
+					gfctx.drawImage(p_img, 0, 0);
+				} catch(e) {
+					throw e;
+				} finally {
+					gfctx.restore();
+				}
+	
 			}
+		})(p_mapctxt, this, img, dims)
 
-		}
 		img.src = getmapurl;
 
 

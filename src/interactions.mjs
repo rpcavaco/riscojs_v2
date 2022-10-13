@@ -4,6 +4,7 @@ import {GlobalConst} from './constants.js';
 export class BaseTool {
 
 	enabled = true;
+	start_time = null;
 	constructor(p_joinstogglegroup, opt_defaultintoggle) {
 		this.joinstogglegroup = p_joinstogglegroup;
 		if (this.joinstogglegroup) {
@@ -109,10 +110,24 @@ class MultiTool extends BaseTool {
 					break;
 
 				case 'wheel':
+
+					if (this.start_time == null) {
+						this.start_time = new Date().getTime();
+					}
+
 					if (this.wheelscale == null) {
 						this.wheelscale = p_mapctx.transformmgr.getReadableCartoScale();
 					}
-					scale = this.wheelscale + (p_evt.deltaY * 10);
+
+					if (this.wheelscale < 700) {
+						scale = this.wheelscale + (p_evt.deltaY * 1.2);
+					} else if (this.wheelscale < 1000) {
+						scale = this.wheelscale + (p_evt.deltaY * 2);
+					} else if (this.wheelscale < 2000) {
+						scale = this.wheelscale + (p_evt.deltaY * 4);
+					} else {
+						scale = this.wheelscale + (p_evt.deltaY * 10);
+					}
 
 					if (GlobalConst.MINSCALE !== undefined) {
 						scale = Math.max(GlobalConst.MINSCALE, scale);
@@ -123,8 +138,16 @@ class MultiTool extends BaseTool {
 					if (this.wheelscale != scale) {
 						this.wheelscale = scale;
 						//console.log(this.wheelscale);
-						p_mapctx.transformmgr.setScaleCenteredAtPoint(this.wheelscale, [p_evt.clientX, p_evt.clientY])
-						p_mapctx.transformmgr.setScaleFromReadableCartoScale(this.wheelscale, true); // storing transformation
+						const lap = new Date().getTime();
+						if (GlobalConst.getDebug("DISENG_WHEEL")) {
+							console.log("[DBG:DISENG_WHEEL] scale:", this.wheelscale, "time:", lap - this.start_time);
+						} else {
+							if ((lap - this.start_time) > GlobalConst.MOUSEWHEEL_THROTTLE) {
+								p_mapctx.transformmgr.setScaleCenteredAtPoint(this.wheelscale, [p_evt.clientX, p_evt.clientY])
+								p_mapctx.transformmgr.setScaleFromReadableCartoScale(this.wheelscale, true); // storing transformation
+							}
+						}
+						this.start_time = lap;
 					}
 					break;
 
