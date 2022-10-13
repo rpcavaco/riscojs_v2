@@ -4,11 +4,11 @@ import {DynamicCanvasLayer} from './canvas_layers.mjs';
 
 export class TOCManager {
 	
-	constructor(p_mapctx, p_layers_config, p_mode) {
+	constructor(p_mapctx, p_mode) {
 		this.layers = [];
 		this.mode = p_mode;  // 'canvas', para já
 		this.mapctx = p_mapctx;
-		this.initLayersFromConfig(p_layers_config);
+		this.initLayersFromConfig();
 	}
 	static readLayerConfigItem(p_lyrob, p_configvar, p_layerkey, p_itemname) {
 		if (p_configvar.lorder[p_layerkey][p_itemname] !== undefined) {	
@@ -16,29 +16,32 @@ export class TOCManager {
 		}
 	}
 
-	initLayersFromConfig(p_configvar) {
+	initLayersFromConfig() {
 
 		let currentLayer = [];
 		let items;
 
+		const cfgvar = this.mapctx.cfgvar;
+
 		this.layers.length = 0;
+		const layerscfg = cfgvar["layers"];
 
-		for (let lyk, i=0; i < p_configvar.lorder.length; i++) {
+		for (let lyk, i=0; i < layerscfg.lorder.length; i++) {
 
 
-			lyk = p_configvar.lorder[i];
-			if (p_configvar.layers[lyk] !== undefined) {
+			lyk = layerscfg.lorder[i];
+			if (layerscfg.layers[lyk] !== undefined) {
 
 					
-				if (p_configvar.layers[lyk]["type"] !== undefined) {
+				if (layerscfg.layers[lyk]["type"] !== undefined) {
 
-					switch (p_configvar.layers[lyk]["type"]) {
+					switch (layerscfg.layers[lyk]["type"]) {
 					
 						case "wms":
 						case "graticule":
 
 							if (this.mode == 'canvas')	{
-								currentLayer.push(new DynamicCanvasLayer(p_configvar.layers[lyk]["type"]));
+								currentLayer.push(new DynamicCanvasLayer(layerscfg.layers[lyk]["type"]));
 							}
 							break;
 
@@ -46,7 +49,7 @@ export class TOCManager {
 					}
 
 					if (currentLayer.length == 0) {
-						throw new Error(`TOCManager, layer '${lyk}' type not known: '${p_configvar.layers[lyk]["type"]}'`);
+						throw new Error(`TOCManager, layer '${lyk}' type not known: '${layerscfg.layers[lyk]["type"]}'`);
 					}
 
 					const scaneables = [currentLayer[0]];
@@ -55,30 +58,42 @@ export class TOCManager {
 						scaneables.push(currentLayer[0].default_stroke_symbol);
 					}
 
-					for (let si=0; si < scaneables.length; si++) {
+					try {
+						for (let si=0; si < scaneables.length; si++) {
 
-						items = Object.keys(scaneables[si]);
-						for (let ii=0; ii < items.length; ii++) {
+							items = Object.keys(scaneables[si]);
+							for (let ii=0; ii < items.length; ii++) {
+								
+								if (layerscfg.layers[lyk][items[ii]] !== undefined) {
+									scaneables[si][items[ii]] = layerscfg.layers[lyk][items[ii]];
+								} else {
+									// item has no default value
+
+									if (scaneables[si][items[ii]] == null) {
+										currentLayer[0].missing_mandatory_configs.push(items[ii]);
+									}
 							
-							if (p_configvar.layers[lyk][items[ii]] !== undefined) {
-								scaneables[si][items[ii]] = p_configvar.layers[lyk][items[ii]];
-							} else {
-								// item has no default value
-								if (scaneables[si][items[ii]] == null) {
-									throw new Error(`TOCManager, layer '${lyk}' config is missing mandatory item '${items[ii]}'`);
 								}
+							}	
+							
+							if (currentLayer[0].missing_mandatory_configs.length > 0) {
+								throw new Error(`TOCManager, layer '${lyk}' config is missing mandatory items: '${currentLayer[0].missing_mandatory_configs}'`);
 							}
 	
-							// console.log("item:", items[ii], currentLayer[items[ii]], currentLayer[items[ii]] === undefined, currentLayer[items[ii]] == null);
-						}						
-
+						}
+					} catch(e) {
+						console.error(e);
+					}
+					
+					try {
+						if (currentLayer[0].init !== undefined) {
+							currentLayer[0].init(this.mapctx);
+						}
+					} catch(e) {
+						console.error(e);
 					}
 
-					if (currentLayer[0].init !== undefined) {
-						currentLayer[0].init();
-					}
-
-					currentLayer[0].setKey(lyk);
+					currentLayer[0].key = lyk;
 
 					this.layers.push(currentLayer[0]);
 					console.info(`[init RISCO] TOCManager, layer '${lyk}' (${currentLayer[0].constructor.name}) prepared`);
@@ -116,7 +131,7 @@ export class TOCManager {
 		}
 
 		for (let li=0; li < this.layers.length; li++) {
-			console.log(".. drawing lyr", this.layers[li].getKey());
+			console.log(".. drawing lyr", this.layers[li].key);
 			this.layers[li].draw2D(this.mapctx, p_scaleval);
 		}
 

@@ -115,13 +115,16 @@ class CanvasRasterLayer extends Layer {
 class CanvasOGCRasterLayer extends CanvasRasterLayer {
 
 	url; // get capabilities or URL missing getcapabilities command
+	layername;
 	#servmetadata;
+	#servmetadata_report;
+	#servmetadata_report_completed = false;
 	#metadata_or_root_url;
 	constructor() { 
 		super();
 	}
 
-	init() {
+	init(p_mapctx) {
 
 		if (this.url == null || this.url.length < 1) {
 			throw new Error("Class CanvasOGCRasterLayer, null or empty p_metadata_or_root_url");
@@ -129,6 +132,11 @@ class CanvasOGCRasterLayer extends CanvasRasterLayer {
 
 		this.#servmetadata = {};
 		this.#metadata_or_root_url = new URL(this.url);
+
+		const bounds = [], dims=[];
+		p_mapctx.getMapBounds(bounds);
+		const cfg = p_mapctx.cfgvar["basic"];
+		p_mapctx.getCanvasDims(dims);
 
 		if (this.#metadata_or_root_url) {
 			const sp = this.#metadata_or_root_url.searchParams;
@@ -159,7 +167,7 @@ class CanvasOGCRasterLayer extends CanvasRasterLayer {
 		fetch(this.#metadata_or_root_url.toString())
 			.then(response => response.text())
 			.then(
-				function(responsetext, servmetadata) {
+				function(responsetext) {
 
 					const parser = new DOMParser();
 					//const ret = response.json();
@@ -186,7 +194,7 @@ class CanvasOGCRasterLayer extends CanvasRasterLayer {
 					const lyrs = xmlDoc.querySelectorAll("Capability Layer");
 					that.#servmetadata["layers"] = {}
 
-					let lname, ly;
+					let lname, ly, k;
 					for (let li=0; li<lyrs.length; li++) {
 
 						ly = lyrs[li];
@@ -205,13 +213,119 @@ class CanvasOGCRasterLayer extends CanvasRasterLayer {
 							}							
 						}
 
+						velem = ly.querySelectorAll("BoundingBox");
+						if (velem.length>0) {
+							that.#servmetadata["layers"][lname]["bbox"] = {};
+							for (let crsi=0; crsi<velem.length; crsi++) {
+								k = velem[crsi].getAttribute('CRS').replace("EPSG:", "");
+								that.#servmetadata["layers"][lname]["bbox"][k] = [velem[crsi].getAttribute('minx'), velem[crsi].getAttribute('miny'), velem[crsi].getAttribute('maxx'), velem[crsi].getAttribute('maxy')];
+							}							
+						}
 					}
+
+					that.reporting(cfg["crs"], bounds, dims);
+
 				}
 			)
+
+
+
 	}
 
+	reporting (p_crs, p_bounds, p_dims) {
+		// service capabilities validation step
+		
+		//console.log(this.#servmetadata);
+		//console.log(Object.keys(this.#servmetadata));
+		this.#servmetadata_report = {};
+
+		this.#servmetadata_report["imagewidth"] = ( parseInt(this.#servmetadata["maxw"]) >= p_dims[0] ? "ok" : "notok");
+		this.#servmetadata_report["imageheight"] = ( parseInt(this.#servmetadata["maxh"]) >= p_dims[1] ? "ok" : "notok");
+		this.#servmetadata_report["imageformat"] = ( this.#servmetadata["formats"].indexOf("image/png") < 0 && this.#servmetadata["formats"].indexOf("image/jpeg") < 0 ? "notok" : "ok");
+
+		this.#servmetadata_report["layers"] = {}
+
+		let lname, ly, ret, bb;
+		for (lname in this.#servmetadata["layers"]) {
+
+			ly = this.#servmetadata["layers"][lname];
+			this.#servmetadata_report["layers"][lname] = {};
+			
+			this.#servmetadata_report["layers"][lname]["crs"] = ( ly["crs"].indexOf(p_crs) < 0 ? "ok" : "notok");
+
+			if (this.#servmetadata["layers"][lname]["abstract"] !== undefined) {
+				this.#servmetadata_report["layers"][lname]["abstract"] = this.#servmetadata["layers"][lname]["abstract"];
+			}
+
+			if (this.#servmetadata["layers"][lname]["bbox"][p_crs] !== undefined) {
+				bb = this.#servmetadata["layers"][lname]["bbox"][p_crs];
+				this.#servmetadata_report["layers"][lname]["bbox"] = (p_bounds[0] >= bb[0] && p_bounds[1] >= bb[1] && p_bounds[2] <= bb[2] && p_bounds[3] <= bb[3] ? "ok" : "notok");
+			}
+		}
+		this.#servmetadata_report_completed = true;
+		
+		this.draw2D();
+	
+	}
+	reportResult(p_wmsinnerlayername) {
+		let res = null;
+		for (let k in this.#servmetadata_report) {
+			if (k == "layers") {
+				continue;
+			}
+			if (this.#servmetadata_report[k] == "notok") {
+				res = k;
+				break;
+			}			
+		}
+		if (res == null && p_wmsinnerlayername != null) {
+			for (let k in this.#servmetadata_report["layers"][p_wmsinnerlayername]) {
+				if (this.#servmetadata_report["layers"][p_wmsinnerlayername][k] == "notok") {
+					res = `layer '${p_wmsinnerlayername}', item '${k}'`;
+					break;
+				}			
+			}
+		}
+		return res;
+	}
 	draw2D () {
-		console.log("drawing ...")
+		if (this.#servmetadata_report_completed) {
+			let res = this.reportResult();
+			if (res != null) {
+				throw new Error(`WMS service not usable due to: ${res}`);				
+			}
+
+			let othermandatory = [], missinglayername  = false;
+			if (this.missing_mandatory_configs.length > 0) {
+				for (let i=0; i<this.missing_mandatory_configs.length; i++) {		
+					if (this.missing_mandatory_configs[i] != "layername") {
+						othermandatory.push(this.missing_mandatory_configs[i]);
+					} else {
+						missinglayername = true;
+					}
+				}		
+				if (othermandatory.length > 0) {
+					throw new Error(`WMS layer, unable to draw due to missing mandatory configs for toc entry '${this.key}': ${othermandatory}`);
+				}					
+
+				if (missinglayername) {
+					let lylist = [];
+					for (const k in this.#servmetadata_report.layers) {
+						lylist.push(`'${k}' (crs:${this.#servmetadata_report.layers[k]['crs']}, bbox:${this.#servmetadata_report.layers[k]['bbox']})`);
+					}
+					throw new Error(`WMS 'layername' not configured, available: ${lylist}`);
+				}				
+			}
+
+			res = this.reportResult(this.layername);
+			if (res != null) {
+				throw new Error(`WMS service inner layer '${this.layername}' not usable due to: ${res}`);				
+			}
+
+			console.log("drawing ...");
+		} else {
+			console.log("waiting on metadata ...");
+		}
 	}
 	/*readMetadata() {
 		

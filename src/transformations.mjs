@@ -161,7 +161,7 @@ class TransformsQueue {
 		for (let i=0; i<keys.length; i++) {
 
 			if (p_mapctx_config_var[keys[i]] === undefined) {
-				throw new Error(`Class Transform2DMgr, mapctx_config is missing mandatory '${keys[i]}' entry`);
+				throw new Error(`Class Transform2DMgr, 'basic' config is missing mandatory '${keys[i]}' entry`);
 			}
 	
 		}	

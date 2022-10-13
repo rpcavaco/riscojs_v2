@@ -127,10 +127,12 @@ export class RiscoMapCtx {
 			throw new Error(`Class RiscoMapCtx, panel widget must be DIV, not ${this.panelwidget.tagName}`);
 		}	
 
+		this.cfgvar = p_config_var;
+
 		this.canvasmgr = new HTML5CanvasMgr(this);
 		this.transformmgr = new Transform2DMgr(this, p_config_var["basic"]);	
 		this.toolmgr = new ToolManager(p_config_var["basic"]);
-		this.tocmgr = new TOCManager(this, p_config_var["layers"], 'canvas');
+		this.tocmgr = new TOCManager(this, 'canvas');
 		this.#customization_instance = null;
 
 		// Attach event listeners to this map context panel
@@ -190,6 +192,10 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			p_evt.stopPropagation();
 		}		
 	}	
+
+	getCanvasDims(out_env) {
+		this.canvasmgr.getCanvasDims(out_env);
+	}
 
 	getMapBounds(out_env) {
 		const canvasDims = [];
