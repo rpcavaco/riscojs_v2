@@ -369,7 +369,7 @@ class CanvasWMSLayer extends CanvasRasterLayer {
 		return ret;
 	}
 
-	buildGetMapURL(p_mapctxt) {
+	buildGetMapURL(p_mapctxt, p_dims) {
 
 		if (this.#servmetadata["getmapurl"] === undefined) {
 			throw new Error(`WMS layer '${this.key}', missing getmapurl, taken from metadata`);	
@@ -380,9 +380,6 @@ class CanvasWMSLayer extends CanvasRasterLayer {
 		const url = new URL(this.#servmetadata["getmapurl"]);
 		const sp = url.searchParams;
 		const crs = p_mapctxt.cfgvar["basic"]["crs"];
-
-		const dims = [];
-		p_mapctxt.getCanvasDims(dims);
 
 		const bounds = [];
 		p_mapctxt.getMapBounds(bounds);
@@ -401,14 +398,16 @@ class CanvasWMSLayer extends CanvasRasterLayer {
 			sp.set('CRS', 'EPSG:'+crs);
 		}
 		sp.set('BBOX', bndstr);
-		sp.set('WIDTH', dims[0]);
-		sp.set('HEIGHT', dims[1]);
+		sp.set('WIDTH', p_dims[0]);
+		sp.set('HEIGHT', p_dims[1]);
 		sp.set('FORMAT', this.imageformat);
 
 		const ret = url.toString();		
 		if (GlobalConst.getDebug("WMS")) {
 			console.log(`[DBG:WMS] buildGetMapURL: '${ret}'`);
-		}		
+		}	
+		
+		return ret; 
 	}
 
 	draw2D(p_mapctxt) {
@@ -424,7 +423,31 @@ class CanvasWMSLayer extends CanvasRasterLayer {
 			return;
 		}
 
-		const getmapurl = this.buildGetMapURL(p_mapctxt);
+		const dims = [];
+		p_mapctxt.getCanvasDims(dims);
+		const getmapurl = this.buildGetMapURL(p_mapctxt, dims);
+
+		const img = new Image();
+
+		img.onload = function() {
+
+			const gfctx = p_mapctxt.canvasmgr.getDrwCtx('base');
+			gfctx.save();
+			try {
+				gfctx.clearRect(0, 0, ...dims);
+				gfctx.drawImage(img, 0, 0);
+			} catch(e) {
+				throw e;
+			} finally {
+				gfctx.restore();
+			}
+
+		}
+		console.log(getmapurl);
+		img.src = getmapurl;
+
+
+
 
 	}
 
