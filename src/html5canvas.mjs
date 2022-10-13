@@ -112,14 +112,24 @@
 		}
 	}
 
-	putImages(p_imgdata_dict, p_ins_scrcoords) {
+	/**
+	 * 
+	 * @param {*} p_imgdata_dict 
+	 * @param {*} pt_ins_scrcoords 
+	 * @param {*} opt_img_dims se null, todo o canvas será limpo
+	 */
+	putImages(p_imgdata_dict, p_pt_ins_scrcoords, opt_img_dims) {
 		let ctx;
 		const dims=[];
-		this.getCanvasDims(dims);
 		for (const key in p_imgdata_dict) {
 			ctx = this.canvases[key].getContext('2d');
-			ctx.clearRect(0, 0, ...dims); 
-			ctx.putImageData(p_imgdata_dict[key], ...p_ins_scrcoords);
+			if (opt_img_dims) {
+				ctx.clearRect(...p_pt_ins_scrcoords, ...opt_img_dims); 
+			} else {
+				this.getCanvasDims(dims);
+				ctx.clearRect(0, 0, ...dims); 
+			}
+			ctx.putImageData(p_imgdata_dict[key], ...p_pt_ins_scrcoords);
 		}
 	}
 

@@ -428,7 +428,7 @@ class CanvasWMSLayer extends CanvasRasterLayer {
 		const getmapurl = this.buildGetMapURL(p_mapctxt, dims);
 
 		const img = new Image();
-
+		img.crossOrigin = "anonymous";
 		img.onload = function() {
 
 			const gfctx = p_mapctxt.canvasmgr.getDrwCtx('base');
@@ -443,10 +443,7 @@ class CanvasWMSLayer extends CanvasRasterLayer {
 			}
 
 		}
-		console.log(getmapurl);
 		img.src = getmapurl;
-
-
 
 
 	}
