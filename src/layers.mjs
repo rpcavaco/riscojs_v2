@@ -12,6 +12,9 @@ export class Layer {
 	}
 
 	checkScaleVisibility(p_scaleval) {
+		if (p_scaleval == null) {
+			throw new Error(`Layer '${this.key}', null scale val during scale interval visibility check`);	
+		}
 		return (p_scaleval >= this.minscale && p_scaleval <= this.maxscale);
 	}
 
@@ -30,7 +33,7 @@ export class Layer {
 		// to be extended
 	}	
 
-	draw2D(p_mapctxt, p_scaleval) {
+	draw2D(p_mapctxt) {
 
 		// to be extended
 	}		

@@ -131,7 +131,7 @@ export class TOCManager {
 		}
 
 		for (let li=0; li < this.layers.length; li++) {
-			this.layers[li].draw2D(this.mapctx, p_scaleval);
+			this.layers[li].draw2D(this.mapctx);
 		}
 
 	}

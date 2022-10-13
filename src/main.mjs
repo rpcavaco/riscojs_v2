@@ -208,6 +208,10 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		this.transformmgr.getCenter(out_pt);
 	}
 
+	getScale() {
+		return this.transformmgr.getReadableCartoScale();
+	}
+
 	draw() {
 		// console.info(">>>>>           draw            <<<<<");
 		const sv = this.transformmgr.getReadableCartoScale();

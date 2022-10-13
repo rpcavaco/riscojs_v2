@@ -59,12 +59,12 @@ class CanvasGraticuleLayer extends CanvasVectorLayer {
 
 	}
 
-	draw2D(p_mapctxt, p_scaleval) {
+	draw2D(p_mapctxt) {
 
 		if (!this.defaultvisible) {
 			return;
 		}
-		if (!this.checkScaleVisibility(p_scaleval)) {
+		if (!this.checkScaleVisibility(p_mapctxt.getScale())) {
 			return;
 		}		
 
@@ -98,7 +98,7 @@ class CanvasSplitterLayer extends CanvasVectorLayer {
 
 	}
 
-	draw2D(p_mapctxt, p_scaleval) {
+	draw2D(p_mapctxt) {
 
 
 	}	
@@ -114,10 +114,13 @@ class CanvasRasterLayer extends Layer {
 	}	
 }
 
-class CanvasOGCRasterLayer extends CanvasRasterLayer {
+class CanvasWMSLayer extends CanvasRasterLayer {
 
 	url; // get capabilities or URL missing getcapabilities command
-	layername;
+	layernames;
+	imageformat = "image/jpeg";
+	reuseurl = false;
+
 	#servmetadata;
 	#servmetadata_report;
 	#servmetadata_report_completed = false;
@@ -129,7 +132,7 @@ class CanvasOGCRasterLayer extends CanvasRasterLayer {
 	init(p_mapctx) {
 
 		if (this.url == null || this.url.length < 1) {
-			throw new Error("Class CanvasOGCRasterLayer, null or empty p_metadata_or_root_url");
+			throw new Error("Class CanvasWMSLayer, null or empty p_metadata_or_root_url");
 		}
 
 		this.#servmetadata = {};
@@ -137,7 +140,7 @@ class CanvasOGCRasterLayer extends CanvasRasterLayer {
 
 		const bounds = [], dims=[];
 		p_mapctx.getMapBounds(bounds);
-		const cfg = p_mapctx.cfgvar["basic"];
+		const cfg = p_mapctx.cfgvar["basic"]; 
 		p_mapctx.getCanvasDims(dims);
 
 		if (this.#metadata_or_root_url) {
@@ -175,8 +178,11 @@ class CanvasOGCRasterLayer extends CanvasRasterLayer {
 					//const ret = response.json();
 					const xmlDoc = parser.parseFromString(responsetext, "text/xml");
 
+					let velem = xmlDoc.activeElement.getAttribute("version");
+					that.#servmetadata["version"] = velem;
+
 					const srvc = xmlDoc.getElementsByTagName("Service")[0];
-					let velem = srvc.getElementsByTagName("MaxWidth")[0].textContent;
+					velem = srvc.getElementsByTagName("MaxWidth")[0].textContent;
 
 					that.#servmetadata["maxw"] = velem;
 					velem = srvc.getElementsByTagName("MaxHeight")[0].textContent;
@@ -191,7 +197,12 @@ class CanvasOGCRasterLayer extends CanvasRasterLayer {
 					}
 
 					velem = getmap.querySelector("DCPType HTTP Get OnlineResource");
-					that.#servmetadata["getmapurl"] = new URL(velem.getAttributeNS("http://www.w3.org/1999/xlink", 'href'));
+
+					if (that.reuseurl) {
+						that.#servmetadata["getmapurl"] = that.url;
+					} else {
+						that.#servmetadata["getmapurl"] = velem.getAttributeNS("http://www.w3.org/1999/xlink", 'href');
+					}
 
 					const lyrs = xmlDoc.querySelectorAll("Capability Layer");
 					that.#servmetadata["layers"] = {}
@@ -225,7 +236,7 @@ class CanvasOGCRasterLayer extends CanvasRasterLayer {
 						}
 					}
 
-					that.reporting(cfg["crs"], bounds, dims);
+					that.reporting(p_mapctx, cfg["crs"], bounds, dims);
 
 				}
 			)
@@ -234,7 +245,7 @@ class CanvasOGCRasterLayer extends CanvasRasterLayer {
 
 	}
 
-	reporting (p_crs, p_bounds, p_dims) {
+	reporting (p_mapctxt, p_crs, p_bounds, p_dims) {
 		// service capabilities validation step
 		
 		//console.log(this.#servmetadata);
@@ -243,7 +254,7 @@ class CanvasOGCRasterLayer extends CanvasRasterLayer {
 
 		this.#servmetadata_report["imagewidth"] = ( parseInt(this.#servmetadata["maxw"]) >= p_dims[0] ? "ok" : "notok");
 		this.#servmetadata_report["imageheight"] = ( parseInt(this.#servmetadata["maxh"]) >= p_dims[1] ? "ok" : "notok");
-		this.#servmetadata_report["imageformat"] = ( this.#servmetadata["formats"].indexOf("image/png") < 0 && this.#servmetadata["formats"].indexOf("image/jpeg") < 0 ? "notok" : "ok");
+		this.#servmetadata_report["imageformat"] = ( this.#servmetadata["formats"].indexOf(this.imageformat) < 0 ? "notok" : "ok");
 
 		this.#servmetadata_report["layers"] = {}
 
@@ -266,11 +277,12 @@ class CanvasOGCRasterLayer extends CanvasRasterLayer {
 		}
 		this.#servmetadata_report_completed = true;
 		
-		this.draw2D();
+		this.draw2D(p_mapctxt);
 	
 	}
-	reportResult(p_wmsinnerlayername) {
-		let res = null;
+	reportResult(p_wms_innerlyrnames_str) {
+
+		let splits=[], res = null;
 		for (let k in this.#servmetadata_report) {
 			if (k == "layers") {
 				continue;
@@ -280,18 +292,26 @@ class CanvasOGCRasterLayer extends CanvasRasterLayer {
 				break;
 			}			
 		}
-		if (res == null && p_wmsinnerlayername != null) {
-			for (let k in this.#servmetadata_report["layers"][p_wmsinnerlayername]) {
-				if (this.#servmetadata_report["layers"][p_wmsinnerlayername][k] == "notok") {
-					res = `layer '${p_wmsinnerlayername}', item '${k}'`;
+		
+		if (res == null && p_wms_innerlyrnames_str != null && p_wms_innerlyrnames_str.length > 0) {
+
+			splits = p_wms_innerlyrnames_str.split(/[,\s]+/);
+			for (let k of splits) {
+				if (this.#servmetadata_report["layers"][p_wms_innerlyrnames_str][k] == "notok") {
+					res = `layer '${p_wms_innerlyrnames_str}', item '${k}'`;
 					break;
 				}			
 			}
 		}
 		return res;
 	}
-	draw2D () {
+
+	checkGetMapRequestViability() {
+		let ret = false;
+
 		if (this.#servmetadata_report_completed) {
+
+			// test generic viability
 			let res = this.reportResult();
 			if (res != null) {
 				throw new Error(`WMS service not usable due to: ${res}`);				
@@ -300,7 +320,7 @@ class CanvasOGCRasterLayer extends CanvasRasterLayer {
 			let othermandatory = [], missinglayername  = false;
 			if (this.missing_mandatory_configs.length > 0) {
 				for (let i=0; i<this.missing_mandatory_configs.length; i++) {		
-					if (this.missing_mandatory_configs[i] != "layername") {
+					if (this.missing_mandatory_configs[i] != "layernames") {
 						othermandatory.push(this.missing_mandatory_configs[i]);
 					} else {
 						missinglayername = true;
@@ -315,42 +335,102 @@ class CanvasOGCRasterLayer extends CanvasRasterLayer {
 					for (const k in this.#servmetadata_report.layers) {
 						lylist.push(`'${k}' (crs:${this.#servmetadata_report.layers[k]['crs']}, bbox:${this.#servmetadata_report.layers[k]['bbox']})`);
 					}
-					throw new Error(`WMS 'layername' not configured, available: ${lylist}`);
+					throw new Error(`WMS 'layernames' not configured, available: ${lylist}`);
 				}				
 			}
 
-			res = this.reportResult(this.layername);
+			res = this.reportResult(this.layernames);
 			if (res != null) {
-				throw new Error(`WMS service inner layer '${this.layername}' not usable due to: ${res}`);				
+				throw new Error(`WMS service inner layer '${this.layernames}' not usable due to: ${res}`);				
 			}
 
-			if (GlobalConst.getDebug("OGCRaster")) {
-				console.log(`[DBG:OGCRaster] drawing '${this.key}'`);
+			if (GlobalConst.getDebug("WMS")) {
+				console.log(`[DBG:WMS] before drawing '${this.key}'`);
 			}
+			ret = true;
 
 		} else {
-			if (GlobalConst.getDebug("OGCRaster")) {
-				console.log(`[DBG:OGCRaster] waiting on metadata for '${this.key}'`);
+			if (GlobalConst.getDebug("WMS")) {
+				console.log(`[DBG:WMS] waiting on metadata for '${this.key}'`);
 			}
 		}
+
+		return ret;
 	}
-	/*readMetadata() {
-		
-		fetch(,
-			
-		);
-	}*/
+	
+	static #wmsVersionNumeric(p_versionstr) {
+		let ret;
+		const clean = parseInt(p_versionstr.replace('.',''));
+		if (clean < 100) {
+			ret = clean * 10;
+		} else {
+			ret = clean;
+		}
+		return ret;
+	}
+
+	buildGetMapURL(p_mapctxt) {
+
+		if (this.#servmetadata["getmapurl"] === undefined) {
+			throw new Error(`WMS layer '${this.key}', missing getmapurl, taken from metadata`);	
+		}
+
+		const lyrnames_str = this.layernames.split(/[,\s]+/).join(',');
+	
+		const url = new URL(this.#servmetadata["getmapurl"]);
+		const sp = url.searchParams;
+		const crs = p_mapctxt.cfgvar["basic"]["crs"];
+
+		const dims = [];
+		p_mapctxt.getCanvasDims(dims);
+
+		const bounds = [];
+		p_mapctxt.getMapBounds(bounds);
+
+		const bndstr = bounds.join(',');
+
+		sp.set('SERVICE', 'WMS');
+		sp.set('VERSION', this.#servmetadata["version"]);
+		sp.set('REQUEST', 'GetMap');
+		sp.set('LAYERS', lyrnames_str);
+
+		const vers = this.constructor.#wmsVersionNumeric((this.#servmetadata["version"].replace('.', '')));
+		if (vers < 130) {
+			sp.set('SRS', 'EPSG:'+crs);
+		} else {
+			sp.set('CRS', 'EPSG:'+crs);
+		}
+		sp.set('BBOX', bndstr);
+		sp.set('WIDTH', dims[0]);
+		sp.set('HEIGHT', dims[1]);
+		sp.set('FORMAT', this.imageformat);
+
+		const ret = url.toString();		
+		if (GlobalConst.getDebug("WMS")) {
+			console.log(`[DBG:WMS] buildGetMapURL: '${ret}'`);
+		}		
+	}
+
+	draw2D(p_mapctxt) {
+
+		if (!this.defaultvisible) {
+			return;
+		}
+		if (!this.checkScaleVisibility(p_mapctxt.getScale())) {
+			return;
+		}
+
+		if (!this.checkGetMapRequestViability()) {
+			return;
+		}
+
+		const getmapurl = this.buildGetMapURL(p_mapctxt);
+
+	}
+
 
 }
 
-
-class CanvasWMSLayer extends CanvasOGCRasterLayer {
-
-	constructor(p_metadata_url) {
-		super(p_metadata_url);
-	}
-
-}
 
 const canvas_layer_classes = {
     "graticule": CanvasGraticuleLayer,

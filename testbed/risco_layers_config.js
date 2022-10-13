@@ -9,8 +9,9 @@ var RISCOJS_LAYERS_CFG = {
 		},
 		"orto2021": {
 			"type": "wms",
+			"reuseurl": true, 
 			"url": "https://sigcrsprxy.cm-porto.pt/dgtwms/ortos2021",
-			"layername": "Ortos2021" 
+			"layernames": "Ortos2021-RGB" 
 		}
 	}
 

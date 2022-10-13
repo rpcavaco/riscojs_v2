@@ -1,14 +1,14 @@
 
 
 var SUBKEYS = {
-	"layers": ["ogcraster"]
+	"layers": ["wms"]
 }
 
 // 'layers' and other keys in SUBKEYS are group keys: whenever DEBUG: "LAYERS", code marked with debug for "WMS" is also debugged
 
 var GlobalConst = {
 
-	DEBUG: "LAYERS",    // ALL, I18N, LAYERS, OGCRaster
+	DEBUG: "LAYERS",    // ALL, I18N, LAYERS, WMS
 
 	MMPD: 25.4 / 96.0,
 	ACCPTBLE_LYRREDRAW_DELAY_MSEC: 10,

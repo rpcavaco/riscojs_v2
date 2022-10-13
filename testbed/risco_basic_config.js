@@ -1,4 +1,5 @@
 var RISCOJS_BASIC_CFG = {
+	
 	"mapname": "dev_test",	
 	"crs": 3763,
 	"scale": 5000.0 , 
