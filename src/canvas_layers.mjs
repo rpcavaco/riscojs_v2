@@ -1,4 +1,6 @@
 
+import {GlobalConst} from './constants.js';
+
 import {Layer} from './layers.mjs';
 import {CanvasStrokeSymbol} from './canvas_symbols.mjs';
 
@@ -322,9 +324,14 @@ class CanvasOGCRasterLayer extends CanvasRasterLayer {
 				throw new Error(`WMS service inner layer '${this.layername}' not usable due to: ${res}`);				
 			}
 
-			console.log("drawing ...");
+			if (GlobalConst.getDebug("OGCRaster")) {
+				console.log(`[DBG:OGCRaster] drawing '${this.key}'`);
+			}
+
 		} else {
-			console.log("waiting on metadata ...");
+			if (GlobalConst.getDebug("OGCRaster")) {
+				console.log(`[DBG:OGCRaster] waiting on metadata for '${this.key}'`);
+			}
 		}
 	}
 	/*readMetadata() {

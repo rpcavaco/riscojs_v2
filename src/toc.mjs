@@ -131,7 +131,6 @@ export class TOCManager {
 		}
 
 		for (let li=0; li < this.layers.length; li++) {
-			console.log(".. drawing lyr", this.layers[li].key);
 			this.layers[li].draw2D(this.mapctx, p_scaleval);
 		}
 

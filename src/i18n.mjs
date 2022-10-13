@@ -16,11 +16,11 @@ export class I18n {
 		let langstr = navigator.language || navigator.userLanguage;
 		let ret, lang = langstr.substring(0,2);		
 		if (this.msgs[lang] === undefined) {
-			if (GlobalConst.GENERALDEBUG)
+			if (GlobalConst.getDebug("I18N"))
 				console.info(`browser lang not found ${lang}, defaulting to 'en'`);
 			lang = "en";
 		} else {
-			if (GlobalConst.GENERALDEBUG)
+			if (GlobalConst.getDebug("I18N"))
 				console.info("using browser lang:", lang);
 		}
 		
