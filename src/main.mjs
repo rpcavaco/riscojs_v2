@@ -149,7 +149,7 @@ export class RiscoMapCtx {
 			this.draw();
 		}
 
-		console.info(`[init RISCO] ====  End of map context init for '${this.panelwidget.id}'  ====`);
+		console.info(`[init RISCO] ==  End of map context init for '${this.panelwidget.id}'  ==`);
 	}
 
 	/**
@@ -169,6 +169,7 @@ export class RiscoMapCtx {
 	 */	
 	resize() {
 		this.canvasmgr.init();
+		this.draw();
 		this.customResize(this);
 	}
 
