@@ -1,0 +1,7 @@
+_sphinxcrap/
+testbed/js/
+dist/
+src/_*.*js
+docs/build
+venv38/
+*.zip
