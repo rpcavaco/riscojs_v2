@@ -2,14 +2,14 @@
 import {GlobalConst} from './constants.js';
 // import {processHDREffect} from './canvas_utils.mjs';
 
-import {Layer} from './layers.mjs';
+import {VectorLayer, RasterLayer} from './layers.mjs';
 import {CanvasStrokeSymbol} from './canvas_symbols.mjs';
 
-class CanvasVectorLayer extends Layer {
+class CanvasVectorLayer extends VectorLayer {
 
 	canvasKey = 'normal';
-	constructor() {
-		super();
+	constructor(p_mapctxt) {
+		super(p_mapctxt);
 		this.default_stroke_symbol = new CanvasStrokeSymbol();
 		// this.default_fill_symbol = null;
 	}	
@@ -18,31 +18,50 @@ class CanvasVectorLayer extends Layer {
 class CanvasGraticuleLayer extends CanvasVectorLayer {
 
 	separation;
-	constructor() {
-		super();
+	constructor(p_mapctxt) {
+		super(p_mapctxt);
 	}
-	* items(p_mapctxt) {
 
-		let x, crdlist, crdlist_t, out_pt=[], bounds = [], modes=['horiz', 'vert'];
-		let endlimit;
-		p_mapctxt.getMapBounds(bounds);
+	* envs(p_mapctxt) {
 
-		for (let mi=0; mi < modes.length; mi++) {
+		const terrain_bounds = [], out_pt=[], scr_bounds = null; //scr_bounds=[];
+		p_mapctxt.getMapBounds(terrain_bounds);
 
-			if (modes[mi] == 'vert') {
-				x = this.separation * Math.floor(bounds[0] / this.separation);
-				endlimit = bounds[2];
+		/*
+		scr_bounds.length = 4;
+		for (let i=0; i<2; i++) {
+			p_mapctxt.transformmgr.getCanvasPt([terrain_bounds[2*i], terrain_bounds[2*i+1]], out_pt)
+			scr_bounds[2*i] = out_pt[0];
+			scr_bounds[2*i+1] = out_pt[1];
+		}
+		*/
+
+		yield [terrain_bounds, scr_bounds];
+	}
+	
+	* items(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
+		
+		const line = [];
+		let x, endlimit, crdlist=[], out_pt=[], crdlist_t;
+		for (const mode of ['horiz', 'vert']) {
+
+			if (mode == 'vert') {
+				x = this.separation * Math.floor(p_terrain_env[0] / this.separation);
+				endlimit = p_terrain_env[2];
 			} else {
-				x = this.separation * Math.floor(bounds[1] / this.separation);
-				endlimit = bounds[3];
+				x = this.separation * Math.floor(p_terrain_env[1] / this.separation);
+				endlimit = p_terrain_env[3];
 			}
 
 			while (x <= endlimit) {
+
 				x = x + this.separation;
-				if (modes[mi] == 'vert') {
-					crdlist = [x, bounds[1], x, bounds[3]];
+				if (mode == 'vert') {
+					crdlist.length = 0;
+					crdlist.push(...[x, p_terrain_env[1], x, p_terrain_env[3]]);
 				} else {
-					crdlist = [bounds[0], x, bounds[2], x];
+					crdlist.length = 0;
+					crdlist.push(...[p_terrain_env[0], x, p_terrain_env[2], x]);
 				}
 				crdlist_t = []
 				crdlist_t.length = crdlist.length;
@@ -52,66 +71,36 @@ class CanvasGraticuleLayer extends CanvasVectorLayer {
 					crdlist_t[2*i+1] = out_pt[1];
 				}
 
-				yield crdlist_t;
+				yield [crdlist_t, null];
 			}
 
 		}
 
+	}	
+	
+	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_canvas_coords, p_attrs) {
 
-	}
+		p_gfctx.beginPath();
+		p_gfctx.moveTo(p_canvas_coords[0], p_canvas_coords[1]);
+		p_gfctx.lineTo(p_canvas_coords[2], p_canvas_coords[3]);
+		p_gfctx.stroke();
 
-	draw2D(p_mapctxt) {
+		return true;
 
-		if (!this.defaultvisible) {
-			return;
-		}
-		if (!this.checkScaleVisibility(p_mapctxt.getScale())) {
-			return;
-		}		
-
-		const gfctx = p_mapctxt.canvasmgr.getDrwCtx(this.canvasKey, '2d');
-		gfctx.save();
-		try {
-			gfctx.strokeStyle = this.default_stroke_symbol.strokeStyle;
-			gfctx.lineWidth = this.default_stroke_symbol.lineWidth;
-			for (let elem_coords of this.items(p_mapctxt)) {
-				gfctx.beginPath();
-				gfctx.moveTo(elem_coords[0], elem_coords[1]);
-				gfctx.lineTo(elem_coords[2], elem_coords[3]);
-				gfctx.stroke();
-			}
-		} catch(e) {
-			throw e;
-		} finally {
-			gfctx.restore();
-		}
 	}	
 }
 
 /*
 class CanvasSplitterLayer extends CanvasVectorLayer {
 
-	divnumh;
-	constructor(p_divnum_w, p_divnum_h) {
-		super();
-	}
-	* items(p_mapctxt) {
-
-	}
-
-	draw2D(p_mapctxt) {
-
-
-	}	
-}
 */
 
-class CanvasRasterLayer extends Layer {
+class CanvasRasterLayer extends RasterLayer {
 
 	canvasKey = 'base';
 	image_filter = "none";
-	constructor() {
-		super();
+	constructor(p_mapctxt) {
+		super(p_mapctxt);
 	}	
 }
 
@@ -126,11 +115,15 @@ class CanvasWMSLayer extends CanvasRasterLayer {
 	#servmetadata_report;
 	#servmetadata_report_completed = false;
 	#metadata_or_root_url;
-	constructor() { 
-		super();
+	constructor(p_mapctxt) { 
+		super(p_mapctxt);
+		console.log("CanvasWMSLayer_", p_mapctxt);
+		this.inited = false;
 	}
 
-	init(p_mapctx) {
+	initLayer() {
+
+		console.log("######## INIT LAYER #########", this.mapctx);
 
 		if (this.url == null || this.url.length < 1) {
 			throw new Error("Class CanvasWMSLayer, null or empty p_metadata_or_root_url");
@@ -140,9 +133,9 @@ class CanvasWMSLayer extends CanvasRasterLayer {
 		this.#metadata_or_root_url = new URL(this.url);
 
 		const bounds = [], dims=[];
-		p_mapctx.getMapBounds(bounds);
-		const cfg = p_mapctx.cfgvar["basic"]; 
-		p_mapctx.getCanvasDims(dims);
+		this.mapctx.getMapBounds(bounds);
+		const cfg = this.mapctx.cfgvar["basic"]; 
+		this.mapctx.getCanvasDims(dims);
 
 		if (this.#metadata_or_root_url) {
 			const sp = this.#metadata_or_root_url.searchParams;
@@ -175,6 +168,8 @@ class CanvasWMSLayer extends CanvasRasterLayer {
 			.then(
 				function(responsetext) {
 
+					console.log("RESPONSE ARRIVED !!!!!!")
+
 					const parser = new DOMParser();
 					//const ret = response.json();
 					const xmlDoc = parser.parseFromString(responsetext, "text/xml");
@@ -204,6 +199,8 @@ class CanvasWMSLayer extends CanvasRasterLayer {
 					} else {
 						that.#servmetadata["getmapurl"] = velem.getAttributeNS("http://www.w3.org/1999/xlink", 'href');
 					}
+
+					console.log("that.#servmetadata['getmapurl']:", that.#servmetadata["getmapurl"]);
 
 					const lyrs = xmlDoc.querySelectorAll("Capability Layer");
 					that.#servmetadata["layers"] = {}
@@ -237,12 +234,15 @@ class CanvasWMSLayer extends CanvasRasterLayer {
 						}
 					}
 
-					that.reporting(p_mapctx, cfg["crs"], bounds, dims);
+					that.reporting(this.mapctx, cfg["crs"], bounds, dims);
 
 				}
 			)
 
 
+		console.log("######## finsish INIT LAYER #########");
+
+		this.draw2D();
 
 	}
 
@@ -370,7 +370,7 @@ class CanvasWMSLayer extends CanvasRasterLayer {
 		return ret;
 	}
 
-	buildGetMapURL(p_mapctxt, p_dims) {
+	buildGetMapURL(p_mapctxt, p_terrain_bounds, p_dims) {
 
 		if (this.#servmetadata["getmapurl"] === undefined) {
 			throw new Error(`WMS layer '${this.key}', missing getmapurl, taken from metadata`);	
@@ -382,10 +382,7 @@ class CanvasWMSLayer extends CanvasRasterLayer {
 		const sp = url.searchParams;
 		const crs = p_mapctxt.cfgvar["basic"]["crs"];
 
-		const bounds = [];
-		p_mapctxt.getMapBounds(bounds);
-
-		const bndstr = bounds.join(',');
+		const bndstr = p_terrain_bounds.join(',');
 
 		sp.set('SERVICE', 'WMS');
 		sp.set('VERSION', this.#servmetadata["version"]);
@@ -410,7 +407,62 @@ class CanvasWMSLayer extends CanvasRasterLayer {
 		
 		return ret; 
 	}
+	
+	/*
+	* envs(p_mapctxt) {
 
+		const terrain_bounds = [], out_pt=[], scr_bounds = null; //scr_bounds=[];
+		p_mapctxt.getMapBounds(terrain_bounds);
+
+		scr_bounds.length = 4;
+		for (let i=0; i<2; i++) {
+			p_mapctxt.transformmgr.getCanvasPt([terrain_bounds[2*i], terrain_bounds[2*i+1]], out_pt)
+			scr_bounds[2*i] = out_pt[0];
+			scr_bounds[2*i+1] = out_pt[1];
+		}
+
+		yield [terrain_bounds, scr_bounds];
+	} */
+
+	* items(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
+
+		p_mapctxt.getCanvasDims(p_dims);
+		return this.buildGetMapURL(p_mapctxt, p_terrain_env, p_dims);
+	
+	}
+
+	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_raster_url) {
+
+		const img = new Image();
+		img.crossOrigin = "anonymous";
+		(function(pp_mapctxt, p_this, p_img, p_dims) {
+			p_img.onload = function() {
+
+				const gfctx = pp_mapctxt.canvasmgr.getDrwCtx(p_this.canvasKey);
+				gfctx.save();
+				try {
+					gfctx.clearRect(0, 0, ...p_dims);
+					gfctx.drawImage(p_img, 0, 0);
+
+					//processHDREffect(gfctx, [0,0], p_dims)
+				} catch(e) {
+					throw e;
+				} finally {
+					gfctx.restore();
+				}
+	
+			}
+		})(p_mapctxt, this, img, p_dims);
+
+		img.src = p_raster_url;
+
+		return true;
+
+	}	
+	
+
+
+/*	
 	draw2D(p_mapctxt) {
 
 		if (!this.defaultvisible) {
@@ -453,7 +505,7 @@ class CanvasWMSLayer extends CanvasRasterLayer {
 
 
 	}
-
+*/
 
 }
 
@@ -465,6 +517,6 @@ const canvas_layer_classes = {
 
 export class DynamicCanvasLayer {
     constructor (p_classkey, opts) {
-        return new canvas_layer_classes[p_classkey](opts);
+       return new canvas_layer_classes[p_classkey](opts);
     }
 }

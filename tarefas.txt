@@ -1,5 +1,6 @@
 
 - 3 níveis drawing: obter envs, gerar itens (features ou outros), desenhar
+- mouse wheel throttle - passar para classe acima na hierarquia
 
 - parar load desnecessário
 - filtros imagem

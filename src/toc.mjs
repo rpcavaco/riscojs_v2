@@ -41,18 +41,24 @@ export class TOCManager {
 						case "graticule":
 
 							if (this.mode == 'canvas')	{
-								currentLayer.push(new DynamicCanvasLayer(layerscfg.layers[lyk]["type"]));
+								currentLayer.push(new DynamicCanvasLayer(layerscfg.layers[lyk]["type"], this.mapctx));
+								console.log("...... 45 .....", currentLayer[0].mapctx);
 							}
 							break;
-
-								
 					}
+
+					console.log("...... 49 .....", currentLayer[0].mapctx);
 
 					if (currentLayer.length == 0) {
-						throw new Error(`TOCManager, layer '${lyk}' type not known: '${layerscfg.layers[lyk]["type"]}'`);
+						console.error(`TOCManager, layer '${lyk}' type not known: '${layerscfg.layers[lyk]["type"]}'`);
+						continue;
 					}
 
+					console.log("...... 56 .....", currentLayer[0].mapctx);
+
 					const scaneables = [currentLayer[0]];
+
+					console.log("...... 60 .....", currentLayer[0].mapctx);
 					
 					if (currentLayer[0].default_stroke_symbol !== undefined) {
 						scaneables.push(currentLayer[0].default_stroke_symbol);
@@ -86,8 +92,9 @@ export class TOCManager {
 					}
 					
 					try {
-						if (currentLayer[0].init !== undefined) {
-							currentLayer[0].init(this.mapctx);
+						if (currentLayer[0].initLayer !== undefined) {
+							console.
+							currentLayer[0].initLayer();
 						}
 					} catch(e) {
 						console.error(e);
@@ -113,7 +120,7 @@ export class TOCManager {
 	}
 
 	draw(p_scaleval) {
-		//console.log("TOCManager draw, layers: ", this.layers.length, "scale:", p_scaleval);
+		console.log("TOCManager draw, layers: ", this.layers.length, "scale:", p_scaleval);
 		let gfctx;
 		const ckeys = new Set();
 		const canvas_dims = [];
