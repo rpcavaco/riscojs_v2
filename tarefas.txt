@@ -1,0 +1,13 @@
+
+- 3 níveis drawing: obter envs, gerar itens (features ou outros), desenhar
+
+- parar load desnecessário
+- filtros imagem
+- offline bitmap
+
+- estratégias envelopeing para reduzir carregamentos feats e imagem
+- info na multi tool (no mouse up sem drag)
+- HDR
+- imagens AGS
+- features AGS
+- indide espacial

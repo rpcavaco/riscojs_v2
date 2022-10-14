@@ -10,7 +10,7 @@ var SUBKEYS = {
 
 var GlobalConst = {
 
-	DEBUG: "WMS",    // ALL, I18N, LAYERS, WMS, DISENG_WHEEL
+	DEBUG: "none",    // ALL, I18N, LAYERS, WMS, DISENG_WHEEL, none
 
 	MMPD: 25.4 / 96.0,
 	ACCPTBLE_LYRREDRAW_DELAY_MSEC: 10,

@@ -1,5 +1,6 @@
 
 import {GlobalConst} from './constants.js';
+// import {processHDREffect} from './canvas_utils.mjs';
 
 import {Layer} from './layers.mjs';
 import {CanvasStrokeSymbol} from './canvas_symbols.mjs';
@@ -437,6 +438,8 @@ class CanvasWMSLayer extends CanvasRasterLayer {
 				try {
 					gfctx.clearRect(0, 0, ...p_dims);
 					gfctx.drawImage(p_img, 0, 0);
+
+					//processHDREffect(gfctx, [0,0], p_dims)
 				} catch(e) {
 					throw e;
 				} finally {
