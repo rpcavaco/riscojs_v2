@@ -21,6 +21,7 @@ var GlobalConst = {
 	MINSCALEDIFF: 1,
 	MAXLAYERCOUNT: 100,
 	MOUSEWHEEL_THROTTLE: 100,  // millisecs, interval between wheel events must span more than this interval for each event to be listened
+	LIMITSCALE_ENVDIV: 1000,  // scale limit for env division in wms / raster layers
 
 	getDebug: function(p_dbgkey) {
 		let ret = false, all = false;

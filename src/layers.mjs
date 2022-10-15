@@ -1,7 +1,7 @@
 
 import {GlobalConst} from './constants.js';
 
-function genSingleEnv(p_mapctxt) {
+export function genSingleEnv(p_mapctxt) {
 
 	const terrain_bounds = [], out_pt=[], dims=[], scr_bounds=[];
 	p_mapctxt.getMapBounds(terrain_bounds);
@@ -15,7 +15,7 @@ function genSingleEnv(p_mapctxt) {
 
 	p_mapctxt.getCanvasDims(dims);
 
-	const key = 1;
+	const key = 0;
 
 	return [terrain_bounds, scr_bounds, dims, key];
 }
@@ -166,7 +166,7 @@ export class RasterLayer extends Layer {
 	}
 
 	* envs(p_mapctxt) {
-		// intended to be extended / replaced whenever request chunking, by envelopes, is needed
+		// intended to be overrriden whenever request chunking, by envelopes, is needed
 		yield genSingleEnv(p_mapctxt);
 	}	
 
@@ -217,7 +217,8 @@ export class RasterLayer extends Layer {
 
 			for (const [terrain_env, scr_env, dims, envkey] of this.envs(this.mapctx)) {
 
-				// console.log("-- 210 env --", terrain_env, scr_env, " canceled:", this.drawingcanceled);
+				//console.log("-- 220 env --", terrain_env, " canceled:", this.drawingcanceled);
+				//console.log("-- 221 screnv,dims,envk --", scr_env, dims, envkey);
 
 				if (this.drawingcanceled) {
 					this.onCancel();

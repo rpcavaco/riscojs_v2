@@ -2,7 +2,7 @@
 import {GlobalConst} from './constants.js';
 // import {processHDREffect} from './canvas_utils.mjs';
 
-import {RasterLayer} from './layers.mjs';
+import {genSingleEnv, RasterLayer} from './layers.mjs';
 
 
 const uuidv4 = () => {
@@ -27,6 +27,57 @@ class CanvasRasterLayer extends RasterLayer {
 	constructor() {
 		super();
 	}	
+
+	* envs(p_mapctxt) {
+		// intended to be extended / replaced whenever request chunking, by envelopes, is needed
+		//  >>>>> antiga >>>> yield genSingleEnv(p_mapctxt);
+
+
+		const terrain_bounds = [], out_pt=[], scr_bounds=[];
+		const cen = [];
+		let dims, env;
+
+
+		const scalval = p_mapctxt.getScale();
+
+		// for scales greater than 1:LIMITSCALE_ENVDIV,  env will be just one
+		if (scalval <= 1000) {//GlobalConst.LIMITSCALE_ENVDIV) {
+
+			yield genSingleEnv(p_mapctxt);
+		
+		} else {
+
+			p_mapctxt.getMapBounds(terrain_bounds);
+			p_mapctxt.getCenter(cen);
+
+			// ccw from lower left
+			
+			const div_envs = [
+				[terrain_bounds[0], terrain_bounds[1], ...cen],
+				[cen[0], terrain_bounds[1], terrain_bounds[2], cen[1]],
+				[...cen, terrain_bounds[2], terrain_bounds[3]],
+				[terrain_bounds[0], cen[1], cen[0], terrain_bounds[3]]
+			];
+
+			for (let ei=0; ei<div_envs.length; ei++) {
+
+				env = div_envs[ei];
+				
+				scr_bounds.length = 4;
+				for (let i=0; i<2; i++) {
+					p_mapctxt.transformmgr.getCanvasPt([env[2*i], env[2*i+1]], out_pt);
+					scr_bounds[2*i] = out_pt[0];
+					scr_bounds[2*i+1] = out_pt[1];
+				}
+
+				dims = [scr_bounds[2] - scr_bounds[0], scr_bounds[1] - scr_bounds[3]];
+
+				yield [env, scr_bounds, dims, ei];
+
+			}
+	
+		}
+	}	
 	
 	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url) {
 
@@ -36,30 +87,32 @@ class CanvasRasterLayer extends RasterLayer {
 		if (this.rastersloading[p_envkey] === undefined) {
 			this.rastersloading[p_envkey] = {};
 		}
+
 		const raster_id = uuidv4();
 
-		(function(pp_mapctxt, p_this, p_img, p_dims, pp_envkey, p_raster_id) {
+		(function(pp_mapctxt, p_this, p_img, pp_scr_env, pp_dims, pp_envkey, p_raster_id) {
 			p_img.onload = function() {
 
-				const gfctx = pp_mapctxt.canvasmgr.getDrwCtx(p_this.canvasKey);
-				gfctx.save();
+				p_gfctx.save();
 				try {
-					gfctx.clearRect(0, 0, ...p_dims);
-					gfctx.drawImage(p_img, 0, 0);
+					//console.log(">>   ", p_img.width, p_img.height, pp_envkey);
+					//console.log(">>2>>", pp_scr_env[0], pp_scr_env[3], pp_dims);
+					p_gfctx.clearRect(pp_scr_env[0], pp_scr_env[3], ...pp_dims);
+					p_gfctx.drawImage(p_img, pp_scr_env[0], pp_scr_env[3]);
 
-					//processHDREffect(gfctx, [0,0], p_dims)
+					//processHDREffect(gfctx, [0,0], pp_dims)
 				} catch(e) {
 					throw e;
 				} finally {
-					gfctx.restore();
+					p_gfctx.restore();
 
 					delete p_this.rastersloading[pp_envkey][p_raster_id];
 					// console.log(`(rstrs still loading at t1 x ${p_envkey}):`, Object.keys(p_this.rastersloading[p_envkey]));
 				}
 	
 			}
-		})(p_mapctxt, this, img, p_dims, p_envkey, raster_id);
-
+		})(p_mapctxt, this, img, p_scr_env.slice(0), p_dims.slice(0), p_envkey, raster_id);
+		
 		img.src = p_raster_url;
 
 		// console.log(`(rstrs on loading at t0 x ${p_envkey}):`, Object.keys(this.rastersloading[p_envkey]));
@@ -67,7 +120,7 @@ class CanvasRasterLayer extends RasterLayer {
 		for (let rstrid in this.rastersloading[p_envkey]) {
 			this.rastersloading[p_envkey][rstrid].src = "";
 			delete this.rastersloading[p_envkey][rstrid];
-		}
+		} 
 		this.rastersloading[p_envkey][raster_id] = img;
 
 		return true;
@@ -403,7 +456,7 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 	
 	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
 
-		p_mapctxt.getCanvasDims(p_dims);
+		// p_mapctxt.getCanvasDims(p_dims);
 		yield this.buildGetMapURL(p_mapctxt, p_terrain_env, p_dims);
 	
 	}
