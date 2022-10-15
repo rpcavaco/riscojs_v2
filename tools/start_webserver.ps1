@@ -12,4 +12,4 @@ Copy-Item -Path "..\src\*" -Include "*.js","*.mjs" -Destination "..\testbed\js\r
 
 Compress-Archive -Path "..\dist\riscojs_v2" -DestinationPath "..\riscojs_v2.zip" -Force
 
-python -m http.server --directory ..\testbed 9000
+python -m http.server --directory ../testbed 9000

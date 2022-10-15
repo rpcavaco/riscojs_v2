@@ -1,5 +1,5 @@
 var RISCOJS_LAYERS_CFG = {
-	"lorder": ["orto2021", "grat"],
+	"lorder": ["carta_itineraria", "grat"],
 	"layers": {
 		"grat": {
 			"type": "graticule",
@@ -12,7 +12,14 @@ var RISCOJS_LAYERS_CFG = {
 			"reuseurl": true, 
 			"url": "https://sigcrsprxy.cm-porto.pt/dgtwms/ortos2021",
 			"layernames": "Ortos2021-RGB" 
-		}
+		},
+		"carta_itineraria": {
+			"type": "wms",
+			"reuseurl": true, 
+			"url": "https://webservices.igeoe.pt/geoserver/cigeoe/carta_itineraria",
+
+		}		
+
 	}
 
 }
