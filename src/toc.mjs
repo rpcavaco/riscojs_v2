@@ -1,6 +1,18 @@
 
-import {DynamicCanvasLayer} from './canvas_layers.mjs';
 
+import {CanvasWMSLayer} from './canvas_rasterlayers.mjs';
+import {CanvasGraticuleLayer} from './canvas_vectorlayers.mjs';
+
+const canvas_layer_classes = {
+    "graticule": CanvasGraticuleLayer,
+    "wms": CanvasWMSLayer
+};
+
+export class DynamicCanvasLayer {
+    constructor (p_classkey, opts) {
+       return new canvas_layer_classes[p_classkey](opts);
+    }
+}
 
 export class TOCManager {
 	

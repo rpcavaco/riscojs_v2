@@ -5,3 +5,4 @@ src/_*.*js
 docs/build
 venv38/
 *.zip
+passos_*
