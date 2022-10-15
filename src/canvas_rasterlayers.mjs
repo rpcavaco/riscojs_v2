@@ -35,13 +35,13 @@ class CanvasRasterLayer extends RasterLayer {
 
 		const terrain_bounds = [], out_pt=[], scr_bounds=[];
 		const cen = [];
-		let dims, env;
+		let dims, env, w, cen1, cen2;
 
 
 		const scalval = p_mapctxt.getScale();
 
-		// for scales greater than 1:LIMITSCALE_ENVDIV,  env will be just one
-		if (scalval <= 1000) {//GlobalConst.LIMITSCALE_ENVDIV) {
+		// for scales greater than 1:ENVDIV_LIMITSCALE,  env will be just one
+		if (scalval <= GlobalConst.ENVDIV_LIMITSCALE) {
 
 			yield genSingleEnv(p_mapctxt);
 		
@@ -51,28 +51,59 @@ class CanvasRasterLayer extends RasterLayer {
 			p_mapctxt.getCenter(cen);
 
 			// ccw from lower left
-			
-			const div_envs = [
-				[terrain_bounds[0], terrain_bounds[1], ...cen],
-				[cen[0], terrain_bounds[1], terrain_bounds[2], cen[1]],
-				[...cen, terrain_bounds[2], terrain_bounds[3]],
-				[terrain_bounds[0], cen[1], cen[0], terrain_bounds[3]]
-			];
 
-			for (let ei=0; ei<div_envs.length; ei++) {
-
-				env = div_envs[ei];
+			let div_envs;
+			if (GlobalConst.ENVDIV_NUMDIVS == 2) {
 				
-				scr_bounds.length = 4;
-				for (let i=0; i<2; i++) {
-					p_mapctxt.transformmgr.getCanvasPt([env[2*i], env[2*i+1]], out_pt);
-					scr_bounds[2*i] = out_pt[0];
-					scr_bounds[2*i+1] = out_pt[1];
+				div_envs = [
+					[terrain_bounds[0], terrain_bounds[1], ...cen],
+					[cen[0], terrain_bounds[1], terrain_bounds[2], cen[1]],
+					[...cen, terrain_bounds[2], terrain_bounds[3]],
+					[terrain_bounds[0], cen[1], cen[0], terrain_bounds[3]]
+				];
+	
+			} else if (GlobalConst.ENVDIV_NUMDIVS == 3) {
+
+				w = (terrain_bounds[2] - terrain_bounds[0]) / 3.0;
+				cen1 = [terrain_bounds[0] + w, cen[1]];
+				cen2 = [terrain_bounds[2] - w, cen[1]];
+
+				div_envs = [
+					[terrain_bounds[0], terrain_bounds[1], ...cen1],
+					[cen1[0], terrain_bounds[1], ...cen2],
+					[cen2[0], terrain_bounds[1], terrain_bounds[2], cen[1]],
+					[...cen2, terrain_bounds[2], terrain_bounds[3]],
+					[...cen1, cen2[0], terrain_bounds[3]],
+					[terrain_bounds[0], cen[1], cen1[0], terrain_bounds[3]]
+				];
+
+
+			} else {
+
+				console.error(`Invalid number of parts per axis in GlobalConst.ENVDIV_NUMDIVS: ${GlobalConst.ENVDIV_NUMDIVS}, allowed: 2 or 3`);
+
+				yield genSingleEnv(p_mapctxt);
+			}
+			
+
+			if (GlobalConst.ENVDIV_NUMDIVS == 2 || GlobalConst.ENVDIV_NUMDIVS == 3) {
+
+				for (let ei=0; ei<div_envs.length; ei++) {
+
+					env = div_envs[ei];
+					
+					scr_bounds.length = 4;
+					for (let i=0; i<2; i++) {
+						p_mapctxt.transformmgr.getCanvasPt([env[2*i], env[2*i+1]], out_pt);
+						scr_bounds[2*i] = out_pt[0];
+						scr_bounds[2*i+1] = out_pt[1];
+					}
+
+					dims = [scr_bounds[2] - scr_bounds[0], scr_bounds[1] - scr_bounds[3]];
+
+					yield [env, scr_bounds, dims, ei];
+
 				}
-
-				dims = [scr_bounds[2] - scr_bounds[0], scr_bounds[1] - scr_bounds[3]];
-
-				yield [env, scr_bounds, dims, ei];
 
 			}
 	
