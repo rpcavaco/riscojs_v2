@@ -1,14 +1,18 @@
 
-- 3 níveis drawing: obter envs, gerar itens (features ou outros), desenhar
-- mouse wheel throttle - passar para classe acima na hierarquia
+- OK - 3 níveis drawing: obter envs, gerar itens (features ou outros), desenhar
+- DESNECessario - mouse wheel throttle - passar para classe acima na hierarquia
 
-- parar load desnecessário
+- OK - parar load de imagem desnecessário
 - filtros imagem
 - offline bitmap
 
-- estratégias envelopeing para reduzir carregamentos feats e imagem
+- fallback: detetar indisponibilidade de layer e acionar layer de substituição
 - info na multi tool (no mouse up sem drag)
 - HDR
 - imagens AGS
 - features AGS
 - indide espacial
+
+
+- estratégias envelopeing para reduzir carregamentos feats e imagem - >> no WMS
+

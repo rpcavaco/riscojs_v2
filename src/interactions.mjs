@@ -276,7 +276,7 @@ export class ToolManager {
 	onEvent(p_mapctx, p_evt) {
 
 		let _ret, ret = true;
-		
+
 		for (let i=0; i<this.maptools.length; i++) {
 			if (this.maptools[i].enabled) {
 				_ret = this.maptools[i].onEvent(p_mapctx, p_evt);

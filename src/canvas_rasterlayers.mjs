@@ -5,13 +5,75 @@ import {GlobalConst} from './constants.js';
 import {RasterLayer} from './layers.mjs';
 
 
+const uuidv4 = () => {
+    const hex = [...Array(256).keys()]
+      .map(index => (index).toString(16).padStart(2, '0'));
+  
+    const r = crypto.getRandomValues(new Uint8Array(16));
+  
+    r[6] = (r[6] & 0x0f) | 0x40;
+    r[8] = (r[8] & 0x3f) | 0x80;
+    
+    return [...r.entries()]
+      .map(([index, int]) => [4, 6, 8, 10].includes(index) ? `-${hex[int]}` : hex[int])
+      .join('');
+};
+
+
 class CanvasRasterLayer extends RasterLayer {
 
 	canvasKey = 'base';
 	image_filter = "none";
 	constructor() {
 		super();
-	}		
+	}	
+	
+	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url) {
+
+		const img = new Image();
+		img.crossOrigin = "anonymous";
+
+		if (this.rastersloading[p_envkey] === undefined) {
+			this.rastersloading[p_envkey] = {};
+		}
+		const raster_id = uuidv4();
+
+		(function(pp_mapctxt, p_this, p_img, p_dims, pp_envkey, p_raster_id) {
+			p_img.onload = function() {
+
+				const gfctx = pp_mapctxt.canvasmgr.getDrwCtx(p_this.canvasKey);
+				gfctx.save();
+				try {
+					gfctx.clearRect(0, 0, ...p_dims);
+					gfctx.drawImage(p_img, 0, 0);
+
+					//processHDREffect(gfctx, [0,0], p_dims)
+				} catch(e) {
+					throw e;
+				} finally {
+					gfctx.restore();
+
+					delete p_this.rastersloading[pp_envkey][p_raster_id];
+					// console.log(`(rstrs still loading at t1 x ${p_envkey}):`, Object.keys(p_this.rastersloading[p_envkey]));
+				}
+	
+			}
+		})(p_mapctxt, this, img, p_dims, p_envkey, raster_id);
+
+		img.src = p_raster_url;
+
+		// console.log(`(rstrs on loading at t0 x ${p_envkey}):`, Object.keys(this.rastersloading[p_envkey]));
+
+		for (let rstrid in this.rastersloading[p_envkey]) {
+			this.rastersloading[p_envkey][rstrid].src = "";
+			delete this.rastersloading[p_envkey][rstrid];
+		}
+		this.rastersloading[p_envkey][raster_id] = img;
+
+		return true;
+
+	}	
+	
 }
 
 export class CanvasWMSLayer extends CanvasRasterLayer {
@@ -25,6 +87,7 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 	#servmetadata_report;
 	#servmetadata_report_completed = false;
 	#metadata_or_root_url;
+	#img_time_start;
 
 	constructor() { 
 		super();
@@ -345,34 +408,7 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 	
 	}
 
-	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_raster_url) {
-
-		const img = new Image();
-		img.crossOrigin = "anonymous";
-		(function(pp_mapctxt, p_this, p_img, p_dims) {
-			p_img.onload = function() {
-
-				const gfctx = pp_mapctxt.canvasmgr.getDrwCtx(p_this.canvasKey);
-				gfctx.save();
-				try {
-					gfctx.clearRect(0, 0, ...p_dims);
-					gfctx.drawImage(p_img, 0, 0);
-
-					//processHDREffect(gfctx, [0,0], p_dims)
-				} catch(e) {
-					throw e;
-				} finally {
-					gfctx.restore();
-				}
 	
-			}
-		})(p_mapctxt, this, img, p_dims);
-
-		img.src = p_raster_url;
-
-		return true;
-
-	}	
 	
 }
 

@@ -15,7 +15,9 @@ function genSingleEnv(p_mapctxt) {
 
 	p_mapctxt.getCanvasDims(dims);
 
-	return [terrain_bounds, scr_bounds, dims];
+	const key = 1;
+
+	return [terrain_bounds, scr_bounds, dims, key];
 }
 
 class Layer {
@@ -92,7 +94,7 @@ export class VectorLayer extends Layer {
 		// for each envelope generated in 'envs', generate an graphic item or feature in canvas coords
 	}	
 
-	drawitem2D(p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts) {
+	drawitem2D(p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, item_geom, item_atts) {
 
 		// to be extended
 		// for each 'canvas' item just draw
@@ -118,7 +120,7 @@ export class VectorLayer extends Layer {
 			gfctx.strokeStyle = this.default_stroke_symbol.strokeStyle;
 			gfctx.lineWidth = this.default_stroke_symbol.lineWidth;
 
-			for (const [terrain_env, scr_env, dims] of this.envs(this.mapctx)) {
+			for (const [terrain_env, scr_env, dims, envkey] of this.envs(this.mapctx)) {
 
 				// console.log("-- env --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);
 
@@ -131,7 +133,7 @@ export class VectorLayer extends Layer {
 
 					//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
 
-					if (!this.drawitem2D(this.mapctx, gfctx, terrain_env, scr_env, dims, item_coords, item_attrs)) {
+					if (!this.drawitem2D(this.mapctx, gfctx, terrain_env, scr_env, dims, envkey, item_coords, item_attrs)) {
 						cancel = true;
 						break;
 					}
@@ -158,6 +160,7 @@ export class VectorLayer extends Layer {
 
 export class RasterLayer extends Layer {
 
+	rastersloading = {};
 	constructor(p_mapctx) {
 		super(p_mapctx);
 	}
@@ -172,7 +175,7 @@ export class RasterLayer extends Layer {
 		// for each envelope generated in 'envs', generate an graphic item or feature in canvas coords
 	}	
 
-	drawitem2D(p_gfctx, p_terrain_env, p_scr_env, p_dims, p_raster_url) {
+	drawitem2D(p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url) {
 
 		// to be extended
 		// for each 'canvas' item just draw
@@ -212,7 +215,7 @@ export class RasterLayer extends Layer {
 				console.log(`[DBG:WMS] Layer '${this.key}' drawing, gettings envs`);
 			}
 
-			for (const [terrain_env, scr_env, dims] of this.envs(this.mapctx)) {
+			for (const [terrain_env, scr_env, dims, envkey] of this.envs(this.mapctx)) {
 
 				// console.log("-- 210 env --", terrain_env, scr_env, " canceled:", this.drawingcanceled);
 
@@ -229,7 +232,7 @@ export class RasterLayer extends Layer {
 					
 					// console.log("-- item --", terrain_env, scr_env, raster_url);
 
-					if (!this.drawitem2D(this.mapctx, gfctx, terrain_env, scr_env, dims, raster_url)) {
+					if (!this.drawitem2D(this.mapctx, gfctx, terrain_env, scr_env, dims, envkey, raster_url)) {
 						cancel = true;
 						break;
 					}
@@ -251,5 +254,6 @@ export class RasterLayer extends Layer {
 		}
 
 		return cancel;
-	}		
+	}	
+	
 }
