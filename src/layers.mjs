@@ -63,12 +63,12 @@ class Layer {
 		this.drawingcanceled = false;
 	}
 
-	* envs() {
-		// intended to be extended / replaced whenever request chunking, by envelopes, is needed
-		yield genSingleEnv(this.mapctx);
+	* envs(p_mapctxt) {
+		// intended to be overrriden whenever request chunking, by envelopes, is needed
+		yield genSingleEnv(p_mapctxt);
 	}	
 
-	* items(p_terrain_env, p_scr_env, p_dims) {
+	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
 		// to be extended
 		// for each envelope generated in 'envs', generate an graphic item or feature in canvas coords
 	}	
@@ -89,7 +89,7 @@ export class VectorLayer extends Layer {
 	}
 
 
-	* items(p_terrain_env, p_scr_env, p_dims) {
+	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
 		// to be extended
 		// for each envelope generated in 'envs', generate an graphic item or feature in canvas coords
 	}	
@@ -129,7 +129,7 @@ export class VectorLayer extends Layer {
 					cancel = true;
 					break;
 				}
-				for (const [item_coords, item_attrs] of this.items(this.mapctx, terrain_env, scr_env, dims)) {
+				for (const [item_coords, item_attrs] of this.layeritems(this.mapctx, terrain_env, scr_env, dims)) {
 
 					//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
 
@@ -165,12 +165,12 @@ export class RasterLayer extends Layer {
 		super(p_mapctx);
 	}
 
-	* envs() {
+	* envs(p_mapctxt) {
 		// intended to be extended / replaced whenever request chunking, by envelopes, is needed
-		yield genSingleEnv(this.mapctx);
+		yield genSingleEnv(p_mapctxt);
 	}	
 
-	* items(p_terrain_env, p_scr_env, p_dims) {
+	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
 		// to be extended
 		// for each envelope generated in 'envs', generate an graphic item or feature in canvas coords
 	}	
@@ -227,7 +227,7 @@ export class RasterLayer extends Layer {
 
 				// console.log("-- gettting rasters --");
 
-				for (const raster_url of this.items(this.mapctx, terrain_env, scr_env, dims)) {
+				for (const raster_url of this.layeritems(this.mapctx, terrain_env, scr_env, dims)) {
 
 					
 					// console.log("-- item --", terrain_env, scr_env, raster_url);

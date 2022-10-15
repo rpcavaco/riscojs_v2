@@ -41,7 +41,7 @@ export class CanvasGraticuleLayer extends CanvasVectorLayer {
 		yield [terrain_bounds, scr_bounds];
 	}
 	
-	* items(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
+	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
 		
 		const line = [];
 		let x, endlimit, crdlist=[], out_pt=[], crdlist_t;

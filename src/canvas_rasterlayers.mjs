@@ -401,7 +401,7 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 		return ret; 
 	}
 	
-	* items(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
+	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
 
 		p_mapctxt.getCanvasDims(p_dims);
 		yield this.buildGetMapURL(p_mapctxt, p_terrain_env, p_dims);
