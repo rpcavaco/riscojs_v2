@@ -9,9 +9,9 @@ class CanvasRasterLayer extends RasterLayer {
 
 	canvasKey = 'base';
 	image_filter = "none";
-	constructor(p_mapctxt) {
-		super(p_mapctxt);
-	}	
+	constructor() {
+		super();
+	}		
 }
 
 export class CanvasWMSLayer extends CanvasRasterLayer {
@@ -25,16 +25,23 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 	#servmetadata_report;
 	#servmetadata_report_completed = false;
 	#metadata_or_root_url;
-	constructor(p_mapctxt) { 
-		super(p_mapctxt);
-		console.log("CanvasWMSLayer_", p_mapctxt);
-		this.inited = false;
+
+	constructor() { 
+		super();
 	}
 
-	initLayer() {
+	isInited() {
+		return this.#servmetadata_report_completed;
+	}
 
-		console.log("######## INIT LAYER #########", this.mapctx);
+	// Why passing Map context to this method if this layer has it as a field ?
+	// The reason is: it is not still available at this stage; it will be availabe later to subsequent drawing ops
+	initLayer(p_mapctx) {
 
+		if (GlobalConst.getDebug("WMS")) {
+			console.log(`[DBG:WMS] Layer '${this.key}' is in INIT`);
+		}
+		
 		if (this.url == null || this.url.length < 1) {
 			throw new Error("Class CanvasWMSLayer, null or empty p_metadata_or_root_url");
 		}
@@ -43,9 +50,9 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 		this.#metadata_or_root_url = new URL(this.url);
 
 		const bounds = [], dims=[];
-		this.mapctx.getMapBounds(bounds);
-		const cfg = this.mapctx.cfgvar["basic"]; 
-		this.mapctx.getCanvasDims(dims);
+		p_mapctx.getMapBounds(bounds);
+		const cfg = p_mapctx.cfgvar["basic"]; 
+		p_mapctx.getCanvasDims(dims);
 
 		if (this.#metadata_or_root_url) {
 			const sp = this.#metadata_or_root_url.searchParams;
@@ -78,7 +85,9 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 			.then(
 				function(responsetext) {
 
-					console.log("RESPONSE ARRIVED !!!!!!")
+					if (GlobalConst.getDebug("WMS")) {
+						console.log(`[DBG:WMS] Layer '${that.key}' metadata arrived, viability check starting`);
+					}
 
 					const parser = new DOMParser();
 					//const ret = response.json();
@@ -110,7 +119,7 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 						that.#servmetadata["getmapurl"] = velem.getAttributeNS("http://www.w3.org/1999/xlink", 'href');
 					}
 
-					console.log("that.#servmetadata['getmapurl']:", that.#servmetadata["getmapurl"]);
+					// console.log("that.#servmetadata['getmapurl']:", that.#servmetadata["getmapurl"]);
 
 					const lyrs = xmlDoc.querySelectorAll("Capability Layer");
 					that.#servmetadata["layers"] = {}
@@ -144,13 +153,10 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 						}
 					}
 
-					that.reporting(this.mapctx, cfg["crs"], bounds, dims);
+					that.reporting(p_mapctx, cfg["crs"], bounds, dims);				
 
 				}
 			)
-
-
-		console.log("######## finsish INIT LAYER #########");
 
 		this.draw2D();
 
@@ -159,8 +165,6 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 	reporting (p_mapctxt, p_crs, p_bounds, p_dims) {
 		// service capabilities validation step
 		
-		//console.log(this.#servmetadata);
-		//console.log(Object.keys(this.#servmetadata));
 		this.#servmetadata_report = {};
 
 		this.#servmetadata_report["imagewidth"] = ( parseInt(this.#servmetadata["maxw"]) >= p_dims[0] ? "ok" : "notok");
@@ -187,10 +191,25 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 			}
 		}
 		this.#servmetadata_report_completed = true;
-		
+
+		const [viable, errormsg] = this.checkGetMapRequestViability();
+
+		if (GlobalConst.getDebug("WMS")) {
+			if (viable) {
+				console.log(`[DBG:WMS] Layer '${this.key}' viability checked OK, before drawing`);
+			} else {
+				console.log(`[DBG:WMS] Layer '${this.key}' metadata did not check OK, drawing skipped`);
+			}
+		}
+
+		if (!viable) {
+			return;
+		}
+
 		this.draw2D(p_mapctxt);
 	
 	}
+
 	reportResult(p_wms_innerlyrnames_str) {
 
 		let splits=[], res = null;
@@ -218,7 +237,7 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 	}
 
 	checkGetMapRequestViability() {
-		let ret = false;
+		let ret = false, res="";
 
 		if (this.#servmetadata_report_completed) {
 
@@ -250,15 +269,16 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 				}				
 			}
 
+			ret = true;
 			res = this.reportResult(this.layernames);
 			if (res != null) {
-				throw new Error(`WMS service inner layer '${this.layernames}' not usable due to: ${res}`);				
+				ret = false;
+				console.error(`WMS service inner layer '${this.layernames}' not usable due to: ${res}`);				
 			}
 
 			if (GlobalConst.getDebug("WMS")) {
 				console.log(`[DBG:WMS] before drawing '${this.key}'`);
 			}
-			ret = true;
 
 		} else {
 			if (GlobalConst.getDebug("WMS")) {
@@ -266,7 +286,7 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 			}
 		}
 
-		return ret;
+		return [ret, res];
 	}
 	
 	static #wmsVersionNumeric(p_versionstr) {
@@ -318,26 +338,10 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 		return ret; 
 	}
 	
-	/*
-	* envs(p_mapctxt) {
-
-		const terrain_bounds = [], out_pt=[], scr_bounds = null; //scr_bounds=[];
-		p_mapctxt.getMapBounds(terrain_bounds);
-
-		scr_bounds.length = 4;
-		for (let i=0; i<2; i++) {
-			p_mapctxt.transformmgr.getCanvasPt([terrain_bounds[2*i], terrain_bounds[2*i+1]], out_pt)
-			scr_bounds[2*i] = out_pt[0];
-			scr_bounds[2*i+1] = out_pt[1];
-		}
-
-		yield [terrain_bounds, scr_bounds];
-	} */
-
 	* items(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
 
 		p_mapctxt.getCanvasDims(p_dims);
-		return this.buildGetMapURL(p_mapctxt, p_terrain_env, p_dims);
+		yield this.buildGetMapURL(p_mapctxt, p_terrain_env, p_dims);
 	
 	}
 
@@ -370,53 +374,6 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 
 	}	
 	
-
-
-/*	
-	draw2D(p_mapctxt) {
-
-		if (!this.defaultvisible) {
-			return;
-		}
-		if (!this.checkScaleVisibility(p_mapctxt.getScale())) {
-			return;
-		}
-
-		if (!this.checkGetMapRequestViability()) {
-			return;
-		}
-
-		const dims = [];
-		p_mapctxt.getCanvasDims(dims);
-		const getmapurl = this.buildGetMapURL(p_mapctxt, dims);
-
-		const img = new Image();
-		img.crossOrigin = "anonymous";
-		(function(pp_mapctxt, p_this, p_img, p_dims) {
-			p_img.onload = function() {
-
-				const gfctx = pp_mapctxt.canvasmgr.getDrwCtx(p_this.canvasKey);
-				gfctx.save();
-				try {
-					gfctx.clearRect(0, 0, ...p_dims);
-					gfctx.drawImage(p_img, 0, 0);
-
-					//processHDREffect(gfctx, [0,0], p_dims)
-				} catch(e) {
-					throw e;
-				} finally {
-					gfctx.restore();
-				}
-	
-			}
-		})(p_mapctxt, this, img, dims)
-
-		img.src = getmapurl;
-
-
-	}
-*/
-
 }
 
 

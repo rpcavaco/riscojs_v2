@@ -24,16 +24,21 @@ class Layer {
 	maxscale = Number.MAX_SAFE_INTEGER;
 	defaultvisible = true;
 	drawingcanceled = false;
-	inited = true;
 	#key;
-	#mapctxt;
-	constructor(p_mapctxt) {
-		this.#mapctxt = p_mapctxt;
+	// constructor(p_mapctxt) {
+	//	this.mapctx = p_mapctxt;
+	//  console.log(this.mapctx);
+	constructor() {
 		this.missing_mandatory_configs = [];
 	}
 
-	get mapctxt() {
-		return this.#mapctxt;
+	isInited () {
+		// to be overridden by sub classes, when needed
+		return true;
+	}
+
+	setMapctxt(p_mapctxt) {
+		this.mapctx = p_mapctxt;
 	}
 
 	checkScaleVisibility(p_scaleval) {
@@ -42,14 +47,6 @@ class Layer {
 		}
 		return (p_scaleval >= this.minscale && p_scaleval <= this.maxscale);
 	}
-
-	checkAlreadyInit() {
-		return this.inited;
-	}
-
-	/* init (p_mapctxt) {  
-		an optional INIT method can perform initialization like get capabilities on OGC services
-	} */
 
 	set key(p_key) {
 		this.#key = p_key;
@@ -66,7 +63,7 @@ class Layer {
 
 	* envs() {
 		// intended to be extended / replaced whenever request chunking, by envelopes, is needed
-		yield genSingleEnv(this.#mapctxt);
+		yield genSingleEnv(this.mapctx);
 	}	
 
 	* items(p_terrain_env, p_scr_env, p_dims) {
@@ -107,11 +104,11 @@ export class VectorLayer extends Layer {
 		if (!this.defaultvisible) {
 			return;
 		}
-		if (!this.checkScaleVisibility(this.mapctxt.getScale())) {
+		if (!this.checkScaleVisibility(this.mapctx.getScale())) {
 			return;
 		}		
 
-		const gfctx = this.mapctxt.canvasmgr.getDrwCtx(this.canvasKey, '2d');
+		const gfctx = this.mapctx.canvasmgr.getDrwCtx(this.canvasKey, '2d');
 
 		let cancel = false;
 
@@ -121,7 +118,7 @@ export class VectorLayer extends Layer {
 			gfctx.strokeStyle = this.default_stroke_symbol.strokeStyle;
 			gfctx.lineWidth = this.default_stroke_symbol.lineWidth;
 
-			for (const [terrain_env, scr_env, dims] of this.envs(this.mapctxt)) {
+			for (const [terrain_env, scr_env, dims] of this.envs(this.mapctx)) {
 
 				// console.log("-- env --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);
 
@@ -130,11 +127,11 @@ export class VectorLayer extends Layer {
 					cancel = true;
 					break;
 				}
-				for (const [item_coords, item_attrs] of this.items(this.mapctxt, terrain_env, scr_env, dims)) {
+				for (const [item_coords, item_attrs] of this.items(this.mapctx, terrain_env, scr_env, dims)) {
 
 					//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
 
-					if (!this.drawitem2D(this.mapctxt, gfctx, terrain_env, scr_env, dims, item_coords, item_attrs)) {
+					if (!this.drawitem2D(this.mapctx, gfctx, terrain_env, scr_env, dims, item_coords, item_attrs)) {
 						cancel = true;
 						break;
 					}
@@ -167,7 +164,7 @@ export class RasterLayer extends Layer {
 
 	* envs() {
 		// intended to be extended / replaced whenever request chunking, by envelopes, is needed
-		yield genSingleEnv(this.mapctxt);
+		yield genSingleEnv(this.mapctx);
 	}	
 
 	* items(p_terrain_env, p_scr_env, p_dims) {
@@ -185,38 +182,54 @@ export class RasterLayer extends Layer {
 	draw2D() {
 
 		if (!this.defaultvisible) {
+			if (GlobalConst.getDebug("WMS")) {
+				console.log(`[DBG:WMS] Layer '${this.key}' is not default visible`);
+			}
 			return;
 		}
-		if (!this.checkScaleVisibility(this.mapctxt.getScale())) {
+		if (!this.checkScaleVisibility(this.mapctx.getScale())) {
+			if (GlobalConst.getDebug("WMS")) {
+				console.log(`[DBG:WMS] Layer '${this.key}' is out of scale visibility for 1:${this.mapctx.getScale()}`);
+			}
 			return;
 		}
 		
-		if (!this.inited) {
-			console.log("#######    NOT INITED      #######");
+		if (!this.isInited()) {
+			if (GlobalConst.getDebug("WMS")) {
+				console.log(`[DBG:WMS] Layer '${this.key}' is not inited`);
+			}
 			return;
 		}
 
-		const gfctx = this.mapctxt.canvasmgr.getDrwCtx(this.canvasKey, '2d');
+		const gfctx = this.mapctx.canvasmgr.getDrwCtx(this.canvasKey, '2d');
 
 		let cancel = false;
 
 		gfctx.save();
 		try {
 
-			for (const [terrain_env, scr_env, dims] of this.envs(this.mapctxt)) {
+			if (GlobalConst.getDebug("WMS")) {
+				console.log(`[DBG:WMS] Layer '${this.key}' drawing, gettings envs`);
+			}
 
-				// console.log("-- env --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);
+			for (const [terrain_env, scr_env, dims] of this.envs(this.mapctx)) {
+
+				// console.log("-- 210 env --", terrain_env, scr_env, " canceled:", this.drawingcanceled);
 
 				if (this.drawingcanceled) {
 					this.onCancel();
 					cancel = true;
 					break;
 				}
-				for (const raster_url of this.items(this.mapctxt, terrain_env, scr_env, dims)) {
 
-					//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
+				// console.log("-- gettting rasters --");
 
-					if (!this.drawitem2D(this.mapctxt, gfctx, terrain_env, scr_env, dims, raster_url)) {
+				for (const raster_url of this.items(this.mapctx, terrain_env, scr_env, dims)) {
+
+					
+					// console.log("-- item --", terrain_env, scr_env, raster_url);
+
+					if (!this.drawitem2D(this.mapctx, gfctx, terrain_env, scr_env, dims, raster_url)) {
 						cancel = true;
 						break;
 					}

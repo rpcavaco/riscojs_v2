@@ -34,6 +34,7 @@ export class TOCManager {
 		let items;
 
 		const cfgvar = this.mapctx.cfgvar;
+		const missing_configs_to_letgo = ["layernames"];
 
 		this.layers.length = 0;
 		const layerscfg = cfgvar["layers"];
@@ -53,25 +54,18 @@ export class TOCManager {
 						case "graticule":
 
 							if (this.mode == 'canvas')	{
-								currentLayer.push(new DynamicCanvasLayer(layerscfg.layers[lyk]["type"], this.mapctx));
-								console.log("...... 45 .....", currentLayer[0].mapctx);
+								currentLayer.push(new DynamicCanvasLayer(layerscfg.layers[lyk]["type"]));
+								currentLayer[0].setMapctxt(this.mapctx);
 							}
 							break;
 					}
-
-					console.log("...... 49 .....", currentLayer[0].mapctx);
 
 					if (currentLayer.length == 0) {
 						console.error(`TOCManager, layer '${lyk}' type not known: '${layerscfg.layers[lyk]["type"]}'`);
 						continue;
 					}
 
-					console.log("...... 56 .....", currentLayer[0].mapctx);
-
 					const scaneables = [currentLayer[0]];
-
-					console.log("...... 60 .....", currentLayer[0].mapctx);
-					
 					if (currentLayer[0].default_stroke_symbol !== undefined) {
 						scaneables.push(currentLayer[0].default_stroke_symbol);
 					}
@@ -94,8 +88,19 @@ export class TOCManager {
 								}
 							}	
 							
+							// missing items such as layernames must be handled in other place
 							if (currentLayer[0].missing_mandatory_configs.length > 0) {
-								throw new Error(`TOCManager, layer '${lyk}' config is missing mandatory items: '${currentLayer[0].missing_mandatory_configs}'`);
+								let cnt = 0;
+								for (const mc of currentLayer[0].missing_mandatory_configs) {
+									if (missing_configs_to_letgo.indexOf(mc) < 0) {
+										cnt++;
+									}
+								}
+								if (cnt>0) {
+									throw new Error(`TOCManager, layer '${lyk}' config is missing mandatory items: '${currentLayer[0].missing_mandatory_configs}'`);
+								} else {
+									console.log("missing mand:"+currentLayer[0].missing_mandatory_configs)
+								}
 							}
 	
 						}
@@ -105,8 +110,7 @@ export class TOCManager {
 					
 					try {
 						if (currentLayer[0].initLayer !== undefined) {
-							console.
-							currentLayer[0].initLayer();
+							currentLayer[0].initLayer(this.mapctx);
 						}
 					} catch(e) {
 						console.error(e);
@@ -132,7 +136,7 @@ export class TOCManager {
 	}
 
 	draw(p_scaleval) {
-		console.log("TOCManager draw, layers: ", this.layers.length, "scale:", p_scaleval);
+		console.info(`[INFO] attemting to draw ${this.layers.length} layers at scale 1:${p_scaleval}`);
 		let gfctx;
 		const ckeys = new Set();
 		const canvas_dims = [];

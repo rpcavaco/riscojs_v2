@@ -6,8 +6,10 @@ import {CanvasStrokeSymbol} from './canvas_symbols.mjs';
 class CanvasVectorLayer extends VectorLayer {
 
 	canvasKey = 'normal';
-	constructor(p_mapctxt) {
-		super(p_mapctxt);
+	// constructor(p_mapctxt) {
+		//super(p_mapctxt);
+	constructor() {
+		super();
 		this.default_stroke_symbol = new CanvasStrokeSymbol();
 		// this.default_fill_symbol = null;
 	}	
@@ -16,10 +18,12 @@ class CanvasVectorLayer extends VectorLayer {
 export class CanvasGraticuleLayer extends CanvasVectorLayer {
 
 	separation;
-	constructor(p_mapctxt) {
+	/* constructor(p_mapctxt) {
 		super(p_mapctxt);
+	} */
+	constructor() {
+		super();
 	}
-
 	* envs(p_mapctxt) {
 
 		const terrain_bounds = [], out_pt=[], scr_bounds = null; //scr_bounds=[];

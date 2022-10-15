@@ -12,12 +12,6 @@ var RISCOJS_LAYERS_CFG = {
 			"reuseurl": true, 
 			"url": "http://localhost:9200/wms/ortos2021",
 			"layernames": "Ortos2021-RGB" 
-		},
-		"carta_itineraria": {
-			"type": "wms",
-			"reuseurl": true, 
-			"url": "https://webservices.igeoe.pt/geoserver/cigeoe/carta_itineraria",
-
 		}		
 
 	}
