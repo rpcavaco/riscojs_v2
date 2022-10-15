@@ -1,8 +1,9 @@
 _sphinxcrap/
+lixo/
 testbed/js/
 dist/
 src/_*.*js
-docs/build
+docs/build/
 venv38/
 *.zip
 passos_*

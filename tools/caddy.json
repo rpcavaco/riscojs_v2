@@ -1,0 +1,75 @@
+
+{
+	"admin":{"disabled":true},
+	"apps": {
+		"http": {
+			"servers": {
+				"proxy": {
+					"listen": ["testserver.me:9200"],
+					"routes": [
+                        {
+                            "handle": [
+                                {
+                                    "handler": "headers",
+                                    "response": {
+                                        "deferred": true,
+                                        "set": {
+                                            "Access-Control-Allow-Credentials": [
+                                                "false"
+                                            ],
+                                            "Access-Control-Allow-Headers": [
+                                                "*"
+                                            ],
+                                            "Access-Control-Allow-Methods": [
+                                                "GET, OPTIONS"
+                                            ],
+                                            "Access-Control-Allow-Origin": [
+                                                "*"
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "match": [
+                                {
+                                    "method": [
+                                        "OPTIONS"
+                                    ]
+                                }
+                            ],
+                            "handle": [
+                                {
+                                    "handler": "static_response",
+                                    "status_code": 204
+                                }
+                            ]
+                        },
+						{
+							"handle": [{
+								"handler": "reverse_proxy",
+								"headers": {
+									"response": {
+										"delete": [
+											"Access-Control-Allow-Origin"
+										]
+									}
+								},								
+								"transport": {
+									"protocol": "http",
+									"tls": {}
+								},
+								"upstreams":[{
+									"dial":"cartografia.dgterritorio.gov.pt:443"
+								}]
+							}]
+						}
+					]
+				}
+			}
+		}
+	}
+}
+
+
