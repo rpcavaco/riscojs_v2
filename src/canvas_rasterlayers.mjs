@@ -205,7 +205,6 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 	#servmetadata_report;
 	#servmetadata_report_completed = false;
 	#metadata_or_root_url;
-	#img_time_start;
 
 	constructor() { 
 		super();

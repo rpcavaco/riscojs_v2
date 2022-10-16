@@ -34,7 +34,9 @@ export class TOCManager {
 		let items;
 
 		const cfgvar = this.mapctx.cfgvar;
-		const missing_configs_to_letgo = ["layernames"];
+
+		// mandatory configs whose absence must be provisionally accepted at this stage, and be properly handled further ahead in initialization 
+		const missing_configs_to_letgo = ["layernames"]; 
 
 		this.layers.length = 0;
 		const layerscfg = cfgvar["layers"];
@@ -75,12 +77,17 @@ export class TOCManager {
 
 							items = Object.keys(scaneables[si]);
 							for (let ii=0; ii < items.length; ii++) {
+
+								// class fields starting with '_' are the ones being public but not related to configurable items
+								if (items[ii].startsWith('_')) { 
+									continue;
+								}
 								
 								if (layerscfg.layers[lyk][items[ii]] !== undefined) {
 									scaneables[si][items[ii]] = layerscfg.layers[lyk][items[ii]];
 								} else {
-									// item has no default value
 
+									// item is missing if has no default value
 									if (scaneables[si][items[ii]] == null) {
 										currentLayer[0].missing_mandatory_configs.push(items[ii]);
 									}
@@ -99,7 +106,7 @@ export class TOCManager {
 								if (cnt>0) {
 									throw new Error(`TOCManager, layer '${lyk}' config is missing mandatory items: '${currentLayer[0].missing_mandatory_configs}'`);
 								} else {
-									console.log("missing mand:"+currentLayer[0].missing_mandatory_configs)
+									console.log(`missing mand.config on layer '${lyk}'` + currentLayer[0].missing_mandatory_configs);
 								}
 							}
 	

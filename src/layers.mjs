@@ -20,12 +20,31 @@ export function genSingleEnv(p_mapctxt) {
 	return [terrain_bounds, scr_bounds, dims, key];
 }
 
+export function genMultipleEnv(p_mapctxt) {
+
+	const terrain_bounds = [], out_pt=[], dims=[], scr_bounds=[];
+	p_mapctxt.getMapBounds(terrain_bounds);
+
+	scr_bounds.length = 4;
+	for (let i=0; i<2; i++) {
+		p_mapctxt.transformmgr.getCanvasPt([terrain_bounds[2*i], terrain_bounds[2*i+1]], out_pt)
+		scr_bounds[2*i] = out_pt[0];
+		scr_bounds[2*i+1] = out_pt[1];
+	}
+
+	p_mapctxt.getCanvasDims(dims);
+
+	const key = 0;
+
+	return [terrain_bounds, scr_bounds, dims, key];
+}
+
 class Layer {
 
 	minscale = GlobalConst.MINSCALE;
 	maxscale = Number.MAX_SAFE_INTEGER;
 	defaultvisible = true;
-	drawingcanceled = false;
+	_drawingcanceled = false;
 	#key;
 	// constructor(p_mapctxt) {
 	//	this.mapctx = p_mapctxt;
@@ -60,7 +79,7 @@ class Layer {
 	onCancel() {
 		// to be extended
 		// At least must end with:
-		this.drawingcanceled = false;
+		this._drawingcanceled = false;
 	}
 
 	* envs(p_mapctxt) {
@@ -124,7 +143,7 @@ export class VectorLayer extends Layer {
 
 				// console.log("-- env --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);
 
-				if (this.drawingcanceled) {
+				if (this._drawingcanceled) {
 					this.onCancel();
 					cancel = true;
 					break;
@@ -137,7 +156,7 @@ export class VectorLayer extends Layer {
 						cancel = true;
 						break;
 					}
-					if (this.drawingcanceled) {
+					if (this._drawingcanceled) {
 						this.onCancel();
 						cancel = true;
 						break;
@@ -217,10 +236,10 @@ export class RasterLayer extends Layer {
 
 			for (const [terrain_env, scr_env, dims, envkey] of this.envs(this.mapctx)) {
 
-				//console.log("-- 220 env --", terrain_env, " canceled:", this.drawingcanceled);
+				//console.log("-- 220 env --", terrain_env, " canceled:", this._drawingcanceled);
 				//console.log("-- 221 screnv,dims,envk --", scr_env, dims, envkey);
 
-				if (this.drawingcanceled) {
+				if (this._drawingcanceled) {
 					this.onCancel();
 					cancel = true;
 					break;
@@ -237,7 +256,7 @@ export class RasterLayer extends Layer {
 						cancel = true;
 						break;
 					}
-					if (this.drawingcanceled) {
+					if (this._drawingcanceled) {
 						this.onCancel();
 						cancel = true;
 						break;
