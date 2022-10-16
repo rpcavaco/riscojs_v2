@@ -3,7 +3,7 @@
 - DESNECessario - mouse wheel throttle - passar para classe acima na hierarquia
 
 - OK - parar load de imagem desnecessário
-- filtros imagem
+- OK - filtros imagem
 -  ?  offline bitmap
 
 - fallback: detetar indisponibilidade de layer e acionar layer de substituição
@@ -16,5 +16,5 @@
 
 - estratégias enveloping para reduzir carregamentos feats e imagem - OK no WMS
 
-- >> melhorar  estratégias enveloping a pensar na rotação 
-
+- melhorar estratégias enveloping a pensar na rotação 
+- cookie "local" anterior

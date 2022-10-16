@@ -11,7 +11,8 @@ var RISCOJS_LAYERS_CFG = {
 			"type": "wms",
 			"reuseurl": true, 
 			"url": "http://localhost:9200/wms/ortos2021",
-			"layernames": "Ortos2021-RGB" 
+			"layernames": "Ortos2021-RGB"
+			//"filter": "grayscale"
 		}		
 
 	}

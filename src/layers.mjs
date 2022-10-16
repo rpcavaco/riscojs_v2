@@ -247,6 +247,7 @@ export class VectorLayer extends Layer {
 export class RasterLayer extends Layer {
 
 	rastersloading = {};
+	filter = "none";
 	constructor(p_mapctx) {
 		super(p_mapctx);
 	}
