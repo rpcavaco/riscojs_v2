@@ -67,7 +67,7 @@ class CanvasRasterLayer extends RasterLayer {
 				try {
 					//console.log(">>   ", p_img.width, p_img.height, pp_envkey);
 					//console.log(">>2>>", pp_scr_env[0], pp_scr_env[3], pp_dims);
-					p_gfctx.clearRect(pp_scr_env[0], pp_scr_env[3], ...pp_dims);
+					//p_gfctx.clearRect(pp_scr_env[0], pp_scr_env[3], ...pp_dims);
 					p_gfctx.drawImage(p_img, pp_scr_env[0], pp_scr_env[3]);
 
 					if (p_this.filter == 'grayscale') {

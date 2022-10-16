@@ -119,11 +119,13 @@ class MultiTool extends BaseTool {
 						this.wheelscale = p_mapctx.transformmgr.getReadableCartoScale();
 					}
 
-					if (this.wheelscale < 700) {
+					if (this.wheelscale < 1500) {
 						scale = this.wheelscale + (p_evt.deltaY * 1.2);
-					} else if (this.wheelscale < 1000) {
-						scale = this.wheelscale + (p_evt.deltaY * 2);
 					} else if (this.wheelscale < 2000) {
+						scale = this.wheelscale + (p_evt.deltaY * 2.4);
+					} else if (this.wheelscale < 3000) {
+						scale = this.wheelscale + (p_evt.deltaY * 3);
+					} else if (this.wheelscale < 3000) {
 						scale = this.wheelscale + (p_evt.deltaY * 4);
 					} else {
 						scale = this.wheelscale + (p_evt.deltaY * 10);

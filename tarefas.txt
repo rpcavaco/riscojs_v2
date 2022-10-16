@@ -5,8 +5,9 @@
 - OK - estratégias enveloping para reduzir carregamentos feats e imagem
 - OK - filtros imagem
 - OK - cookie "local" anterior
-
 - OK - imagens AGS
+
+- blending de layers raster
 
 -  ?  offline bitmap
 
@@ -16,6 +17,8 @@
 - rotação
 - features AGS
 - índice espacial
+
+- graticulas de pontos
 
 
 

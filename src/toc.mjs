@@ -159,6 +159,9 @@ export class TOCManager {
 		}
 
 		for (const ck of ckeys) {
+			/* if (ck == 'base') {
+				continue;
+			} */
 			gfctx = this.mapctx.canvasmgr.getDrwCtx(ck, '2d');
 			// console.log("clear ck:", ck);
 			gfctx.clearRect(0, 0, ...canvas_dims); 
