@@ -76,7 +76,7 @@ export class CanvasGraticuleLayer extends CanvasVectorLayer {
 export class CanvasGraticulePtsLayer extends CanvasVectorLayer {
 
 	separation;
-	ptdim = 12;
+	ptdim = 2;
 
 	constructor() {
 		super();
@@ -107,18 +107,21 @@ export class CanvasGraticulePtsLayer extends CanvasVectorLayer {
 
 	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_canvas_coords, p_attrs, p_lyrorder) {
 
+		const sclval = p_mapctxt.getScale();
+		const dim = this.ptdim * (10.0 / Math.log10(sclval));
+
 		p_gfctx.beginPath();
 
 		// horiz
-		p_gfctx.moveTo(p_canvas_coords[0] - this.ptdim, p_canvas_coords[1]);
-		p_gfctx.lineTo(p_canvas_coords[0] + this.ptdim, p_canvas_coords[1]);
+		p_gfctx.moveTo(p_canvas_coords[0] - dim, p_canvas_coords[1]);
+		p_gfctx.lineTo(p_canvas_coords[0] + dim, p_canvas_coords[1]);
 		p_gfctx.stroke();
 
 		p_gfctx.beginPath();
 
 		// vert
-		p_gfctx.moveTo(p_canvas_coords[0], p_canvas_coords[1] - this.ptdim);
-		p_gfctx.lineTo(p_canvas_coords[0], p_canvas_coords[1] + this.ptdim);
+		p_gfctx.moveTo(p_canvas_coords[0], p_canvas_coords[1] - dim);
+		p_gfctx.lineTo(p_canvas_coords[0], p_canvas_coords[1] + dim);
 		p_gfctx.stroke();
 
 		return true;
