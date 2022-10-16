@@ -6,8 +6,7 @@
 - OK - filtros imagem
 - OK - cookie "local" anterior
 - OK - imagens AGS
-
-- blending de layers raster
+- FALHAdo - blending de layers raster
 
 -  ?  offline bitmap
 

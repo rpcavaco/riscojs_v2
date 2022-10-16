@@ -65,33 +65,10 @@ class CanvasRasterLayer extends RasterLayer {
 
 				p_gfctx.save();
 				try {
-					//console.log(">>   ", p_img.width, p_img.height, pp_envkey);
-					//console.log(">>2>>", pp_scr_env[0], pp_scr_env[3], pp_dims);
+
 					//p_gfctx.clearRect(pp_scr_env[0], pp_scr_env[3], ...pp_dims);
 
-					//console.log("######", p_lyrorder, "<<<<< lyr ord <<<<<<");
-
-					let img_pre, img_pre_data, img_pos, img_pos_data, pixels;
-					
-					if (p_lyrorder > 0 && this.blend) {
-						console.log("blending!!");
-						img_pre = p_gfctx.getImageData(pp_scr_env[0], pp_scr_env[3], ...pp_dims);
-						img_pre_data = img_pre.data;						
-					}
-
-
 					p_gfctx.drawImage(p_img, pp_scr_env[0], pp_scr_env[3]);
-
-					if (p_lyrorder > 0 && this.blend) {
-						img_pos = p_gfctx.getImageData(pp_scr_env[0], pp_scr_env[3], ...pp_dims);
-						img_pos_data = img_pos.data;
-						
-						while (pixels--) {
-							img_pre_data[pixels] = img_pre_data[pixels] * 0.5 + img_pos_data[pixels] * 0.5;
-						}
-						img_pre.data = img_pre_data;
-						p_gfctx.putImageData(img_pre, 0, 0);						
-					}
 
 					if (p_this.filter == 'grayscale') {
 						toGrayScaleImgFilter(p_gfctx, p_img, pp_scr_env[0], pp_scr_env[3], ...pp_dims);

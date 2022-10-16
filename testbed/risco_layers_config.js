@@ -1,5 +1,5 @@
 var RISCOJS_LAYERS_CFG = {
-	"lorder": ["orto2021",  "enq_bw_porto", "grat"],
+	"lorder": ["enq_bw_porto", "grat"],
 	"layers": {
 		"grat": {
 			"type": "graticule",
@@ -19,7 +19,7 @@ var RISCOJS_LAYERS_CFG = {
 			"url": "https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer",
 			"layers": "show:9,11,16,17"
 			//"filter": "grayscale"
-		},		
+		}		
 		
 		
 
