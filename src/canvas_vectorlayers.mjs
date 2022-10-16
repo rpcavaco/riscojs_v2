@@ -1,18 +1,18 @@
 
 
-import {VectorLayer} from './layers.mjs';
-import {CanvasStrokeSymbol} from './canvas_symbols.mjs';
+import { VectorLayer } from './layers.mjs';
+import { CanvasStrokeSymbol } from './canvas_symbols.mjs';
 
 class CanvasVectorLayer extends VectorLayer {
 
 	canvasKey = 'normal';
 	// constructor(p_mapctxt) {
-		//super(p_mapctxt);
+	//super(p_mapctxt);
 	constructor() {
 		super();
 		this.default_stroke_symbol = new CanvasStrokeSymbol();
 		// this.default_fill_symbol = null;
-	}	
+	}
 }
 
 export class CanvasGraticuleLayer extends CanvasVectorLayer {
@@ -24,9 +24,8 @@ export class CanvasGraticuleLayer extends CanvasVectorLayer {
 	}
 
 	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
-		
-		const line = [];
-		let x, endlimit, crdlist=[], out_pt=[], crdlist_t;
+
+		let x, endlimit, crdlist = [], out_pt = [], crdlist_t;
 		for (const mode of ['horiz', 'vert']) {
 
 			if (mode == 'vert') {
@@ -49,10 +48,10 @@ export class CanvasGraticuleLayer extends CanvasVectorLayer {
 				}
 				crdlist_t = []
 				crdlist_t.length = crdlist.length;
-				for (let i=0; i<2; i++) {
-					p_mapctxt.transformmgr.getCanvasPt([crdlist[2*i], crdlist[2*i+1]], out_pt)
-					crdlist_t[2*i] = out_pt[0];
-					crdlist_t[2*i+1] = out_pt[1];
+				for (let i = 0; i < 2; i++) {
+					p_mapctxt.transformmgr.getCanvasPt([crdlist[2 * i], crdlist[2 * i + 1]], out_pt)
+					crdlist_t[2 * i] = out_pt[0];
+					crdlist_t[2 * i + 1] = out_pt[1];
 				}
 
 				yield [crdlist_t, null];
@@ -60,8 +59,8 @@ export class CanvasGraticuleLayer extends CanvasVectorLayer {
 
 		}
 
-	}	
-	
+	}
+
 	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_canvas_coords, p_attrs, p_lyrorder) {
 
 		p_gfctx.beginPath();
@@ -71,7 +70,60 @@ export class CanvasGraticuleLayer extends CanvasVectorLayer {
 
 		return true;
 
-	}	
+	}
+}
+
+export class CanvasGraticulePtsLayer extends CanvasVectorLayer {
+
+	separation;
+	ptdim = 12;
+
+	constructor() {
+		super();
+	}
+
+	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
+
+		let out_pt = [];
+		let x, xorig = this.separation * Math.floor(p_terrain_env[0] / this.separation);
+		let x_lim = p_terrain_env[2];
+
+		let y = this.separation * Math.floor(p_terrain_env[1] / this.separation);
+		let y_lim = p_terrain_env[3];
+
+		while (y <= y_lim) {
+
+			y = y + this.separation;
+			x = xorig;
+
+			while (x <= x_lim) {
+
+				x = x + this.separation;
+				p_mapctxt.transformmgr.getCanvasPt([x, y], out_pt)
+				yield [out_pt.slice(0), null];
+			}
+		}
+	}
+
+	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_canvas_coords, p_attrs, p_lyrorder) {
+
+		p_gfctx.beginPath();
+
+		// horiz
+		p_gfctx.moveTo(p_canvas_coords[0] - this.ptdim, p_canvas_coords[1]);
+		p_gfctx.lineTo(p_canvas_coords[0] + this.ptdim, p_canvas_coords[1]);
+		p_gfctx.stroke();
+
+		p_gfctx.beginPath();
+
+		// vert
+		p_gfctx.moveTo(p_canvas_coords[0], p_canvas_coords[1] - this.ptdim);
+		p_gfctx.lineTo(p_canvas_coords[0], p_canvas_coords[1] + this.ptdim);
+		p_gfctx.stroke();
+
+		return true;
+
+	}
 }
 
 /*

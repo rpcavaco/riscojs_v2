@@ -7,6 +7,7 @@
 - OK - cookie "local" anterior
 - OK - imagens AGS
 - FALHAdo - blending de layers raster
+- OK - graticulas de pontos
 
 -  ?  offline bitmap
 
@@ -17,7 +18,7 @@
 - features AGS
 - índice espacial
 
-- graticulas de pontos
+
 
 
 

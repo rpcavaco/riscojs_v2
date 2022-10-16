@@ -2,9 +2,9 @@ var RISCOJS_LAYERS_CFG = {
 	"lorder": ["enq_bw_porto", "grat"],
 	"layers": {
 		"grat": {
-			"type": "graticule",
+			"type": "graticulept",
 			"separation": 100,
-			"strokeStyle": "white",
+			"strokeStyle": "grey",
 			"lineWidth": 1
 		},
 		"orto2021": {

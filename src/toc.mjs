@@ -1,10 +1,11 @@
 
 
 import {CanvasWMSLayer, CanvasAGSMapLayer} from './canvas_rasterlayers.mjs';
-import {CanvasGraticuleLayer} from './canvas_vectorlayers.mjs';
+import {CanvasGraticuleLayer, CanvasGraticulePtsLayer} from './canvas_vectorlayers.mjs';
 
 const canvas_layer_classes = {
     "graticule": CanvasGraticuleLayer,
+    "graticulept": CanvasGraticulePtsLayer,	
     "wms": CanvasWMSLayer,
 	"ags_map": CanvasAGSMapLayer
 };
@@ -56,6 +57,7 @@ export class TOCManager {
 						case "wms":
 						case "ags_map":
 						case "graticule":
+						case "graticulept":
 
 							if (this.mode == 'canvas')	{
 								currentLayer.push(new DynamicCanvasLayer(layerscfg.layers[lyk]["type"]));
