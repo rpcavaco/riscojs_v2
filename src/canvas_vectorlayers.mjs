@@ -18,29 +18,11 @@ class CanvasVectorLayer extends VectorLayer {
 export class CanvasGraticuleLayer extends CanvasVectorLayer {
 
 	separation;
-	/* constructor(p_mapctxt) {
-		super(p_mapctxt);
-	} */
+
 	constructor() {
 		super();
 	}
-	* envs(p_mapctxt) {
 
-		const terrain_bounds = [], out_pt=[], scr_bounds = null; //scr_bounds=[];
-		p_mapctxt.getMapBounds(terrain_bounds);
-
-		/*
-		scr_bounds.length = 4;
-		for (let i=0; i<2; i++) {
-			p_mapctxt.transformmgr.getCanvasPt([terrain_bounds[2*i], terrain_bounds[2*i+1]], out_pt)
-			scr_bounds[2*i] = out_pt[0];
-			scr_bounds[2*i+1] = out_pt[1];
-		}
-		*/
-
-		yield [terrain_bounds, scr_bounds];
-	}
-	
 	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
 		
 		const line = [];

@@ -251,20 +251,15 @@ export class RasterLayer extends Layer {
 		super(p_mapctx);
 	}
 
-	/** envs(p_mapctxt) {
-		// intended to be overrriden whenever request chunking, by envelopes, is needed
-		yield genSingleEnv(p_mapctxt);
-	}	*/
-
 	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
 		// to be extended
-		// for each envelope generated in 'envs', generate an graphic item or feature in canvas coords
+		// for each envelope generated in 'envs', generate an graphic item, feature (or chunks of items or features) in canvas coords
 	}	
 
 	drawitem2D(p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url) {
 
 		// to be extended
-		// for each 'canvas' item just draw
+		// just draw each item in canvas
 
 	}	
 
