@@ -310,7 +310,6 @@ export class RasterLayer extends Layer {
 				// console.log("-- gettting rasters --");
 
 				for (const raster_url of this.layeritems(this.mapctx, terrain_env, scr_env, dims)) {
-
 					
 					// console.log("-- item --", terrain_env, scr_env, raster_url);
 

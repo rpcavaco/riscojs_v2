@@ -425,11 +425,11 @@ class TransformsQueue {
 
 		out_env.length = 4;
 		
-		// minx, miny, maxx, maxy
-		out_env[0] = terrainPtUL[0];
-		out_env[1] = terrainPtLR[1];		
-		out_env[2] = terrainPtLR[0];
-		out_env[3] = terrainPtUL[1];		
+		// minx, miny, maxx, maxy, ready for rotation
+		out_env[0] = Math.min(terrainPtUL[0], terrainPtLR[0]);
+		out_env[1] = Math.min(terrainPtLR[1], terrainPtUL[1]);		
+		out_env[2] = Math.max(terrainPtUL[0], terrainPtLR[0]);
+		out_env[3] = Math.max(terrainPtLR[1], terrainPtUL[1]);		
 	}	
 
 
