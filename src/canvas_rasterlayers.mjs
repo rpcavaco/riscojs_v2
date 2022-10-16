@@ -434,8 +434,60 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 	
 	}
 
+}
+
+/*
+https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer/
+
+export?bbox=-45769.791687218014%2C163884.03511089442%2C-41083.105778479825%2C167393.47546310845&bboxSR=102161&imageSR=102161&size=1051%2C787&dpi=96&format=png32&transparent=true&layers=show%3A11%2C16%2C17&f=image
+*/
+
+export class CanvasAGSMapLayer extends CanvasRasterLayer {
+
+	url;
+	layers;
+	imageformat = "jpg"; // png | png8 | png24 | jpg | pdf | bmp | gif | svg | svgz | emf | ps | png32
+
+	constructor() { 
+		super();
+	}
+
+	buildExportMapURL(p_mapctxt, p_terrain_bounds, p_dims) {
+
+		if (this.url.indexOf("/MapServer/export") < 0) {
+			this.url = this.url.replace("/MapServer", "/MapServer/export");
+		}
+
+		const url = new URL(this.url);
+		
+		const sp = url.searchParams;
+		const crs = p_mapctxt.cfgvar["basic"]["crs"];
+		const bndstr = p_terrain_bounds.join(',');
+
+		sp.set('bbox', bndstr);
+		sp.set('bboxSR', crs);
+		sp.set('imageSR', crs);
+		sp.set('size', `${p_dims[0]},${p_dims[1]}`);
+		sp.set('dpi', '96');		
+		sp.set('format', this.imageformat);
+		sp.set('layers', this.layers);
+		sp.set('f', 'image');
+
+		const ret = url.toString();		
+		if (GlobalConst.getDebug("AGSMAP")) {
+			console.log(`[DBG:AGSMAP] buildGetMapURL: '${ret}'`);
+		}	
+		
+		return ret; 
+	}
+	
+	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
+
+		// p_mapctxt.getCanvasDims(p_dims);
+		yield this.buildExportMapURL(p_mapctxt, p_terrain_env, p_dims);
+	
+	}
+
 	
 	
 }
-
-

@@ -20,23 +20,34 @@ export function genSingleEnv(p_mapctxt) {
 	return [terrain_bounds, scr_bounds, dims, key];
 }
 
-export function* genMultipleEnv(p_mapctxt, p_scale) {
+export function* genMultipleEnv(p_mapctxt, p_envsplit_cfg, p_scale) {
 
-	const envsplit_scales = Object.keys(GlobalConst.ENVSPLIT_CFG); 
-	envsplit_scales.sort();
+	let envsplit_scales, the_splits, mult, v;
 
-	// find the scale in config which is immediately above current scale
-	let v, found_gte_scale, gte_scale;
-	for (gte_scale of envsplit_scales) {
-		v = parseInt(gte_scale);
-		if (v >=  p_scale) {
-			found_gte_scale = v;
-			break;
+	if (Object.keys(p_envsplit_cfg).length !== 0) {
+
+		envsplit_scales = Object.keys(p_envsplit_cfg); 
+		envsplit_scales.sort();
+
+		// find the scale in config which is immediately above current scale
+		let v, found_gte_scale, gte_scale;
+		for (gte_scale of envsplit_scales) {
+			v = parseInt(gte_scale);
+			if (v >=  p_scale) {
+				found_gte_scale = v;
+				break;
+			}
 		}
-	}
 
-	const the_splits = GlobalConst.ENVSPLIT_CFG[found_gte_scale];
-	const mult = Math.max(...the_splits);
+		the_splits = p_envsplit_cfg[found_gte_scale];
+		mult = Math.max(...the_splits);
+
+	} else {
+
+		the_splits = [1,1];
+		mult = 1;
+
+	}
 
 	const terrain_bounds = [], tx_ticks=[], ty_ticks=[], out_dims=[];
 	const out_terr_bounds = [], out_scr_bounds=[], out_pt=[];
@@ -103,6 +114,7 @@ class Layer {
 	maxscale = Number.MAX_SAFE_INTEGER;
 	defaultvisible = true;
 	envsplit = true;
+	envsplit_cfg = {};
 	_drawingcanceled = false;
 	#key;
 	// constructor(p_mapctxt) {
@@ -143,9 +155,15 @@ class Layer {
 
 	* envs(p_mapctxt) {
 		// might be overriden to implement a different env split - based request chunking
+
 		if (this.envsplit) {
+
+			if (Object.keys(this.envsplit_cfg).length === 0) {
+				this.envsplit_cfg = GlobalConst.ENVSPLIT_CFG_DEFAULT;
+			}
+	
 			const scl = this.mapctx.getScale();
-			for (const envdata of genMultipleEnv(p_mapctxt, scl)) {
+			for (const envdata of genMultipleEnv(p_mapctxt, this.envsplit_cfg, scl)) {
 				yield envdata;
 			}
 

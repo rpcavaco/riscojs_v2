@@ -1,7 +1,7 @@
 
 
 var SUBKEYS = {
-	"layers": ["wms"]
+	"layers": ["wms", ""]
 }
 
 // 'layers' and other keys in SUBKEYS are group keys: whenever DEBUG: "LAYERS", code marked with debug for "WMS" is also debugged
@@ -10,7 +10,7 @@ var SUBKEYS = {
 
 var GlobalConst = {
 
-	DEBUG: "none",    // ALL, I18N, LAYERS, WMS, DISENG_WHEEL, none
+	DEBUG: "none",    // ALL, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, none
 
 	MMPD: 25.4 / 96.0,
 	ACCPTBLE_LYRREDRAW_DELAY_MSEC: 10,
@@ -21,8 +21,7 @@ var GlobalConst = {
 	MINSCALEDIFF: 1,
 	MAXLAYERCOUNT: 100,
 	MOUSEWHEEL_THROTTLE: 100,  // millisecs, interval between wheel events must span more than this interval for each event to be listened
-
-	ENVSPLIT_CFG: {  // envelope division in chunking requests -- each entry:  display scales up to key value are split n-times horizontally and k-times vertically
+	ENVSPLIT_CFG_DEFAULT: {  // envelope division in chunking requests -- each entry:  display scales up to key value are split n-times horizontally and k-times vertically
 		1000: [1, 1],
 		2000: [2, 1],
 		3000: [2, 2],

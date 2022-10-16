@@ -1,11 +1,12 @@
 
 
-import {CanvasWMSLayer} from './canvas_rasterlayers.mjs';
+import {CanvasWMSLayer, CanvasAGSMapLayer} from './canvas_rasterlayers.mjs';
 import {CanvasGraticuleLayer} from './canvas_vectorlayers.mjs';
 
 const canvas_layer_classes = {
     "graticule": CanvasGraticuleLayer,
-    "wms": CanvasWMSLayer
+    "wms": CanvasWMSLayer,
+	"ags_map": CanvasAGSMapLayer
 };
 
 export class DynamicCanvasLayer {
@@ -53,6 +54,7 @@ export class TOCManager {
 					switch (layerscfg.layers[lyk]["type"]) {
 					
 						case "wms":
+						case "ags_map":
 						case "graticule":
 
 							if (this.mode == 'canvas')	{
@@ -143,7 +145,9 @@ export class TOCManager {
 	}
 
 	draw(p_scaleval) {
+
 		console.info(`[INFO] attemting to draw ${this.layers.length} layers at scale 1:${p_scaleval}`);
+		
 		let gfctx;
 		const ckeys = new Set();
 		const canvas_dims = [];
@@ -161,7 +165,12 @@ export class TOCManager {
 		}
 
 		for (let li=0; li < this.layers.length; li++) {
-			this.layers[li].draw2D(this.mapctx);
+
+			try {
+				this.layers[li].draw2D(this.mapctx);
+			} catch(e) {
+				console.error(e);
+			}
 		}
 
 	}
