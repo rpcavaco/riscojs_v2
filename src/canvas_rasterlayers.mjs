@@ -5,7 +5,7 @@ import {GlobalConst} from './constants.js';
 import {genSingleEnv, RasterLayer} from './layers.mjs';
 
 
-const uuidv4 = () => {
+function uuidv4() {
     const hex = [...Array(256).keys()]
       .map(index => (index).toString(16).padStart(2, '0'));
   
@@ -17,8 +17,42 @@ const uuidv4 = () => {
     return [...r.entries()]
       .map(([index, int]) => [4, 6, 8, 10].includes(index) ? `-${hex[int]}` : hex[int])
       .join('');
-};
+}
 
+function toGrayScaleImgFilter(p_gfctx, p_imgobj, p_x, p_y, p_ctxw, p_ctxh, null_filteradicdata) {
+		
+	try {
+		var imageData = p_gfctx.getImageData(p_x, p_y, p_ctxw, p_ctxh);
+		var data = imageData.data;
+
+		for(var i = 0; i < data.length; i += 4) {
+		  var brightness = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
+		  // red
+		  data[i] = brightness;
+		  // green
+		  data[i + 1] = brightness;
+		  // blue
+		  data[i + 2] = brightness;
+		}
+
+		// overwrite original image
+		p_gfctx.putImageData(imageData, p_x, p_y);    			
+		
+	} catch(e) {
+		var accepted = false
+		if (e.name !== undefined) {
+			if (["NS_ERROR_NOT_AVAILABLE"].indexOf(e.name) >= 0) {
+				accepted = true;
+			}
+		}
+		if (!accepted) {
+			console.log("... drawImage ERROR ...");
+			console.log(p_imgobj);
+			console.log(e);
+		}
+			
+	}
+};
 
 class CanvasRasterLayer extends RasterLayer {
 

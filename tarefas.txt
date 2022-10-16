@@ -4,7 +4,7 @@
 
 - OK - parar load de imagem desnecessário
 - filtros imagem
-- offline bitmap
+-  ?  offline bitmap
 
 - fallback: detetar indisponibilidade de layer e acionar layer de substituição
 - info na multi tool (no mouse up sem drag)
@@ -14,5 +14,7 @@
 - indide espacial
 
 
-- estratégias envelopeing para reduzir carregamentos feats e imagem - >> no WMS
+- estratégias enveloping para reduzir carregamentos feats e imagem - OK no WMS
+
+- >> melhorar  estratégias enveloping a pensar na rotação 
 
