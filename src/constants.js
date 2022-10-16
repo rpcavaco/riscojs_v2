@@ -21,8 +21,14 @@ var GlobalConst = {
 	MINSCALEDIFF: 1,
 	MAXLAYERCOUNT: 100,
 	MOUSEWHEEL_THROTTLE: 100,  // millisecs, interval between wheel events must span more than this interval for each event to be listened
-	ENVDIV_LIMITSCALE: 1000,  // scale limit for env division in wms / raster layers
-	ENVDIV_NUMDIVS: 3,  // number of parts in each axis, env division in wms / raster layers
+
+	ENVSPLIT_CFG: {  // envelope division in chunking requests -- each entry:  display scales up to key value are split n-times horizontally and k-times vertically
+		1000: [1, 1],
+		2000: [2, 1],
+		3000: [2, 2],
+		4000: [3, 2],
+		9999999999999: [3, 3]
+	},
 
 	getDebug: function(p_dbgkey) {
 		let ret = false, all = false;

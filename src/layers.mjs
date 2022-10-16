@@ -20,23 +20,81 @@ export function genSingleEnv(p_mapctxt) {
 	return [terrain_bounds, scr_bounds, dims, key];
 }
 
-export function genMultipleEnv(p_mapctxt) {
+export function* genMultipleEnv(p_mapctxt, p_scale) {
 
-	const terrain_bounds = [], out_pt=[], dims=[], scr_bounds=[];
-	p_mapctxt.getMapBounds(terrain_bounds);
+	const envsplit_scales = Object.keys(GlobalConst.ENVSPLIT_CFG); 
+	envsplit_scales.sort();
 
-	scr_bounds.length = 4;
-	for (let i=0; i<2; i++) {
-		p_mapctxt.transformmgr.getCanvasPt([terrain_bounds[2*i], terrain_bounds[2*i+1]], out_pt)
-		scr_bounds[2*i] = out_pt[0];
-		scr_bounds[2*i+1] = out_pt[1];
+	// find the scale in config which is immediately above current scale
+	let v, found_gte_scale, gte_scale;
+	for (gte_scale of envsplit_scales) {
+		v = parseInt(gte_scale);
+		if (v >=  p_scale) {
+			found_gte_scale = v;
+			break;
+		}
 	}
 
-	p_mapctxt.getCanvasDims(dims);
+	const the_splits = GlobalConst.ENVSPLIT_CFG[found_gte_scale];
+	const mult = Math.max(...the_splits);
 
-	const key = 0;
+	const terrain_bounds = [], tx_ticks=[], ty_ticks=[], out_dims=[];
+	const out_terr_bounds = [], out_scr_bounds=[], out_pt=[];
+	let dx, dy, xi, yi;
 
-	return [terrain_bounds, scr_bounds, dims, key];
+	if (GlobalConst.getDebug("LAYERS")) {
+		console.log(`[DBG:LAYERS] Greater-then-or-equal scale found: ${found_gte_scale}, with splits ${the_splits}`);
+	}
+
+	p_mapctxt.getMapBounds(terrain_bounds);
+
+	if (the_splits[0] < 1) {
+		throw new Error(`invalid value (x<1) for envelope X split (first in array) at scale ${found_gte_scale}: ${the_splits[0]}`);
+	}
+	if (the_splits[1] < 1) {
+		throw new Error(`invalid value (x<1) for envelope Y split (last in array) at scale ${found_gte_scale}: ${the_splits[1]}`);
+	}
+
+	dx = (terrain_bounds[2] - terrain_bounds[0]) / the_splits[0];
+	for (xi=0; xi<=the_splits[0]; xi++) {
+
+		v = terrain_bounds[0] + (xi * dx);
+		tx_ticks.push(v);
+	}
+
+	dy = (terrain_bounds[3] - terrain_bounds[1]) / the_splits[1];
+	for (yi=0; yi<=the_splits[1]; yi++) {
+		
+		v = terrain_bounds[1] + (yi * dy);
+		ty_ticks.push(v);
+	}
+
+	for (yi=0; yi<the_splits[1]; yi++) {
+
+		for (xi=0; xi<the_splits[0]; xi++) {
+
+			out_terr_bounds.length = 0;
+			out_scr_bounds.length = 0;
+			out_dims.length = 0;
+
+			out_terr_bounds.push(tx_ticks[xi]);
+			out_terr_bounds.push(ty_ticks[yi]);
+
+			p_mapctxt.transformmgr.getCanvasPt([tx_ticks[xi], ty_ticks[yi]], out_pt);
+			out_scr_bounds.push(...out_pt);
+
+			out_terr_bounds.push(tx_ticks[xi+1]);
+			out_terr_bounds.push(ty_ticks[yi+1]);
+
+			p_mapctxt.transformmgr.getCanvasPt([tx_ticks[xi+1], ty_ticks[yi+1]], out_pt);
+			out_scr_bounds.push(...out_pt);
+
+			out_dims.push(...[out_scr_bounds[2] - out_scr_bounds[0], out_scr_bounds[1] - out_scr_bounds[3]]);
+
+			yield [out_terr_bounds.slice(0), out_scr_bounds.slice(0), out_dims.slice(0), mult*yi+xi];
+		}		
+	}
+
 }
 
 class Layer {
@@ -44,6 +102,7 @@ class Layer {
 	minscale = GlobalConst.MINSCALE;
 	maxscale = Number.MAX_SAFE_INTEGER;
 	defaultvisible = true;
+	envsplit = true;
 	_drawingcanceled = false;
 	#key;
 	// constructor(p_mapctxt) {
@@ -83,8 +142,16 @@ class Layer {
 	}
 
 	* envs(p_mapctxt) {
-		// intended to be overrriden whenever request chunking, by envelopes, is needed
-		yield genSingleEnv(p_mapctxt);
+		// might be overriden to implement a different env split - based request chunking
+		if (this.envsplit) {
+			const scl = this.mapctx.getScale();
+			for (const envdata of genMultipleEnv(p_mapctxt, scl)) {
+				yield envdata;
+			}
+
+		} else {
+			yield genSingleEnv(p_mapctxt);			
+		}
 	}	
 
 	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
@@ -184,10 +251,10 @@ export class RasterLayer extends Layer {
 		super(p_mapctx);
 	}
 
-	* envs(p_mapctxt) {
+	/** envs(p_mapctxt) {
 		// intended to be overrriden whenever request chunking, by envelopes, is needed
 		yield genSingleEnv(p_mapctxt);
-	}	
+	}	*/
 
 	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
 		// to be extended
