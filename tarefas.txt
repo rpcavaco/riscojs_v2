@@ -9,13 +9,14 @@
 - FALHAdo - blending de layers raster
 - OK - graticulas de pontos
 
+- >> features AGS
+
 -  ?  offline bitmap
 
 - fallback: detetar indisponibilidade de layer e acionar layer de substituição
 - info na multi tool (no mouse up sem drag)
 - HDR
 - rotação
-- features AGS
 - índice espacial
 
 
