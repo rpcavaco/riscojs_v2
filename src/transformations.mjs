@@ -1,7 +1,8 @@
 import {GlobalConst} from './constants.js';
 import {rad2Deg} from './geom.mjs';
-
 import {identity, multiply, inverse, scaling, translation, twod_shift, rotation, getCartoScaling, vectorMultiply} from './matrices3.mjs';
+
+import {getCookie, setCookie} from './utils.mjs';
 
 class MapAffineTransformationMxColl {
 
@@ -182,9 +183,32 @@ class TransformsQueue {
 			throw new Error("Class Transform2DMgr, init, configuration JSON dictionary contains no 'scale' value");
 		}
 
-		this.setScaleFromReadableCartoScale(this.mapctx_config_var["scale"], false);
-		this.setCenter(...this.mapctx_config_var["terrain_center"], true);
+		let scalev, tc = getCookie("risco_mapscale");
+		if (tc.length < 1) {
+			tc = this.mapctx_config_var["scale"];
+			scalev = parseFloat(tc);
+		} else {
+			if (isNaN(parseFloat(tc))) {
+				throw new Error("Invalid scale in 'risco_mapscale' cookie:", tc);
+			}
+			scalev = parseFloat(tc);
+		}
 
+		if (scalev < GlobalConst.MINSCALE) {
+			scalev = GlobalConst.MINSCALE;
+		}
+
+		this.setScaleFromReadableCartoScale(scalev, false);
+
+		let tcobj;
+		tc = getCookie("risco_terrain_center");
+		if (tc.length < 1) {
+			tcobj = this.mapctx_config_var["terrain_center"];
+		} else {
+			tcobj = tc.split("_");
+		}
+				
+		this.setCenter(...tcobj, true);
 	}
 	/**
 	 * Method setScaleFromReadableCartoScale
@@ -237,6 +261,8 @@ class TransformsQueue {
 		if (opt_do_store) {
 			this.transformsQueue.store();
 		}
+
+		setCookie("risco_mapscale", vscale.toString());
 		
 	}	
 
@@ -250,7 +276,7 @@ class TransformsQueue {
 	 * @param {float} p_cx
 	 * @param {float} p_cy 
 	 */
-	setCenter(p_cx, p_cy, opt_do_store) {
+	setCenter(p_cx, p_cy, b_do_store) {
 
 		if (p_cx === null || isNaN(p_cx)) {
 			throw new Error("Class Transform2DMgr, setCenter, invalid value was passed for cx", p_cx);
@@ -278,10 +304,11 @@ class TransformsQueue {
 
 		ctrans.setTranslating(-ox, -(oy + fheight));
 
-		if (opt_do_store) {
+		if (b_do_store) {
 			this.transformsQueue.store();
 		}
 
+		setCookie("risco_terrain_center", `${p_cx}_${p_cy}`);
 	}	
 
 	getCenter(out_ret) {
@@ -377,7 +404,7 @@ class TransformsQueue {
 
 	doPan(p_scrpt_a, p_scrpt_b, opt_do_store) {
 
-		let ctrans, diff_pt = [];
+		let ctrans, diff_pt = [], cen_pt=[];
 		this.getTerrainTranslation(p_scrpt_a, p_scrpt_b, diff_pt);
 
 		ctrans = this.transformsQueue.currentTransform;
@@ -386,6 +413,9 @@ class TransformsQueue {
 		if (opt_do_store) {
 			this.transformsQueue.store();
 		}
+
+		this.getCenter(cen_pt);
+		setCookie("risco_terrain_center", `${cen_pt[0]}_${cen_pt[1]}`);
 	}
 
 	/**

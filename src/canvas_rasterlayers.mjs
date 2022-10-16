@@ -1,23 +1,10 @@
 
 import {GlobalConst} from './constants.js';
+import {uuidv4} from './utils.mjs';
 // import {processHDREffect} from './canvas_utils.mjs';
 
-import {genSingleEnv, RasterLayer} from './layers.mjs';
+import {RasterLayer} from './layers.mjs';
 
-
-function uuidv4() {
-    const hex = [...Array(256).keys()]
-      .map(index => (index).toString(16).padStart(2, '0'));
-  
-    const r = crypto.getRandomValues(new Uint8Array(16));
-  
-    r[6] = (r[6] & 0x0f) | 0x40;
-    r[8] = (r[8] & 0x3f) | 0x80;
-    
-    return [...r.entries()]
-      .map(([index, int]) => [4, 6, 8, 10].includes(index) ? `-${hex[int]}` : hex[int])
-      .join('');
-}
 
 function toGrayScaleImgFilter(p_gfctx, p_imgobj, p_x, p_y, p_ctxw, p_ctxh, null_filteradicdata) {
 		
