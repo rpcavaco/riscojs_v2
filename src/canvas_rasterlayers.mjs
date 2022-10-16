@@ -49,7 +49,7 @@ class CanvasRasterLayer extends RasterLayer {
 		super();
 	}	
 
-	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url) {
+	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url, p_lyrorder) {
 
 		const img = new Image();
 		img.crossOrigin = "anonymous";
@@ -65,9 +65,9 @@ class CanvasRasterLayer extends RasterLayer {
 
 				p_gfctx.save();
 				try {
-					//console.log(">>   ", p_img.width, p_img.height, pp_envkey);
-					//console.log(">>2>>", pp_scr_env[0], pp_scr_env[3], pp_dims);
+
 					//p_gfctx.clearRect(pp_scr_env[0], pp_scr_env[3], ...pp_dims);
+
 					p_gfctx.drawImage(p_img, pp_scr_env[0], pp_scr_env[3]);
 
 					if (p_this.filter == 'grayscale') {
@@ -125,7 +125,7 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 
 	// Why passing Map context to this method if this layer has it as a field ?
 	// The reason is: it is not still available at this stage; it will be availabe later to subsequent drawing ops
-	initLayer(p_mapctx) {
+	initLayer(p_mapctx, p_lyr_order) {
 
 		if (GlobalConst.getDebug("WMS")) {
 			console.log(`[DBG:WMS] Layer '${this.key}' is in INIT`);
@@ -242,16 +242,16 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 						}
 					}
 
-					that.reporting(p_mapctx, cfg["crs"], bounds, dims);				
+					that.reporting(p_mapctx, cfg["crs"], bounds, dims, p_lyr_order);				
 
 				}
 			)
 
-		this.draw2D();
+		this.draw2D(p_mapctx, p_lyr_order);
 
 	}
 
-	reporting (p_mapctxt, p_crs, p_bounds, p_dims) {
+	reporting (p_mapctxt, p_crs, p_bounds, p_dims, p_lyr_order) {
 		// service capabilities validation step
 		
 		this.#servmetadata_report = {};
@@ -295,7 +295,7 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 			return;
 		}
 
-		this.draw2D(p_mapctxt);
+		this.draw2D(p_mapctxt, p_lyr_order);
 	
 	}
 

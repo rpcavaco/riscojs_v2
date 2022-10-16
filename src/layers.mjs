@@ -115,6 +115,7 @@ class Layer {
 	defaultvisible = true;
 	envsplit = true;
 	envsplit_cfg = {};
+	blend = false;
 	_drawingcanceled = false;
 	#key;
 	// constructor(p_mapctxt) {
@@ -177,7 +178,7 @@ class Layer {
 		// for each envelope generated in 'envs', generate an graphic item or feature in canvas coords
 	}	
 
-	draw2D() {
+	draw2D(p_mapctx, p_lyrorder) {
 
 		// to be extended
 		
@@ -198,14 +199,14 @@ export class VectorLayer extends Layer {
 		// for each envelope generated in 'envs', generate an graphic item or feature in canvas coords
 	}	
 
-	drawitem2D(p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, item_geom, item_atts) {
+	drawitem2D(p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, item_geom, item_atts, p_lyrorder) {
 
 		// to be extended
 		// for each 'canvas' item just draw
 
 	}	
 
-	draw2D() {
+	draw2D(p_mapctx, p_lyrorder) {
 
 		if (!this.defaultvisible) {
 			return;
@@ -237,7 +238,7 @@ export class VectorLayer extends Layer {
 
 					//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
 
-					if (!this.drawitem2D(this.mapctx, gfctx, terrain_env, scr_env, dims, envkey, item_coords, item_attrs)) {
+					if (!this.drawitem2D(this.mapctx, gfctx, terrain_env, scr_env, dims, envkey, item_coords, item_attrs, p_lyrorder)) {
 						cancel = true;
 						break;
 					}
@@ -275,14 +276,14 @@ export class RasterLayer extends Layer {
 		// for each envelope generated in 'envs', generate an graphic item, feature (or chunks of items or features) in canvas coords
 	}	
 
-	drawitem2D(p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url) {
+	drawitem2D(p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url, p_lyrorder) {
 
 		// to be extended
 		// just draw each item in canvas
 
 	}	
 
-	draw2D() {
+	draw2D(p_mapctx, p_lyrorder) {
 
 		if (!this.defaultvisible) {
 			if (GlobalConst.getDebug("WMS")) {
@@ -290,9 +291,9 @@ export class RasterLayer extends Layer {
 			}
 			return;
 		}
-		if (!this.checkScaleVisibility(this.mapctx.getScale())) {
+		if (!this.checkScaleVisibility(p_mapctx.getScale())) {
 			if (GlobalConst.getDebug("WMS")) {
-				console.log(`[DBG:WMS] Layer '${this.key}' is out of scale visibility for 1:${this.mapctx.getScale()}`);
+				console.log(`[DBG:WMS] Layer '${this.key}' is out of scale visibility for 1:${p_mapctx.getScale()}`);
 			}
 			return;
 		}
@@ -315,7 +316,7 @@ export class RasterLayer extends Layer {
 				console.log(`[DBG:WMS] Layer '${this.key}' drawing, gettings envs`);
 			}
 
-			for (const [terrain_env, scr_env, dims, envkey] of this.envs(this.mapctx)) {
+			for (const [terrain_env, scr_env, dims, envkey] of this.envs(p_mapctx)) {
 
 				//console.log("-- 220 env --", terrain_env, " canceled:", this._drawingcanceled);
 				//console.log("-- 221 screnv,dims,envk --", scr_env, dims, envkey);
@@ -328,11 +329,11 @@ export class RasterLayer extends Layer {
 
 				// console.log("-- gettting rasters --");
 
-				for (const raster_url of this.layeritems(this.mapctx, terrain_env, scr_env, dims)) {
+				for (const raster_url of this.layeritems(p_mapctx, terrain_env, scr_env, dims)) {
 					
 					// console.log("-- item --", terrain_env, scr_env, raster_url);
 
-					if (!this.drawitem2D(this.mapctx, gfctx, terrain_env, scr_env, dims, envkey, raster_url)) {
+					if (!this.drawitem2D(p_mapctx, gfctx, terrain_env, scr_env, dims, envkey, raster_url, p_lyrorder)) {
 						cancel = true;
 						break;
 					}

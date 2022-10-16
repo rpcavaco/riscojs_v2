@@ -62,7 +62,7 @@ export class CanvasGraticuleLayer extends CanvasVectorLayer {
 
 	}	
 	
-	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_canvas_coords, p_attrs) {
+	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_canvas_coords, p_attrs, p_lyrorder) {
 
 		p_gfctx.beginPath();
 		p_gfctx.moveTo(p_canvas_coords[0], p_canvas_coords[1]);

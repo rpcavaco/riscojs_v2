@@ -119,7 +119,7 @@ export class TOCManager {
 					
 					try {
 						if (currentLayer[0].initLayer !== undefined) {
-							currentLayer[0].initLayer(this.mapctx);
+							currentLayer[0].initLayer(this.mapctx, i);
 						}
 					} catch(e) {
 						console.error(e);
@@ -170,7 +170,7 @@ export class TOCManager {
 		for (let li=0; li < this.layers.length; li++) {
 
 			try {
-				this.layers[li].draw2D(this.mapctx);
+				this.layers[li].draw2D(this.mapctx, li);
 			} catch(e) {
 				console.error(e);
 			}
