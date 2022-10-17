@@ -116,7 +116,7 @@ class Layer {
 	envsplit_cfg = {};
 	blend = false;
 	_drawingcanceled = false;
-	#key;
+	_key;
 	// constructor(p_mapctxt) {
 	//	this.mapctx = p_mapctxt;
 	//  console.log(this.mapctx);
@@ -149,10 +149,10 @@ class Layer {
 	}
 
 	set key(p_key) {
-		this.#key = p_key;
+		this._key = p_key;
 	}
 	get key() {
-		return this.#key;
+		return this._key;
 	}
 
 	onCancel() {
@@ -342,8 +342,8 @@ export class RasterLayer extends Layer {
 		gfctx.save();
 		try {
 
-			if (GlobalConst.getDebug("WMS")) {
-				console.log(`[DBG:WMS] Layer '${this.key}' drawing, gettings envs`);
+			if (GlobalConst.getDebug("LAYERS")) {
+				console.log(`[DBG:LAYERS] Layer '${this.key}' drawing, gettings envs`);
 			}
 
 			for (const [terrain_env, scr_env, dims, envkey] of this.envs(p_mapctx)) {

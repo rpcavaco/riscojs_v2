@@ -1,5 +1,5 @@
 
-
+import {GlobalConst} from './constants.js';
 import { VectorLayer } from './layers.mjs';
 import { CanvasStrokeSymbol } from './canvas_symbols.mjs';
 

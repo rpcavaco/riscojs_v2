@@ -13,6 +13,7 @@
 - measuring tool
 
 
+- >> scaledep 'layers' / 'layernames' (sub-layers)
 
 - >> features AGS
 

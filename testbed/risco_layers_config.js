@@ -17,7 +17,10 @@ var RISCOJS_LAYERS_CFG = {
 		"enq_bw_porto": {
 			"type": "ags_map",
 			"url": "https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer",
-			"layers": "show:11,16,17"
+			"layers": "11,16,17",
+			"scaledepLayers": {
+				5000: "9,11,16,17"
+			}
 			//"filter": "grayscale"
 		}		
 		
