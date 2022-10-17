@@ -248,7 +248,7 @@ export class VectorLayer extends Layer {
 			gfctx.strokeStyle = this.default_stroke_symbol.strokeStyle;
 			gfctx.lineWidth = this.default_stroke_symbol.lineWidth;
 
-			for (const [terrain_env, scr_env, dims, envkey] of this.envs(this.mapctx)) {
+			for (const [terrain_env, scr_env, dims, envkey] of this.envs(p_mapctx)) {
 
 				// console.log("-- env --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);
 
@@ -258,7 +258,7 @@ export class VectorLayer extends Layer {
 					break;
 				}
 
-				if (!previousToLayeritems(p_mapctxt, p_terrain_env)) {
+				if (!this.previousToLayeritems(p_mapctx, terrain_env)) {
 					if (GlobalConst.getDebug("LAYERS")) {
 						console.log(`[DBG:LAYERS] Vector layer '${this.key}' previousToLayeritems failed`);
 					}
