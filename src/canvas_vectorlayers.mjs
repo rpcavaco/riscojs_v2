@@ -133,16 +133,16 @@ export class CanvasGraticulePtsLayer extends CanvasVectorLayer {
 /*
 https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer/
 
-export?bbox=-45769.791687218014%2C163884.03511089442%2C-41083.105778479825%2C167393.47546310845&bboxSR=102161&imageSR=102161&size=1051%2C787&dpi=96&format=png32&transparent=true&layers=show%3A11%2C16%2C17&f=image
-*/
+
 
 https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer/9/query?where=1%3D1&text=&objectIds=&time=&timeRelation=esriTimeRelationOverlaps&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&returnExtentOnly=false&sqlFormat=none&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=html
+*/
 
 export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 
 	url;     // https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer
 	layerid; // 9
-	fields = "*";
+	fields = "objectid";
 	precision = 3; 
 	f = "json";
 	
@@ -150,7 +150,7 @@ export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 		super();
 	}
 
-	buildQueryURL(p_mapctxt, p_terrain_bounds, p_dims) {
+	buildQueryURL(p_mapctxt, p_terrain_bounds, p_mode) {
 
 		const teststr = `MapServer/${this.layerid}/query`;
 
@@ -168,19 +168,28 @@ export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 		sp.set('inSR', crs);
 		sp.set('spatialRel', 'esriSpatialRelIntersects');
 		sp.set('outFields', this.fields);
+
+		switch(p_mode) {
+
+			case "INITCOUNT":
+				sp.set('returnGeometry', 'true');
+				sp.set('returnIdsOnly', 'false');
+				sp.set('returnCountOnly', 'false');
+				sp.set('returnExtentOnly', 'false');
+				break;
+		
+		}
+
+		/*
 		sp.set('returnGeometry', 'true');
 		sp.set('returnIdsOnly', 'false');
 		sp.set('returnCountOnly', 'false');
 		sp.set('returnExtentOnly', 'false');
 		sp.set('geometryPrecision', precision.toString());
 		sp.set('outSR', crs);
+		*/
 
-		sp.set('imageSR', crs);
-		sp.set('size', `${p_dims[0]},${p_dims[1]}`);
-		sp.set('dpi', '96');		
-		sp.set('format', this.imageformat);
-		sp.set('layers', this.layers);
-		sp.set('f', 'image');
+		sp.set('f', 'json');
 
 		const ret = url.toString();		
 		if (GlobalConst.getDebug("AGSQRY")) {
@@ -190,6 +199,15 @@ export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 		return ret; 
 	}
 
+	isInited() {
+		// to be extended, if needed
+	}
 
+	// Why passing Map context to this method if this layer has it as a field ?
+	// The reason is: it is not still available at this stage; it will be availabe later to subsequent drawing ops
+	initLayer(p_mapctx, p_lyr_order) {
+		// to be extended, if needed
+	}	
+	
 }
 

@@ -21,7 +21,7 @@ export class I18n {
 			lang = "en";
 		} else {
 			if (GlobalConst.getDebug("I18N"))
-				console.info("using browser lang:", lang);
+				console.info("[DBG:I18N] using browser lang:", lang);
 		}
 		
 		ret = this.msgs[lang][p_msgkey];

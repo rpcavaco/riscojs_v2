@@ -22,7 +22,7 @@ export function genSingleEnv(p_mapctxt) {
 
 export function* genMultipleEnv(p_mapctxt, p_envsplit_cfg, p_scale) {
 
-	let envsplit_scales, the_splits, mult, v;
+	let envsplit_scales, found_gte_scale, the_splits, mult, v;
 
 	if (Object.keys(p_envsplit_cfg).length !== 0) {
 
@@ -30,7 +30,7 @@ export function* genMultipleEnv(p_mapctxt, p_envsplit_cfg, p_scale) {
 		envsplit_scales.sort();
 
 		// find the scale in config which is immediately above current scale
-		let v, found_gte_scale, gte_scale;
+		let v, gte_scale;
 		for (gte_scale of envsplit_scales) {
 			v = parseInt(gte_scale);
 			if (v >=  p_scale) {
@@ -113,7 +113,6 @@ class Layer {
 	minscale = GlobalConst.MINSCALE;
 	maxscale = Number.MAX_SAFE_INTEGER;
 	defaultvisible = true;
-	envsplit = true;
 	envsplit_cfg = {};
 	blend = false;
 	_drawingcanceled = false;
@@ -129,6 +128,14 @@ class Layer {
 		// to be overridden by sub classes, when needed
 		return true;
 	}
+
+	// Why passing Map context to this method if this layer has it as a field ?
+	// The reason is: it is not still available at this stage; it will be availabe later to subsequent drawing ops
+	initLayer(p_mapctx, p_lyr_order) {
+		// to be extended, if needed
+
+		// if not finishing in error, must alter instance state in order fo method 'isInited' to return true
+	}	
 
 	setMapctxt(p_mapctxt) {
 		this.mapctx = p_mapctxt;
@@ -189,6 +196,7 @@ class Layer {
 
 export class VectorLayer extends Layer {
 
+	envsplit = false;
 	constructor(p_mapctx) {
 		super(p_mapctx);
 	}
@@ -209,14 +217,24 @@ export class VectorLayer extends Layer {
 	draw2D(p_mapctx, p_lyrorder) {
 
 		if (!this.defaultvisible) {
+			if (GlobalConst.getDebug("LAYERS")) {
+				console.log(`[DBG:LAYERS] Vector layer '${this.key}' is not default visible`);
+			}
 			return;
 		}
-		if (!this.checkScaleVisibility(this.mapctx.getScale())) {
+		if (!this.checkScaleVisibility(p_mapctx.getScale())) {
+			if (GlobalConst.getDebug("LAYERS")) {
+				console.log(`[DBG:LAYERS] Vector layer '${this.key}' is out of scale visibility for 1:${p_mapctx.getScale()}`);
+			}
+			return;
+		}
+		
+		if (!this.isInited()) {
+			console.log(`[WARN:LAYERS] Vector layer '${this.key}' is not inited`);
 			return;
 		}		
 
 		const gfctx = this.mapctx.canvasmgr.getDrwCtx(this.canvasKey, '2d');
-
 		let cancel = false;
 
 		gfctx.save();
@@ -267,6 +285,7 @@ export class RasterLayer extends Layer {
 
 	rastersloading = {};
 	filter = "none";
+	envsplit = true;
 	constructor(p_mapctx) {
 		super(p_mapctx);
 	}
@@ -286,22 +305,20 @@ export class RasterLayer extends Layer {
 	draw2D(p_mapctx, p_lyrorder) {
 
 		if (!this.defaultvisible) {
-			if (GlobalConst.getDebug("WMS")) {
-				console.log(`[DBG:WMS] Layer '${this.key}' is not default visible`);
+			if (GlobalConst.getDebug("LAYERS")) {
+				console.log(`[DBG:LAYERS] Raster layer '${this.key}' is not default visible`);
 			}
 			return;
 		}
 		if (!this.checkScaleVisibility(p_mapctx.getScale())) {
-			if (GlobalConst.getDebug("WMS")) {
-				console.log(`[DBG:WMS] Layer '${this.key}' is out of scale visibility for 1:${p_mapctx.getScale()}`);
+			if (GlobalConst.getDebug("LAYERS")) {
+				console.log(`[DBG:LAYERS] Raster layer '${this.key}' is out of scale visibility for 1:${p_mapctx.getScale()}`);
 			}
 			return;
 		}
 		
 		if (!this.isInited()) {
-			if (GlobalConst.getDebug("WMS")) {
-				console.log(`[DBG:WMS] Layer '${this.key}' is not inited`);
-			}
+			console.log(`[WARN:LAYERS] Raster layer '${this.key}' is not inited`);
 			return;
 		}
 

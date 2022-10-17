@@ -8,6 +8,11 @@
 - OK - imagens AGS
 - FALHAdo - blending de layers raster
 - OK - graticulas de pontos
+- racionalizar a criação de novas layer - acabar com o switch
+- zoom janela e ferramenta base de desenho de janela
+- measuring tool
+
+
 
 - >> features AGS
 
@@ -16,10 +21,14 @@
 - fallback: detetar indisponibilidade de layer e acionar layer de substituição
 - info na multi tool (no mouse up sem drag)
 - HDR
+- FGB
 - rotação
 - índice espacial
+- ? pluggable new layers 
+- canvas de background para mostrar blurred image durante substituições de mapa
 
 
+- novo s riscowidgets e risco web client (onde se junta tudo)
 
 
 
