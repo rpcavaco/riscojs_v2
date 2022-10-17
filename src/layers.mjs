@@ -178,7 +178,7 @@ class Layer {
 		} else {
 			yield genSingleEnv(p_mapctxt);			
 		}
-	}	
+	}
 
 	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
 		// to be extended
@@ -201,6 +201,11 @@ export class VectorLayer extends Layer {
 		super(p_mapctx);
 	}
 
+	
+	* previousToLayeritems(p_mapctxt, p_terrain_env) {
+		// to be extended
+		return true;
+	}		
 
 	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
 		// to be extended
@@ -252,6 +257,14 @@ export class VectorLayer extends Layer {
 					cancel = true;
 					break;
 				}
+
+				if (!previousToLayeritems(p_mapctxt, p_terrain_env)) {
+					if (GlobalConst.getDebug("LAYERS")) {
+						console.log(`[DBG:LAYERS] Vector layer '${this.key}' previousToLayeritems failed`);
+					}
+					continue;
+				}
+
 				for (const [item_coords, item_attrs] of this.layeritems(this.mapctx, terrain_env, scr_env, dims)) {
 
 					//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
