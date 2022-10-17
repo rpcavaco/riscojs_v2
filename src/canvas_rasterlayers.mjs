@@ -317,10 +317,12 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 
 			splits = p_wms_innerlyrnames_str.split(/[,\s]+/);
 			for (let k of splits) {
-				if (this._servmetadata_report["layers"][p_wms_innerlyrnames_str][k] == "notok") {
-					res = `layer '${p_wms_innerlyrnames_str}', item '${k}'`;
-					break;
-				}			
+				for (let m in this._servmetadata_report["layers"][k]) {
+					if (this._servmetadata_report["layers"][k][m] == "notok") {
+						res = `layer '${k}', item '${m}'`;
+						break;
+					}	
+				}		
 			}
 		}
 		return res;
