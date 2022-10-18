@@ -10,7 +10,7 @@ var SUBKEYS = {
 
 var GlobalConst = {
 
-	DEBUG: "IMGLOAD",    // ALL, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, none
+	DEBUG: "LAYERS",    // ALL, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, none
 
 	MMPD: 25.4 / 96.0,
 	IMGRELOAD_TIMEOUT_MSEC: 2000,  // Image loading time after which original request is discarded and a new image load is attempted 

@@ -1,10 +1,10 @@
 var RISCOJS_LAYERS_CFG = {
-	"lorder": ["enq_bw_porto", "grat"],
+	"lorder": ["ortos_2018", "grat"],
 	"layers": {
 		"grat": {
-			"type": "graticulept",
+			"type": "graticule",
 			"separation": 100,
-			"strokeStyle": "white",
+			"strokeStyle": "black",
 			"lineWidth": 1
 		},
 		"orto2021": {
@@ -19,8 +19,8 @@ var RISCOJS_LAYERS_CFG = {
 			"type": "wms",
 			"url": "http://geo.cm-porto.net/wms/ortos_2018_dgt",
 			"layernames": "ortos2018",
-			"envsplit": false,
-			"filter": "grayscale"			
+			"envsplit": false
+			//"filter": "grayscale"			
 		},
 
 		"enq_bw_porto": {
@@ -30,8 +30,8 @@ var RISCOJS_LAYERS_CFG = {
 			"scaledepLayers": {
 				5000: "9,11,16,17"
 			},
-			"envsplit": false,
-			"filter": "grayscale"
+			"envsplit": false
+			//"filter": "grayscale"
 		}		
 		
 		

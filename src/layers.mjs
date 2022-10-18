@@ -188,11 +188,6 @@ class Layer {
 		}
 	}
 
-	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
-		// to be extended
-		// for each envelope generated in 'envs', generate an graphic item or feature in canvas coords
-	}	
-
 	draw2D(p_mapctx, p_lyrorder) {
 
 		// to be extended
@@ -210,12 +205,12 @@ export class VectorLayer extends Layer {
 	}
 
 	
-	* previousToLayeritems(p_mapctxt, p_terrain_env) {
+	* itemchunks(p_mapctxt, p_terrain_env) {
 		// to be extended
-		return true;
+		// for each chunk, responde with firstrecid, reccount
 	}		
 
-	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
+	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, firstrecid, reccount) {
 		// to be extended
 		// for each envelope generated in 'envs', generate an graphic item or feature in canvas coords
 	}	
@@ -256,7 +251,7 @@ export class VectorLayer extends Layer {
 			gfctx.strokeStyle = this.default_stroke_symbol.strokeStyle;
 			gfctx.lineWidth = this.default_stroke_symbol.lineWidth;
 
-			for (const [terrain_env, scr_env, dims, envkey] of this.envs(p_mapctx)) {
+			for (const [terrain_env, scr_env, dims, envkey, totalrecs] of this.envs(p_mapctx)) {
 
 				// console.log("-- env --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);
 
@@ -266,27 +261,26 @@ export class VectorLayer extends Layer {
 					break;
 				}
 
-				if (!this.previousToLayeritems(p_mapctx, terrain_env)) {
-					if (GlobalConst.getDebug("LAYERS")) {
-						console.log(`[DBG:LAYERS] Vector layer '${this.key}' previousToLayeritems failed`);
+				for (const [firstrecid, reccount] of this.itemchunks(p_mapctx, terrain_env)) {
+
+					for (const [item_coords, item_attrs] of this.layeritems(this.mapctx, terrain_env, scr_env, dims, firstrecid, reccount)) {
+
+						//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
+
+						if (!this.drawitem2D(this.mapctx, gfctx, terrain_env, scr_env, dims, envkey, item_coords, item_attrs, p_lyrorder)) {
+							cancel = true;
+							break;
+						}
+
+						if (this._drawingcanceled) {
+							this.onCancel();
+							cancel = true;
+							break;
+						}				
 					}
-					continue;
+
 				}
 
-				for (const [item_coords, item_attrs] of this.layeritems(this.mapctx, terrain_env, scr_env, dims)) {
-
-					//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
-
-					if (!this.drawitem2D(this.mapctx, gfctx, terrain_env, scr_env, dims, envkey, item_coords, item_attrs, p_lyrorder)) {
-						cancel = true;
-						break;
-					}
-					if (this._drawingcanceled) {
-						this.onCancel();
-						cancel = true;
-						break;
-					}				
-				}
 				if (cancel) {
 					break;
 				}
