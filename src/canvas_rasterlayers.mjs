@@ -60,10 +60,6 @@ class CanvasRasterLayer extends RasterLayer {
 		const img = new Image();
 		img.crossOrigin = "anonymous";
 
-		if (this.rastersloading[p_envkey] === undefined) {
-			this.rastersloading[p_envkey] = {};
-		}
-
 		const raster_id = uuidv4();
 
 		(function(pp_mapctxt, p_this, p_img, pp_scr_env, pp_dims, pp_envkey, p_raster_id) {
@@ -86,7 +82,9 @@ class CanvasRasterLayer extends RasterLayer {
 				} finally {
 					p_gfctx.restore();
 
-					delete p_this.rastersloading[pp_envkey][p_raster_id];
+					console.log("img timing:", new Date().getTime() - p_this.rastersloading[p_raster_id]["ts"] )
+
+					delete p_this.rastersloading[p_raster_id];
 					// console.log(`(rstrs still loading at t1 x ${p_envkey}):`, Object.keys(p_this.rastersloading[p_envkey]));
 				}
 	
@@ -97,11 +95,10 @@ class CanvasRasterLayer extends RasterLayer {
 
 		// console.log(`(rstrs on loading at t0 x ${p_envkey}):`, Object.keys(this.rastersloading[p_envkey]));
 
-		for (let rstrid in this.rastersloading[p_envkey]) {
-			this.rastersloading[p_envkey][rstrid].src = "";
-			delete this.rastersloading[p_envkey][rstrid];
-		} 
-		this.rastersloading[p_envkey][raster_id] = img;
+		this.rastersloading[raster_id] = {
+			"img": img,
+			"ts": new Date().getTime()
+		}
 
 		return true;
 
@@ -677,7 +674,7 @@ export class CanvasAGSMapLayer extends CanvasRasterLayer {
 				if (mis == 0 && mxs == 0) {
 					retstatus = "ok";
 				} else {
-					console.log(this.minscale, '>', mis, this.maxscale, '<', mxs);
+					//console.log(this.minscale, '>', mis, this.maxscale, '<', mxs);
 					retstatus = ((this.minscale > mis || this.maxscale < mxs) ?  "notok" : "ok");
 				}
 
@@ -765,7 +762,7 @@ export class CanvasAGSMapLayer extends CanvasRasterLayer {
 					}
 				}		
 				if (othermandatory.length > 0) {
-					throw new Error(`WMS layer, unable to draw due to missing mandatory configs for toc entry '${this.key}': ${othermandatory}`);
+					throw new Error(`AGS layer, unable to draw due to missing mandatory configs for toc entry '${this.key}': ${othermandatory}`);
 				}					
 
 				if (missinglayername) {

@@ -299,6 +299,7 @@ export class RasterLayer extends Layer {
 	rastersloading = {};
 	filter = "none";
 	envsplit = true;
+
 	constructor(p_mapctx) {
 		super(p_mapctx);
 	}
@@ -342,41 +343,52 @@ export class RasterLayer extends Layer {
 		gfctx.save();
 		try {
 
-			if (GlobalConst.getDebug("LAYERS")) {
-				console.log(`[DBG:LAYERS] Layer '${this.key}' drawing, gettings envs`);
-			}
+			if (!this._drawingcanceled) {
 
-			for (const [terrain_env, scr_env, dims, envkey] of this.envs(p_mapctx)) {
-
-				//console.log("-- 220 env --", terrain_env, " canceled:", this._drawingcanceled);
-				//console.log("-- 221 screnv,dims,envk --", scr_env, dims, envkey);
-
-				if (this._drawingcanceled) {
-					this.onCancel();
-					cancel = true;
-					break;
+				if (GlobalConst.getDebug("LAYERS")) {
+					console.log(`[DBG:LAYERS] Layer '${this.key}' drawing, gettings envs`);
 				}
 
-				// console.log("-- gettting rasters --");
 
-				for (const raster_url of this.layeritems(p_mapctx, terrain_env, scr_env, dims)) {
-					
-					// console.log("-- item --", terrain_env, scr_env, raster_url);
+				for (let rstrid in this.rastersloading) {
+					this.rastersloading[rstrid].img.src = "";
+					delete this.rastersloading[rstrid];
+				} 
+		
+				for (const [terrain_env, scr_env, dims, envkey] of this.envs(p_mapctx)) {
 
-					if (!this.drawitem2D(p_mapctx, gfctx, terrain_env, scr_env, dims, envkey, raster_url, p_lyrorder)) {
-						cancel = true;
-						break;
-					}
+					//console.log("-- 220 env --", terrain_env, " canceled:", this._drawingcanceled);
+					//console.log("-- 221 screnv,dims,envk --", scr_env, dims, envkey);
+
 					if (this._drawingcanceled) {
 						this.onCancel();
 						cancel = true;
 						break;
-					}				
+					}
+
+					// console.log("-- gettting rasters --");
+
+					for (const raster_url of this.layeritems(p_mapctx, terrain_env, scr_env, dims)) {
+						
+						// console.log("-- item --", terrain_env, scr_env, raster_url);
+
+						if (!this.drawitem2D(p_mapctx, gfctx, terrain_env, scr_env, dims, envkey, raster_url, p_lyrorder)) {
+							cancel = true;
+							break;
+						}
+						if (this._drawingcanceled) {
+							this.onCancel();
+							cancel = true;
+							break;
+						}				
+					}
+					if (cancel) {
+						break;
+					}
 				}
-				if (cancel) {
-					break;
-				}
-			}
+
+			}			
+
 
 		} catch(e) {
 			throw e;
