@@ -82,22 +82,42 @@ class CanvasRasterLayer extends RasterLayer {
 				} finally {
 					p_gfctx.restore();
 
-					console.log("img timing:", new Date().getTime() - p_this.rastersloading[p_raster_id]["ts"] )
+					if (GlobalConst.getDebug("IMGLOAD")) {
+						console.log(`[DBG:IMGLOAD] timing for '${p_raster_id}': ${new Date().getTime() - p_this.rastersloading[p_raster_id]["ts"]}`);
+					}
 
 					delete p_this.rastersloading[p_raster_id];
 					// console.log(`(rstrs still loading at t1 x ${p_envkey}):`, Object.keys(p_this.rastersloading[p_envkey]));
 				}
 	
 			}
+
+			p_img.onerror = function() {
+				if (GlobalConst.getDebug("IMGLOAD")) {
+					if (p_this.rastersloading[p_raster_id] !== undefined) {
+						console.log(`[DBG:IMGLOAD] Error for '${p_raster_id}', time: ${new Date().getTime() - p_this.rastersloading[p_raster_id]["ts"]}`);
+					}
+				}
+				if (p_this.rastersloading[p_raster_id] !== undefined) {
+					delete p_this.rastersloading[p_raster_id];		
+				}		
+			}
+
 		})(p_mapctxt, this, img, p_scr_env.slice(0), p_dims.slice(0), p_envkey, raster_id);
 		
 		img.src = p_raster_url;
 
 		// console.log(`(rstrs on loading at t0 x ${p_envkey}):`, Object.keys(this.rastersloading[p_envkey]));
 
+		if (GlobalConst.getDebug("IMGLOAD")) {
+			const ks = Object.keys(this.rastersloading);
+			console.log(`[DBG:IMGLOAD] Loading '${raster_id}', pending: ${ks.length} ${Object.keys(this.rastersloading)}`);
+		}
+
 		this.rastersloading[raster_id] = {
 			"img": img,
-			"ts": new Date().getTime()
+			"ts": new Date().getTime(),
+			"url": p_raster_url
 		}
 
 		return true;

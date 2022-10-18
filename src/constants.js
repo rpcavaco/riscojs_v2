@@ -1,7 +1,7 @@
 
 
 var SUBKEYS = {
-	"layers": ["wms", "agsmap", "agsqry"]
+	"layers": ["wms", "agsmap", "agsqry", "imgload"]
 }
 
 // 'layers' and other keys in SUBKEYS are group keys: whenever DEBUG: "LAYERS", code marked with debug for "WMS" is also debugged
@@ -10,7 +10,7 @@ var SUBKEYS = {
 
 var GlobalConst = {
 
-	DEBUG: "NONE",    // ALL, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, none
+	DEBUG: "IMGLOAD",    // ALL, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, none
 
 	MMPD: 25.4 / 96.0,
 	ACCPTBLE_LYRREDRAW_DELAY_MSEC: 10,
