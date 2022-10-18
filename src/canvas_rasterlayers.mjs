@@ -181,7 +181,10 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 	// The reason is: it is not still available at this stage; it will be availabe later to subsequent drawing ops
 	initLayer(p_mapctx, p_lyr_order) {
 
-		console.log("init layer", p_lyr_order);
+		// 18-10-2022: Unable to understand nested Layer elements - metadata analysis is BROKEN
+
+		//console.log("init layer", p_lyr_order);
+
 
 		if (GlobalConst.getDebug("WMS")) {
 			console.log(`[DBG:WMS] Layer '${this.key}' is in INIT`);
