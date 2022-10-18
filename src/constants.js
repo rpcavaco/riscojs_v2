@@ -13,13 +13,14 @@ var GlobalConst = {
 	DEBUG: "IMGLOAD",    // ALL, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, none
 
 	MMPD: 25.4 / 96.0,
-	ACCPTBLE_LYRREDRAW_DELAY_MSEC: 10,
+	IMGRELOAD_TIMEOUT_MSEC: 2000,  // Image loading time after which original request is discarded and a new image load is attempted 
+	/*ACCPTBLE_LYRREDRAW_DELAY_MSEC: 10,
 	MAPCHANGE_TIMEOUT_MSEC: 8000,
-	SPINDEX_STEP: 10,
+	SPINDEX_STEP: 10,*/
 	MINSCALE: 100,
 	MAXSCALE: 1000000,
 	MINSCALEDIFF: 1,
-	MAXLAYERCOUNT: 100,
+	//MAXLAYERCOUNT: 100,
 	MOUSEWHEEL_THROTTLE: 100,  // millisecs, interval between wheel events must span more than this interval for each event to be listened
 	ENVSPLIT_CFG_DEFAULT: {  // envelope division in chunking requests -- each entry:  display scales up to key value are split n-times horizontally and k-times vertically
 		1000: [1, 1],

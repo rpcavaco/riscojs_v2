@@ -115,8 +115,16 @@ class Layer {
 	defaultvisible = true;
 	envsplit_cfg = {};
 	blend = false;
+
 	_drawingcanceled = false;
 	_key;
+
+	_servmetadata_docollect = true;
+	_servmetadata;
+	_servmetadata_report;
+	_servmetadata_report_completed = false;
+	_metadata_or_root_url;
+
 	// constructor(p_mapctxt) {
 	//	this.mapctx = p_mapctxt;
 	//  console.log(this.mapctx);
