@@ -1,7 +1,11 @@
 
 import {GlobalConst} from './constants.js';
+import {WKID_List} from './esri_wkids.js';
+
 import { VectorLayer } from './layers.mjs';
 import { CanvasStrokeSymbol } from './canvas_symbols.mjs';
+
+
 
 class CanvasVectorLayer extends VectorLayer {
 
@@ -65,7 +69,7 @@ export class CanvasGraticuleLayer extends CanvasVectorLayer {
 
 	}
 
-	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_canvas_coords, p_attrs, p_lyrorder) {
+	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_canvas_coords, p_attrs, p_lyrorder) {
 
 		p_gfctx.beginPath();
 		p_gfctx.moveTo(p_canvas_coords[0], p_canvas_coords[1]);
@@ -113,7 +117,7 @@ export class CanvasGraticulePtsLayer extends CanvasVectorLayer {
 		}
 	}
 
-	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_canvas_coords, p_attrs, p_lyrorder) {
+	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_canvas_coords, p_attrs, p_lyrorder) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = this.ptdim * (10.0 / Math.log10(sclval));
@@ -146,7 +150,7 @@ https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFreg
 https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer/9/query?where=1%3D1&text=&objectIds=&time=&timeRelation=esriTimeRelationOverlaps&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&returnExtentOnly=false&sqlFormat=none&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=html
 */
 
-export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
+export class CanvasAGSQryLayer extends CanvasVectorLayer {
 
 	url;     // https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer
 	layerid; // 9
@@ -160,7 +164,7 @@ export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 
 	buildQueryURL(p_mapctxt, p_terrain_bounds, p_mode) {
 
-		const teststr = `MapServer/${this.layerid}/query`;
+		const teststr = `/MapServer/${this.layerid}/query`;
 
 		if (this.url.indexOf(teststr) < 0) {
 			this.url = this.url.replace("/MapServer", teststr);
@@ -180,9 +184,9 @@ export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 		switch(p_mode) {
 
 			case "INITCOUNT":
-				sp.set('returnGeometry', 'true');
+				sp.set('returnGeometry', 'false');
 				sp.set('returnIdsOnly', 'false');
-				sp.set('returnCountOnly', 'false');
+				sp.set('returnCountOnly', 'true');
 				sp.set('returnExtentOnly', 'false');
 				break;
 		
@@ -215,16 +219,16 @@ export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 	// The reason is: it is not still available at this stage; it will be availabe later to subsequent drawing ops
 	initLayer(p_mapctx, p_lyr_order) {
 
-		if (GlobalConst.getDebug("AGSMAP")) {
-			console.log(`[DBG:AGSMAP] Layer '${this.key}' is in INIT`);
+		if (GlobalConst.getDebug("AGSQRY")) {
+			console.log(`[DBG:AGSQRY] Layer '${this.key}' is in INIT`);
 		}
 		
 		if (this.url == null || this.url.length < 1) {
-			throw new Error("Class CanvasAGSMapLayer, null or empty p_metadata_or_root_url");
+			throw new Error("Class CanvasAGSQryLayer, null or empty p_metadata_or_root_url");
 		}
 
 		if (!this.url.endsWith('/MapServer')) {
-			throw new Error("Class CanvasAGSMapLayer, 'url' config parameter must terminate with '/MapServer'");
+			throw new Error("Class CanvasAGSQryLayer, 'url' config parameter must terminate with '/MapServer'");
 		}		
 
 		this._servmetadata = {};
@@ -242,8 +246,8 @@ export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 			}
 
 			for (const [key, value] of sp.entries()) {
-				if (key.toLowerCase() == 'service' && value.toLowerCase() == 'wms') {
-					checkitems["f"] = "true";
+				if (key.toLowerCase() == 'f' && value.toLowerCase() == 'json') {
+					checkitems["f"] = true;
 				}
 			}
 
@@ -259,8 +263,8 @@ export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 			.then(
 				function(responsejson) {
 
-					if (GlobalConst.getDebug("AGSMAP")) {
-						console.log(`[DBG:AGSMAP] Layer '${that.key}' metadata arrived, viability check starting`);
+					if (GlobalConst.getDebug("AGSQRY")) {
+						console.log(`[DBG:AGSQRY] Layer '${that.key}' metadata arrived, viability check starting`);
 					}
 
 					const md_attrnames = [
@@ -281,15 +285,11 @@ export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 						"minscale",
 						"mapscale",
 						"units",
-						"supportedImageFormatTypes",
 						"capabilities", 
-						// "supportedQueryFormats", 
+						"supportedQueryFormats", 
 						"supportsDatumTransformation",
 						"supportsSpatialFilter",
-						//"supportsQueryDataElements"
-						//"maxRecordCount",			
-						"maxImageHeight",			
-						"maxImageWidth"			
+						"maxRecordCount"
 					];
 
 					let splts;
@@ -386,13 +386,11 @@ export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 						}
 					}
 					if (that.reporting(p_mapctx, cfg["crs"], bounds, dims, p_lyr_order)) {
-						this.draw2D(p_mapctx, p_mapctx);
+						this.getStats(p_mapctx, bounds, p_lyr_order);
 
 					}			
 				}
 			)
-
-		this.draw2D(p_mapctx, p_lyr_order);
 
 	}
 
@@ -402,10 +400,6 @@ export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 		this._servmetadata_report = {};
 
 		try {
-
-			this._servmetadata_report["imagewidth"] = ( parseInt(this._servmetadata["maxImageWidth"]) >= p_dims[0] ? "ok" : "notok");
-			this._servmetadata_report["imageheight"] = ( parseInt(this._servmetadata["maxImageHeight"]) >= p_dims[1] ? "ok" : "notok");
-			this._servmetadata_report["imageformat"] = ( this._servmetadata["supportedImageFormatTypes"].toLowerCase().indexOf(this.imageformat) < 0 ? "notok" : "ok");
 
 			if (WKID_List[this._servmetadata["wkid"]] === undefined) {
 				throw new Error(`Uknown ${this._servmetadata["wkid"]} WKID in layer '${this._key}'`);
@@ -417,6 +411,8 @@ export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 			} else {
 				this._servmetadata_report["crs"] = "ok";
 			}
+
+			this._servmetadata_report["querycapability"] = (this._servmetadata["capabilities"].indexOf("Query") >= 0);
 
 			this._servmetadata_report["layers"] = {}
 
@@ -447,13 +443,13 @@ export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 			}
 			this._servmetadata_report_completed = true;
 
-			const [viable, errormsg] = this.checkGetMapRequestViability();
+			const [viable, errormsg] = this.checkDrawingViability();
 
-			if (GlobalConst.getDebug("AGSMAP")) {
+			if (GlobalConst.getDebug("AGSQRY")) {
 				if (viable) {
-					console.log(`[DBG:AGSMAP] Layer '${this.key}' viability checked OK, before drawing`);
+					console.log(`[DBG:AGSQRY] Layer '${this.key}' viability checked OK, before drawing`);
 				} else {
-					console.log(`[DBG:AGSMAP] Layer '${this.key}' metadata did not check OK, drawing skipped`);
+					console.log(`[DBG:AGSQRY] Layer '${this.key}' metadata did not check OK, drawing skipped`);
 				}
 			}
 
@@ -461,6 +457,7 @@ export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 				return;
 			}
 
+		
 			this.draw2D(p_mapctxt, p_lyr_order);
 
 		} catch(e) {
@@ -502,7 +499,7 @@ export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 		return res;
 	}
 
-	checkGetMapRequestViability() {
+	checkDrawingViability() {
 		let ret = false, res="";
 
 		if (this._servmetadata_report_completed) {
@@ -543,19 +540,20 @@ export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 				console.error(`AGS service inner layers '${this.layers}' not usable due to: ${res}`);				
 			}
 
-			if (GlobalConst.getDebug("AGSMAP")) {
-				console.log(`[DBG:AGSMAP] before drawing '${this.key}'`);
+			if (GlobalConst.getDebug("AGSQRY")) {
+				console.log(`[DBG:AGSQRY] before drawing '${this.key}'`);
 			}
 
 		} else {
-			if (GlobalConst.getDebug("AGSMAP")) {
-				console.log(`[DBG:AGSMAP] waiting on metadata for '${this.key}'`);
+			if (GlobalConst.getDebug("AGSQRY")) {
+				console.log(`[DBG:AGSQRY] waiting on metadata for '${this.key}'`);
 			}
 		}
 
 		return [ret, res];
 	}
 
+	/*
 	buildExportMapURL(p_mapctxt, p_terrain_bounds, p_dims) {
 
 		let found_layers = this.layers;
@@ -572,8 +570,8 @@ export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 			}
 		}
 
-		if (GlobalConst.getDebug("AGSMAP")) {
-			console.log(`[DBG:AGSMAP] found_layers '${found_layers}' for scale 1:'${sclval}'`);
+		if (GlobalConst.getDebug("AGSQRY")) {
+			console.log(`[DBG:AGSQRY] found_layers '${found_layers}' for scale 1:'${sclval}'`);
 		}
 
 		if (this.url.indexOf("/MapServer/export") < 0) {
@@ -596,16 +594,64 @@ export class CanvasAGSFeatQueryLayer extends CanvasVectorLayer {
 		sp.set('f', 'image');
 
 		const ret = url.toString();		
-		if (GlobalConst.getDebug("AGSMAP")) {
-			console.log(`[DBG:AGSMAP] buildGetMapURL: '${ret}'`);
+		if (GlobalConst.getDebug("AGSQRY")) {
+			console.log(`[DBG:AGSQRY] buildGetMapURL: '${ret}'`);
 		}	
 		
 		return ret; 
-	}	
+	}	*/
+
+	getStats(p_mapctxt, p_terrain_env, p_lyr_order) {
+
+		let ti, fti=-1;;
+		for (ti = 0; ti < p_trasport_obj.length; ti++) {
+
+			const [terrain_env, scr_env, dims, envkey, featcount] = p_trasport_obj[ti];
+
+			if (featcount == null) {
+				fti = ti;
+				break;
+			}
+		}
+
+		const [terrain_env, scr_env, dims, envkey] = p_trasport_obj[ti];
+
+		const url = this.buildQueryURL(p_mapctxt, terrain_env, "INITCOUNT");
+
+		console.log(url);
+
+		const that = this;
+
+		fetch(url)
+			.then(response => response.json())
+			.then(
+				function(responsejson) {
+
+					p_trasport_obj[ti][4] = responsejson.count;
+					let found_empty = false;
+					
+					for (ti = 0; ti < p_trasport_obj.length; ti++) {
+
+						const [terrain_env, scr_env, dims, envkey, featcount] = p_trasport_obj[ti];
+			
+						if (featcount == null) {
+							found_empty = true;
+							break;
+						}
+					}	
+					
+					if (found_empty) {
+						that.getStats(p_mapctxt, p_trasport_obj);
+					} else {
+
+					}			
+				}
+			);			
+	}
 
 	* itemchunks(p_mapctxt, p_terrain_env) {
-		// to be extended
-		// for each chunk, responde with firstrecid, reccount
+
+
 	}		
 
 	

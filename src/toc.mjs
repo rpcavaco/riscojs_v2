@@ -1,13 +1,14 @@
 
 
 import {CanvasWMSLayer, CanvasAGSMapLayer} from './canvas_rasterlayers.mjs';
-import {CanvasGraticuleLayer, CanvasGraticulePtsLayer} from './canvas_vectorlayers.mjs';
+import {CanvasGraticuleLayer, CanvasGraticulePtsLayer, CanvasAGSQryLayer} from './canvas_vectorlayers.mjs';
 
 const canvas_layer_classes = {
     "graticule": CanvasGraticuleLayer,
     "graticulept": CanvasGraticulePtsLayer,	
     "wms": CanvasWMSLayer,
-	"ags_map": CanvasAGSMapLayer
+	"ags_map": CanvasAGSMapLayer,
+	"ags_qry": CanvasAGSQryLayer	
 };
 
 export class DynamicCanvasLayer {
@@ -52,18 +53,9 @@ export class TOCManager {
 					
 				if (layerscfg.layers[lyk]["type"] !== undefined) {
 
-					switch (layerscfg.layers[lyk]["type"]) {
-					
-						case "wms":
-						case "ags_map":
-						case "graticule":
-						case "graticulept":
-
-							if (this.mode == 'canvas')	{
-								currentLayer.push(new DynamicCanvasLayer(layerscfg.layers[lyk]["type"]));
-								currentLayer[0].setMapctxt(this.mapctx);
-							}
-							break;
+					if (this.mode == 'canvas')	{
+						currentLayer.push(new DynamicCanvasLayer(layerscfg.layers[lyk]["type"]));
+						currentLayer[0].setMapctxt(this.mapctx);
 					}
 
 					if (currentLayer.length == 0) {
@@ -72,8 +64,18 @@ export class TOCManager {
 					}
 
 					const scaneables = [currentLayer[0]];
-					if (currentLayer[0].default_stroke_symbol !== undefined) {
-						scaneables.push(currentLayer[0].default_stroke_symbol);
+
+					currentLayer[0].key = lyk;
+
+					/* Need to previously */
+
+					switch(this.geomtype) {
+						case "poly":
+						case "line":
+							if (currentLayer[0].default_stroke_symbol !== undefined) {
+								scaneables.push(currentLayer[0].default_stroke_symbol);
+							}
+							break;
 					}
 
 					try {
@@ -126,8 +128,6 @@ export class TOCManager {
 					} catch(e) {
 						console.error(e);
 					}
-
-					currentLayer[0].key = lyk;
 
 					this.layers.push(currentLayer[0]);
 					console.info(`[init RISCO] TOCManager, layer '${lyk}' (${currentLayer[0].constructor.name}) prepared`);

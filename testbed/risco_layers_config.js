@@ -1,5 +1,5 @@
 var RISCOJS_LAYERS_CFG = {
-	"lorder": ["ortos_2018", "grat"],
+	"lorder": ["ortos_2018", "mancha_constr", "grat"],
 	"layers": {
 		"grat": {
 			"type": "graticule",
@@ -30,6 +30,15 @@ var RISCOJS_LAYERS_CFG = {
 			"scaledepLayers": {
 				5000: "9,11,16,17"
 			},
+			"envsplit": false
+			//"filter": "grayscale"
+		},
+		
+		"mancha_constr": {
+			"type": "ags_qry",
+			"geomtype": "poly",
+			"url": "https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer",
+			"layerid": "9",
 			"envsplit": false
 			//"filter": "grayscale"
 		}		

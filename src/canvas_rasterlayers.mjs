@@ -606,7 +606,7 @@ export class CanvasAGSMapLayer extends CanvasRasterLayer {
 			}
 
 			for (const [key, value] of sp.entries()) {
-				if (key.toLowerCase() == 'service' && value.toLowerCase() == 'wms') {
+				if (key.toLowerCase() == 'f' && value.toLowerCase() == 'json') {
 					checkitems["f"] = "true";
 				}
 			}
@@ -750,13 +750,11 @@ export class CanvasAGSMapLayer extends CanvasRasterLayer {
 						}
 					}
 					if (that.reporting(p_mapctx, cfg["crs"], bounds, dims, p_lyr_order)) {
-						this.draw2D(p_mapctx, p_mapctx);
+						this.draw2D(p_mapctx, p_lyr_order);
 
 					}			
 				}
 			)
-
-		this.draw2D(p_mapctx, p_lyr_order);
 
 	}
 

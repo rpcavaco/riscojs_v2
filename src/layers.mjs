@@ -113,7 +113,6 @@ class Layer {
 	minscale = GlobalConst.MINSCALE;
 	maxscale = Number.MAX_SAFE_INTEGER;
 	defaultvisible = true;
-	envsplit_cfg = {};
 	blend = false;
 
 	_drawingcanceled = false;
@@ -169,25 +168,6 @@ class Layer {
 		this._drawingcanceled = false;
 	}
 
-	* envs(p_mapctxt) {
-		// might be overriden to implement a different env split - based request chunking
-
-		if (this.envsplit) {
-
-			if (Object.keys(this.envsplit_cfg).length === 0) {
-				this.envsplit_cfg = GlobalConst.ENVSPLIT_CFG_DEFAULT;
-			}
-	
-			const scl = this.mapctx.getScale();
-			for (const envdata of genMultipleEnv(p_mapctxt, this.envsplit_cfg, scl)) {
-				yield envdata;
-			}
-
-		} else {
-			yield genSingleEnv(p_mapctxt);			
-		}
-	}
-
 	draw2D(p_mapctx, p_lyrorder) {
 
 		// to be extended
@@ -199,30 +179,36 @@ class Layer {
 
 export class VectorLayer extends Layer {
 
-	envsplit = false;
+	geomtype = "none";
 	constructor(p_mapctx) {
 		super(p_mapctx);
 	}
-
 	
 	* itemchunks(p_mapctxt, p_terrain_env) {
 		// to be extended
-		// for each chunk, responde with firstrecid, reccount
+		// for each chunk, respond with firstrecid, reccount
 	}		
 
 	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, firstrecid, reccount) {
 		// to be extended
-		// for each envelope generated in 'envs', generate an graphic item or feature in canvas coords
+		// for each envelope generated in 'envs', for each chunk in 'itemschunks', generate an graphic item or feature in canvas coords
 	}	
 
-	drawitem2D(p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, item_geom, item_atts, p_lyrorder) {
+	getStats() {
+		// calculations for itemchunks,
+		// first method to be called when consuming services, should call draw2D
+	}
+
+	drawitem2D(p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_lyrorder) {
 
 		// to be extended
-		// for each 'canvas' item just draw
+		// for each 'canvas' item just draw each 'layeritem'
 
 	}	
 
 	draw2D(p_mapctx, p_lyrorder) {
+
+		const [terrain_env, scr_env, dims] = genSingleEnv(p_mapctx);
 
 		if (!this.defaultvisible) {
 			if (GlobalConst.getDebug("LAYERS")) {
@@ -251,15 +237,14 @@ export class VectorLayer extends Layer {
 			gfctx.strokeStyle = this.default_stroke_symbol.strokeStyle;
 			gfctx.lineWidth = this.default_stroke_symbol.lineWidth;
 
-			for (const [terrain_env, scr_env, dims, envkey, totalrecs] of this.envs(p_mapctx)) {
 
-				// console.log("-- env --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);
+			// console.log("-- env --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);
 
-				if (this._drawingcanceled) {
-					this.onCancel();
-					cancel = true;
-					break;
-				}
+			if (this._drawingcanceled) {
+				this.onCancel();
+				cancel = true;
+			
+			} else  {
 
 				for (const [firstrecid, reccount] of this.itemchunks(p_mapctx, terrain_env)) {
 
@@ -267,7 +252,7 @@ export class VectorLayer extends Layer {
 
 						//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
 
-						if (!this.drawitem2D(this.mapctx, gfctx, terrain_env, scr_env, dims, envkey, item_coords, item_attrs, p_lyrorder)) {
+						if (!this.drawitem2D(this.mapctx, gfctx, terrain_env, scr_env, dims, item_coords, item_attrs, p_lyrorder)) {
 							cancel = true;
 							break;
 						}
@@ -280,10 +265,6 @@ export class VectorLayer extends Layer {
 					}
 
 				}
-
-				if (cancel) {
-					break;
-				}
 			}
 
 		} catch(e) {
@@ -293,7 +274,7 @@ export class VectorLayer extends Layer {
 		}
 
 		return cancel;
-	}		
+	}	
 }
 
 export class RasterLayer extends Layer {
@@ -301,11 +282,31 @@ export class RasterLayer extends Layer {
 	rastersloading = {};
 	filter = "none";
 	envsplit = true;
+	envsplit_cfg = {};
 
 	constructor(p_mapctx) {
 		super(p_mapctx);
 	}
 
+	* envs(p_mapctxt) {
+		// might be overriden to implement a different env split - based request chunking
+
+		if (this.envsplit) {
+
+			if (Object.keys(this.envsplit_cfg).length === 0) {
+				this.envsplit_cfg = GlobalConst.ENVSPLIT_CFG_DEFAULT;
+			}
+	
+			const scl = this.mapctx.getScale();
+			for (const envdata of genMultipleEnv(p_mapctxt, this.envsplit_cfg, scl)) {
+				yield envdata;
+			}
+
+		} else {
+			yield genSingleEnv(p_mapctxt);			
+		}
+	}
+		
 	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
 		// to be extended
 		// for each envelope generated in 'envs', generate an graphic item, feature (or chunks of items or features) in canvas coords
