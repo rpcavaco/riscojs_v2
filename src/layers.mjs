@@ -180,28 +180,30 @@ class Layer {
 export class VectorLayer extends Layer {
 
 	geomtype = "none";
+	_current_featcount = 0;
 	constructor(p_mapctx) {
 		super(p_mapctx);
 	}
 	
 	* itemchunks(p_mapctxt, p_terrain_env) {
-		// to be extended
+		// to be implemented
 		// for each chunk, respond with firstrecid, reccount
 	}		
 
 	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, firstrecid, reccount) {
 		// to be extended
-		// for each envelope generated in 'envs', for each chunk in 'itemschunks', generate an graphic item or feature in canvas coords
+		// for each chunk in 'itemschunks', generate an url to fetch features
 	}	
 
-	getStats() {
+	getStats(p_mapctx, p_bounds, p_lyr_order) {
+		// to be implemented
 		// calculations for itemchunks,
 		// first method to be called when consuming services, should call draw2D
 	}
 
 	drawitem2D(p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_lyrorder) {
 
-		// to be extended
+		// to be implemented
 		// for each 'canvas' item just draw each 'layeritem'
 
 	}	
@@ -246,7 +248,8 @@ export class VectorLayer extends Layer {
 			
 			} else  {
 
-				for (const [firstrecid, reccount] of this.itemchunks(p_mapctx, terrain_env)) {
+				// firstrec_order is zero - based
+				for (const [firstrec_order, reccount] of this.itemchunks(p_mapctx, terrain_env)) {
 
 					for (const [item_coords, item_attrs] of this.layeritems(this.mapctx, terrain_env, scr_env, dims, firstrecid, reccount)) {
 
@@ -309,7 +312,7 @@ export class RasterLayer extends Layer {
 		
 	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
 		// to be extended
-		// for each envelope generated in 'envs', generate an graphic item, feature (or chunks of items or features) in canvas coords
+		// for each envelope generated in 'envs', generate an url to fetch an image
 	}	
 
 	drawitem2D(p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url, p_lyrorder) {

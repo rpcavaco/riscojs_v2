@@ -601,22 +601,9 @@ export class CanvasAGSQryLayer extends CanvasVectorLayer {
 		return ret; 
 	}	*/
 
-	getStats(p_mapctxt, p_terrain_env, p_lyr_order) {
+	getStats(p_mapctx, p_terrain_env, p_lyr_order) {
 
-		let ti, fti=-1;;
-		for (ti = 0; ti < p_trasport_obj.length; ti++) {
-
-			const [terrain_env, scr_env, dims, envkey, featcount] = p_trasport_obj[ti];
-
-			if (featcount == null) {
-				fti = ti;
-				break;
-			}
-		}
-
-		const [terrain_env, scr_env, dims, envkey] = p_trasport_obj[ti];
-
-		const url = this.buildQueryURL(p_mapctxt, terrain_env, "INITCOUNT");
+		const url = this.buildQueryURL(p_mapctx, p_terrain_env, "INITCOUNT");
 
 		console.log(url);
 
@@ -627,33 +614,36 @@ export class CanvasAGSQryLayer extends CanvasVectorLayer {
 			.then(
 				function(responsejson) {
 
-					p_trasport_obj[ti][4] = responsejson.count;
-					let found_empty = false;
-					
-					for (ti = 0; ti < p_trasport_obj.length; ti++) {
-
-						const [terrain_env, scr_env, dims, envkey, featcount] = p_trasport_obj[ti];
+					that._current_featcount = responsejson.count;
+					this.draw2D(p_mapctx, p_lyr_order);
 			
-						if (featcount == null) {
-							found_empty = true;
-							break;
-						}
-					}	
-					
-					if (found_empty) {
-						that.getStats(p_mapctxt, p_trasport_obj);
-					} else {
-
-					}			
 				}
 			);			
 	}
 
 	* itemchunks(p_mapctxt, p_terrain_env) {
 
+		if (this._current_featcount == 0) {
+			console.log(`[WARN:AGSQRY] Empty feat set in layer '${this.key}', nothing to draw`);
+			return;
+		}
+
+		const nchunks = Math.floor(Math.log10(this._current_featcount));
+		const chunk_size = Math.floor(this._current_featcount / nchunks);
+		const remainder = this._current_featcount % nchunks;
+
+		for (let i=0; i<nchunks; i++) {
+			if (i < (nchunks-1)) {
+				yield [i*chunk_size, chunk_size];
+			} else {
+				yield [i*chunk_size, remainder];
+			}
+		}
 
 	}		
 
-	
+	drawitem2D(p_gfctx, p_terrain_env, p_scr_env, p_dims, p_features_url, p_lyrorder) {
+
+	}	
 }
 
