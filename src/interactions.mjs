@@ -145,8 +145,7 @@ class MultiTool extends BaseTool {
 							console.log("[DBG:DISENG_WHEEL] scale:", this.wheelscale, "time:", lap - this.start_time);
 						} else {
 							if ((lap - this.start_time) > GlobalConst.MOUSEWHEEL_THROTTLE) {
-								p_mapctx.transformmgr.setScaleCenteredAtPoint(this.wheelscale, [p_evt.clientX, p_evt.clientY])
-								p_mapctx.transformmgr.setScaleFromReadableCartoScale(this.wheelscale, true); // storing transformation
+								p_mapctx.transformmgr.setScaleCenteredAtPoint(this.wheelscale, [p_evt.clientX, p_evt.clientY], true);
 							}
 						}
 						this.start_time = lap;

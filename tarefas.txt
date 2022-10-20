@@ -8,14 +8,17 @@
 - OK - imagens AGS
 - FALHAdo - blending de layers raster
 - OK - graticulas de pontos
-- racionalizar a criação de novas layer - acabar com o switch
+- OK - racionalizar a criação de novas layer - acabar com o switch
+- OK- scaledep 'layers' / 'layernames' (sub-layers)
+
 - zoom janela e ferramenta base de desenho de janela
 - measuring tool
+- controle de erros em todos os fetches, copiar das feats de AGSQuery
 
 
-- >> scaledep 'layers' / 'layernames' (sub-layers)
+- >> features AGS - primeira visão com polígonos
+- >> eliminação dos requests caducados
 
-- >> features AGS
 
 -  ?  offline bitmap
 

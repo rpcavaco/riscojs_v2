@@ -180,7 +180,7 @@ class Layer {
 export class VectorLayer extends Layer {
 
 	geomtype = "none";
-	_current_featcount = 0;
+
 	constructor(p_mapctx) {
 		super(p_mapctx);
 	}
@@ -192,16 +192,10 @@ export class VectorLayer extends Layer {
 
 	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, firstrecid, reccount) {
 		// to be extended
-		// for each chunk in 'itemschunks', generate an url to fetch features
+		// for each chunk in 'itemschunks', generate graphic items (graphics and attributes) to be drawn
 	}	
 
-	getStats(p_mapctx, p_bounds, p_lyr_order) {
-		// to be implemented
-		// calculations for itemchunks,
-		// first method to be called when consuming services, should call draw2D
-	}
-
-	drawitem2D(p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_lyrorder) {
+	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_recvd_geomtype, p_lyrorder) {
 
 		// to be implemented
 		// for each 'canvas' item just draw each 'layeritem'
@@ -251,11 +245,11 @@ export class VectorLayer extends Layer {
 				// firstrec_order is zero - based
 				for (const [firstrec_order, reccount] of this.itemchunks(p_mapctx, terrain_env)) {
 
-					for (const [item_coords, item_attrs] of this.layeritems(this.mapctx, terrain_env, scr_env, dims, firstrecid, reccount)) {
+					for (const [item_coords, item_attrs] of this.layeritems(this.mapctx, terrain_env, scr_env, dims, firstrec_order, reccount)) {
 
 						//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
 
-						if (!this.drawitem2D(this.mapctx, gfctx, terrain_env, scr_env, dims, item_coords, item_attrs, p_lyrorder)) {
+						if (!this.drawitem2D(this.mapctx, gfctx, terrain_env, scr_env, dims, item_coords, item_attrs, null, p_lyrorder)) {
 							cancel = true;
 							break;
 						}
@@ -278,6 +272,110 @@ export class VectorLayer extends Layer {
 
 		return cancel;
 	}	
+}
+
+export class RemoteVectorLayer extends Layer {
+
+	geomtype = "none";
+	featchunksloading = {};
+
+	constructor(p_mapctx) {
+		super(p_mapctx);
+	}
+
+	* itemchunks(p_mapctxt, p_feat_count, p_terrain_env) {
+		// to be implemented
+		// for each chunk, respond with firstrecid, reccount
+	}	
+
+	preDraw(p_mapctx) {
+
+		if (!this.defaultvisible) {
+			if (GlobalConst.getDebug("LAYERS")) {
+				console.log(`[DBG:LAYERS] Remote vector layer '${this.key}' is not default visible`);
+			}
+			return false;
+		}
+		
+		if (!this.checkScaleVisibility(p_mapctx.getScale())) {
+			if (GlobalConst.getDebug("LAYERS")) {
+				console.log(`[DBG:LAYERS] Remote vector layer '${this.key}' is out of scale visibility for 1:${p_mapctx.getScale()}`);
+			}
+			return false;
+		}
+		
+		if (!this.isInited()) {
+			console.log(`[WARN:LAYERS] Remote vector layer '${this.key}' is not inited`);
+			return false;
+		}
+
+		return true;
+	}	
+
+	getStats(p_mapctx, p_bounds, p_lyr_order) {
+		// to be implemented
+		// calculations for itemchunks,
+		// first method to be called when consuming services, should call draw2D
+	}
+
+	draw2D(p_mapctx, p_feat_count, p_lyrorder) {
+
+		const [terrain_env, scr_env, dims] = genSingleEnv(p_mapctx);
+
+		const gfctx = this.mapctx.canvasmgr.getDrwCtx(this.canvasKey, '2d');
+		let cancel = false;
+
+		gfctx.save();
+		try {
+
+			gfctx.strokeStyle = this.default_stroke_symbol.strokeStyle;
+			gfctx.lineWidth = this.default_stroke_symbol.lineWidth;
+
+
+			// console.log("-- env --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);
+
+			if (this._drawingcanceled) {
+				this.onCancel();
+				cancel = true;
+			
+			} else  {
+
+				// console.log("--   >> 354 --", terrain_env, scr_env);
+				for (let rstrid in this.featchunksloading) {
+					this.featchunksloading[rstrid].img.src = "";
+					delete this.featchunksloading[rstrid];
+				} 
+
+				// firstrec_order is zero - based
+				for (const [firstrec_order, reccount] of this.itemchunks(p_mapctx, p_feat_count, terrain_env)) {
+
+					// console.log("--   >> 359 --", firstrec_order, reccount, this.constructor.name);
+
+					cancel = this.layeritems(this.mapctx, gfctx, terrain_env, scr_env, dims, firstrec_order, reccount, p_lyrorder);
+
+					if (cancel) {
+						cancel = true;
+						break;						
+					}
+
+					if (this._drawingcanceled) {
+						this.onCancel();
+						cancel = true;
+						break;
+					}
+						
+				}
+			}
+
+		} catch(e) {
+			throw e;
+		} finally {
+			gfctx.restore();
+		}
+
+		return cancel;
+	}	
+
 }
 
 export class RasterLayer extends Layer {
@@ -315,7 +413,7 @@ export class RasterLayer extends Layer {
 		// for each envelope generated in 'envs', generate an url to fetch an image
 	}	
 
-	drawitem2D(p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url, p_lyrorder) {
+	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url, p_lyrorder) {
 
 		// to be extended
 		// just draw each item in canvas

@@ -2,6 +2,7 @@
 
 import {CanvasWMSLayer, CanvasAGSMapLayer} from './canvas_rasterlayers.mjs';
 import {CanvasGraticuleLayer, CanvasGraticulePtsLayer, CanvasAGSQryLayer} from './canvas_vectorlayers.mjs';
+import {RemoteVectorLayer} from './layers.mjs';
 
 const canvas_layer_classes = {
     "graticule": CanvasGraticuleLayer,
@@ -152,7 +153,7 @@ export class TOCManager {
 		
 		let gfctx;
 		const ckeys = new Set();
-		const canvas_dims = [];
+		const canvas_dims = [], bounds = [];
 
 		this.mapctx.canvasmgr.getCanvasDims(canvas_dims);
 
@@ -172,10 +173,20 @@ export class TOCManager {
 		for (let li=0; li < this.layers.length; li++) {
 
 			try {
-				this.layers[li].draw2D(this.mapctx, li);
+
+				if (this.layers[li] instanceof RemoteVectorLayer) {
+					if (this.layers[li].preDraw(this.mapctx)) {
+						this.mapctx.getMapBounds(bounds);			
+						this.layers[li].getStats(this.mapctx, bounds, li);
+					}
+				} else {
+					this.layers[li].draw2D(this.mapctx, li);
+				}
+
 			} catch(e) {
 				console.error(e);
 			}
+
 		}
 
 	}

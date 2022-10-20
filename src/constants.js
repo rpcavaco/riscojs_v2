@@ -10,7 +10,7 @@ var SUBKEYS = {
 
 var GlobalConst = {
 
-	DEBUG: "LAYERS",    // ALL, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, none
+	DEBUG: "AGSQRY",    // ALL, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, none
 
 	MMPD: 25.4 / 96.0,
 	IMGRELOAD_TIMEOUT_MSEC: 2000,  // Image loading time after which original request is discarded and a new image load is attempted 
@@ -20,6 +20,8 @@ var GlobalConst = {
 	MINSCALE: 100,
 	MAXSCALE: 1000000,
 	MINSCALEDIFF: 1,
+	MAXFEATCHUNKSIZE: 500,
+	GEOMPRECISION_DECIMALS: 3,	
 	//MAXLAYERCOUNT: 100,
 	MOUSEWHEEL_THROTTLE: 100,  // millisecs, interval between wheel events must span more than this interval for each event to be listened
 	ENVSPLIT_CFG_DEFAULT: {  // envelope division in chunking requests -- each entry:  display scales up to key value are split n-times horizontally and k-times vertically

@@ -336,7 +336,7 @@ class TransformsQueue {
 
 	}
 
-	setScaleCenteredAtPoint(p_scaleval, p_screen_pt) {
+	setScaleCenteredAtPoint(p_scaleval, p_screen_pt, do_store) {
 
 		const cen= [], terr_pt_from = [], terr_pt_to = [], newpt = [];
 
@@ -351,7 +351,7 @@ class TransformsQueue {
 		newpt[0] = cen[0] + terr_pt_from[0] - terr_pt_to[0];
 		newpt[1] = cen[1] + terr_pt_from[1] - terr_pt_to[1];	
 
-		this.setCenter(newpt[0], newpt[1], true);		
+		this.setCenter(newpt[0], newpt[1], do_store);		
 	}
 	
 	/**

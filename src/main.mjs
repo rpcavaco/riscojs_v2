@@ -213,7 +213,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	}
 
 	draw() {
-		// console.info(">>>>>           draw            <<<<<");
+		//console.info(">>>>>           draw            <<<<<");
 		const sv = this.transformmgr.getReadableCartoScale();
 		this.printScale(sv);
 		this.tocmgr.draw(sv);
