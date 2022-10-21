@@ -3,6 +3,7 @@
 import {CanvasWMSLayer, CanvasAGSMapLayer} from './canvas_rasterlayers.mjs';
 import {CanvasGraticuleLayer, CanvasGraticulePtsLayer, CanvasAGSQryLayer} from './canvas_vectorlayers.mjs';
 import {RemoteVectorLayer} from './layers.mjs';
+import {CanvasLineSymbol, CanvasPolygonSymbol} from './canvas_symbols.mjs';
 
 const canvas_layer_classes = {
     "graticule": CanvasGraticuleLayer,
@@ -83,21 +84,20 @@ export class TOCManager {
 
 						case "poly":
 
-							// console.log("## >>>", Object.keys(currentLayer[0].default_fill_symbol));
-
-							if (currentLayer[0].default_fill_symbol !== undefined) {
-								scaneables.push(currentLayer[0].default_fill_symbol);
-							}
-							if (currentLayer[0].default_stroke_symbol !== undefined) {
-								scaneables.push(currentLayer[0].default_stroke_symbol);
+							if (currentLayer[0].default_canvas_symbol == null) {
+								currentLayer[0].default_canvas_symbol = new CanvasPolygonSymbol();
 							}
 							break;
 
 						case "line":
-							if (currentLayer[0].default_stroke_symbol !== undefined) {
-								scaneables.push(currentLayer[0].default_stroke_symbol);
+							if (currentLayer[0].default_canvas_symbol == null) {
+								currentLayer[0].default_canvas_symbol = new CanvasLineSymbol();
 							}
 							break;
+					}
+
+					if (currentLayer[0].default_canvas_symbol !== undefined) {
+						scaneables.push(currentLayer[0].default_canvas_symbol);
 					}
 
 					// console.log(currentLayer[0].default_stroke_symbol);

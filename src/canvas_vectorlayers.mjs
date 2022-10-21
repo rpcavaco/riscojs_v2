@@ -4,27 +4,23 @@ import {WKID_List} from './esri_wkids.js';
 import {uuidv4} from './utils.mjs';
 
 import { VectorLayer, RemoteVectorLayer } from './layers.mjs';
-import { CanvasStrokeSymbol, CanvasFillSymbol } from './canvas_symbols.mjs';
-
 
 
 class CanvasVectorLayer extends VectorLayer {
 
 	canvasKey = 'normal';
+	default_canvas_symbol;
 	constructor() {
 		super();
-		this.default_stroke_symbol = new CanvasStrokeSymbol();
-		this.default_fill_symbol = new CanvasFillSymbol();
 	}
 }
 
 class CanvasRemoteVectorLayer extends RemoteVectorLayer {
 
 	canvasKey = 'normal';
+	default_canvas_symbol;
 	constructor() {
 		super();
-		this.default_stroke_symbol = new CanvasStrokeSymbol();
-		this.default_fill_symbol = new CanvasFillSymbol();
 	}
 }
 
@@ -715,14 +711,24 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 
 							case "poly":
 
-								gfctx.fillStyle = that.default_fill_symbol.fillStyle;
-								gfctx.strokeStyle = that.default_stroke_symbol.strokeStyle;
-								gfctx.lineWidth = that.default_stroke_symbol.lineWidth;
+								gfctx.fillStyle = that.default_canvas_symbol.fillStyle;
+								gfctx.strokeStyle = that.default_canvas_symbol.strokeStyle;
+								gfctx.lineWidth = that.default_canvas_symbol.lineWidth;
 			
 								if (esriGeomtype != "esriGeometryPolygon") {
 									throw new Error(`incoerence in feat.types - config:${that.geomtype}, ret.from service:${esriGeomtype}`);
 								}
 								break;
+
+							case "line":
+
+								gfctx.strokeStyle = that.default_canvas_symbol.strokeStyle;
+								gfctx.lineWidth = that.default_canvas_symbol.lineWidth;
+			
+								if (esriGeomtype != "esriGeometryPolyline") {
+									throw new Error(`incoerence in feat.types - config:${that.geomtype}, ret.from service:${esriGeomtype}`);
+								}
+								break;								
 
 						}
 

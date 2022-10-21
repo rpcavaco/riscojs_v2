@@ -20,27 +20,32 @@ class WhereClause {
 }
 
 class Symbol {
+	greaterOrEqualScale = Number.MAX_SAFE_INTEGER; // limit above the current scale
 	constructor() {
 		this.whereClause = new WhereClause();
 	}
 		
 }
 
-export class CanvasStrokeSymbol extends Symbol {
+const strokeSymbolMixin = (Base) => class extends Base {
 	strokeStyle;
 	lineWidth;	
-	constructor() {
-		super();
-	}
-		
 }
 
-export class CanvasFillSymbol extends Symbol {
+const fillSymbolMixin = (Base) => class extends Base {
 	fillStyle;
+}
+
+export class CanvasLineSymbol extends strokeSymbolMixin(Symbol) { 
 	constructor() {
 		super();
 	}
-		
+}
+
+export class CanvasPolygonSymbol extends fillSymbolMixin(strokeSymbolMixin(Symbol)) { 
+	constructor() {
+		super();
+	}
 }
 
 

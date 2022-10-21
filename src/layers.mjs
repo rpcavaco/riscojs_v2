@@ -237,9 +237,23 @@ export class VectorLayer extends Layer {
 		gfctx.save();
 		try {
 
-			gfctx.fillStyle = this.default_stroke_symbol.fillStyle;
-			gfctx.strokeStyle = this.default_stroke_symbol.strokeStyle;
-			gfctx.lineWidth = this.default_stroke_symbol.lineWidth;
+			switch (this.geomtype) {
+
+				case "poly":
+
+					gfctx.fillStyle = that.default_canvas_symbol.fillStyle;
+					gfctx.strokeStyle = that.default_canvas_symbol.strokeStyle;
+					gfctx.lineWidth = that.default_canvas_symbol.lineWidth;
+
+					break;
+
+				case "line":
+
+					gfctx.strokeStyle = this.default_canvas_symbol.strokeStyle;
+					gfctx.lineWidth = this.default_canvas_symbol.lineWidth;
+
+					break;
+			}
 
 
 			// console.log("-- 297 --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);

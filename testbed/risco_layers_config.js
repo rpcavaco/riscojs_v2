@@ -4,7 +4,7 @@ var RISCOJS_LAYERS_CFG = {
 		"grat": {
 			"type": "graticule",
 			"separation": 100,
-			"strokeStyle": "blue",
+			"strokeStyle": "white",
 			"lineWidth": 1
 		},
 		"orto2021": {
