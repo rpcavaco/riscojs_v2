@@ -1,5 +1,5 @@
 var RISCOJS_LAYERS_CFG = {
-	"lorder": ["enq_bw_porto", "mancha_constr", "grat"],
+	"lorder": ["ortos_2018", "mancha_constr", "grat"],
 	"layers": {
 		"grat": {
 			"type": "graticule",

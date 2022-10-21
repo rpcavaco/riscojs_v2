@@ -931,7 +931,7 @@ export class CanvasAGSMapLayer extends CanvasRasterLayer {
 		}
 
 		if (GlobalConst.getDebug("AGSMAP")) {
-			console.log(`[DBG:AGSMAP] found_layers '${found_layers}' for scale 1:'${sclval}'`);
+			console.log(`[DBG:AGSMAP] found_layers '${found_layers}' for scale 1:${sclval}`);
 		}
 
 		if (this.url.indexOf("/MapServer/export") < 0) {

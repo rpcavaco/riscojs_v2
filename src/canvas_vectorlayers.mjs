@@ -1,6 +1,7 @@
 
 import {GlobalConst} from './constants.js';
 import {WKID_List} from './esri_wkids.js';
+import {uuidv4} from './utils.mjs';
 
 import { VectorLayer, RemoteVectorLayer } from './layers.mjs';
 import { CanvasStrokeSymbol, CanvasFillSymbol } from './canvas_symbols.mjs';
@@ -96,6 +97,7 @@ export class CanvasGraticulePtsLayer extends CanvasVectorLayer {
 
 	separation;
 	ptdim = 2;
+	_geomtype = "line";
 
 	constructor() {
 		super();
@@ -678,6 +680,8 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 		const urlstr = this.buildQueryURL(p_mapctxt, p_terrain_env, "GETCHUNK", firstrecid, reccount);
 		const that = this;
 
+		const chunk_id = uuidv4();
+
 		fetch(urlstr)
 			.then((response) => {
 				if (response.ok) {
@@ -688,13 +692,18 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 			.then(
 				function(responsejson) {
 
+					// chunk has become obsolete and was deleted from featchunksloading
+					// by new drawing action
+					if (that.featchunksloading[chunk_id] === undefined) {
+						return;
+					}
+
 					const esriGeomtype = responsejson.geometryType;
 					const svcReference = responsejson.spatialReference.wkid;
 					const crs = p_mapctxt.cfgvar["basic"]["crs"];
 
 					const gfctx = p_mapctxt.canvasmgr.getDrwCtx(that.canvasKey, '2d');
 					gfctx.save();
-
 
 					try {
 
@@ -727,12 +736,30 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 						console.error(e);
 					} finally {
 						gfctx.restore();
+
+						if (that.featchunksloading[chunk_id] !== undefined) {
+
+							if (GlobalConst.getDebug("VECTLOAD")) {
+								console.log(`[DBG:VECTLOAD] timing for '${chunk_id}': ${new Date().getTime() - that.featchunksloading[chunk_id]["ts"]}, reloaded: ${that.featchunksloading[chunk_id]["reloaded"]}`);
+							}
+			
+							delete that.featchunksloading[chunk_id];
+			
+						}						
 					}
 								
 				}
 			).catch((e) => {
 				console.error(e);
 			});	
+
+		this.featchunksloading[chunk_id] = {
+			"chunk_id": chunk_id,
+			"ts": new Date().getTime(),
+			"url": urlstr,
+			"reloaded": false
+		}
+
 
 	};
 
