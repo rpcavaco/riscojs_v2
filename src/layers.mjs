@@ -115,6 +115,13 @@ class Layer {
 	defaultvisible = true;
 	blend = false;
 
+	// Unconfigurables
+	//   If subclass has a non-null value in one of these fields,
+	//   a config value (same name without '_') will be ignored, 
+	//   fo thar subclass only.
+	//
+	_geomtype = null;         // if subclass has n
+
 	_drawingcanceled = false;
 	_key;
 
@@ -230,11 +237,13 @@ export class VectorLayer extends Layer {
 		gfctx.save();
 		try {
 
+			gfctx.fillStyle = this.default_stroke_symbol.fillStyle;
 			gfctx.strokeStyle = this.default_stroke_symbol.strokeStyle;
 			gfctx.lineWidth = this.default_stroke_symbol.lineWidth;
 
 
-			// console.log("-- env --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);
+			// console.log("-- 297 --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);
+			// console.log("-- 239 --", gfctx.strokeStyle, gfctx.lineWidth);
 
 			if (this._drawingcanceled) {
 				this.onCancel();
@@ -322,17 +331,11 @@ export class RemoteVectorLayer extends Layer {
 
 		const [terrain_env, scr_env, dims] = genSingleEnv(p_mapctx);
 
-		const gfctx = this.mapctx.canvasmgr.getDrwCtx(this.canvasKey, '2d');
 		let cancel = false;
-
-		gfctx.save();
 		try {
 
-			gfctx.strokeStyle = this.default_stroke_symbol.strokeStyle;
-			gfctx.lineWidth = this.default_stroke_symbol.lineWidth;
-
-
 			// console.log("-- env --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);
+			//console.log("-- 338 --", gfctx.strokeStyle, gfctx.lineWidth);
 
 			if (this._drawingcanceled) {
 				this.onCancel();
@@ -350,8 +353,9 @@ export class RemoteVectorLayer extends Layer {
 				for (const [firstrec_order, reccount] of this.itemchunks(p_mapctx, p_feat_count, terrain_env)) {
 
 					// console.log("--   >> 359 --", firstrec_order, reccount, this.constructor.name);
+					// console.log("## 360 FILLSTYLE ####", gfctx.fillStyle);
 
-					cancel = this.layeritems(this.mapctx, gfctx, terrain_env, scr_env, dims, firstrec_order, reccount, p_lyrorder);
+					cancel = this.layeritems(this.mapctx, terrain_env, scr_env, dims, firstrec_order, reccount, p_lyrorder);
 
 					if (cancel) {
 						cancel = true;
@@ -369,13 +373,17 @@ export class RemoteVectorLayer extends Layer {
 
 		} catch(e) {
 			throw e;
-		} finally {
-			gfctx.restore();
 		}
 
 		return cancel;
 	}	
 
+	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_recvd_geomtype, p_lyrorder) {
+
+		// to be implemented
+		// for each 'canvas' item just draw each 'layeritem'
+
+	}		
 }
 
 export class RasterLayer extends Layer {
@@ -413,7 +421,7 @@ export class RasterLayer extends Layer {
 		// for each envelope generated in 'envs', generate an url to fetch an image
 	}	
 
-	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url, p_lyrorder) {
+	drawitem2D(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url, p_lyrorder) {
 
 		// to be extended
 		// just draw each item in canvas
@@ -440,11 +448,11 @@ export class RasterLayer extends Layer {
 			return;
 		}
 
-		const gfctx = this.mapctx.canvasmgr.getDrwCtx(this.canvasKey, '2d');
+		//const gfctx = this.mapctx.canvasmgr.getDrwCtx(this.canvasKey, '2d');
 
 		let cancel = false;
 
-		gfctx.save();
+		//gfctx.save();
 		try {
 
 			if (!this._drawingcanceled) {
@@ -476,7 +484,7 @@ export class RasterLayer extends Layer {
 						
 						// console.log("-- item --", terrain_env, scr_env, raster_url);
 
-						if (!this.drawitem2D(p_mapctx, gfctx, terrain_env, scr_env, dims, envkey, raster_url, p_lyrorder)) {
+						if (!this.drawitem2D(p_mapctx, terrain_env, scr_env, dims, envkey, raster_url, p_lyrorder)) {
 							cancel = true;
 							break;
 						}
@@ -496,8 +504,8 @@ export class RasterLayer extends Layer {
 
 		} catch(e) {
 			throw e;
-		} finally {
-			gfctx.restore();
+		//} finally {
+		//	gfctx.restore();
 		}
 
 		return cancel;

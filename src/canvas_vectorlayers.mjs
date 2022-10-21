@@ -3,41 +3,40 @@ import {GlobalConst} from './constants.js';
 import {WKID_List} from './esri_wkids.js';
 
 import { VectorLayer, RemoteVectorLayer } from './layers.mjs';
-import { CanvasStrokeSymbol } from './canvas_symbols.mjs';
+import { CanvasStrokeSymbol, CanvasFillSymbol } from './canvas_symbols.mjs';
 
 
 
 class CanvasVectorLayer extends VectorLayer {
 
 	canvasKey = 'normal';
-	// constructor(p_mapctxt) {
-	//super(p_mapctxt);
 	constructor() {
 		super();
 		this.default_stroke_symbol = new CanvasStrokeSymbol();
-		// this.default_fill_symbol = null;
+		this.default_fill_symbol = new CanvasFillSymbol();
 	}
 }
 
 class CanvasRemoteVectorLayer extends RemoteVectorLayer {
 
 	canvasKey = 'normal';
-	// constructor(p_mapctxt) {
-	//super(p_mapctxt);
 	constructor() {
 		super();
 		this.default_stroke_symbol = new CanvasStrokeSymbol();
-		// this.default_fill_symbol = null;
+		this.default_fill_symbol = new CanvasFillSymbol();
 	}
 }
 
 export class CanvasGraticuleLayer extends CanvasVectorLayer {
 
 	separation;
+	_geomtype = "line";
 
 	constructor() {
 		super();
 	}
+
+
 
 	* itemchunks(p_mapctxt, p_terrain_env) {
 		yield [-1, -1];
@@ -154,14 +153,6 @@ export class CanvasGraticulePtsLayer extends CanvasVectorLayer {
 }
 
 
-/*
-https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer/
-
-
-
-https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer/9/query?where=1%3D1&text=&objectIds=&time=&timeRelation=esriTimeRelationOverlaps&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&returnExtentOnly=false&sqlFormat=none&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=html
-*/
-
 export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 
 	url;     // https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer
@@ -219,15 +210,6 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 				break;
 					
 		}
-
-		/*
-		sp.set('returnGeometry', 'true');
-		sp.set('returnIdsOnly', 'false');
-		sp.set('returnCountOnly', 'false');
-		sp.set('returnExtentOnly', 'false');
-		sp.set('geometryPrecision', precision.toString());
-		sp.set('outSR', crs);
-		*/
 
 		sp.set('f', 'json');
 
@@ -637,9 +619,7 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 	getStats(p_mapctx, p_terrain_env, p_lyr_order) {
 
 		const url = this.buildQueryURL(p_mapctx, p_terrain_env, "INITCOUNT");
-
 		// console.log("## GETSTATS buildQueryURL:", url);
-
 		const that = this;
 
 		fetch(url)
@@ -671,13 +651,11 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 				calc_chunksize = Math.floor(p_feat_count / numchunks);
 				remainder = p_feat_count % numchunks;
 			}
-
 		} else {
 			numchunks = 1;
 			calc_chunksize = p_feat_count;
 			remainder = 0;
 		}
-
 
 		if (GlobalConst.getDebug("AGSQRY")) {
 			console.log(`[DBG:AGSQRY] Vector layer '${this.key}' , chunks:${numchunks}, size:${calc_chunksize}, rem:${remainder}`);
@@ -695,7 +673,7 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 
 	}		
 
-	layeritems(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, firstrecid, reccount, p_lyrorder) {
+	layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, firstrecid, reccount, p_lyrorder) {
 
 		const urlstr = this.buildQueryURL(p_mapctxt, p_terrain_env, "GETCHUNK", firstrecid, reccount);
 		const that = this;
@@ -714,25 +692,41 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 					const svcReference = responsejson.spatialReference.wkid;
 					const crs = p_mapctxt.cfgvar["basic"]["crs"];
 
-					if (WKID_List[svcReference] != crs) {
-						throw new Error(`incoerence in crs - config:${crs}, ret.from service:${WKID_List[svcReference]} (WKID: ${svcReference})`);
-					}
+					const gfctx = p_mapctxt.canvasmgr.getDrwCtx(that.canvasKey, '2d');
+					gfctx.save();
 
-					switch (that.geomtype) {
 
-						case "poly":
+					try {
 
-							if (esriGeomtype != "esriGeometryPolygon") {
-								throw new Error(`incoerence in feat.types - config:${that.geomtype}, ret.from service:${esriGeomtype}`);
-							}
-							break;
+						if (WKID_List[svcReference] != crs) {
+							throw new Error(`incoerence in crs - config:${crs}, ret.from service:${WKID_List[svcReference]} (WKID: ${svcReference})`);
+						}
 
-					}
+						switch (that.geomtype) {
 
-					// verificar campos ATTRS
+							case "poly":
 
-					for (const feat of responsejson.features) {
-						that.drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, feat.geometry, feat.attributes, esriGeomtype, p_lyrorder);
+								gfctx.fillStyle = that.default_fill_symbol.fillStyle;
+								gfctx.strokeStyle = that.default_stroke_symbol.strokeStyle;
+								gfctx.lineWidth = that.default_stroke_symbol.lineWidth;
+			
+								if (esriGeomtype != "esriGeometryPolygon") {
+									throw new Error(`incoerence in feat.types - config:${that.geomtype}, ret.from service:${esriGeomtype}`);
+								}
+								break;
+
+						}
+
+						// verificar campos ATTRS
+
+						for (const feat of responsejson.features) {
+							that.drawitem2D(p_mapctxt, gfctx, p_terrain_env, p_scr_env, p_dims, feat.geometry, feat.attributes, esriGeomtype, p_lyrorder);
+						}
+
+					} catch(e) {
+						console.error(e);
+					} finally {
+						gfctx.restore();
 					}
 								
 				}
@@ -765,9 +759,9 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 					p_gfctx.closePath();
 				}
 
-				p_gfctx.fillStyle = "#FF00007F";
-				p_gfctx.strokeStyle = "rgba(0.7,0.7,0.7)";
-				p_gfctx.lineWidth = 1;
+				// p_gfctx.fillStyle = this.fillStyle;
+				// p_gfctx.strokeStyle = this.strokeStyle;
+				// p_gfctx.lineWidth = this.lineWidth;
 				p_gfctx.fill();
 				p_gfctx.stroke();	
 				

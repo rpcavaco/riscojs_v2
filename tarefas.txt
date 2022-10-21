@@ -14,6 +14,7 @@
 - zoom janela e ferramenta base de desenho de janela
 - measuring tool
 - controle de erros em todos os fetches, copiar das feats de AGSQuery
+- where clause na simbologia
 
 
 - >> features AGS - primeira visão com polígonos

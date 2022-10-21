@@ -47,10 +47,8 @@ export class TOCManager {
 
 		for (let lyk, i=0; i < layerscfg.lorder.length; i++) {
 
-
 			lyk = layerscfg.lorder[i];
 			if (layerscfg.layers[lyk] !== undefined) {
-
 					
 				if (layerscfg.layers[lyk]["type"] !== undefined) {
 
@@ -64,20 +62,46 @@ export class TOCManager {
 						continue;
 					}
 
-					const scaneables = [currentLayer[0]];
+					// 'geomtype' processed separatedly, it is a special property
+					if (currentLayer[0]._geomtype != null) {
+						currentLayer[0].geomtype = currentLayer[0]._geomtype;
+						if (layerscfg.layers[lyk]["geomtype"] !== undefined) {
+							console.error(`[WARN] layer '${lyk}' 'geomtype' property is not configurable in that layer type`);
+						}
+					} else {
+						if (layerscfg.layers[lyk]["geomtype"] !== undefined) {
+							currentLayer[0].geomtype = layerscfg.layers[lyk]["geomtype"];
+						}
+					}
 
+					const scaneables = [currentLayer[0]];
 					currentLayer[0].key = lyk;
 
-					/* Need to previously */
+					// console.log("## geomtype -- >", lyk, layerscfg.layers[lyk]["geomtype"], currentLayer[0].geomtype);
 
-					switch(this.geomtype) {
+					switch(currentLayer[0].geomtype) {
+
 						case "poly":
+
+							// console.log("## >>>", Object.keys(currentLayer[0].default_fill_symbol));
+
+							if (currentLayer[0].default_fill_symbol !== undefined) {
+								scaneables.push(currentLayer[0].default_fill_symbol);
+							}
+							if (currentLayer[0].default_stroke_symbol !== undefined) {
+								scaneables.push(currentLayer[0].default_stroke_symbol);
+							}
+							break;
+
 						case "line":
 							if (currentLayer[0].default_stroke_symbol !== undefined) {
 								scaneables.push(currentLayer[0].default_stroke_symbol);
 							}
 							break;
 					}
+
+					// console.log(currentLayer[0].default_stroke_symbol);
+					// console.log(scaneables);
 
 					try {
 						for (let si=0; si < scaneables.length; si++) {
@@ -89,7 +113,7 @@ export class TOCManager {
 								if (items[ii].startsWith('_')) { 
 									continue;
 								}
-								
+
 								if (layerscfg.layers[lyk][items[ii]] !== undefined) {
 									scaneables[si][items[ii]] = layerscfg.layers[lyk][items[ii]];
 								} else {

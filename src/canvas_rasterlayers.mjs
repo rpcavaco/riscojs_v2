@@ -41,26 +41,28 @@ function toGrayScaleImgFilter(p_gfctx, p_imgobj, p_x, p_y, p_ctxw, p_ctxh, null_
 	}
 };
 
-function imageEvtsHandling(pp_mapctxt, p_gfctx, p_lyr, p_img, pp_scr_env, pp_dims, pp_envkey, p_raster_id) {
+function imageEvtsHandling(pp_mapctxt, p_lyr, p_img, pp_scr_env, pp_dims, pp_envkey, p_raster_id) {
 	
 	p_img.onload = function() {
 
-		p_gfctx.save();
+		const gfctx = pp_mapctxt.canvasmgr.getDrwCtx(p_lyr.canvasKey, '2d');
+
+		gfctx.save();
 		try {
 
 			//p_gfctx.clearRect(pp_scr_env[0], pp_scr_env[3], ...pp_dims);
 
-			p_gfctx.drawImage(p_img, pp_scr_env[0], pp_scr_env[3]);
+			gfctx.drawImage(p_img, pp_scr_env[0], pp_scr_env[3]);
 
 			if (p_lyr.filter == 'grayscale') {
-				toGrayScaleImgFilter(p_gfctx, p_img, pp_scr_env[0], pp_scr_env[3], ...pp_dims);
+				toGrayScaleImgFilter(gfctx, p_img, pp_scr_env[0], pp_scr_env[3], ...pp_dims);
 			}
 
 			//processHDREffect(gfctx, [0,0], pp_dims)
 		} catch(e) {
 			throw e;
 		} finally {
-			p_gfctx.restore();
+			gfctx.restore();
 
 			if (p_lyr.rastersloading[p_raster_id] !== undefined) {
 
@@ -128,14 +130,14 @@ class CanvasRasterLayer extends RasterLayer {
 		super();
 	}	
 
-	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url, p_lyrorder) {
+	drawitem2D(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url, p_lyrorder) {
 
 		const img = new Image();
 		img.crossOrigin = "anonymous";
 
 		const raster_id = uuidv4();
 
-		imageEvtsHandling(p_mapctxt, p_gfctx, this, img, p_scr_env.slice(0), p_dims.slice(0), p_envkey, raster_id);		
+		imageEvtsHandling(p_mapctxt, this, img, p_scr_env.slice(0), p_dims.slice(0), p_envkey, raster_id);		
 		img.src = p_raster_url;
 
 		// console.log(`(rstrs on loading at t0 x ${p_envkey}):`, Object.keys(this.rastersloading[p_envkey]));
@@ -297,8 +299,6 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 
 							ly = lyrs[li];
 							lname = ly.querySelector("Name").textContent;
-
-							console.log(">>>>>", li, lname);
 
 							that._servmetadata["layers"][lname] = {}
 							velem = ly.querySelector("Abstract")

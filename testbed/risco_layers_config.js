@@ -1,10 +1,10 @@
 var RISCOJS_LAYERS_CFG = {
-	"lorder": ["ortos_2018", "mancha_constr", "grat"],
+	"lorder": ["enq_bw_porto", "mancha_constr", "grat"],
 	"layers": {
 		"grat": {
 			"type": "graticule",
 			"separation": 100,
-			"strokeStyle": "black",
+			"strokeStyle": "blue",
 			"lineWidth": 1
 		},
 		"orto2021": {
@@ -39,7 +39,10 @@ var RISCOJS_LAYERS_CFG = {
 			"geomtype": "poly",
 			"url": "https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer",
 			"layerid": "9",
-			"envsplit": false
+			"envsplit": false,
+			"fillStyle": "#FF00007F",
+			"strokeStyle": "rgba(0.7,0.7,0.7)",
+			"lineWidth": 1	
 			//"filter": "grayscale"
 		}		
 		

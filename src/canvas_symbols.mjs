@@ -19,11 +19,26 @@ class WhereClause {
 	}
 }
 
-export class CanvasStrokeSymbol {
+class Symbol {
+	constructor() {
+		this.whereClause = new WhereClause();
+	}
+		
+}
+
+export class CanvasStrokeSymbol extends Symbol {
 	strokeStyle;
 	lineWidth;	
 	constructor() {
-		this.whereClause = new WhereClause();
+		super();
+	}
+		
+}
+
+export class CanvasFillSymbol extends Symbol {
+	fillStyle;
+	constructor() {
+		super();
 	}
 		
 }
