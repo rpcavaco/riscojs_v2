@@ -10,6 +10,11 @@
 - OK - graticulas de pontos
 - OK - racionalizar a criação de novas layer - acabar com o switch
 - OK- scaledep 'layers' / 'layernames' (sub-layers)
+- OK - eliminação dos requests caducados (vetores)
+- OK features AGS - primeira visão com polígonos
+		faltam linhas e pontos
+
+- scaledep symbology
 
 - zoom janela e ferramenta base de desenho de janela
 - measuring tool
@@ -17,8 +22,8 @@
 - where clause na simbologia
 
 
-- >> features AGS - primeira visão com polígonos
-- >> eliminação dos requests caducados
+
+
 
 
 -  ?  offline bitmap
