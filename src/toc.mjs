@@ -59,12 +59,19 @@ export class TOCManager {
 						currentLayer[0].setMapctxt(this.mapctx);
 					}
 
+					// connects feature collection to this layer, if applicable
+					// (if it implements featureLayersMixin)
+					if (currentLayer[0].setCurrFeatures !== undefined) {
+						currentLayer[0].setCurrFeatures(this.mapctx.currFeatures, lyk);
+					}
+
 					if (currentLayer.length == 0) {
 						console.error(`TOCManager, layer '${lyk}' type not known: '${layerscfg.layers[lyk]["type"]}'`);
 						continue;
 					}
 
-					// 'geomtype' processed separatedly, it is a special property
+					// 'geomtype',  'fields', 'oidfldname' processed separatedly, they are special properties
+					
 					if (currentLayer[0]._geomtype != null) {
 						currentLayer[0].geomtype = currentLayer[0]._geomtype;
 						if (layerscfg.layers[lyk]["geomtype"] !== undefined) {
@@ -76,6 +83,24 @@ export class TOCManager {
 						}
 					}
 
+					if (layerscfg.layers[lyk]["fields"] !== undefined) {
+						currentLayer[0].fields = layerscfg.layers[lyk]["fields"];
+					}
+
+					if (currentLayer[0].oidfldname == null && layerscfg.layers[lyk]["oidfldname"] !== undefined) {
+						currentLayer[0].oidfldname = layerscfg.layers[lyk]["oidfldname"];
+					}
+
+					// if exists oidfldname, addit  to 'fields' string, in case the user hasn't already done it
+					if (currentLayer[0].oidfldname != null) {
+						if (currentLayer[0].fields == null || currentLayer[0].fields.length == 0) {
+							currentLayer[0].fields = currentLayer[0].oidfldname;
+						} else {
+							if (currentLayer[0].fields.indexOf(currentLayer[0].oidfldname) < 0) {
+								currentLayer[0].fields = currentLayer[0].oidfldname + "," + currentLayer[0].fields;
+							}
+						}
+					}					
 					const scaneables = [currentLayer[0]];
 					currentLayer[0].key = lyk;
 

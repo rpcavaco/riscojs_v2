@@ -159,7 +159,7 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 
 	url;     // https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer
 	layerid; // 9
-	fields = "objectid";
+	oidfldname = "objectid"
 	precision = 3;
 	f = "json";
 
@@ -470,7 +470,7 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 		} catch(e) {
 
 			console.error(e);
-
+			console.log(`------ FAILING LAYER '${this.key}' METADATA --------`);
 			console.log(this._servmetadata);
 			ret = false;
 			

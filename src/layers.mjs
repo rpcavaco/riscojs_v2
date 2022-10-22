@@ -184,12 +184,24 @@ class Layer {
 	}		
 }
 
-export class VectorLayer extends Layer {
-
+const vectorLayersMixin = (Base) => class extends Base {
 	geomtype = "none";
+}
 
-	constructor(p_mapctx) {
-		super(p_mapctx);
+const featureLayersMixin = (Base) => class extends Base {
+	currFeatures;
+	oidfldname;
+	fields;
+	setCurrFeatures(p_curr_feats, p_layer_key) {
+		this.currFeatures = p_curr_feats;
+		this.currFeatures.setLayer(p_layer_key);
+	}
+}
+
+export class VectorLayer extends vectorLayersMixin(Layer) {
+
+	constructor() {
+		super();
 	}
 	
 	* itemchunks(p_mapctxt, p_terrain_env) {
@@ -297,13 +309,12 @@ export class VectorLayer extends Layer {
 	}	
 }
 
-export class RemoteVectorLayer extends Layer {
+export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Layer)) {
 
-	geomtype = "none";
 	featchunksloading = {};
 
-	constructor(p_mapctx) {
-		super(p_mapctx);
+	constructor() {
+		super();
 	}
 
 	* itemchunks(p_mapctxt, p_feat_count, p_terrain_env) {

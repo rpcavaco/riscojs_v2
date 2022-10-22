@@ -8,6 +8,12 @@ export class FeatureCollection {
 		this.spIndex = new SpatialIndex();
 	}
 
+	setLayer(p_layerkey) {
+		if (this.featList[p_layerkey] === undefined) {
+			this.featList[p_layerkey] = {};
+		}		
+	}
+
 	add(p_layerkey, p_id_fieldname, p_geom, p_attrs) {
 
 		if (this.featList[p_layerkey] === undefined) {

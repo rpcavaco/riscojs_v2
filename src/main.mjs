@@ -131,10 +131,11 @@ export class RiscoMapCtx {
 		this.cfgvar = p_config_var;
 
 		this.canvasmgr = new HTML5CanvasMgr(this);
+		this.currFeatures = new FeatureCollection(this);
 		this.transformmgr = new Transform2DMgr(this, p_config_var["basic"]);	
 		this.toolmgr = new ToolManager(p_config_var["basic"]);
 		this.tocmgr = new TOCManager(this, 'canvas');
-		this.currFeatures = new FeatureCollection(this);
+
 		this.#customization_instance = null;
 
 		// Attach event listeners to this map context panel
