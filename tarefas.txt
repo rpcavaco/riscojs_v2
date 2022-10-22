@@ -14,7 +14,9 @@
 - OK features AGS - primeira visão com polígonos
 		faltam linhas e pontos
 
+
 - scaledep symbology
+- flatgeobuf
 
 - zoom janela e ferramenta base de desenho de janela
 - measuring tool
