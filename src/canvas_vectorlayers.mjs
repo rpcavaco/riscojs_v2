@@ -75,6 +75,8 @@ export class CanvasGraticuleLayer extends CanvasVectorLayer {
 
 		}
 
+		p_mapctxt.tocmgr.signalVectorLoadFinished(this.key);
+
 	}
 
 	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype, p_lyrorder) {
@@ -124,6 +126,8 @@ export class CanvasGraticulePtsLayer extends CanvasVectorLayer {
 				yield [out_pt.slice(0), null];
 			}
 		}
+
+		p_mapctxt.tocmgr.signalVectorLoadFinished(this.key);		
 	}
 
 	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype, p_lyrorder) {
@@ -461,14 +465,7 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 				}
 			}
 
-			if (!viable) {
-				return ret;
-			}
-		
-			// draw2D returns 'cancel' if true, must return false
-			if (this.preDraw(p_mapctxt)) {
-				ret = ! this.draw2D(p_mapctxt, p_lyr_order);
-			}
+			ret = viable;
 
 		} catch(e) {
 
@@ -636,6 +633,11 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 			return;
 		}
 
+		if (p_feat_count == 1) {
+			console.log(`[WARN:AGSQRY] QUASI Empty feat set in layer '${this.key}', 1 elem to draw`);
+			return;
+		}		
+
 		let numchunks, remainder, calc_chunksize;
 
 		if (p_feat_count > GlobalConst.MAXFEATCHUNKSIZE) {
@@ -683,7 +685,7 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 				if (response.ok) {
 					return response.json();
 				}
-				throw new Error(`Error fetching features chunk for layer ${that.key}'`);
+				throw new Error(`Error fetching features chunk for layer '${that.key}'`);
 			})
 			.then(
 				function(responsejson) {
@@ -704,7 +706,7 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 					try {
 
 						if (WKID_List[svcReference] != crs) {
-							throw new Error(`incoerence in crs - config:${crs}, ret.from service:${WKID_List[svcReference]} (WKID: ${svcReference})`);
+							throw new Error(`'${that.key}', incoerence in crs - config:${crs}, ret.from service:${WKID_List[svcReference]} (WKID: ${svcReference})`);
 						}
 
 						switch (that.geomtype) {
@@ -716,7 +718,7 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 								gfctx.lineWidth = that.default_canvas_symbol.lineWidth;
 			
 								if (esriGeomtype != "esriGeometryPolygon") {
-									throw new Error(`incoerence in feat.types - config:${that.geomtype}, ret.from service:${esriGeomtype}`);
+									throw new Error(`'${that.key}', incoerence in feat.types - config:${that.geomtype}, ret.from service:${esriGeomtype}`);
 								}
 								break;
 
@@ -726,7 +728,7 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 								gfctx.lineWidth = that.default_canvas_symbol.lineWidth;
 			
 								if (esriGeomtype != "esriGeometryPolyline") {
-									throw new Error(`incoerence in feat.types - config:${that.geomtype}, ret.from service:${esriGeomtype}`);
+									throw new Error(`'${that.key}', incoerence in feat.types - config:${that.geomtype}, ret.from service:${esriGeomtype}`);
 								}
 								break;								
 
@@ -746,10 +748,17 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 						if (that.featchunksloading[chunk_id] !== undefined) {
 
 							if (GlobalConst.getDebug("VECTLOAD")) {
-								console.log(`[DBG:VECTLOAD] timing for '${chunk_id}': ${new Date().getTime() - that.featchunksloading[chunk_id]["ts"]}, reloaded: ${that.featchunksloading[chunk_id]["reloaded"]}`);
+								console.log(`[DBG:VECTLOAD] '${that.key}', timing for '${chunk_id}': ${new Date().getTime() - that.featchunksloading[chunk_id]["ts"]}, reloaded: ${that.featchunksloading[chunk_id]["reloaded"]}`);
 							}
 			
 							delete that.featchunksloading[chunk_id];
+
+							if (Object.keys(that.featchunksloading).length == 0) {
+								if (GlobalConst.getDebug("VECTLOAD")) {
+									console.log(`[DBG:VECTLOAD] Finished loading'${that.key}'`);
+								}
+								p_mapctxt.tocmgr.signalVectorLoadFinished(that.key);
+							}
 			
 						}						
 					}

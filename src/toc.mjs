@@ -2,7 +2,7 @@
 
 import {CanvasWMSLayer, CanvasAGSMapLayer} from './canvas_rasterlayers.mjs';
 import {CanvasGraticuleLayer, CanvasGraticulePtsLayer, CanvasAGSQryLayer} from './canvas_vectorlayers.mjs';
-import {RemoteVectorLayer} from './layers.mjs';
+import {RasterLayer, RemoteVectorLayer} from './layers.mjs';
 import {CanvasLineSymbol, CanvasPolygonSymbol} from './canvas_symbols.mjs';
 
 const canvas_layer_classes = {
@@ -26,6 +26,7 @@ export class TOCManager {
 		this.mode = p_mode;  // 'canvas', para já
 		this.mapctx = p_mapctx;
 		this.initLayersFromConfig();
+		this.drawlist = [];
 	}
 	static readLayerConfigItem(p_lyrob, p_configvar, p_layerkey, p_itemname) {
 		if (p_configvar.lorder[p_layerkey][p_itemname] !== undefined) {	
@@ -177,7 +178,7 @@ export class TOCManager {
 		
 		let gfctx;
 		const ckeys = new Set();
-		const canvas_dims = [], bounds = [];
+		const canvas_dims = [];
 
 		this.mapctx.canvasmgr.getCanvasDims(canvas_dims);
 
@@ -194,25 +195,67 @@ export class TOCManager {
 			gfctx.clearRect(0, 0, ...canvas_dims); 
 		}
 
+		this.drawlist.length = 0;
+
+		// Find single raster, send it to bottom of list
+		//  and discard others
+		let the_raster_layer_i = -1;
 		for (let li=0; li < this.layers.length; li++) {
-
-			try {
-
-				if (this.layers[li] instanceof RemoteVectorLayer) {
-					if (this.layers[li].preDraw(this.mapctx)) {
-						this.mapctx.getMapBounds(bounds);			
-						this.layers[li].getStats(this.mapctx, bounds, li);
-					}
+			if (this.layers[li] instanceof RasterLayer) {
+				if (the_raster_layer_i >= 0) {
+					console.error(`[WARN] Only one raster layer is allowed, ignoring '${this.layers[li].key}'`);
 				} else {
-					this.layers[li].draw2D(this.mapctx, li);
+					the_raster_layer_i = li;
 				}
-
-			} catch(e) {
-				console.error(e);
 			}
-
 		}
 
+		// Drawing first the single raster, draw in self canvas, can render at anytime
+		if (the_raster_layer_i >= 0) {
+			this.layers[the_raster_layer_i].draw2D(this.mapctx, the_raster_layer_i);
+		}
+
+		for (let li=0; li < this.layers.length; li++) {
+			if (!(this.layers[li] instanceof RasterLayer)) {
+				this.drawlist.push(li);
+			}
+		}	
+
+		this.nextdraw();
 	}
 
+	// getStats and draw2D will launch processes that terminate by calling signalVectorLoadFinished
+	nextdraw() {
+		const bounds = [];
+
+		if (this.drawlist.length < 1) {
+			return;
+		}
+
+		const li = this.drawlist[0];
+		try {
+
+			if (this.layers[li] instanceof RemoteVectorLayer) {
+				if (this.layers[li].preDraw(this.mapctx)) {
+					this.mapctx.getMapBounds(bounds);			
+					this.layers[li].getStats(this.mapctx, bounds, li);
+				}
+			} else {
+				this.layers[li].draw2D(this.mapctx, li);
+			}
+
+		} catch(e) {
+			console.error(e);
+		}
+	}
+
+	signalVectorLoadFinished(p_finished_key) {
+		const li = 0;
+
+		if (this.layers[this.drawlist[li]].key != p_finished_key) {
+			throw new Error(`Layer just finished '${p_finished_key}' is not in drawing list drawing position (zero), occupied by '${this.layers[this.drawlist[li]].key}'`)
+		}
+		this.drawlist.shift();
+		this.nextdraw();
+	}
 }

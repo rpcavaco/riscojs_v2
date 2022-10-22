@@ -359,8 +359,9 @@ export class RemoteVectorLayer extends Layer {
 
 				// console.log("--   >> 354 --", terrain_env, scr_env);
 				for (let rstrid in this.featchunksloading) {
-					this.featchunksloading[rstrid].img.src = "";
-					delete this.featchunksloading[rstrid];
+					if (this.featchunksloading.hasOwnProperty(rstrid)) {
+						delete this.featchunksloading[rstrid];
+					}
 				} 
 
 				// firstrec_order is zero - based
@@ -477,8 +478,10 @@ export class RasterLayer extends Layer {
 
 
 				for (let rstrid in this.rastersloading) {
-					this.rastersloading[rstrid].img.src = "";
-					delete this.rastersloading[rstrid];
+					if (this.rastersloading.hasOwnProperty(rstrid)) {
+						this.rastersloading[rstrid].img.src = "";
+						delete this.rastersloading[rstrid];
+					}
 				} 
 		
 				for (const [terrain_env, scr_env, dims, envkey] of this.envs(p_mapctx)) {
