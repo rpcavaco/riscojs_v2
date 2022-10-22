@@ -7,40 +7,43 @@
 - OK - cookie "local" anterior
 - OK - imagens AGS
 - FALHAdo - blending de layers raster
-- OK - graticulas de pontos
+- OK - graticulas de pontos (cruzes) - falta orientar as cruzes ao sistema de coordenadas
 - OK - racionalizar a criação de novas layer - acabar com o switch
 - OK- scaledep 'layers' / 'layernames' (sub-layers)
 - OK - eliminação dos requests caducados (vetores)
-- OK features AGS - primeira visão com polígonos
+- OK - where clause nos obj simbologia
+- OK - limite sup escala nos obj simbologia
+- OK - features AGS - primeira visão com polígonos
 		faltam linhas e pontos
 
-
+- recolher attribs dos formatos vetoriais e info na multi tool (no mouse up sem drag)
+- 3 >> - simbologia pontos (para completar 'Fisca')
+- 1 ou >> - WFS xml
+- 1 >> - fomatos risco - features
+- formatos risco - imagem
 - scaledep symbology
 - flatgeobuf
+- índice espacial
+- labeling 
 
 - zoom janela e ferramenta base de desenho de janela
 - measuring tool
 - controle de erros em todos os fetches, copiar das feats de AGSQuery
-- where clause na simbologia
 
 
+Nice to Have
 
-
-
-
--  ?  offline bitmap
-
-- fallback: detetar indisponibilidade de layer e acionar layer de substituição
-- info na multi tool (no mouse up sem drag)
 - HDR
-- FGB
 - rotação
-- índice espacial
+-  ?  offline bitmap
+- fallback: detetar indisponibilidade de layer e acionar layer de substituição
 - ? pluggable new layers 
 - canvas de background para mostrar blurred image durante substituições de mapa
 
 
-- novo s riscowidgets e risco web client (onde se junta tudo)
+Integração geral
+
+- novos riscowidgets e risco web client (onde se junta tudo)
 
 
 
