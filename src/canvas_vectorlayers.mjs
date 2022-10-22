@@ -785,6 +785,8 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 
 			if (p_coords.rings.length > 0) {
 
+				this.currFeatures.add(this.key, this.oidfldname, p_coords.rings, p_attrs);
+
 				p_gfctx.beginPath();
 
 				for (const ring of p_coords.rings) {
