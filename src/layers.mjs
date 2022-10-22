@@ -241,9 +241,9 @@ export class VectorLayer extends Layer {
 
 				case "poly":
 
-					gfctx.fillStyle = that.default_canvas_symbol.fillStyle;
-					gfctx.strokeStyle = that.default_canvas_symbol.strokeStyle;
-					gfctx.lineWidth = that.default_canvas_symbol.lineWidth;
+					gfctx.fillStyle = this.default_canvas_symbol.fillStyle;
+					gfctx.strokeStyle = this.default_canvas_symbol.strokeStyle;
+					gfctx.lineWidth = this.default_canvas_symbol.lineWidth;
 
 					break;
 
