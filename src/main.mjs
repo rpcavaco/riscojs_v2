@@ -2,6 +2,7 @@ import {HTML5CanvasMgr} from './html5canvas.mjs';
 import {Transform2DMgr} from './transformations.mjs';
 import {ToolManager} from './interactions.mjs';
 import {TOCManager} from './toc.mjs';
+import {FeatureCollection} from './feature_collection.mjs';
 
 /**
  * Class RiscoMapOverlay
@@ -133,6 +134,7 @@ export class RiscoMapCtx {
 		this.transformmgr = new Transform2DMgr(this, p_config_var["basic"]);	
 		this.toolmgr = new ToolManager(p_config_var["basic"]);
 		this.tocmgr = new TOCManager(this, 'canvas');
+		this.currFeatures = new FeatureCollection(this);
 		this.#customization_instance = null;
 
 		// Attach event listeners to this map context panel

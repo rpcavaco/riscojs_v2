@@ -1,4 +1,6 @@
 
+// Portuguese items for now
+
 export var WKID_List = {
 	4326: 4326,
 	3763: 3763,
