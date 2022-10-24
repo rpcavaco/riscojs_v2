@@ -1,5 +1,5 @@
 var RISCOJS_LAYERS_CFG = {
-	"lorder": ["ortos_2018", "mancha_constr", "grat"],
+	"lorder": ["ortos_2018", "mancha_constr", "gratMRK"],
 	"layers": {
 		"grat": {
 			"type": "graticule",
@@ -7,6 +7,12 @@ var RISCOJS_LAYERS_CFG = {
 			"strokeStyle": "white",
 			"lineWidth": 1
 		},
+		"gratMRK": {
+			"type": "graticulept",
+			"separation": 100,
+			"strokeStyle": "white",
+			"lineWidth": 1
+		},		
 		"orto2021": {
 			"type": "wms",
 			"reuseurl": true, 
