@@ -277,9 +277,19 @@ export class TOCManager {
 	signalVectorLoadFinished(p_finished_key) {
 		const li = 0;
 
-		if (this.layers[this.drawlist[li]].key != p_finished_key) {
-			throw new Error(`Layer just finished '${p_finished_key}' is not in drawing list drawing position (zero), occupied by '${this.layers[this.drawlist[li]].key}'`)
+		if (this.drawlist.length == 0) {
+			return;
 		}
+
+		try {
+			if (this.layers[this.drawlist[li]].key != p_finished_key) {
+				throw new Error(`Layer just finished '${p_finished_key}' is not in drawing list drawing position (zero), occupied by '${this.layers[this.drawlist[li]].key}'`)
+			}
+		} catch(e) {
+			console.log("li:", li, ", this.drawlist[li]:", this.drawlist[li], ", this.drawlist.len:", this.drawlist.length);
+			throw e;
+		}
+
 		this.drawlist.shift();
 		this.nextdraw();
 	}
