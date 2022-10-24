@@ -557,7 +557,7 @@ export class CanvasAGSQryLayer extends canvasLayerMixin(RemoteVectorLayer) {
 			.then(response => response.json())
 			.then(
 				function(responsejson) {
-					that.draw2D(p_mapctx, responsejson.count, p_lyr_order);					
+					that.refresh(p_mapctx, responsejson.count, p_lyr_order);					
 				}
 			);	
 	}

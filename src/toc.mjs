@@ -204,9 +204,9 @@ export class TOCManager {
 		console.info("[init RISCO] TOCManager, layers init finished");
 	}
 
-	draw(p_scaleval) {
+	refresh(p_scaleval) {
 
-		console.info(`[INFO] attemting to draw ${this.layers.length} layers at scale 1:${p_scaleval}`);
+		console.info(`[INFO] attemting to refresh ${this.layers.length} layers at scale 1:${p_scaleval}`);
 		
 		let gfctx;
 		const ckeys = new Set();
@@ -244,7 +244,7 @@ export class TOCManager {
 
 		// Drawing first the single raster, draw in self canvas, can render at anytime
 		if (the_raster_layer_i >= 0) {
-			this.layers[the_raster_layer_i].draw2D(this.mapctx, the_raster_layer_i);
+			this.layers[the_raster_layer_i].refresh(this.mapctx, the_raster_layer_i);
 		}
 
 		for (let li=0; li < this.layers.length; li++) {
@@ -268,12 +268,12 @@ export class TOCManager {
 		try {
 
 			if (this.layers[li] instanceof RemoteVectorLayer) {
-				if (this.layers[li].preDraw(this.mapctx)) {
+				if (this.layers[li].preRefresh(this.mapctx)) {
 					this.mapctx.getMapBounds(bounds);			
 					this.layers[li].getStats(this.mapctx, bounds, li);
 				}
 			} else {
-				this.layers[li].draw2D(this.mapctx, li);
+				this.layers[li].refresh(this.mapctx, li);
 			}
 
 		} catch(e) {

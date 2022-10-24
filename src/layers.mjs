@@ -175,7 +175,7 @@ class Layer {
 		this._drawingcanceled = false;
 	}
 
-	draw2D(p_mapctx, p_lyrorder) {
+	refresh(p_mapctx, p_lyrorder) {
 
 		// to be extended
 		
@@ -221,7 +221,7 @@ export class VectorLayer extends vectorLayersMixin(Layer) {
 
 	}	
 
-	draw2D(p_mapctx, p_lyrorder) {
+	refresh(p_mapctx, p_lyrorder) {
 
 		const [terrain_env, scr_env, dims] = genSingleEnv(p_mapctx);
 
@@ -322,7 +322,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 		// for each chunk, respond with firstrecid, reccount
 	}	
 
-	preDraw(p_mapctx) {
+	preRefresh(p_mapctx) {
 
 		if (!this.defaultvisible) {
 			if (GlobalConst.getDebug("LAYERS")) {
@@ -349,10 +349,10 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 	getStats(p_mapctx, p_bounds, p_lyr_order) {
 		// to be implemented
 		// calculations for itemchunks,
-		// first method to be called when consuming services, should call draw2D
+		// first method to be called when consuming services, should call refresh
 	}
 
-	draw2D(p_mapctx, p_feat_count, p_lyrorder) {
+	refresh(p_mapctx, p_feat_count, p_lyrorder) {
 
 		const [terrain_env, scr_env, dims] = genSingleEnv(p_mapctx);
 
@@ -454,7 +454,7 @@ export class RasterLayer extends Layer {
 
 	}	
 
-	draw2D(p_mapctx, p_lyrorder) {
+	refresh(p_mapctx, p_lyrorder) {
 
 		if (!this.defaultvisible) {
 			if (GlobalConst.getDebug("LAYERS")) {
