@@ -224,6 +224,9 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 	transformsChanged(b_dodraw) {
 		// console.info(">>>>>     transformsChanged     <<<<<");
+
+		// invalidate spatial index - aqui ou em draw
+		
 		if (b_dodraw) {
 			this.draw();
 		}
