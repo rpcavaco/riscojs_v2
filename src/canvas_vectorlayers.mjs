@@ -5,7 +5,7 @@ import {uuidv4} from './utils.mjs';
 
 import { VectorLayer, RemoteVectorLayer } from './layers.mjs';
 
-const canvasLayerMixin = (Base) => class extends Base {
+export const canvasLayerMixin = (Base) => class extends Base {
 	canvasKey = 'normal';
 	default_canvas_symbol;
 }
@@ -17,6 +17,7 @@ export class CanvasGraticuleLayer extends canvasLayerMixin(VectorLayer) {
 
 	constructor() {
 		super();
+		this._servmetadata_docollect = false;		
 	}
 
 
@@ -85,6 +86,7 @@ export class CanvasGraticulePtsLayer extends canvasLayerMixin(VectorLayer) {
 
 	constructor() {
 		super();
+		this._servmetadata_docollect = false;
 	}
 
 	* itemchunks(p_mapctxt, p_terrain_env) {
@@ -207,10 +209,6 @@ export class CanvasAGSQryLayer extends canvasLayerMixin(RemoteVectorLayer) {
 		}	
 		
 		return ret; 
-	}
-
-	isInited() {
-		return !this._servmetadata_docollect || this._servmetadata_report_completed;
 	}
 
 	// Why passing Map context to this method if this layer has it as a field ?

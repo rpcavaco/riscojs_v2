@@ -140,7 +140,7 @@ class Layer {
 
 	isInited () {
 		// to be overridden by sub classes, when needed
-		return true;
+		return !this._servmetadata_docollect || this._servmetadata_report_completed;
 	}
 
 	// Why passing Map context to this method if this layer has it as a field ?
@@ -185,7 +185,7 @@ class Layer {
 }
 
 const vectorLayersMixin = (Base) => class extends Base {
-	geomtype = "none";
+	geomtype;
 }
 
 const featureLayersMixin = (Base) => class extends Base {

@@ -86,6 +86,12 @@ export class MapAffineTransformation extends MapAffineTransformationMxColl {
 	getScalingFactor() {
 		return getCartoScaling(this.scaling);
 	}
+
+	getPixSize() {
+		return 1.0 / this.getScalingFactor();
+	}
+	
+	
 	getReadableCartoScale(p_mmpd) {
 		let ret = Math.round(1000.0 / (getCartoScaling(this.scaling) * p_mmpd));
 		return ret;

@@ -215,6 +215,10 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		return this.transformmgr.getReadableCartoScale();
 	}
 
+	getPixSize() {
+		return this.transformmgr.getPixSize();
+	}
+
 	draw() {
 		//console.info(">>>>>           draw            <<<<<");
 		const sv = this.transformmgr.getReadableCartoScale();

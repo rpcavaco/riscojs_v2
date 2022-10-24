@@ -4,18 +4,25 @@ import {CanvasWMSLayer, CanvasAGSMapLayer} from './canvas_rasterlayers.mjs';
 import {CanvasGraticuleLayer, CanvasGraticulePtsLayer, CanvasAGSQryLayer} from './canvas_vectorlayers.mjs';
 import {RasterLayer, RemoteVectorLayer} from './layers.mjs';
 import {CanvasLineSymbol, CanvasPolygonSymbol} from './canvas_symbols.mjs';
+import {CanvasRiscoFeatsLayer} from './risco_ownlayers.mjs';
 
 const canvas_layer_classes = {
     "graticule": CanvasGraticuleLayer,
     "graticulept": CanvasGraticulePtsLayer,	
     "wms": CanvasWMSLayer,
 	"ags_map": CanvasAGSMapLayer,
-	"ags_qry": CanvasAGSQryLayer	
+	"ags_qry": CanvasAGSQryLayer,
+	"riscofeats": CanvasRiscoFeatsLayer
 };
 
 export class DynamicCanvasLayer {
     constructor (p_classkey, opts) {
-       return new canvas_layer_classes[p_classkey](opts);
+		try {
+    		return new canvas_layer_classes[p_classkey](opts);
+		} catch (e) {
+			console.log("class key:", p_classkey);
+			console.error(e);
+		}
     }
 }
 

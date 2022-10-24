@@ -175,10 +175,6 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 		this._servmetadata_docollect = false;
 	}
 
-	isInited() {
-		return !this._servmetadata_docollect || this._servmetadata_report_completed;
-	}
-
 	// Why passing Map context to this method if this layer has it as a field ?
 	// The reason is: it is not still available at this stage; it will be availabe later to subsequent drawing ops
 	initLayer(p_mapctx, p_lyr_order) {

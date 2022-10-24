@@ -1,7 +1,7 @@
 
 
 var SUBKEYS = {
-	"layers": ["wms", "agsmap", "agsqry", "imgload", "vectload"]
+	"layers": ["wms", "agsmap", "agsqry", "imgload", "vectload", "riscofeats"]
 }
 
 // 'layers' and other keys in SUBKEYS are group keys: whenever DEBUG: "LAYERS", code marked with debug for "WMS" is also debugged
@@ -10,7 +10,7 @@ var SUBKEYS = {
 
 var GlobalConst = {
 
-	DEBUG: "none",    // ALL, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, VECTLOAD, none
+	DEBUG: "none",    // ALL, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, VECTLOAD, RISCOFEATS, none
 
 	MMPD: 25.4 / 96.0,
 	IMGRELOAD_TIMEOUT_MSEC: 2000,  // Image loading time after which original request is discarded and a new image load is attempted 

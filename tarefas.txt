@@ -15,10 +15,11 @@
 - OK - limite sup escala nos obj simbologia
 - OK - features AGS - primeira visão com polígonos
 		faltam linhas e pontos
+- >>> - fomatos risco - features (para garantir material de teste vetorial)
 
 - >> - recolher attribs dos formatos vetoriais em FeatureCollection
 - OK 	- ADD features
-- >>	- clean ao inicio do draw request
+- VERIF >>	- clean ao inicio do draw request
 
 - >> - índice espacial
 
@@ -27,7 +28,8 @@
 - > - simbologia pontos (para completar 'Fisca')
 - > - labeling 
 
-
+- risco server -- pedido de stats comum a várias layers
+	- getStatsURL opt_filter
 
 - WFS xml
 - formatos risco - imagem
