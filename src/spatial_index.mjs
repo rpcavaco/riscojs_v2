@@ -6,5 +6,9 @@ export class SpatialIndex {
 		this.index = {};
 	}
 
+	invalidate() {
+		// TODO
+	}
+
 
 }

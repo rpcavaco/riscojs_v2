@@ -53,5 +53,10 @@ export class FeatureCollection {
 		}
 	}	
 
+	invalidate() {
+		this.emptyAll();
+		this.spIndex.invalidate();
+	}
+
 
 }
