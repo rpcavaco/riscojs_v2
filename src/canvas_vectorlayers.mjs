@@ -5,26 +5,12 @@ import {uuidv4} from './utils.mjs';
 
 import { VectorLayer, RemoteVectorLayer } from './layers.mjs';
 
-
-class CanvasVectorLayer extends VectorLayer {
-
+const canvasLayerMixin = (Base) => class extends Base {
 	canvasKey = 'normal';
 	default_canvas_symbol;
-	constructor() {
-		super();
-	}
 }
 
-class CanvasRemoteVectorLayer extends RemoteVectorLayer {
-
-	canvasKey = 'normal';
-	default_canvas_symbol;
-	constructor() {
-		super();
-	}
-}
-
-export class CanvasGraticuleLayer extends CanvasVectorLayer {
+export class CanvasGraticuleLayer extends canvasLayerMixin(VectorLayer) {
 
 	separation;
 	_geomtype = "line";
@@ -91,7 +77,7 @@ export class CanvasGraticuleLayer extends CanvasVectorLayer {
 	}
 }
 
-export class CanvasGraticulePtsLayer extends CanvasVectorLayer {
+export class CanvasGraticulePtsLayer extends canvasLayerMixin(VectorLayer) {
 
 	separation;
 	ptdim = 2;
@@ -155,7 +141,7 @@ export class CanvasGraticulePtsLayer extends CanvasVectorLayer {
 }
 
 
-export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
+export class CanvasAGSQryLayer extends canvasLayerMixin(RemoteVectorLayer) {
 
 	url;     // https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer
 	layerid; // 9
@@ -562,54 +548,6 @@ export class CanvasAGSQryLayer extends CanvasRemoteVectorLayer {
 
 		return [ret, res];
 	}
-
-	/*
-	buildExportMapURL(p_mapctxt, p_terrain_bounds, p_dims) {
-
-		let found_layers = this.layers;
-		let sclval  = p_mapctxt.getScale();
-		let ordsdlscales = [];
-		for (let k in this.scaledepLayers) {
-			ordsdlscales.push(parseFloat(k));
-		};
-		ordsdlscales.sort();
-
-		for (let sdlscale of ordsdlscales) {
-			if (sclval <= sdlscale) {
-				found_layers = this.scaledepLayers[sdlscale];
-			}
-		}
-
-		if (GlobalConst.getDebug("AGSQRY")) {
-			console.log(`[DBG:AGSQRY] found_layers '${found_layers}' for scale 1:'${sclval}'`);
-		}
-
-		if (this.url.indexOf("/MapServer/export") < 0) {
-			this.url = this.url.replace("/MapServer", "/MapServer/export");
-		}
-
-		const url = new URL(this.url);
-		
-		const sp = url.searchParams;
-		const crs = p_mapctxt.cfgvar["basic"]["crs"];
-		const bndstr = p_terrain_bounds.join(',');
-
-		sp.set('bbox', bndstr);
-		sp.set('bboxSR', crs);
-		sp.set('imageSR', crs);
-		sp.set('size', `${p_dims[0]},${p_dims[1]}`);
-		sp.set('dpi', '96');		
-		sp.set('format', this.imageformat);
-		sp.set('layers', `show:${found_layers}`);
-		sp.set('f', 'image');
-
-		const ret = url.toString();		
-		if (GlobalConst.getDebug("AGSQRY")) {
-			console.log(`[DBG:AGSQRY] buildGetMapURL: '${ret}'`);
-		}	
-		
-		return ret; 
-	}	*/
 
 	getStats(p_mapctx, p_terrain_env, p_lyr_order) {
 
