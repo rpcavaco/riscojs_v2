@@ -20,8 +20,6 @@ export class CanvasGraticuleLayer extends canvasLayerMixin(VectorLayer) {
 		this._servmetadata_docollect = false;		
 	}
 
-
-
 	* itemchunks(p_mapctxt, p_terrain_env) {
 		yield [-1, -1];
 	}	
@@ -66,7 +64,7 @@ export class CanvasGraticuleLayer extends canvasLayerMixin(VectorLayer) {
 
 	}
 
-	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype, p_lyrorder) {
+	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype, p_lyrorder) {
 
 		p_gfctx.beginPath();
 		p_gfctx.moveTo(p_coords[0], p_coords[1]);
@@ -118,7 +116,7 @@ export class CanvasGraticulePtsLayer extends canvasLayerMixin(VectorLayer) {
 		p_mapctxt.tocmgr.signalVectorLoadFinished(this.key);		
 	}
 
-	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype, p_lyrorder) {
+	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype, p_lyrorder) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = this.ptdim * (10.0 / Math.log10(sclval));
@@ -673,7 +671,7 @@ export class CanvasAGSQryLayer extends canvasLayerMixin(RemoteVectorLayer) {
 						// verificar campos ATTRS
 
 						for (const feat of responsejson.features) {
-							that.drawitem2D(p_mapctxt, gfctx, p_terrain_env, p_scr_env, p_dims, feat.geometry, feat.attributes, esriGeomtype, p_lyrorder);
+							that.refreshitem(p_mapctxt, gfctx, p_terrain_env, p_scr_env, p_dims, feat.geometry, feat.attributes, esriGeomtype, p_lyrorder);
 						}
 
 					} catch(e) {
@@ -714,7 +712,7 @@ export class CanvasAGSQryLayer extends canvasLayerMixin(RemoteVectorLayer) {
 
 	};
 
-	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype, p_lyrorder) {
+	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype, p_lyrorder) {
 
 		const pt=[];
 		if (p_recvd_geomtype == "esriGeometryPolygon") {

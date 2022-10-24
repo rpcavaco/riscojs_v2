@@ -214,7 +214,7 @@ export class VectorLayer extends vectorLayersMixin(Layer) {
 		// for each chunk in 'itemschunks', generate graphic items (graphics and attributes) to be drawn
 	}	
 
-	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_recvd_geomtype, p_lyrorder) {
+	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_recvd_geomtype, p_lyrorder) {
 
 		// to be implemented
 		// for each 'canvas' item just draw each 'layeritem'
@@ -284,7 +284,7 @@ export class VectorLayer extends vectorLayersMixin(Layer) {
 
 						//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
 
-						if (!this.drawitem2D(this.mapctx, gfctx, terrain_env, scr_env, dims, item_coords, item_attrs, null, p_lyrorder)) {
+						if (!this.refreshitem(this.mapctx, gfctx, terrain_env, scr_env, dims, item_coords, item_attrs, null, p_lyrorder)) {
 							cancel = true;
 							break;
 						}
@@ -404,7 +404,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 		return cancel;
 	}	
 
-	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_recvd_geomtype, p_lyrorder) {
+	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_recvd_geomtype, p_lyrorder) {
 
 		// to be implemented
 		// for each 'canvas' item just draw each 'layeritem'
@@ -447,7 +447,7 @@ export class RasterLayer extends Layer {
 		// for each envelope generated in 'envs', generate an url to fetch an image
 	}	
 
-	drawitem2D(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url, p_lyrorder) {
+	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url, p_lyrorder) {
 
 		// to be extended
 		// just draw each item in canvas
@@ -512,7 +512,7 @@ export class RasterLayer extends Layer {
 						
 						// console.log("-- item --", terrain_env, scr_env, raster_url);
 
-						if (!this.drawitem2D(p_mapctx, terrain_env, scr_env, dims, envkey, raster_url, p_lyrorder)) {
+						if (!this.refreshitem(p_mapctx, terrain_env, scr_env, dims, envkey, raster_url, p_lyrorder)) {
 							cancel = true;
 							break;
 						}

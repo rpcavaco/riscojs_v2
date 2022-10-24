@@ -222,7 +222,7 @@ export class CanvasRiscoFeatsLayer extends canvasLayerMixin(RemoteVectorLayer) {
 						// verificar campos ATTRS
 
 						for (const feat of responsejson.features) {
-							that.drawitem2D(p_mapctxt, gfctx, p_terrain_env, p_scr_env, p_dims, feat.geometry, feat.attributes, esriGeomtype, p_lyrorder);
+							that.refreshitem(p_mapctxt, gfctx, p_terrain_env, p_scr_env, p_dims, feat.geometry, feat.attributes, esriGeomtype, p_lyrorder);
 						}
 
 					} catch(e) {
@@ -263,7 +263,7 @@ export class CanvasRiscoFeatsLayer extends canvasLayerMixin(RemoteVectorLayer) {
 
 	};
 
-	drawitem2D(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype, p_lyrorder) {
+	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype, p_lyrorder) {
 
 		const pt=[];
 		if (p_recvd_geomtype == "esriGeometryPolygon") {
