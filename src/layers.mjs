@@ -108,7 +108,7 @@ export function* genMultipleEnv(p_mapctxt, p_envsplit_cfg, p_scale) {
 
 }
 
-class Layer {
+export class Layer {
 
 	minscale = GlobalConst.MINSCALE;
 	maxscale = Number.MAX_SAFE_INTEGER;
@@ -175,7 +175,7 @@ class Layer {
 		this._drawingcanceled = false;
 	}
 
-	refresh(p_mapctx, p_lyrorder) {
+	refresh(p_mapctx) {
 
 		// to be extended
 		
@@ -192,9 +192,9 @@ const featureLayersMixin = (Base) => class extends Base {
 	currFeatures;
 	oidfldname;
 	fields;
-	setCurrFeatures(p_curr_feats, p_layer_key) {
+	setCurrFeatures(p_curr_feats, p_layer_key, p_layerobj) {
 		this.currFeatures = p_curr_feats;
-		this.currFeatures.setLayer(p_layer_key);
+		this.currFeatures.setLayer(p_layer_key, p_layerobj);
 	}
 }
 
@@ -214,14 +214,14 @@ export class VectorLayer extends vectorLayersMixin(Layer) {
 		// for each chunk in 'itemschunks', generate graphic items (graphics and attributes) to be drawn
 	}	
 
-	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_recvd_geomtype, p_lyrorder) {
+	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_recvd_geomtype) {
 
 		// to be implemented
 		// for each 'canvas' item just draw each 'layeritem'
 
 	}	
 
-	refresh(p_mapctx, p_lyrorder) {
+	refresh(p_mapctx) {
 
 		const [terrain_env, scr_env, dims] = genSingleEnv(p_mapctx);
 
@@ -284,7 +284,7 @@ export class VectorLayer extends vectorLayersMixin(Layer) {
 
 						//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
 
-						if (!this.refreshitem(this.mapctx, gfctx, terrain_env, scr_env, dims, item_coords, item_attrs, null, p_lyrorder)) {
+						if (!this.refreshitem(this.mapctx, gfctx, terrain_env, scr_env, dims, item_coords, item_attrs, null)) {
 							cancel = true;
 							break;
 						}
@@ -352,7 +352,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 		// first method to be called when consuming services, should call refresh
 	}
 
-	refresh(p_mapctx, p_feat_count, p_lyrorder) {
+	refresh(p_mapctx, p_feat_count) {
 
 		const [terrain_env, scr_env, dims] = genSingleEnv(p_mapctx);
 
@@ -381,7 +381,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 					// console.log("--   >> 359 --", firstrec_order, reccount, this.constructor.name);
 					// console.log("## 360 FILLSTYLE ####", gfctx.fillStyle);
 
-					cancel = this.layeritems(this.mapctx, terrain_env, scr_env, dims, firstrec_order, reccount, p_lyrorder);
+					cancel = this.layeritems(this.mapctx, terrain_env, scr_env, dims, firstrec_order, reccount);
 
 					if (cancel) {
 						cancel = true;
@@ -404,7 +404,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 		return cancel;
 	}	
 
-	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_recvd_geomtype, p_lyrorder) {
+	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_recvd_geomtype) {
 
 		// to be implemented
 		// for each 'canvas' item just draw each 'layeritem'
@@ -447,14 +447,14 @@ export class RasterLayer extends Layer {
 		// for each envelope generated in 'envs', generate an url to fetch an image
 	}	
 
-	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url, p_lyrorder) {
+	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url) {
 
 		// to be extended
 		// just draw each item in canvas
 
 	}	
 
-	refresh(p_mapctx, p_lyrorder) {
+	refresh(p_mapctx) {
 
 		if (!this.defaultvisible) {
 			if (GlobalConst.getDebug("LAYERS")) {
@@ -512,7 +512,7 @@ export class RasterLayer extends Layer {
 						
 						// console.log("-- item --", terrain_env, scr_env, raster_url);
 
-						if (!this.refreshitem(p_mapctx, terrain_env, scr_env, dims, envkey, raster_url, p_lyrorder)) {
+						if (!this.refreshitem(p_mapctx, terrain_env, scr_env, dims, envkey, raster_url)) {
 							cancel = true;
 							break;
 						}

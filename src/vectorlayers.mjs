@@ -61,9 +61,9 @@ export class GraticuleLayer extends VectorLayer {
 
 	}
 
-	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype, p_lyrorder) {
+	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype) {
 
-		return this.backendRefreshItem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype, p_lyrorder);
+		return this.backendRefreshItem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs);
 
 
 
@@ -110,26 +110,9 @@ export class GraticulePtsLayer extends VectorLayer {
 		p_mapctxt.tocmgr.signalVectorLoadFinished(this.key);		
 	}
 
-	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype, p_lyrorder) {
+	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype) {
 
-		const sclval = p_mapctxt.getScale();
-		const dim = this.ptdim * (10.0 / Math.log10(sclval));
-
-		p_gfctx.beginPath();
-
-		// horiz
-		p_gfctx.moveTo(p_coords[0] - dim, p_coords[1]);
-		p_gfctx.lineTo(p_coords[0] + dim, p_coords[1]);
-		p_gfctx.stroke();
-
-		p_gfctx.beginPath();
-
-		// vert
-		p_gfctx.moveTo(p_coords[0], p_coords[1] - dim);
-		p_gfctx.lineTo(p_coords[0], p_coords[1] + dim);
-		p_gfctx.stroke();
-
-		return true;
+		return this.backendRefreshItem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs);
 
 	}
 }
@@ -601,7 +584,7 @@ export class AGSQryLayer extends RemoteVectorLayer {
 
 	}		
 
-	layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, firstrecid, reccount, p_lyrorder) {
+	layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, firstrecid, reccount) {
 
 		const urlstr = this.buildQueryURL(p_mapctxt, p_terrain_env, "GETCHUNK", firstrecid, reccount);
 		const that = this;
@@ -665,7 +648,7 @@ export class AGSQryLayer extends RemoteVectorLayer {
 						// verificar campos ATTRS
 
 						for (const feat of responsejson.features) {
-							that.refreshitem(p_mapctxt, gfctx, p_terrain_env, p_scr_env, p_dims, feat.geometry, feat.attributes, esriGeomtype, p_lyrorder);
+							that.refreshitem(p_mapctxt, gfctx, p_terrain_env, p_scr_env, p_dims, feat.geometry, feat.attributes, esriGeomtype);
 						}
 
 					} catch(e) {
@@ -706,43 +689,17 @@ export class AGSQryLayer extends RemoteVectorLayer {
 
 	};
 
-	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype, p_lyrorder) {
+	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype) {
 
 		const pt=[];
+		let id;
 		if (p_recvd_geomtype == "esriGeometryPolygon") {
-
 			if (p_coords.rings.length > 0) {
-
-				this.currFeatures.add(this.key, this.oidfldname, p_coords.rings, p_attrs);
-
-				p_gfctx.beginPath();
-
-				for (const ring of p_coords.rings) {
-					for (let pti=0; pti<ring.length; pti++) {
-
-						p_mapctxt.transformmgr.getCanvasPt(ring[pti], pt)
-
-						if (pti == 0){
-							p_gfctx.moveTo(...pt);
-						} else {
-							p_gfctx.lineTo(...pt);
-						}
-					}
-					p_gfctx.closePath();
-				}
-
-				// p_gfctx.fillStyle = this.fillStyle;
-				// p_gfctx.strokeStyle = this.strokeStyle;
-				// p_gfctx.lineWidth = this.lineWidth;
-				p_gfctx.fill();
-				p_gfctx.stroke();	
-				
-//				console.log("<<<< fim >>>>>");
-
-
+				id = this.currFeatures.add(this.key, this.oidfldname, p_coords.rings, p_attrs);
+				this.currFeatures.draw(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, this.key, id);
 			}
-
 		}
+		
 
 	}	
 

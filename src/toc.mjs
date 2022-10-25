@@ -70,7 +70,7 @@ export class TOCManager {
 					// connects feature collection to this layer, if applicable
 					// (if it implements featureLayersMixin)
 					if (currentLayer[0].setCurrFeatures !== undefined) {
-						currentLayer[0].setCurrFeatures(this.mapctx.currFeatures, lyk);
+						currentLayer[0].setCurrFeatures(this.mapctx.currFeatures, lyk, currentLayer[0]);
 					}
 
 					if (currentLayer.length == 0) {

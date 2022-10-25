@@ -158,7 +158,7 @@ export class CanvasRiscoFeatsLayer extends canvasLayerMixin(RemoteVectorLayer) {
 
 	}		
 
-	layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, firstrecid, reccount, p_lyrorder) {
+	layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, firstrecid, reccount) {
 
 		const urlstr = this.buildQueryURL(p_mapctxt, p_terrain_env, "GETCHUNK", firstrecid, reccount);
 		const that = this;
@@ -222,7 +222,7 @@ export class CanvasRiscoFeatsLayer extends canvasLayerMixin(RemoteVectorLayer) {
 						// verificar campos ATTRS
 
 						for (const feat of responsejson.features) {
-							that.refreshitem(p_mapctxt, gfctx, p_terrain_env, p_scr_env, p_dims, feat.geometry, feat.attributes, esriGeomtype, p_lyrorder);
+							that.refreshitem(p_mapctxt, gfctx, p_terrain_env, p_scr_env, p_dims, feat.geometry, feat.attributes, esriGeomtype);
 						}
 
 					} catch(e) {
@@ -263,7 +263,7 @@ export class CanvasRiscoFeatsLayer extends canvasLayerMixin(RemoteVectorLayer) {
 
 	};
 
-	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype, p_lyrorder) {
+	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype) {
 
 		const pt=[];
 		if (p_recvd_geomtype == "esriGeometryPolygon") {

@@ -105,7 +105,7 @@ class CanvasRasterLayer extends RasterLayer {
 		super();
 	}	
 
-	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url, p_lyrorder) {
+	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_envkey, p_raster_url) {
 
 		const img = new Image();
 		img.crossOrigin = "anonymous";
