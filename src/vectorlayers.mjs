@@ -5,12 +5,9 @@ import {uuidv4} from './utils.mjs';
 
 import { VectorLayer, RemoteVectorLayer } from './layers.mjs';
 
-export const canvasLayerMixin = (Base) => class extends Base {
-	canvasKey = 'normal';
-	default_symbol;
-}
 
-export class CanvasGraticuleLayer extends canvasLayerMixin(VectorLayer) {
+
+export class GraticuleLayer extends VectorLayer {
 
 	separation;
 	_geomtype = "line";
@@ -76,7 +73,7 @@ export class CanvasGraticuleLayer extends canvasLayerMixin(VectorLayer) {
 	}
 }
 
-export class CanvasGraticulePtsLayer extends canvasLayerMixin(VectorLayer) {
+export class GraticulePtsLayer extends VectorLayer {
 
 	separation;
 	ptdim = 2;
@@ -141,7 +138,7 @@ export class CanvasGraticulePtsLayer extends canvasLayerMixin(VectorLayer) {
 }
 
 
-export class CanvasAGSQryLayer extends canvasLayerMixin(RemoteVectorLayer) {
+export class AGSQryLayer extends RemoteVectorLayer {
 
 	url;     // https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer
 	layerid; // 9

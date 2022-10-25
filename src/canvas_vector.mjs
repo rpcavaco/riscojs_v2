@@ -2,15 +2,35 @@
 import {GlobalConst} from './constants.js';
 import {WKID_List} from './esri_wkids.js';
 import {uuidv4} from './utils.mjs';
+import {GraticuleLayer, GraticulePtsLayer, AGSQryLayer} from './vectorlayers.mjs';
 
-import { VectorLayer, RemoteVectorLayer } from './layers.mjs';
+// import { VectorLayer, RemoteVectorLayer } from './layers.mjs';
 
-export const canvasLayerMixin = (Base) => class extends Base {
+/*export const canvasLayerMixin = (Base) => class extends Base {
 	canvasKey = 'normal';
 	default_symbol;
 }
+*/
 
-export class CanvasGraticuleLayer extends canvasLayerMixin(VectorLayer) {
+const canvasVectorMethodsMixin = (Base) => class extends Base {
+	canvasKey = 'normal';
+	default_symbol;	
+}
+
+export class CanvasGraticuleLayer extends canvasVectorMethodsMixin(GraticuleLayer) {
+
+}
+
+export class CanvasGraticulePtsLayer extends canvasVectorMethodsMixin(GraticulePtsLayer) {
+
+}
+
+export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
+
+}
+
+/*
+class CanvasGraticuleLayerX extends canvasLayerMixin(VectorLayer) {
 
 	separation;
 	_geomtype = "line";
@@ -76,7 +96,7 @@ export class CanvasGraticuleLayer extends canvasLayerMixin(VectorLayer) {
 	}
 }
 
-export class CanvasGraticulePtsLayer extends canvasLayerMixin(VectorLayer) {
+class CanvasGraticulePtsLayerX extends canvasLayerMixin(VectorLayer) {
 
 	separation;
 	ptdim = 2;
@@ -141,7 +161,7 @@ export class CanvasGraticulePtsLayer extends canvasLayerMixin(VectorLayer) {
 }
 
 
-export class CanvasAGSQryLayer extends canvasLayerMixin(RemoteVectorLayer) {
+class CanvasAGSQryLayerX extends canvasLayerMixin(RemoteVectorLayer) {
 
 	url;     // https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer
 	layerid; // 9
@@ -754,3 +774,4 @@ export class CanvasAGSQryLayer extends canvasLayerMixin(RemoteVectorLayer) {
 
 }
 
+*/
