@@ -1,24 +1,27 @@
 
 
-import {CanvasWMSLayer, CanvasAGSMapLayer} from './canvas_rasterlayers.mjs';
 import {CanvasGraticuleLayer, CanvasGraticulePtsLayer, CanvasAGSQryLayer} from './canvas_vectorlayers.mjs';
 import {RasterLayer, RemoteVectorLayer} from './layers.mjs';
 import {CanvasLineSymbol, CanvasPolygonSymbol} from './canvas_symbols.mjs';
 import {CanvasRiscoFeatsLayer} from './risco_ownlayers.mjs';
+import {CanvasWMSLayer, CanvasAGSMapLayer} from  './canvas_raster.mjs';
 
 const canvas_layer_classes = {
-    "graticule": CanvasGraticuleLayer,
-    "graticulept": CanvasGraticulePtsLayer,	
-    "wms": CanvasWMSLayer,
-	"ags_map": CanvasAGSMapLayer,
-	"ags_qry": CanvasAGSQryLayer,
-	"riscofeats": CanvasRiscoFeatsLayer
+	"canvas": {
+		"graticule": CanvasGraticuleLayer,
+		"graticulept": CanvasGraticulePtsLayer,	
+		"wms": CanvasWMSLayer,
+		"ags_map": CanvasAGSMapLayer,
+		"ags_qry": CanvasAGSQryLayer,
+		"riscofeats": CanvasRiscoFeatsLayer
+	}
 };
 
 export class DynamicCanvasLayer {
-    constructor (p_classkey, opts) {
+	// p_mode: only 'canvas' for now
+    constructor (p_mode, p_classkey, opts) {
 		try {
-    		return new canvas_layer_classes[p_classkey](opts);
+			return new canvas_layer_classes[p_mode][p_classkey](opts);
 		} catch (e) {
 			console.log("class key:", p_classkey);
 			console.error(e);
@@ -62,7 +65,7 @@ export class TOCManager {
 				if (layerscfg.layers[lyk]["type"] !== undefined) {
 
 					if (this.mode == 'canvas')	{
-						currentLayer.push(new DynamicCanvasLayer(layerscfg.layers[lyk]["type"]));
+						currentLayer.push(new DynamicCanvasLayer('canvas', layerscfg.layers[lyk]["type"]));
 						currentLayer[0].setMapctxt(this.mapctx);
 					}
 
@@ -215,6 +218,7 @@ export class TOCManager {
 		this.mapctx.canvasmgr.getCanvasDims(canvas_dims);
 
 		for (let li=0; li < this.layers.length; li++) {
+			console.log("initMixin:", this.layers[li].initMixin);
 			ckeys.add(this.layers[li].canvasKey);
 		}
 

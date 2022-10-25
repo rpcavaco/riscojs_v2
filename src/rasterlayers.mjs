@@ -6,6 +6,8 @@ import {uuidv4} from './utils.mjs';
 import {RasterLayer} from './layers.mjs';
 
 
+
+/*
 function toGrayScaleImgFilter(p_gfctx, p_imgobj, p_x, p_y, p_ctxw, p_ctxh, null_filteradicdata) {
 		
 	try {
@@ -90,37 +92,10 @@ function imageEvtsHandling(pp_mapctxt, p_lyr, p_img, pp_scr_env, pp_dims, pp_env
 	}
 
 }
+*/
 
-function timeOutOnRasterLoading(p_rastersloading, p_raster_id) {
 
-	setTimeout(
-		function() {
-
-			if (p_rastersloading[p_raster_id] !== undefined) {
-
-				if (p_rastersloading[p_raster_id].reloaded) {
-					if (GlobalConst.getDebug("IMGLOAD")) {
-						console.log(`[DBG:IMGLOAD] Re-re-loading request rejected '${p_raster_id}'`);
-					}
-					return;
-				}
-
-				p_rastersloading[p_raster_id].img.src = "";
-
-				if (GlobalConst.getDebug("IMGLOAD")) {
-					console.log(`[DBG:IMGLOAD] Re-loading '${p_raster_id}'`);
-				}
-		
-				p_rastersloading[p_raster_id].img.src = p_rastersloading[p_raster_id].url;
-				p_rastersloading[p_raster_id].reloaded = true;
-
-			}
-		},
-		GlobalConst.IMGRELOAD_TIMEOUT_MSEC
-	);
-
-}
-
+/*
 class CanvasRasterLayer extends RasterLayer {
 
 	canvasKey = 'base';
@@ -162,8 +137,9 @@ class CanvasRasterLayer extends RasterLayer {
 	}	
 	
 }
+*/
 
-export class CanvasWMSLayer extends CanvasRasterLayer {
+export class WMSLayer extends RasterLayer {
 
 	url; // get capabilities or URL missing getcapabilities command
 	layernames;
@@ -481,7 +457,7 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 		return [ret, res];
 	}
 	
-	static #wmsVersionNumeric(p_versionstr) {
+	static wmsVersionNumeric(p_versionstr) {
 		let ret;
 		const clean = parseInt(p_versionstr.replace('.',''));
 		if (clean < 100) {
@@ -519,7 +495,7 @@ export class CanvasWMSLayer extends CanvasRasterLayer {
 		sp.set('REQUEST', 'GetMap');
 		sp.set('LAYERS', lyrnames_str);
 
-		const vers = this.constructor.#wmsVersionNumeric((verstr.replace('.', '')));
+		const vers = this.constructor.wmsVersionNumeric((verstr.replace('.', '')));
 		if (vers < 130) {
 			sp.set('SRS', 'EPSG:'+crs);
 		} else {
@@ -553,7 +529,7 @@ https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFreg
 export?bbox=-45769.791687218014%2C163884.03511089442%2C-41083.105778479825%2C167393.47546310845&bboxSR=102161&imageSR=102161&size=1051%2C787&dpi=96&format=png32&transparent=true&layers=show%3A11%2C16%2C17&f=image
 */
 
-export class CanvasAGSMapLayer extends CanvasRasterLayer {
+export class AGSMapLayer extends RasterLayer {
 
 	url;
 	layers;
