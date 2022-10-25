@@ -63,12 +63,9 @@ export class GraticuleLayer extends VectorLayer {
 
 	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype, p_lyrorder) {
 
-		p_gfctx.beginPath();
-		p_gfctx.moveTo(p_coords[0], p_coords[1]);
-		p_gfctx.lineTo(p_coords[2], p_coords[3]);
-		p_gfctx.stroke();
+		return this.backendRefreshItem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype, p_lyrorder);
 
-		return true;
+
 
 	}
 }
