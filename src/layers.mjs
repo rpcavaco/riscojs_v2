@@ -253,16 +253,16 @@ export class VectorLayer extends vectorLayersMixin(Layer) {
 
 				case "poly":
 
-					gfctx.fillStyle = this.default_canvas_symbol.fillStyle;
-					gfctx.strokeStyle = this.default_canvas_symbol.strokeStyle;
-					gfctx.lineWidth = this.default_canvas_symbol.lineWidth;
+					gfctx.fillStyle = this.default_symbol.fillStyle;
+					gfctx.strokeStyle = this.default_symbol.strokeStyle;
+					gfctx.lineWidth = this.default_symbol.lineWidth;
 
 					break;
 
 				case "line":
 
-					gfctx.strokeStyle = this.default_canvas_symbol.strokeStyle;
-					gfctx.lineWidth = this.default_canvas_symbol.lineWidth;
+					gfctx.strokeStyle = this.default_symbol.strokeStyle;
+					gfctx.lineWidth = this.default_symbol.lineWidth;
 
 					break;
 			}

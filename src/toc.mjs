@@ -1,27 +1,25 @@
 
 
-import {CanvasGraticuleLayer, CanvasGraticulePtsLayer, CanvasAGSQryLayer} from './canvas_vectorlayers.mjs';
 import {RasterLayer, RemoteVectorLayer} from './layers.mjs';
-import {CanvasLineSymbol, CanvasPolygonSymbol} from './canvas_symbols.mjs';
-import {CanvasRiscoFeatsLayer} from './risco_ownlayers.mjs';
-import {CanvasWMSLayer, CanvasAGSMapLayer} from  './canvas_raster.mjs';
+import {layerClassAdapter, symbClassAdapter} from './layers_and_symbols_adapter.mjs'
 
-const canvas_layer_classes = {
-	"canvas": {
-		"graticule": CanvasGraticuleLayer,
-		"graticulept": CanvasGraticulePtsLayer,	
-		"wms": CanvasWMSLayer,
-		"ags_map": CanvasAGSMapLayer,
-		"ags_qry": CanvasAGSQryLayer,
-		"riscofeats": CanvasRiscoFeatsLayer
-	}
-};
-
-export class DynamicCanvasLayer {
+class DynamicLayer {
 	// p_mode: only 'canvas' for now
     constructor (p_mode, p_classkey, opts) {
 		try {
-			return new canvas_layer_classes[p_mode][p_classkey](opts);
+			return new layerClassAdapter[p_mode][p_classkey](opts);
+		} catch (e) {
+			console.log("class key:", p_classkey);
+			console.error(e);
+		}
+    }
+}
+
+class DynamicSymbol {
+	// p_mode: only 'canvas' for now
+    constructor (p_mode, p_classkey, opts) {
+		try {
+			return new symbClassAdapter[p_mode][p_classkey](opts);
 		} catch (e) {
 			console.log("class key:", p_classkey);
 			console.error(e);
@@ -65,7 +63,7 @@ export class TOCManager {
 				if (layerscfg.layers[lyk]["type"] !== undefined) {
 
 					if (this.mode == 'canvas')	{
-						currentLayer.push(new DynamicCanvasLayer('canvas', layerscfg.layers[lyk]["type"]));
+						currentLayer.push(new DynamicLayer('canvas', layerscfg.layers[lyk]["type"]));
 						currentLayer[0].setMapctxt(this.mapctx);
 					}
 
@@ -114,29 +112,19 @@ export class TOCManager {
 					const scaneables = [currentLayer[0]];
 					currentLayer[0].key = lyk;
 
-					// console.log("## geomtype -- >", lyk, layerscfg.layers[lyk]["geomtype"], currentLayer[0].geomtype);
+					//console.log("## geomtype -- >", lyk, layerscfg.layers[lyk]["geomtype"], currentLayer[0].geomtype);
 
-					switch(currentLayer[0].geomtype) {
-
-						case "poly":
-
-							if (currentLayer[0].default_canvas_symbol == null) {
-								currentLayer[0].default_canvas_symbol = new CanvasPolygonSymbol();
-							}
-							break;
-
-						case "line":
-							if (currentLayer[0].default_canvas_symbol == null) {
-								currentLayer[0].default_canvas_symbol = new CanvasLineSymbol();
-							}
-							break;
+					if (!(currentLayer[0] instanceof RasterLayer)) {
+						if (currentLayer[0].geomtype === undefined) { 
+							throw new Error(`Layer ${lyk} has no 'geomtype' defined`);
+						} else {
+							currentLayer[0].default_symbol = new DynamicSymbol('canvas', currentLayer[0].geomtype);
+							scaneables.push(currentLayer[0].default_symbol);		
+						}
 					}
 
-					if (currentLayer[0].default_canvas_symbol !== undefined) {
-						scaneables.push(currentLayer[0].default_canvas_symbol);
-					}
 
-					// console.log(currentLayer[0].default_stroke_symbol);
+					// console.log(currentLayer[0].default_symbol);
 					// console.log(scaneables);
 
 					try {
@@ -218,7 +206,6 @@ export class TOCManager {
 		this.mapctx.canvasmgr.getCanvasDims(canvas_dims);
 
 		for (let li=0; li < this.layers.length; li++) {
-			console.log("initMixin:", this.layers[li].initMixin);
 			ckeys.add(this.layers[li].canvasKey);
 		}
 

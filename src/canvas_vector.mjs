@@ -7,7 +7,7 @@ import { VectorLayer, RemoteVectorLayer } from './layers.mjs';
 
 export const canvasLayerMixin = (Base) => class extends Base {
 	canvasKey = 'normal';
-	default_canvas_symbol;
+	default_symbol;
 }
 
 export class CanvasGraticuleLayer extends canvasLayerMixin(VectorLayer) {
@@ -647,9 +647,9 @@ export class CanvasAGSQryLayer extends canvasLayerMixin(RemoteVectorLayer) {
 
 							case "poly":
 
-								gfctx.fillStyle = that.default_canvas_symbol.fillStyle;
-								gfctx.strokeStyle = that.default_canvas_symbol.strokeStyle;
-								gfctx.lineWidth = that.default_canvas_symbol.lineWidth;
+								gfctx.fillStyle = that.default_symbol.fillStyle;
+								gfctx.strokeStyle = that.default_symbol.strokeStyle;
+								gfctx.lineWidth = that.default_symbol.lineWidth;
 			
 								if (esriGeomtype != "esriGeometryPolygon") {
 									throw new Error(`'${that.key}', incoerence in feat.types - config:${that.geomtype}, ret.from service:${esriGeomtype}`);
@@ -658,8 +658,8 @@ export class CanvasAGSQryLayer extends canvasLayerMixin(RemoteVectorLayer) {
 
 							case "line":
 
-								gfctx.strokeStyle = that.default_canvas_symbol.strokeStyle;
-								gfctx.lineWidth = that.default_canvas_symbol.lineWidth;
+								gfctx.strokeStyle = that.default_symbol.strokeStyle;
+								gfctx.lineWidth = that.default_symbol.lineWidth;
 			
 								if (esriGeomtype != "esriGeometryPolyline") {
 									throw new Error(`'${that.key}', incoerence in feat.types - config:${that.geomtype}, ret.from service:${esriGeomtype}`);
