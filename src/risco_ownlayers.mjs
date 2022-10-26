@@ -185,7 +185,7 @@ export class CanvasRiscoFeatsLayer extends canvasLayerMixin(RemoteVectorLayer) {
 					const svcReference = responsejson.spatialReference.wkid;
 					const crs = p_mapctxt.cfgvar["basic"]["crs"];
 
-					const gfctx = p_mapctxt.canvasmgr.getDrwCtx(that.canvasKey, '2d');
+					const gfctx = p_mapctxt.renderingsmgr.getDrwCtx(that.canvasKey, '2d');
 					gfctx.save();
 
 					try {

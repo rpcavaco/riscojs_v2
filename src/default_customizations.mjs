@@ -21,8 +21,8 @@ class MapPrintInRect {
 
 	remove(p_mapctx) {
 		const canvas_dims = [];
-		const gfctx = p_mapctx.canvasmgr.getDrwCtx('service', '2d');
-		p_mapctx.canvasmgr.getCanvasDims(canvas_dims);
+		const gfctx = p_mapctx.renderingsmgr.getDrwCtx('service', '2d');
+		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
 		gfctx.clearRect(this.right-this.boxw, this.bottom-this.boxh, this.boxw, this.boxh); 
 	}	
@@ -40,11 +40,11 @@ class MousecoordsPrint extends MapPrintInRect {
 		const terr_pt = [], canvas_dims = [];
 		p_mapctx.transformmgr.getTerrainPt([p_x, py], terr_pt);
 
-		const ctx = p_mapctx.canvasmgr.getDrwCtx('service', '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx('service', '2d');
 		ctx.save();
 
 		try {
-			p_mapctx.canvasmgr.getCanvasDims(canvas_dims);
+			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
 			this.right = canvas_dims[0];
 			this.boxh = 20;
@@ -81,11 +81,11 @@ class MapScalePrint extends MapPrintInRect {
 	print(p_mapctx, p_scaleval) {
 
 		const canvas_dims = [];
-		const ctx = p_mapctx.canvasmgr.getDrwCtx('service', '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx('service', '2d');
 		ctx.save();
 
 		try {
-			p_mapctx.canvasmgr.getCanvasDims(canvas_dims);
+			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
 			this.right = canvas_dims[0];
 			this.boxh = 20;

@@ -81,7 +81,7 @@ class MultiTool extends BaseTool {
 					if (this.start_screen == null) {
 						if ((p_evt.buttons & 1) == 1) {						
 							this.start_screen = [p_evt.clientX, p_evt.clientY];		
-							p_mapctx.canvasmgr.getImages(this.imgs_dict);
+							p_mapctx.renderingsmgr.getImages(this.imgs_dict);
 							ret = false;
 						}
 					}
@@ -102,7 +102,7 @@ class MultiTool extends BaseTool {
 				case 'mousemove':
 					if (this.start_screen != null) {
 						if ((p_evt.buttons & 1) == 1) {
-							p_mapctx.canvasmgr.putImages(this.imgs_dict, [p_evt.clientX-this.start_screen[0], p_evt.clientY-this.start_screen[1]]);
+							p_mapctx.renderingsmgr.putImages(this.imgs_dict, [p_evt.clientX-this.start_screen[0], p_evt.clientY-this.start_screen[1]]);
 							ret = false;
 						}
 					}

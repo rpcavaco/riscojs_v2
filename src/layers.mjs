@@ -237,7 +237,7 @@ export class SimpleVectorLayer extends vectorLayersMixin(Layer) {
 			return;
 		}		
 
-		const gfctx = p_mapctx.canvasmgr.getDrwCtx(this.canvasKey, '2d');
+		const gfctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvasKey, '2d');
 		let cancel = false;
 
 		gfctx.save();
@@ -351,7 +351,7 @@ export class VectorLayer extends vectorLayersMixin(Layer) {
 			return;
 		}		
 
-		const gfctx = p_mapctx.canvasmgr.getDrwCtx(this.canvasKey, '2d');
+		const gfctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvasKey, '2d');
 		let cancel = false;
 
 		gfctx.save();

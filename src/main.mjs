@@ -48,10 +48,11 @@ export class RiscoMapOverlay {
 	 * Method newMapCtx
 	 * Create new map context attached to this overlay
 	 * @param {object} p_config_var - Variable object containing configuration JSON dictionary
-	 * @param {string} p_ctx_id - Identification of this context
+	 * @param {string} p_ctx_id - Identification of this context eg: 'left', 'right', 'single', 'base', etc.
+	 * @param {string} p_mode - Just 'canvas' for now
 	 * @returns - the context just created
 	 */
-	newMapCtx(p_config_var, p_ctx_id, b_wait_for_customization_avail) {
+	newMapCtx(p_config_var, p_ctx_id, p_mode, b_wait_for_customization_avail) {
 
 		if (p_config_var == null) {
 			throw new Error("Class RiscoMapOverlay, newMapCtx, null config_var");
@@ -60,7 +61,7 @@ export class RiscoMapOverlay {
 			throw new Error("Class RiscoMapOverlay, newMapCtx, null context id");
 		}	
 
-		this.mapcontexts[p_ctx_id] = new RiscoMapCtx(p_config_var, this.panelwidget, b_wait_for_customization_avail);
+		this.mapcontexts[p_ctx_id] = new RiscoMapCtx(p_config_var, this.panelwidget, p_mode, b_wait_for_customization_avail);
 
 		return this.mapcontexts[p_ctx_id];
 	}
@@ -99,7 +100,8 @@ export class RiscoMapCtx {
 
 	#customization_instance;
 
-	constructor(p_config_var, p_paneldiv, b_wait_for_customization_avail) {
+	// p_mode -- just 'canvas' for now
+	constructor(p_config_var, p_paneldiv, p_mode, b_wait_for_customization_avail) {
 
 		this.wait_for_customization_avail = b_wait_for_customization_avail;
 
@@ -130,11 +132,17 @@ export class RiscoMapCtx {
 
 		this.cfgvar = p_config_var;
 
-		this.canvasmgr = new HTML5CanvasMgr(this);
+		switch(p_mode) {
+
+			case 'canvas':
+				this.renderingsmgr = new HTML5CanvasMgr(this);
+				break;
+
+		}
 		this.currFeatures = new FeatureCollection(this);
 		this.transformmgr = new Transform2DMgr(this, p_config_var["basic"]);	
 		this.toolmgr = new ToolManager(p_config_var["basic"]);
-		this.tocmgr = new TOCManager(this, 'canvas');
+		this.tocmgr = new TOCManager(this, p_mode);
 
 		this.#customization_instance = null;
 
@@ -171,7 +179,7 @@ export class RiscoMapCtx {
 	 * Method resize - to be automatically fired on window resize
 	 */	
 	resize() {
-		this.canvasmgr.init();
+		this.renderingsmgr.init();
 		this.refresh();
 		this.customResize(this);
 	}
@@ -198,12 +206,12 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	}	
 
 	getCanvasDims(out_env) {
-		this.canvasmgr.getCanvasDims(out_env);
+		this.renderingsmgr.getCanvasDims(out_env);
 	}
 
 	getMapBounds(out_env) {
 		const canvasDims = [];
-		this.canvasmgr.getCanvasDims(canvasDims);
+		this.renderingsmgr.getCanvasDims(canvasDims);
 		this.transformmgr.getMapBounds(canvasDims, out_env)
 	}
 

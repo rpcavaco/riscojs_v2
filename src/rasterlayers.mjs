@@ -47,7 +47,7 @@ function imageEvtsHandling(pp_mapctxt, p_lyr, p_img, pp_scr_env, pp_dims, pp_env
 	
 	p_img.onload = function() {
 
-		const gfctx = pp_mapctxt.canvasmgr.getDrwCtx(p_lyr.canvasKey, '2d');
+		const gfctx = pp_mapctxt.renderingsmgr.getDrwCtx(p_lyr.canvasKey, '2d');
 
 		gfctx.save();
 		try {

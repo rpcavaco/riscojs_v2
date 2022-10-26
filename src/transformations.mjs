@@ -295,7 +295,7 @@ class TransformsQueue {
 		const ctrans = this.transformsQueue.currentTransform;		
 		let k, hwidth, hheight, fheight, cdims = [];
 
-		this.mapctx.canvasmgr.getCanvasDims(cdims);
+		this.mapctx.renderingsmgr.getCanvasDims(cdims);
 		k = ctrans.getScalingFactor();
 
 		hwidth = (cdims[0] / 2.0) / k;
@@ -323,7 +323,7 @@ class TransformsQueue {
 
 		let k, trpt = [], cdims = [], hwidth, hheight, fheight, ox, oy;
 
-		this.mapctx.canvasmgr.getCanvasDims(cdims);
+		this.mapctx.renderingsmgr.getCanvasDims(cdims);
 
 		const ctrans = this.transformsQueue.currentTransform;	
 		k = ctrans.getScalingFactor();	

@@ -202,7 +202,7 @@ export class TOCManager {
 		const ckeys = new Set();
 		const canvas_dims = [];
 
-		this.mapctx.canvasmgr.getCanvasDims(canvas_dims);
+		this.mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
 		for (let li=0; li < this.layers.length; li++) {
 			ckeys.add(this.layers[li].canvasKey);
@@ -212,7 +212,7 @@ export class TOCManager {
 			/* if (ck == 'base') {
 				continue;
 			} */
-			gfctx = this.mapctx.canvasmgr.getDrwCtx(ck, '2d');
+			gfctx = this.mapctx.renderingsmgr.getDrwCtx(ck, '2d');
 			// console.log("clear ck:", ck);
 			gfctx.clearRect(0, 0, ...canvas_dims); 
 		}

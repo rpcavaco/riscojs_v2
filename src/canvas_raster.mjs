@@ -78,7 +78,7 @@ const canvasRasterMethodsMixin = (Base) => class extends Base {
 		
 		p_img.onload = function() {
 
-			const gfctx = pp_mapctxt.canvasmgr.getDrwCtx(p_lyr.canvasKey, '2d');
+			const gfctx = pp_mapctxt.renderingsmgr.getDrwCtx(p_lyr.canvasKey, '2d');
 
 			gfctx.save();
 			try {

@@ -56,11 +56,11 @@
 			p_mapctx.transformmgr.getTerrainPt([0, 0], terrainPt);
 			console.info("[TEST] terrainPt for canvas(0,0):", terrainPt);
 
-			p_mapctx.canvasmgr.getCanvasCenter(canvasPt);
+			p_mapctx.renderingsmgr.getCanvasCenter(canvasPt);
 			p_mapctx.transformmgr.getTerrainPt(canvasPt, terrainPt);
 			console.info("[TEST] terrainPt for canvas center:", terrainPt);
 
-			p_mapctx.canvasmgr.getCanvasDims(canvasPt);
+			p_mapctx.renderingsmgr.getCanvasDims(canvasPt);
 			p_mapctx.transformmgr.getTerrainPt(canvasPt, terrainPt);
 			console.info("[TEST] canvas dims:", canvasPt);
 			console.info("[TEST] terrainPt for canvas lower right:", terrainPt);
@@ -78,7 +78,7 @@
 		import {MapCustomizations} from './js/riscojs_v2/default_customizations.mjs';
 
 		let RiscoOVInst = new RiscoMapOverlay("PanelDiv");
-		let mapctx = RiscoOVInst.newMapCtx(RISCO_MAP_CFG, "base", true);
+		let mapctx = RiscoOVInst.newMapCtx(RISCO_MAP_CFG, "single", "canvas", true);
 
 		mapctx.customResize = function(p_mapctx) {
 			checkPoints(p_mapctx);
