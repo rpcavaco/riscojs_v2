@@ -425,12 +425,12 @@ class TransformsQueue {
 	}
 
 	/**
-	 * Method getCanvasPt
+	 * Method getRenderingCoordsPt
 	 * @param {object} p_terrpt - Array of coordinates for a terrain point 
 	 * @param {float} out_pt - Out parameter: array of coordinates for a canvas point 
 	 */
 
-	getCanvasPt(p_terrpt, out_pt) {
+	getRenderingCoordsPt(p_terrpt, out_pt) {
 		if (p_terrpt === null || typeof p_terrpt != 'object' || p_terrpt.length != 2) {
 			throw new Error(`Class Transform2DMgr, getTerrainPt, invalid terrain point: ${p_terrpt}`);
 		}

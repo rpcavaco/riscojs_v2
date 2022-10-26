@@ -32,7 +32,7 @@
 	:param object p_scrpt: Array of coordinates for a canvas point
 	:param float out_pt: Out parameter: array of coordinates for a terrain point
 
-.. js:method:: getCanvasPt(p_terrpt, out_pt)
+.. js:method:: getRenderingCoordsPt(p_terrpt, out_pt)
 
 	:param object p_terrpt: Array of coordinates for a terrain point
 	:param float out_pt: Out parameter: array of coordinates for a canvas point

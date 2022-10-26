@@ -47,7 +47,7 @@ export class GraticuleLayer extends SimpleVectorLayer {
 				crdlist_t = []
 				crdlist_t.length = crdlist.length;
 				for (let i = 0; i < 2; i++) {
-					p_mapctxt.transformmgr.getCanvasPt([crdlist[2 * i], crdlist[2 * i + 1]], out_pt)
+					p_mapctxt.transformmgr.getRenderingCoordsPt([crdlist[2 * i], crdlist[2 * i + 1]], out_pt)
 					crdlist_t[2 * i] = out_pt[0];
 					crdlist_t[2 * i + 1] = out_pt[1];
 				}
@@ -61,13 +61,6 @@ export class GraticuleLayer extends SimpleVectorLayer {
 
 	}
 
-	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype) {
-
-		return this.backendRefreshItem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs);
-
-
-
-	}
 }
 
 export class GraticulePtsLayer extends SimpleVectorLayer {
@@ -102,7 +95,7 @@ export class GraticulePtsLayer extends SimpleVectorLayer {
 			while (x <= x_lim) {
 
 				x = x + this.separation;
-				p_mapctxt.transformmgr.getCanvasPt([x, y], out_pt);
+				p_mapctxt.transformmgr.getRenderingCoordsPt([x, y], out_pt);
 				yield [out_pt.slice(0), null];
 			}
 		}
@@ -110,11 +103,6 @@ export class GraticulePtsLayer extends SimpleVectorLayer {
 		p_mapctxt.tocmgr.signalVectorLoadFinished(this.key);		
 	}
 
-	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype) {
-
-		return this.backendRefreshItem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs);
-
-	}
 }
 
 
@@ -648,7 +636,8 @@ export class AGSQryLayer extends RemoteVectorLayer {
 						// verificar campos ATTRS
 
 						for (const feat of responsejson.features) {
-							that.refreshitem(p_mapctxt, gfctx, p_terrain_env, p_scr_env, p_dims, feat.geometry, feat.attributes, esriGeomtype);
+
+							that.preRefreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, feat.geometry, feat.attributes, esriGeomtype);
 						}
 
 					} catch(e) {
@@ -687,16 +676,18 @@ export class AGSQryLayer extends RemoteVectorLayer {
 		}
 
 
-	};
+	}
 
-	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype) {
+	//preRefreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, feat.geometry, feat.attributes, esriGeomtype);
+
+	preRefreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype) {
 
 		const pt=[];
 		let id;
 		if (p_recvd_geomtype == "esriGeometryPolygon") {
 			if (p_coords.rings.length > 0) {
 				id = this.currFeatures.add(this.key, this.oidfldname, p_coords.rings, p_attrs);
-				this.currFeatures.draw(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, this.key, id);
+				this.currFeatures.draw(p_mapctxt, p_terrain_env, p_scr_env, p_dims, this.key, id);
 			}
 		}
 		

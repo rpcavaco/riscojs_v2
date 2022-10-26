@@ -277,7 +277,7 @@ export class CanvasRiscoFeatsLayer extends canvasLayerMixin(RemoteVectorLayer) {
 				for (const ring of p_coords.rings) {
 					for (let pti=0; pti<ring.length; pti++) {
 
-						p_mapctxt.transformmgr.getCanvasPt(ring[pti], pt)
+						p_mapctxt.transformmgr.getRenderingCoordsPt(ring[pti], pt)
 
 						if (pti == 0){
 							p_gfctx.moveTo(...pt);
