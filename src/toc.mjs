@@ -64,7 +64,6 @@ export class TOCManager {
 
 					if (this.mode == 'canvas')	{
 						currentLayer.push(new DynamicLayer('canvas', layerscfg.layers[lyk]["type"]));
-						currentLayer[0].setMapctxt(this.mapctx);
 					}
 
 					// connects feature collection to this layer, if applicable

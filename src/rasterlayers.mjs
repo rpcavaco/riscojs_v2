@@ -300,7 +300,7 @@ export class WMSLayer extends RasterLayer {
 						}
 
 						if (that.reporting(p_mapctx, cfg["crs"], bounds, dims, p_lyr_order)) {
-							this.refresh(p_mapctx, p_mapctx);
+							this.refresh(p_mapctx);
 						}			
 
 					}

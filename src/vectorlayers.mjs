@@ -3,11 +3,11 @@ import {GlobalConst} from './constants.js';
 import {WKID_List} from './esri_wkids.js';
 import {uuidv4} from './utils.mjs';
 
-import { VectorLayer, RemoteVectorLayer } from './layers.mjs';
+import { SimpleVectorLayer, RemoteVectorLayer } from './layers.mjs';
 
 
 
-export class GraticuleLayer extends VectorLayer {
+export class GraticuleLayer extends SimpleVectorLayer {
 
 	separation;
 	_geomtype = "line";
@@ -70,7 +70,7 @@ export class GraticuleLayer extends VectorLayer {
 	}
 }
 
-export class GraticulePtsLayer extends VectorLayer {
+export class GraticulePtsLayer extends SimpleVectorLayer {
 
 	separation;
 	ptdim = 2;

@@ -113,7 +113,6 @@ export class Layer {
 	minscale = GlobalConst.MINSCALE;
 	maxscale = Number.MAX_SAFE_INTEGER;
 	defaultvisible = true;
-	blend = false;
 
 	// Unconfigurables
 	//   If subclass has a non-null value in one of these fields,
@@ -131,9 +130,6 @@ export class Layer {
 	_servmetadata_report_completed = false;
 	_metadata_or_root_url;
 
-	// constructor(p_mapctxt) {
-	//	this.mapctx = p_mapctxt;
-	//  console.log(this.mapctx);
 	constructor() {
 		this.missing_mandatory_configs = [];
 	}
@@ -150,10 +146,6 @@ export class Layer {
 
 		// if not finishing in error, must alter instance state in order fo method 'isInited' to return true
 	}	
-
-	setMapctxt(p_mapctxt) {
-		this.mapctx = p_mapctxt;
-	}
 
 	checkScaleVisibility(p_scaleval) {
 		if (p_scaleval == null) {
@@ -186,6 +178,7 @@ export class Layer {
 
 const vectorLayersMixin = (Base) => class extends Base {
 	geomtype;
+	
 }
 
 const featureLayersMixin = (Base) => class extends Base {
@@ -198,7 +191,8 @@ const featureLayersMixin = (Base) => class extends Base {
 	}
 }
 
-export class VectorLayer extends vectorLayersMixin(Layer) {
+// no feature mgmt, no attributes
+export class SimpleVectorLayer extends vectorLayersMixin(Layer) {
 
 	constructor() {
 		super();
@@ -243,7 +237,7 @@ export class VectorLayer extends vectorLayersMixin(Layer) {
 			return;
 		}		
 
-		const gfctx = this.mapctx.canvasmgr.getDrwCtx(this.canvasKey, '2d');
+		const gfctx = p_mapctx.canvasmgr.getDrwCtx(this.canvasKey, '2d');
 		let cancel = false;
 
 		gfctx.save();
@@ -280,11 +274,125 @@ export class VectorLayer extends vectorLayersMixin(Layer) {
 				// firstrec_order is zero - based
 				for (const [firstrec_order, reccount] of this.itemchunks(p_mapctx, terrain_env)) {
 
-					for (const [item_coords, item_attrs] of this.layeritems(this.mapctx, terrain_env, scr_env, dims, firstrec_order, reccount)) {
+					for (const [item_coords, item_attrs] of this.layeritems(p_mapctx, terrain_env, scr_env, dims, firstrec_order, reccount)) {
 
 						//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
 
-						if (!this.refreshitem(this.mapctx, gfctx, terrain_env, scr_env, dims, item_coords, item_attrs, null)) {
+						if (!this.refreshitem(p_mapctx, gfctx, terrain_env, scr_env, dims, item_coords, item_attrs, null)) {
+							cancel = true;
+							break;
+						}
+
+						if (this._drawingcanceled) {
+							this.onCancel();
+							cancel = true;
+							break;
+						}				
+					}
+
+				}
+			}
+
+		} catch(e) {
+			throw e;
+		} finally {
+			gfctx.restore();
+		}
+
+		return cancel;
+	}	
+}
+
+// has feature mgmt, has attributes
+export class VectorLayer extends vectorLayersMixin(Layer) {
+
+	hiddengraphics = false;
+
+	constructor() {
+		super();
+	}
+	
+	* itemchunks(p_mapctxt, p_terrain_env) {
+		// to be implemented
+		// for each chunk, respond with firstrecid, reccount
+	}		
+
+	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, firstrecid, reccount) {
+		// to be extended
+		// for each chunk in 'itemschunks', generate graphic items (graphics and attributes) to be drawn
+	}	
+
+	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_recvd_geomtype) {
+
+		// to be implemented
+		// for each 'canvas' item just draw each 'layeritem'
+
+	}	
+
+	refresh(p_mapctx) {
+
+		const [terrain_env, scr_env, dims] = genSingleEnv(p_mapctx);
+
+		if (!this.defaultvisible) {
+			if (GlobalConst.getDebug("LAYERS")) {
+				console.log(`[DBG:LAYERS] Vector layer '${this.key}' is not default visible`);
+			}
+			return;
+		}
+		if (!this.checkScaleVisibility(p_mapctx.getScale())) {
+			if (GlobalConst.getDebug("LAYERS")) {
+				console.log(`[DBG:LAYERS] Vector layer '${this.key}' is out of scale visibility for 1:${p_mapctx.getScale()}`);
+			}
+			return;
+		}
+		
+		if (!this.isInited()) {
+			console.log(`[WARN:LAYERS] Vector layer '${this.key}' is not inited`);
+			return;
+		}		
+
+		const gfctx = p_mapctx.canvasmgr.getDrwCtx(this.canvasKey, '2d');
+		let cancel = false;
+
+		gfctx.save();
+		try {
+
+			switch (this.geomtype) {
+
+				case "poly":
+
+					gfctx.fillStyle = this.default_symbol.fillStyle;
+					gfctx.strokeStyle = this.default_symbol.strokeStyle;
+					gfctx.lineWidth = this.default_symbol.lineWidth;
+
+					break;
+
+				case "line":
+
+					gfctx.strokeStyle = this.default_symbol.strokeStyle;
+					gfctx.lineWidth = this.default_symbol.lineWidth;
+
+					break;
+			}
+
+
+			// console.log("-- 297 --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);
+			// console.log("-- 239 --", gfctx.strokeStyle, gfctx.lineWidth);
+
+			if (this._drawingcanceled) {
+				this.onCancel();
+				cancel = true;
+			
+			} else  {
+
+				// firstrec_order is zero - based
+				for (const [firstrec_order, reccount] of this.itemchunks(p_mapctx, terrain_env)) {
+
+					for (const [item_coords, item_attrs] of this.layeritems(p_mapctx, terrain_env, scr_env, dims, firstrec_order, reccount)) {
+
+						//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
+
+						if (!this.refreshitem(p_mapctx, gfctx, terrain_env, scr_env, dims, item_coords, item_attrs, null)) {
 							cancel = true;
 							break;
 						}
@@ -381,7 +489,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 					// console.log("--   >> 359 --", firstrec_order, reccount, this.constructor.name);
 					// console.log("## 360 FILLSTYLE ####", gfctx.fillStyle);
 
-					cancel = this.layeritems(this.mapctx, terrain_env, scr_env, dims, firstrec_order, reccount);
+					cancel = this.layeritems(p_mapctx, terrain_env, scr_env, dims, firstrec_order, reccount);
 
 					if (cancel) {
 						cancel = true;
@@ -432,7 +540,7 @@ export class RasterLayer extends Layer {
 				this.envsplit_cfg = GlobalConst.ENVSPLIT_CFG_DEFAULT;
 			}
 	
-			const scl = this.mapctx.getScale();
+			const scl = p_mapctxt.getScale();
 			for (const envdata of genMultipleEnv(p_mapctxt, this.envsplit_cfg, scl)) {
 				yield envdata;
 			}
@@ -474,11 +582,8 @@ export class RasterLayer extends Layer {
 			return;
 		}
 
-		//const gfctx = this.mapctx.canvasmgr.getDrwCtx(this.canvasKey, '2d');
-
 		let cancel = false;
 
-		//gfctx.save();
 		try {
 
 			if (!this._drawingcanceled) {
@@ -532,8 +637,6 @@ export class RasterLayer extends Layer {
 
 		} catch(e) {
 			throw e;
-		//} finally {
-		//	gfctx.restore();
 		}
 
 		return cancel;
