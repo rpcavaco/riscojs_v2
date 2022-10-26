@@ -141,7 +141,7 @@ export class Layer {
 
 	// Why passing Map context to this method if this layer has it as a field ?
 	// The reason is: it is not still available at this stage; it will be availabe later to subsequent drawing ops
-	initLayer(p_mapctx, p_lyr_order) {
+	initLayer(p_mapctx) {
 		// to be extended, if needed
 
 		// if not finishing in error, must alter instance state in order fo method 'isInited' to return true
@@ -339,7 +339,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 		return true;
 	}	
 
-	getStats(p_mapctx, p_bounds, p_lyr_order) {
+	getStats(p_mapctx, p_bounds) {
 		// to be implemented
 		// calculations for itemchunks,
 		// first method to be called when consuming services, should call refresh

@@ -176,7 +176,7 @@ export class AGSQryLayer extends RemoteVectorLayer {
 
 	// Why passing Map context to this method if this layer has it as a field ?
 	// The reason is: it is not still available at this stage; it will be availabe later to subsequent drawing ops
-	initLayer(p_mapctx, p_lyr_order) {
+	initLayer(p_mapctx) {
 
 		if (GlobalConst.getDebug("AGSQRY")) {
 			console.log(`[DBG:AGSQRY] Layer '${this.key}' is in INIT`);
@@ -344,15 +344,15 @@ export class AGSQryLayer extends RemoteVectorLayer {
 							}
 						}
 					}
-					if (that.reporting(p_mapctx, cfg["crs"], bounds, dims, p_lyr_order)) {
-						that.getStats(p_mapctx, bounds, p_lyr_order);
+					if (that.reporting(p_mapctx, cfg["crs"], bounds, dims)) {
+						that.getStats(p_mapctx, bounds);
 					}			
 				}
 			)
 
 	}
 
-	reporting (p_mapctxt, p_crs, p_bounds, p_dims, p_lyr_order) {
+	reporting (p_mapctxt, p_crs, p_bounds, p_dims) {
 		// service capabilities validation step
 		
 		this._servmetadata_report = {};
@@ -510,7 +510,7 @@ export class AGSQryLayer extends RemoteVectorLayer {
 		return [ret, res];
 	}
 
-	getStats(p_mapctx, p_terrain_env, p_lyr_order) {
+	getStats(p_mapctx, p_terrain_env) {
 
 		const url = this.buildQueryURL(p_mapctx, p_terrain_env, "INITCOUNT");
 		// console.log("## GETSTATS buildQueryURL:", url);
@@ -520,7 +520,7 @@ export class AGSQryLayer extends RemoteVectorLayer {
 			.then(response => response.json())
 			.then(
 				function(responsejson) {
-					that.refresh(p_mapctx, responsejson.count, p_lyr_order);					
+					that.refresh(p_mapctx, responsejson.count);					
 				}
 			);	
 	}

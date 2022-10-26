@@ -153,11 +153,11 @@ export class WMSLayer extends RasterLayer {
 
 	// Why passing Map context to this method if this layer has it as a field ?
 	// The reason is: it is not still available at this stage; it will be availabe later to subsequent drawing ops
-	initLayer(p_mapctx, p_lyr_order) {
+	initLayer(p_mapctx) {
 
 		// 18-10-2022: Unable to understand nested Layer elements - metadata analysis is BROKEN
 
-		//console.log("init layer", p_lyr_order);
+		//console.log("init layer");
 
 
 		if (GlobalConst.getDebug("WMS")) {
@@ -299,7 +299,7 @@ export class WMSLayer extends RasterLayer {
 							console.log(lname, that._servmetadata["layers"][lname]["bbox"]);
 						}
 
-						if (that.reporting(p_mapctx, cfg["crs"], bounds, dims, p_lyr_order)) {
+						if (that.reporting(p_mapctx, cfg["crs"], bounds, dims)) {
 							this.refresh(p_mapctx);
 						}			
 
@@ -310,7 +310,7 @@ export class WMSLayer extends RasterLayer {
 
 	}
 
-	reporting (p_mapctxt, p_crs, p_bounds, p_dims, p_lyr_order) {
+	reporting (p_mapctxt, p_crs, p_bounds, p_dims) {
 		// service capabilities validation step
 
 		let result = false;
@@ -546,7 +546,7 @@ export class AGSMapLayer extends RasterLayer {
 
 	// Why passing Map context to this method if this layer has it as a field ?
 	// The reason is: it is not still available at this stage; it will be availabe later to subsequent drawing ops
-	initLayer(p_mapctx, p_lyr_order) {
+	initLayer(p_mapctx) {
 
 		if (GlobalConst.getDebug("AGSMAP")) {
 			console.log(`[DBG:AGSMAP] Layer '${this.key}' is in INIT`);
@@ -718,15 +718,15 @@ export class AGSMapLayer extends RasterLayer {
 							}
 						}
 					}
-					if (that.reporting(p_mapctx, cfg["crs"], bounds, dims, p_lyr_order)) {
-						this.refresh(p_mapctx, p_lyr_order);
+					if (that.reporting(p_mapctx, cfg["crs"], bounds, dims)) {
+						this.refresh(p_mapctx);
 					}			
 				}
 			)
 
 	}
 
-	reporting (p_mapctxt, p_crs, p_bounds, p_dims, p_lyr_order) {
+	reporting (p_mapctxt, p_crs, p_bounds, p_dims) {
 		// service capabilities validation step
 		
 		this._servmetadata_report = {};
@@ -791,7 +791,7 @@ export class AGSMapLayer extends RasterLayer {
 				return;
 			}
 
-			this.refresh(p_mapctxt, p_lyr_order);
+			this.refresh(p_mapctxt);
 
 		} catch(e) {
 

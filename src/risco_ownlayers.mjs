@@ -5,6 +5,9 @@ import { RemoteVectorLayer } from './layers.mjs';
 export class RiscoFeatsLayer extends RemoteVectorLayer {
 
 	url;     // https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer
+	_current_reqid;
+	_current_stats;
+
 
 	constructor() { 
 		super();
@@ -95,17 +98,21 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 
 	// Why passing Map context to this method if this layer has it as a field ?
 	// The reason is: it is not still available at this stage; it will be availabe later to subsequent drawing ops
-	getStats(p_mapctx, p_terrain_env, p_lyr_order) {
+	getStats(p_mapctx, p_terrain_env) {
 
 		const url = this.getStatsURL(p_mapctx);
-		console.log("## GETSTATS:", url);
+		//console.log("## GETSTATS:", url);
 		const that = this;
 
 		fetch(url)
 			.then(response => response.json())
 			.then(
 				function(responsejson) {
-					console.log(responsejson);				
+					console.log(responsejson);		
+					
+					that._current_reqid = responsejson.reqid;
+					that._current_stats = responsejson.stats[that.key];
+
 				}
 			);	
 	}
@@ -135,7 +142,7 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 				calc_chunksize = Math.floor(p_feat_count / numchunks);
 				remainder = p_feat_count % numchunks;
 			}
-			
+
 		} else {
 			numchunks = 1;
 			calc_chunksize = p_feat_count;
