@@ -103,7 +103,7 @@
 		return this.canvases[p_canvaskey].getContext(dims);
 	}	
 
-	getImages(out_dict) {
+	getRenderedBitmaps(out_dict) {
 		const canvaskeys = ['base', 'normal', 'temporary'], dims=[];
 		this.getCanvasDims(dims);
 		for (let ctx, i=0; i<canvaskeys.length; i++) {

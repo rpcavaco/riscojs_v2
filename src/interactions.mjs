@@ -81,7 +81,7 @@ class MultiTool extends BaseTool {
 					if (this.start_screen == null) {
 						if ((p_evt.buttons & 1) == 1) {						
 							this.start_screen = [p_evt.clientX, p_evt.clientY];		
-							p_mapctx.renderingsmgr.getImages(this.imgs_dict);
+							p_mapctx.renderingsmgr.getRenderedBitmaps(this.imgs_dict);
 							ret = false;
 						}
 					}

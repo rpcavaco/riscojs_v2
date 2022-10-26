@@ -62,9 +62,7 @@ export class TOCManager {
 					
 				if (layerscfg.layers[lyk]["type"] !== undefined) {
 
-					if (this.mode == 'canvas')	{
-						currentLayer.push(new DynamicLayer('canvas', layerscfg.layers[lyk]["type"]));
-					}
+					currentLayer.push(new DynamicLayer(this.mode, layerscfg.layers[lyk]["type"]));
 
 					// connects feature collection to this layer, if applicable
 					// (if it implements featureLayersMixin)
@@ -117,7 +115,7 @@ export class TOCManager {
 						if (currentLayer[0].geomtype === undefined) { 
 							throw new Error(`Layer ${lyk} has no 'geomtype' defined`);
 						} else {
-							currentLayer[0].default_symbol = new DynamicSymbol('canvas', currentLayer[0].geomtype);
+							currentLayer[0].default_symbol = new DynamicSymbol(this.mode, currentLayer[0].geomtype);
 							scaneables.push(currentLayer[0].default_symbol);		
 						}
 					}
