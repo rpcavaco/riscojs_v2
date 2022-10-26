@@ -635,9 +635,15 @@ export class AGSQryLayer extends RemoteVectorLayer {
 
 						// verificar campos ATTRS
 
+						let id;
 						for (const feat of responsejson.features) {
 
-							that.preRefreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, feat.geometry, feat.attributes, esriGeomtype);
+							if (esriGeomtype == "esriGeometryPolygon") {
+								if (feat.geometry.rings.length > 0) {
+									id = that.currFeatures.add(that.key, that.oidfldname, feat.geometry.rings, feat.attributes);
+									that.currFeatures.draw(p_mapctxt, p_terrain_env, p_scr_env, p_dims, that.key, id);
+								}
+							}							
 						}
 
 					} catch(e) {
@@ -678,21 +684,6 @@ export class AGSQryLayer extends RemoteVectorLayer {
 
 	}
 
-	//preRefreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, feat.geometry, feat.attributes, esriGeomtype);
-
-	preRefreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype) {
-
-		const pt=[];
-		let id;
-		if (p_recvd_geomtype == "esriGeometryPolygon") {
-			if (p_coords.rings.length > 0) {
-				id = this.currFeatures.add(this.key, this.oidfldname, p_coords.rings, p_attrs);
-				this.currFeatures.draw(p_mapctxt, p_terrain_env, p_scr_env, p_dims, this.key, id);
-			}
-		}
-		
-
-	}	
 
 }
 

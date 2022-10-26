@@ -220,7 +220,7 @@ class TransformsQueue {
 	 * Method setScaleFromReadableCartoScale
 	 * @param {float} p_scale 
 	 */
-	 setScaleFromReadableCartoScale(p_scale, opt_do_store) {
+	setScaleFromReadableCartoScale(p_scale, opt_do_store) {
 
 		if (Math.abs(this.getReadableCartoScale() - p_scale) <= GlobalConst.MINSCALEDIFF) { 
 			return;
@@ -342,6 +342,11 @@ class TransformsQueue {
 
 	}
 
+	getPixSize() {
+		const ctrans = this.transformsQueue.currentTransform;		
+		return ctrans.getPixSize();
+	}	
+
 	setScaleCenteredAtPoint(p_scaleval, p_screen_pt, do_store) {
 
 		const cen= [], terr_pt_from = [], terr_pt_to = [], newpt = [];
@@ -359,7 +364,7 @@ class TransformsQueue {
 
 		this.setCenter(newpt[0], newpt[1], do_store);		
 	}
-	
+
 	/**
 	 * Method getTerrainPt
 	 * @param {object} p_scrpt - Array of coordinates for a canvas point 

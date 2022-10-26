@@ -1,9 +1,8 @@
 import {GlobalConst} from './constants.js';
 import { RemoteVectorLayer } from './layers.mjs';
-import { canvasLayerMixin } from './vectorlayers.mjs';
 
 
-export class CanvasRiscoFeatsLayer extends canvasLayerMixin(RemoteVectorLayer) {
+export class RiscoFeatsLayer extends RemoteVectorLayer {
 
 	url;     // https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer
 
@@ -98,15 +97,15 @@ export class CanvasRiscoFeatsLayer extends canvasLayerMixin(RemoteVectorLayer) {
 	// The reason is: it is not still available at this stage; it will be availabe later to subsequent drawing ops
 	getStats(p_mapctx, p_terrain_env, p_lyr_order) {
 
-		const url = this.buildQueryURL(p_mapctx, p_terrain_env, "INITCOUNT");
-		// console.log("## GETSTATS buildQueryURL:", url);
+		const url = this.getStatsURL(p_mapctx);
+		console.log("## GETSTATS:", url);
 		const that = this;
 
 		fetch(url)
 			.then(response => response.json())
 			.then(
 				function(responsejson) {
-					that.draw2D(p_mapctx, responsejson.count, p_lyr_order);					
+					console.log(responsejson);				
 				}
 			);	
 	}
@@ -136,6 +135,7 @@ export class CanvasRiscoFeatsLayer extends canvasLayerMixin(RemoteVectorLayer) {
 				calc_chunksize = Math.floor(p_feat_count / numchunks);
 				remainder = p_feat_count % numchunks;
 			}
+			
 		} else {
 			numchunks = 1;
 			calc_chunksize = p_feat_count;

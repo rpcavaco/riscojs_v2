@@ -2,6 +2,7 @@
 import {GlobalConst} from './constants.js';
 import {dist2D} from './geom.mjs';
 import {GraticuleLayer, GraticulePtsLayer, AGSQryLayer} from './vectorlayers.mjs';
+import { RiscoFeatsLayer } from './risco_ownlayers.mjs';
 
 const canvasVectorMethodsMixin = (Base) => class extends Base {
 	
@@ -172,6 +173,33 @@ export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
 		return ret;
 
 	}
+
+
+}
+
+export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLayer) {
+
+	/*refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs) {
+
+		let ret = true;
+
+		if (this.grabGf2DCtx(p_mapctxt)) {
+
+			try {
+
+				ret = this.drawPath(p_mapctxt, p_coords);
+
+			} catch(e) {
+				throw e;
+			} finally {
+				this.releaseGf2DCtx();
+			}	
+			
+		}
+
+		return ret;
+
+	} */
 
 
 }

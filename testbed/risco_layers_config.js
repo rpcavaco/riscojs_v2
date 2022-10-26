@@ -52,11 +52,15 @@ var RISCOJS_LAYERS_CFG = {
 			//"filter": "grayscale"
 		},	
 
-		"eixos_via": {
+		"EV": {
 			"type": "riscofeats",
 			"geomtype": "poly",
+			"oidfldname": "objectid",
 			"url": "https://geo.cm-porto.net/riscosrv_v2",
-			"envsplit": false
+			"envsplit": false,
+			"fillStyle": "#FF00007F",
+			"strokeStyle": "rgba(0.7,0.7,0.7)",
+			"lineWidth": 1				
 		}
 		
 		
