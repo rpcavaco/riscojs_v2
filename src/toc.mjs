@@ -21,7 +21,7 @@ class DynamicSymbol {
 		try {
 			return new symbClassAdapter[p_mode][p_classkey](opts);
 		} catch (e) {
-			console.log("class key:", p_classkey);
+			console.log(p_mode, "class key:", p_classkey);
 			console.error(e);
 		}
     }
@@ -62,69 +62,76 @@ export class TOCManager {
 					
 				if (layerscfg.layers[lyk]["type"] !== undefined) {
 
-					currentLayer.push(new DynamicLayer(this.mode, layerscfg.layers[lyk]["type"]));
+					try {
 
-					// connects feature collection to this layer, if applicable
-					// (if it implements featureLayersMixin)
-					if (currentLayer[0].setCurrFeatures !== undefined) {
-						currentLayer[0].setCurrFeatures(this.mapctx.currFeatures, lyk, currentLayer[0]);
-					}
+						currentLayer.push(new DynamicLayer(this.mode, layerscfg.layers[lyk]["type"]));
 
-					if (currentLayer.length == 0) {
-						console.error(`TOCManager, layer '${lyk}' type not known: '${layerscfg.layers[lyk]["type"]}'`);
-						continue;
-					}
-
-					// 'geomtype',  'fields', 'oidfldname' processed separatedly, they are special properties
-					
-					if (currentLayer[0]._geomtype != null) {
-						currentLayer[0].geomtype = currentLayer[0]._geomtype;
-						if (layerscfg.layers[lyk]["geomtype"] !== undefined) {
-							console.error(`[WARN] layer '${lyk}' 'geomtype' property is not configurable in that layer type`);
+						// connects feature collection to this layer, if applicable
+						// (if it implements featureLayersMixin)
+						if (currentLayer[0].setCurrFeatures !== undefined) {
+							currentLayer[0].setCurrFeatures(this.mapctx.currFeatures, lyk, currentLayer[0]);
 						}
-					} else {
-						if (layerscfg.layers[lyk]["geomtype"] !== undefined) {
-							currentLayer[0].geomtype = layerscfg.layers[lyk]["geomtype"];
+
+						if (currentLayer.length == 0) {
+							console.error(`TOCManager, layer '${lyk}' type not known: '${layerscfg.layers[lyk]["type"]}'`);
+							continue;
 						}
-					}
 
-					if (layerscfg.layers[lyk]["fields"] !== undefined) {
-						currentLayer[0].fields = layerscfg.layers[lyk]["fields"];
-					}
-
-					if (currentLayer[0].oidfldname == null && layerscfg.layers[lyk]["oidfldname"] !== undefined) {
-						currentLayer[0].oidfldname = layerscfg.layers[lyk]["oidfldname"];
-					}
-
-					// if exists oidfldname, addit  to 'fields' string, in case the user hasn't already done it
-					if (currentLayer[0].oidfldname != null) {
-						if (currentLayer[0].fields == null || currentLayer[0].fields.length == 0) {
-							currentLayer[0].fields = currentLayer[0].oidfldname;
+						// 'geomtype',  'fields', 'oidfldname', 'marker' processed separatedly, they are special properties
+						
+						if (currentLayer[0]._geomtype != null) {
+							currentLayer[0].geomtype = currentLayer[0]._geomtype;
+							if (layerscfg.layers[lyk]["geomtype"] !== undefined) {
+								console.error(`[WARN] layer '${lyk}' 'geomtype' property is not configurable in that layer type`);
+							}
 						} else {
-							if (currentLayer[0].fields.indexOf(currentLayer[0].oidfldname) < 0) {
-								currentLayer[0].fields = currentLayer[0].oidfldname + "," + currentLayer[0].fields;
+							if (layerscfg.layers[lyk]["geomtype"] !== undefined) {
+								currentLayer[0].geomtype = layerscfg.layers[lyk]["geomtype"];
 							}
 						}
-					}					
-					const scaneables = [currentLayer[0]];
-					currentLayer[0].key = lyk;
 
-					//console.log("## geomtype -- >", lyk, layerscfg.layers[lyk]["geomtype"], currentLayer[0].geomtype);
-
-					if (!(currentLayer[0] instanceof RasterLayer)) {
-						if (currentLayer[0].geomtype === undefined) { 
-							throw new Error(`Layer ${lyk} has no 'geomtype' defined`);
-						} else {
-							currentLayer[0].default_symbol = new DynamicSymbol(this.mode, currentLayer[0].geomtype);
-							scaneables.push(currentLayer[0].default_symbol);		
+						if (layerscfg.layers[lyk]["fields"] !== undefined) {
+							currentLayer[0].fields = layerscfg.layers[lyk]["fields"];
 						}
-					}
+						if (layerscfg.layers[lyk]["marker"] !== undefined) {
+							currentLayer[0].marker = layerscfg.layers[lyk]["marker"];
+						}
 
+						if (currentLayer[0].oidfldname == null && layerscfg.layers[lyk]["oidfldname"] !== undefined) {
+							currentLayer[0].oidfldname = layerscfg.layers[lyk]["oidfldname"];
+						}
+
+						// if exists oidfldname, addit  to 'fields' string, in case the user hasn't already done it
+						if (currentLayer[0].oidfldname != null) {
+							if (currentLayer[0].fields == null || currentLayer[0].fields.length == 0) {
+								currentLayer[0].fields = currentLayer[0].oidfldname;
+							} else {
+								if (currentLayer[0].fields.indexOf(currentLayer[0].oidfldname) < 0) {
+									currentLayer[0].fields = currentLayer[0].oidfldname + "," + currentLayer[0].fields;
+								}
+							}
+						}					
+						const scaneables = [currentLayer[0]];
+						currentLayer[0].key = lyk;
+
+						//console.log("## geomtype -- >", lyk, layerscfg.layers[lyk]["geomtype"], currentLayer[0].geomtype);
+
+						if (!(currentLayer[0] instanceof RasterLayer)) {
+							if (currentLayer[0].geomtype === undefined) { 
+								throw new Error(`Layer ${lyk} has no 'geomtype' defined`);
+							} else {
+								if (currentLayer[0].marker !== undefined) { 
+									currentLayer[0].default_symbol = new DynamicSymbol(this.mode, currentLayer[0].marker);
+								} else {
+									currentLayer[0].default_symbol = new DynamicSymbol(this.mode, currentLayer[0].geomtype);
+								}
+								scaneables.push(currentLayer[0].default_symbol);		
+							}
+						}
 
 					// console.log(currentLayer[0].default_symbol);
 					// console.log(scaneables);
 
-					try {
 						for (let si=0; si < scaneables.length; si++) {
 
 							items = Object.keys(scaneables[si]);
@@ -161,10 +168,13 @@ export class TOCManager {
 									console.log(`missing mand.config on layer '${lyk}'` + currentLayer[0].missing_mandatory_configs);
 								}
 							}
+
+							// console.log(currentLayer[0].default_symbol);
 	
 						}
 					} catch(e) {
 						console.error(e);
+						continue;
 					}
 					
 					try {
@@ -198,22 +208,12 @@ export class TOCManager {
 		
 		let gfctx;
 		const ckeys = new Set();
-		const canvas_dims = [];
-
-		this.mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
 		for (let li=0; li < this.layers.length; li++) {
 			ckeys.add(this.layers[li].canvasKey);
 		}
 
-		for (const ck of ckeys) {
-			/* if (ck == 'base') {
-				continue;
-			} */
-			gfctx = this.mapctx.renderingsmgr.getDrwCtx(ck, '2d');
-			// console.log("clear ck:", ck);
-			gfctx.clearRect(0, 0, ...canvas_dims); 
-		}
+		this.mapctx.renderingsmgr.clearAll(ckeys);
 
 		this.drawlist.length = 0;
 

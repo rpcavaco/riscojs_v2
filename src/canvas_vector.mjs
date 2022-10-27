@@ -31,6 +31,24 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 				this._gfctx.lineWidth = this.default_symbol.lineWidth;
 
 				break;
+
+			case "point":
+
+				if (this.marker !== undefined && this.marker != null) {
+
+					if (this.default_symbol.strokeStyle !== undefined) {
+						this._gfctx.strokeStyle = this.default_symbol.strokeStyle;
+					}
+
+					if (this.default_symbol.lineWidth !== undefined) {
+						this._gfctx.lineWidth = this.default_symbol.lineWidth;
+					}	
+
+					if (this.default_symbol.fillStyle !== undefined) {
+						this._gfctx.fillStyle = this.default_symbol.fillStyle;
+					}									
+				}
+
 		}
 
 		return true;
@@ -237,8 +255,11 @@ export class CanvasGridLayer extends canvasVectorMethodsMixin(GridLayer) {
 		if (this.grabGf2DCtx(p_mapctxt)) {
 			try {
 
+				this.default_symbol.drawsymb(p_mapctxt, this, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, opt_feat_id)
+
+				/*
 				const sclval = p_mapctxt.getScale();
-				const dim = this.ptdim * (10.0 / Math.log10(sclval));
+				const dim = this.mrksize * (10.0 / Math.log10(sclval));
 		
 				this._gfctx.beginPath();
 		
@@ -252,7 +273,8 @@ export class CanvasGridLayer extends canvasVectorMethodsMixin(GridLayer) {
 				// vert
 				this._gfctx.moveTo(p_coords[0], p_coords[1] - dim);
 				this._gfctx.lineTo(p_coords[0], p_coords[1] + dim);
-				this._gfctx.stroke();
+				this._gfctx.stroke(); 
+				*/
 
 			} catch(e) {
 				throw e;

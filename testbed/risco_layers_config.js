@@ -9,9 +9,11 @@ var RISCOJS_LAYERS_CFG = {
 		},
 		"gratMRK": {
 			"type": "grid",
+			"marker": "vertcross",
+			"mrksize": 3,
 			"separation": 100,
 			"strokeStyle": "white",
-			"lineWidth": 1
+			"lineWidth": 2
 		},		
 		"orto2021": {
 			"type": "wms",

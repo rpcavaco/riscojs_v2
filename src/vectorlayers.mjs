@@ -66,8 +66,9 @@ export class GraticuleLayer extends SimpleVectorLayer {
 export class GridLayer extends SimpleVectorLayer {
 
 	separation;
-	ptdim = 2;
-	_geomtype = "line";
+	_geomtype = "point";
+	marker;
+	// mrksize = 2;
 
 	constructor() {
 		super();

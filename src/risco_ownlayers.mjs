@@ -355,37 +355,64 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 					// verificar campos ATTRS
 					console.log(`[INFO] fetching ${responsejson.fcnt} risco feats on '${that.key}' layer`);
 					
-					let feat, path_levels, cnt = 0, skipped=0;
-					for (let id in responsejson.cont) {
+					try {
+					
+						let feat, path_levels, cnt = 0, skipped=0, id2;
+						for (let id in responsejson.cont) {
 
-						feat = responsejson.cont[id];
-						// path_levels = validateGeometry(feat.typ, feat);
-						if (feat.crds === undefined || feat.crds == null) {
-							if (GlobalConst.getDebug("RISCOFEATS")) {
-								console.log(`[DBG:RISCOFEATS] null geom feat, id:${id} layer:${that.key}, beyond current graphic detail level, skipping ...`);
+							feat = responsejson.cont[id];
+							// path_levels = validateGeometry(feat.typ, feat);
+							if (feat.crds === undefined || feat.crds == null) {
+								if (GlobalConst.getDebug("RISCOFEATS")) {
+									console.log(`[DBG:RISCOFEATS] null geom feat, id:${id} layer:${that.key}, beyond current graphic detail level, skipping ...`);
+								}
+								skipped++;
+								continue;
 							}
-							skipped++;
-							continue;
+
+							path_levels = calcPathLevels(feat.crds); 
+
+							// console.log("path_levels:", path_levels);
+
+							// to terrain coords
+							const terrain_coords = [];
+							adaptCoords(path_levels, feat.crds, [responsejson.cenx, responsejson.ceny], responsejson.pxsz, terrain_coords)
+
+							id2 = that.currFeatures.add(that.key, terrain_coords, feat.a, path_levels, id);
+							// If feature still exists  between cleanups that's because it might not have been properly garbage collected
+							// If exists, let's not try to draw it, id is null
+							if (id2) {
+								that.currFeatures.draw(p_mapctxt, p_terrain_env, p_scr_env, p_dims, that.key, id2);
+							}
+
+							cnt++;
 						}
 
-						path_levels = calcPathLevels(feat.crds); 
+						if (responsejson.fcnt != cnt+skipped) {
+							console.error(`risco feat.count mismatch, expected:${responsejson.fcnt}, got: ${cnt} + ${skipped} (skipped) on '${that.key}' layer`);
+						}
 
-						// console.log("path_levels:", path_levels);
+					} catch(e) {
+						console.error(e);
+					} finally {
 
-						// to terrain coords
-						const terrain_coords = [];
-						adaptCoords(path_levels, feat.crds, [responsejson.cenx, responsejson.ceny], responsejson.pxsz, terrain_coords)
+						if (that.featchunksloading[chunk_id] !== undefined) {
 
-						that.currFeatures.add(that.key, terrain_coords, feat.a, path_levels, id);
-						that.currFeatures.draw(p_mapctxt, p_terrain_env, p_scr_env, p_dims, that.key, id);
+							if (GlobalConst.getDebug("VECTLOAD")) {
+								console.log(`[DBG:VECTLOAD] '${that.key}', timing for '${chunk_id}': ${new Date().getTime() - that.featchunksloading[chunk_id]["ts"]}, reloaded: ${that.featchunksloading[chunk_id]["reloaded"]}`);
+							}
+			
+							delete that.featchunksloading[chunk_id];
 
-						cnt++;
-					}
-
-					if (responsejson.fcnt != cnt+skipped) {
-						console.error(`risco feat.count mismatch, expected:${responsejson.fcnt}, got: ${cnt} + ${skipped} (skipped) on '${that.key}' layer`);
-					}
-
+							if (Object.keys(that.featchunksloading).length == 0) {
+								if (GlobalConst.getDebug("VECTLOAD")) {
+									console.log(`[DBG:VECTLOAD] Finished loading'${that.key}'`);
+								}
+								p_mapctxt.tocmgr.signalVectorLoadFinished(that.key);
+							}
+			
+						}						
+					}					
 					
 				}
 			);		

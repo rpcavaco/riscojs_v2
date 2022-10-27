@@ -63,7 +63,21 @@
 			this.canvases[this.canvaskeys[i]].setAttribute('height', parseInt(bounds.height));
 		}
 
-	}	
+	}
+	
+	clearAll(p_ckeys) {
+		for (const ck of p_ckeys) {
+			/* if (ck == 'base') {
+				continue;
+			} */
+			let dims = [];
+			this.getCanvasDims(dims);
+
+			const gfctx = this.getDrwCtx(ck, '2d');
+			// console.log("clear ck:", ck);
+			gfctx.clearRect(0, 0, ...dims); 
+		}		
+	}
 
 	/**
 	 * Method getCanvasDims
