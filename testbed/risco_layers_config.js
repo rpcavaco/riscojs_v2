@@ -7,14 +7,22 @@ var RISCOJS_LAYERS_CFG = {
 			"strokeStyle": "white",
 			"lineWidth": 1
 		},
-		"gratMRK": {
+		"grat_crosses": {
 			"type": "grid",
 			"marker": "vertcross",
 			"mrksize": 3,
 			"separation": 100,
 			"strokeStyle": "white",
 			"lineWidth": 2
-		},		
+		},	
+		"grat_crosses": {
+			"type": "grid",
+			"marker": "vertcross",
+			"mrksize": 3,
+			"separation": 100,
+			"strokeStyle": "white",
+			"lineWidth": 2
+		},			
 		"orto2021": {
 			"type": "wms",
 			"reuseurl": true, 

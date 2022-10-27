@@ -1,7 +1,7 @@
 
 import {GlobalConst} from './constants.js';
 import {dist2D} from './geom.mjs';
-import {GraticuleLayer, GridLayer, AGSQryLayer} from './vectorlayers.mjs';
+import {GraticuleLayer, PointGridLayer, AGSQryLayer} from './vectorlayers.mjs';
 import { RiscoFeatsLayer } from './risco_ownlayers.mjs';
 
 const canvasVectorMethodsMixin = (Base) => class extends Base {
@@ -34,7 +34,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 			case "point":
 
-				if (this.marker !== undefined && this.marker != null) {
+				if (this.marker !== undefined && this.marker != null && this.marker != "none") {
 
 					if (this.default_symbol.strokeStyle !== undefined) {
 						this._gfctx.strokeStyle = this.default_symbol.strokeStyle;
@@ -248,7 +248,7 @@ export class CanvasGraticuleLayer extends canvasVectorMethodsMixin(GraticuleLaye
 	}
 }
 
-export class CanvasGridLayer extends canvasVectorMethodsMixin(GridLayer) {
+export class CanvasGridLayer extends canvasVectorMethodsMixin(PointGridLayer) {
 
 	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id) {
 

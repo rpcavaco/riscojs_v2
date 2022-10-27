@@ -120,7 +120,7 @@ export class TOCManager {
 							if (currentLayer[0].geomtype === undefined) { 
 								throw new Error(`Layer ${lyk} has no 'geomtype' defined`);
 							} else {
-								if (currentLayer[0].marker !== undefined) { 
+								if (currentLayer[0].marker !== undefined && currentLayer[0].marker != "none") { 
 									currentLayer[0].default_symbol = new DynamicSymbol(this.mode, currentLayer[0].marker);
 								} else {
 									currentLayer[0].default_symbol = new DynamicSymbol(this.mode, currentLayer[0].geomtype);

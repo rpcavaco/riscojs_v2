@@ -63,7 +63,7 @@ export class GraticuleLayer extends SimpleVectorLayer {
 
 }
 
-export class GridLayer extends SimpleVectorLayer {
+export class PointGridLayer extends SimpleVectorLayer {
 
 	separation;
 	_geomtype = "point";
