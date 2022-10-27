@@ -8,7 +8,7 @@ var RISCOJS_LAYERS_CFG = {
 			"lineWidth": 1
 		},
 		"gratMRK": {
-			"type": "graticulept",
+			"type": "grid",
 			"separation": 100,
 			"strokeStyle": "white",
 			"lineWidth": 1

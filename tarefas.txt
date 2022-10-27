@@ -13,13 +13,17 @@
 - OK - eliminação dos requests caducados (vetores)
 - OK - where clause nos obj simbologia
 - OK - limite sup escala nos obj simbologia
+- OK - ADD features
+- OK - clean ao inicio do draw request
+
 - OK - features AGS - primeira visão com polígonos
-		faltam linhas e pontos
-- >>> - fomatos risco - features (para garantir material de teste vetorial)
+	- faltam linhas e pontos
+- >> - fomatos risco - features (para garantir material de teste vetorial)
+	- OK - poly / line 
+	- points
 
 - >> - recolher attribs dos formatos vetoriais em FeatureCollection
-- OK 	- ADD features
-- VERIF >>	- clean ao inicio do draw request
+
 
 - >> - índice espacial
 

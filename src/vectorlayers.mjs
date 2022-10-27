@@ -63,7 +63,7 @@ export class GraticuleLayer extends SimpleVectorLayer {
 
 }
 
-export class GraticulePtsLayer extends SimpleVectorLayer {
+export class GridLayer extends SimpleVectorLayer {
 
 	separation;
 	ptdim = 2;
