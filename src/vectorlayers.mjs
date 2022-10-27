@@ -52,7 +52,7 @@ export class GraticuleLayer extends SimpleVectorLayer {
 					crdlist_t[2 * i + 1] = out_pt[1];
 				}
 
-				yield [crdlist_t, null];
+				yield [crdlist_t, null, 1];
 			}
 
 		}
@@ -75,7 +75,7 @@ export class GraticulePtsLayer extends SimpleVectorLayer {
 	}
 
 	* itemchunks(p_mapctxt, p_prep_data) {
-		yield [-1, -1];
+		yield [];
 	}	
 
 	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
@@ -96,7 +96,7 @@ export class GraticulePtsLayer extends SimpleVectorLayer {
 
 				x = x + this.separation;
 				p_mapctxt.transformmgr.getRenderingCoordsPt([x, y], out_pt);
-				yield [out_pt.slice(0), null];
+				yield [out_pt.slice(0), null, 1];
 			}
 		}
 
@@ -613,38 +613,10 @@ export class AGSQryLayer extends RemoteVectorLayer {
 					const svcReference = responsejson.spatialReference.wkid;
 					const crs = p_mapctxt.cfgvar["basic"]["crs"];
 
-					const gfctx = p_mapctxt.renderingsmgr.getDrwCtx(that.canvasKey, '2d');
-					gfctx.save();
-
 					try {
 
 						if (WKID_List[svcReference] != crs) {
 							throw new Error(`'${that.key}', incoerence in crs - config:${crs}, ret.from service:${WKID_List[svcReference]} (WKID: ${svcReference})`);
-						}
-
-						switch (that.geomtype) {
-
-							case "poly":
-
-								gfctx.fillStyle = that.default_symbol.fillStyle;
-								gfctx.strokeStyle = that.default_symbol.strokeStyle;
-								gfctx.lineWidth = that.default_symbol.lineWidth;
-			
-								if (esriGeomtype != "esriGeometryPolygon") {
-									throw new Error(`'${that.key}', incoerence in feat.types - config:${that.geomtype}, ret.from service:${esriGeomtype}`);
-								}
-								break;
-
-							case "line":
-
-								gfctx.strokeStyle = that.default_symbol.strokeStyle;
-								gfctx.lineWidth = that.default_symbol.lineWidth;
-			
-								if (esriGeomtype != "esriGeometryPolyline") {
-									throw new Error(`'${that.key}', incoerence in feat.types - config:${that.geomtype}, ret.from service:${esriGeomtype}`);
-								}
-								break;								
-
 						}
 
 						// verificar campos ATTRS
@@ -654,7 +626,7 @@ export class AGSQryLayer extends RemoteVectorLayer {
 
 							if (esriGeomtype == "esriGeometryPolygon") {
 								if (feat.geometry.rings.length > 0) {
-									id = that.currFeatures.add(that.key, that.oidfldname, feat.geometry.rings, feat.attributes);
+									id = that.currFeatures.add(that.key, feat.geometry.rings, feat.attributes, 2, null, that.oidfldname);
 									that.currFeatures.draw(p_mapctxt, p_terrain_env, p_scr_env, p_dims, that.key, id);
 								}
 							}							
@@ -663,7 +635,6 @@ export class AGSQryLayer extends RemoteVectorLayer {
 					} catch(e) {
 						console.error(e);
 					} finally {
-						gfctx.restore();
 
 						if (that.featchunksloading[chunk_id] !== undefined) {
 

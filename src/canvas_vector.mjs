@@ -48,7 +48,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 	}	
 
 	// must this.grabGf2DCtx first !
-	drawPath(p_mapctxt, p_coords) {
+	drawPath(p_mapctxt, p_coords, p_path_levels) {
 
 		//console.log("coords_", p_coords);
 
@@ -61,32 +61,42 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		if (p_coords.length > 0) {
 
-			this._gfctx.beginPath();
+			switch(p_path_levels) {
 
-			for (const part of p_coords) {
+				case 2:
 
-				for (let pti=0; pti<part.length; pti++) {
+					this._gfctx.beginPath();
 
-					if (ptini==null) {
-						ptini = part[pti].slice(0);
+					for (const part of p_coords) {
+		
+						for (let pti=0; pti<part.length; pti++) {
+		
+							if (ptini==null) {
+								ptini = part[pti].slice(0);
+							}
+		
+							p_mapctxt.transformmgr.getRenderingCoordsPt(part[pti], pt)
+		
+							if (pti == 0){
+								this._gfctx.moveTo(...pt);
+							} else {
+								this._gfctx.lineTo(...pt);
+							}
+						}
+		
+						if (GlobalConst.TOLERANCEDIST_RINGCLOSED >= dist2D(ptini, pt)) {
+							this._gfctx.closePath();
+						}
 					}
+		
+					this._gfctx.fill();
+					this._gfctx.stroke();
 
-					p_mapctxt.transformmgr.getRenderingCoordsPt(part[pti], pt)
+					break;
 
-					if (pti == 0){
-						this._gfctx.moveTo(...pt);
-					} else {
-						this._gfctx.lineTo(...pt);
-					}
-				}
-
-				if (GlobalConst.TOLERANCEDIST_RINGCLOSED >= dist2D(ptini, pt)) {
-					this._gfctx.closePath();
-				}
 			}
 
-			this._gfctx.fill();
-			this._gfctx.stroke();	
+	
 			
 		}
 
@@ -96,7 +106,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 export class CanvasGraticuleLayer extends canvasVectorMethodsMixin(GraticuleLayer) {
 
-	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs) {
+	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels) {
 
 		if (this.grabGf2DCtx(p_mapctxt)) {
 			try {
@@ -117,7 +127,7 @@ export class CanvasGraticuleLayer extends canvasVectorMethodsMixin(GraticuleLaye
 
 export class CanvasGraticulePtsLayer extends canvasVectorMethodsMixin(GraticulePtsLayer) {
 
-	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs) {
+	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels) {
 
 		if (this.grabGf2DCtx(p_mapctxt)) {
 			try {
@@ -152,7 +162,7 @@ export class CanvasGraticulePtsLayer extends canvasVectorMethodsMixin(GraticuleP
 
 export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
 
-	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs) {
+	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels) {
 
 		let ret = true;
 
@@ -160,7 +170,7 @@ export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
 
 			try {
 
-				ret = this.drawPath(p_mapctxt, p_coords);
+				ret = this.drawPath(p_mapctxt, p_coords, p_path_levels);
 
 			} catch(e) {
 				throw e;
@@ -179,15 +189,17 @@ export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
 
 export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLayer) {
 
-	/*refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs) {
+	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels) {
 
 		let ret = true;
+
+		console.log("aa:", [p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs]);
 
 		if (this.grabGf2DCtx(p_mapctxt)) {
 
 			try {
 
-				ret = this.drawPath(p_mapctxt, p_coords);
+				ret = this.drawPath(p_mapctxt, p_coords, p_path_levels);
 
 			} catch(e) {
 				throw e;
@@ -199,7 +211,7 @@ export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLa
 
 		return ret;
 
-	} */
+	}
 
 
 }

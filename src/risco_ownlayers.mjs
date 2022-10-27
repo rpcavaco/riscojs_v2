@@ -1,6 +1,96 @@
 import {GlobalConst} from './constants.js';
+import {uuidv4} from './utils.mjs';
 import { RemoteVectorLayer } from './layers.mjs';
 
+function validateGeometry(p_geom_type, p_content_obj) {
+
+	let ret_path_levels;
+
+	if (p_content_obj.crds !== undefined && p_content_obj.crds != null) {
+	
+		if (p_content_obj.crds.length == undefined && p_content_obj.crds.length < 1) {
+			return -1;
+		}
+
+		// validar geometria
+		switch (p_geom_type) 
+		{
+			case 'point':
+				if (p_content_obj.crds.length < 1 || typeof p_content_obj.crds[0] != 'number') {
+					throw new Error(`Geometry error, structure. Type: ${p_geom_type}`);
+				}
+				if (p_content_obj.crds.length < 2) {
+					throw new Error(`Geometry error, length. Type: ${p_geom_type}`);
+				}
+				ret_path_levels = 1;
+				break;
+				
+			case 'line':
+				if (p_content_obj.crds.length < 1 || typeof p_content_obj.crds[0] != 'number') {
+					throw new Error(`Geometry error, structure. Type: ${p_geom_type}`);
+				}
+				if (p_content_obj.crds.length < 4) {
+					throw new Error(`Geometry error, length. Type: ${p_geom_type}`);
+				}
+				ret_path_levels = 1;
+				break;
+				
+			case 'mline':
+			case 'poly':
+				if (p_content_obj.crds.length < 1 || p_content_obj.crds[0].length < 1 || typeof p_content_obj.crds[0][0] != 'number') {
+					throw new Error(`Geometry error, structure. Type: ${p_geom_type}`);
+				}
+				for (var pcoi=0; pcoi<p_content_obj.crds.length; pcoi++) {
+					if (p_content_obj.crds[pcoi].length < 4) {
+						throw new Error(`Geometry error, length. Type: ${p_geom_type}`);
+					}
+				}
+				ret_path_levels = 2;
+				break;
+				
+			case 'mpoly':
+				if (p_content_obj.crds.length < 1 || p_content_obj.crds[0].length < 1 || p_content_obj.crds[0][0].length < 1 || typeof p_content_obj.crds[0][0][0] != 'number') {
+					throw new Error(`Geometry error, structure. Type: ${p_geom_type}`);
+				}
+				let tmp_pcol;
+				for (var pcoib=0; pcoib<p_content_obj.crds.length; pcoib++) {
+					tmp_pcol = p_content_obj.crds[pcoib];
+					for (var pcoia=0; pcoia<tmp_pcol.length; pcoia++) {
+						if (tmp_pcol[pcoia].length < 4) {
+							throw new Error(`Geometry error, length. Type: ${p_geom_type}`);
+						}
+					}
+				}
+				ret_path_levels = 3;
+				break;	
+								
+			case 'mpoint':
+				if (p_content_obj.crds.length < 1) {
+					throw new Error(`Geometry error, structure. Type: ${p_geom_type}`);
+				} 
+				if ( typeof p_content_obj.crds[0] != 'number' && p_content_obj.crds[0].length < 1) {
+					throw new Error(`Geometry error, structure. Type: ${p_geom_type}`);
+				} 
+				if (p_content_obj.crds[0] == 'number') {
+					ret_path_levels = 1;
+				} else {
+					ret_path_levels = 2;
+				}
+				break;	
+								
+			default:
+				throw new Error(`unsupported geometry, type given: ${p_geom_type}`);
+				
+		}			
+		
+		return ret_path_levels;		
+
+	} else {
+		console.log(p_content_obj);
+		console.error("Missing geometry");
+		return -1;
+	}	
+}
 
 export class RiscoFeatsLayer extends RemoteVectorLayer {
 
@@ -47,7 +137,12 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 		return ret;
 	}
 
-	getFeaturesURL(p_mapctx, p_reqid, p_lname) { //, opt_filter) {
+	// https://loc.cm-porto.net/riscosrv/feats?map=loc&reqid=13d5e2fe-5569-11ed-b265-005056a2682e&lname=EDIFICADO&chunks=2&vertxcnt=9298&chunk=1&_ts=1666814531077
+		
+
+	// [reqid, numchunks, nvert, i]
+
+	getFeaturesURL(p_mapctx, p_item_chunk_params) { //, opt_filter) {
 
 		let sep, ret = "";
 		if (this.url.endsWith("/")) {
@@ -56,6 +151,11 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 			sep = "/";
 		}
 		// TODO: verificar número de casas decimais
+
+		const reqid = p_item_chunk_params[0];
+		const numchunks = p_item_chunk_params[1];
+		const nvert = p_item_chunk_params[2];
+		const chunkidx = p_item_chunk_params[3];
 		
 		const mapname = p_mapctx.cfgvar["basic"]["mapname"];
 		const baseurl = `${this.url}${sep}feats`;
@@ -64,31 +164,16 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 		const sp = url.searchParams;
 
 		sp.set('map', mapname);
-		sp.set('reqid', p_reqid.toString());
+		sp.set('reqid', reqid.toString());
 		sp.set('lname',this.key);
+		sp.set('chunks', numchunks);
+		sp.set('vertxcnt', nvert);
+		sp.set('chunk', chunkidx);
 
-		const [numchunks, numverts, pendingchunkidx] = this.pendingChunks.pop();
-
-		/*
-		if (this.pendingChunks.length > 0) {
-
-
-			sp.set('chunks', numchunks.toString());
-			sp.set('vertxcnt', numverts.toString());
-			sp.set('chunk', pendingchunkidx.toString());
-			
-			formatstr = "{0}{1}feats?map={2}&reqid={3}&lname={4}&chunks={5}&vertxcnt={6}&chunk={7}";
-			ret = String.format(formatstr, this.baseurl, sep, this.mapname, p_reqid, p_lname, chunknumbs[0], chunknumbs[1], chunknumbs[2]);
-		} else {
-			formatstr = "{0}{1}feats?map={2}&reqid={3}&lname={4}&chunks={5}&vertxcnt={6}";
-			ret = String.format(formatstr, this.baseurl, sep, this.mapname, p_reqid, p_lname, chunknumbs[0], chunknumbs[1]);
-		}		
-
-		const ret = url.toString();		
+		ret = url.toString();		
 		if (GlobalConst.getDebug("RISCOFEATS")) {
 			console.log(`[DBG:RISCOFEATS] -- getFeaturesURL: '${ret}'`);
-		}	
-		*/
+		}
 
 		return ret;
 	}
@@ -124,14 +209,12 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 		const numchunks = p_prep_data["nchunks"];
 		const nvert = p_prep_data["nvert"];
 
-		https://loc.cm-porto.net/riscosrv/feats?map=loc&reqid=13d5e2fe-5569-11ed-b265-005056a2682e&lname=EDIFICADO&chunks=2&vertxcnt=9298&chunk=1&_ts=1666814531077
-		
 		/*
 		if (GlobalConst.getDebug("AGSQRY")) {
 			console.log(`[DBG:AGSQRY] Vector layer '${this.key}' , chunks:${numchunks}, size:${calc_chunksize}, rem:${remainder}`);
 		}*/
 
-		for (let i=0; i<numchunks; i++) {
+		for (let i=1; i<=numchunks; i++) {
 
 			yield [reqid, numchunks, nvert, i];
 
@@ -141,16 +224,54 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 
 	layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_item_chunk_params) {
 
-	
+		const urlstr = this.getFeaturesURL(p_mapctxt, p_item_chunk_params);
+		const that = this;
 
+		const chunk_id = uuidv4();
 
+		fetch(urlstr)
+			.then((response) => {
+				if (response.ok) {
+					return response.json();
+				}
+				throw new Error(`Error fetching features chunk for layer '${that.key}'`);
+			})
+			.then(
+				function(responsejson) {
+
+					console.log(responsejson);
+
+					// chunk has become obsolete and was deleted from featchunksloading
+					// by new drawing action
+					if (that.featchunksloading[chunk_id] === undefined) {
+						return;
+					}
+
+					// verificar campos ATTRS
+
+					let feat, path_levels;
+					for (let id in responsejson.cont) {
+
+						feat = responsejson.cont[id];
+						path_levels = validateGeometry(feat.typ, feat);
+
+						that.currFeatures.add(that.key, feat.crds, feat.a, path_levels, id);
+						that.currFeatures.draw(p_mapctxt, p_terrain_env, p_scr_env, p_dims, that.key, id);
+					}
+
+					
+				}
+			);		
+
+		this.featchunksloading[chunk_id] = {
+			"chunk_id": chunk_id,
+			"ts": new Date().getTime(),
+			"url": urlstr,
+			"reloaded": false
+		}
 
 	};
 
-	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype) {
-
-
-	}	
 
 }
 

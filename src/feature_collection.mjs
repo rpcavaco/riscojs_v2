@@ -22,14 +22,26 @@ export class FeatureCollection {
 		}	
 	}
 
-	add(p_layerkey, p_id_fieldname, p_geom, p_attrs) {
+	add(p_layerkey, p_geom, p_attrs, p_path_levels, opt_id, opt_id_fieldname) {
+
+		if (opt_id != null && opt_id_fieldname != null) {
+			throw new Error(`layer '${p_layerkey}' opt_id, opt_id_fieldname are mutually exclusive, both were given, opt_id:${opt_id}, opt_id_fieldname:${opt_id_fieldname}`);
+		}
 
 		if (this.featList[p_layerkey] === undefined) {
 			throw new Error(`layer '${p_layerkey}' was not set through 'setLayer' method`);
 		}
 
-		const id = p_attrs[p_id_fieldname];
+		let id;
+
+		if (opt_id) {
+			id = opt_id;
+		} else {
+			id = p_attrs[opt_id_fieldname];
+		}
+
 		this.featList[p_layerkey][id] = {
+			l: p_path_levels,
 			g: p_geom.slice(0),
 			a: {...p_attrs}
 		};
@@ -76,13 +88,13 @@ export class FeatureCollection {
 
 		if (opt_featid) {
 			feat = this.featList[p_layerkey][opt_featid];
-			this.layers[p_layerkey].refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, feat.g, feat.a);
+			this.layers[p_layerkey].refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, feat.g, feat.a, feat.l);
 		} else {
 
 			for (let id in this.featList[p_layerkey]) {
 				if (this.featList[p_layerkey].hasOwnProperty(id)) {
 					feat = this.featList[p_layerkey][id];
-					this.layers[p_layerkey].refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, feat.g, feat.a);
+					this.layers[p_layerkey].refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, feat.g, feat.a, feat.l);
 				}
 			}
 		}
