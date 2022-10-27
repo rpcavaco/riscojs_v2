@@ -2,6 +2,30 @@ import {GlobalConst} from './constants.js';
 import {uuidv4} from './utils.mjs';
 import { RemoteVectorLayer } from './layers.mjs';
 
+function calcPathLevels(p_coords_obj) {
+
+	let curr_node = p_coords_obj[0], plevel = -1, cnt = 0;
+
+	while (cnt < 10 && plevel < 0) {
+		
+		cnt++;
+		
+		if (typeof curr_node == 'number') {
+			plevel = cnt;
+		} else {
+			if (curr_node[0] !== undefined) {
+				curr_node = curr_node[0];
+			} else {
+				break;
+			}
+		}
+	}
+
+	return plevel;
+
+}
+
+
 function validateGeometry(p_geom_type, p_content_obj) {
 
 	let ret_path_levels;
@@ -13,8 +37,7 @@ function validateGeometry(p_geom_type, p_content_obj) {
 		}
 
 		// validar geometria
-		switch (p_geom_type) 
-		{
+		switch (p_geom_type) {
 			case 'point':
 				if (p_content_obj.crds.length < 1 || typeof p_content_obj.crds[0] != 'number') {
 					throw new Error(`Geometry error, structure. Type: ${p_geom_type}`);
@@ -92,6 +115,92 @@ function validateGeometry(p_geom_type, p_content_obj) {
 	}	
 }
 
+function adaptCoords(p_path_levels, p_in_coords, p_center_pt, p_pixsz, out_coords) {
+
+	let crd_idx, crd_cnt, partcollection, part, outpartc, outpart, partc_cnt, part_cnt, partc_idx, part_idx, vx, vy;
+
+	out_coords.length = 0;
+
+	switch (p_path_levels) {
+
+		case 3:
+			partc_idx = 0;
+			partc_cnt = p_in_coords.length;
+			while (partc_idx < partc_cnt) {
+				partcollection = p_in_coords[partc_idx];
+				outpartc = [];
+				part_idx = 0;
+				part_cnt = partcollection.length;
+				while (part_idx < part_cnt) {
+					part = partcollection[part_idx];
+					crd_idx = 0;
+					outpart = [];
+					crd_cnt = part.length;
+					if (crd_cnt % 2 != 0) {
+						throw new Error("Odd number of coords, crd_cnt:"+crd_cnt+" p_path_levels:"+p_path_levels);
+					}
+					while (crd_idx < crd_cnt) {
+
+						vx = p_center_pt[0] + p_pixsz * part[crd_idx];
+						vy = p_center_pt[1] + p_pixsz * part[crd_idx+1];
+	
+						outpart.push([vx, vy]);
+						crd_idx+=2;
+					}
+					outpartc.push(outpart)
+					part_idx++;
+				}
+				out_coords.push(outpartc);
+				partc_idx++;
+			}
+			break;
+
+		case 2:
+			part_idx = 0;
+			part_cnt = p_in_coords.length;
+			while (part_idx < part_cnt) {
+
+				part = p_in_coords[part_idx];
+				crd_idx = 0;
+				outpart = [];
+				crd_cnt = part.length;
+				if (crd_cnt % 2 != 0) {
+					throw new Error("Odd number of coords, crd_cnt:"+crd_cnt+" p_path_levels:"+p_path_levels);
+				}
+				while (crd_idx < crd_cnt) {
+
+					vx = p_center_pt[0] + p_pixsz * part[crd_idx];
+					vy = p_center_pt[1] + p_pixsz * part[crd_idx+1];
+	
+					outpart.push([vx, vy]);
+					crd_idx+=2;
+				}
+				out_coords.push(outpart)
+				part_idx++;
+
+			}
+			break;
+
+		default:
+			crd_idx = 0;
+			crd_cnt = p_in_coords.length;
+			if (crd_cnt % 2 != 0) {
+				console.log(p_in_coords);
+				throw new Error("Odd number of coords, crd_cnt:"+crd_cnt+" p_path_levels:"+p_path_levels);
+			}
+			while (crd_idx < crd_cnt) {
+
+				vx = p_center_pt[0] + p_pixsz * p_in_coords[crd_idx];
+				vy = p_center_pt[1] + p_pixsz * p_in_coords[crd_idx+1];
+
+				// console.log(vx, " = ", p_center_pt[0], " + ", p_pixsz, " * ", p_in_coords[crd_idx], crd_idx);
+		
+				out_coords.push([vx, vy]);
+				crd_idx+=2;
+			}				
+	}	
+}
+
 export class RiscoFeatsLayer extends RemoteVectorLayer {
 
 	url;     // https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer
@@ -124,8 +233,8 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 		sp.set('map', mapname);
 		sp.set('cenx', center[0]);
 		sp.set('ceny', center[1]);
-		sp.set('wid', dims[0]);
-		sp.set('hei', dims[1]);
+		sp.set('wid', dims[0] *  p_mapctx.getPixSize());
+		sp.set('hei', dims[1] *  p_mapctx.getPixSize());
 		sp.set('pixsz', p_mapctx.getPixSize());
 		sp.set('vizlrs',this.key);
 
@@ -172,7 +281,7 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 
 		ret = url.toString();		
 		if (GlobalConst.getDebug("RISCOFEATS")) {
-			console.log(`[DBG:RISCOFEATS] -- getFeaturesURL: '${ret}'`);
+			console.log(`[DBG:RISCOFEATS] getFeaturesURL: '${ret}'`);
 		}
 
 		return ret;
@@ -191,8 +300,6 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 			.then(
 				function(responsejson) {
 
-					console.log(responsejson);		
-					
 					that.refresh(p_mapctx, {
 						"reqid": responsejson.reqid,
 						"nchunks": responsejson.stats[that.key]['nchunks'],
@@ -239,8 +346,6 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 			.then(
 				function(responsejson) {
 
-					console.log(responsejson);
-
 					// chunk has become obsolete and was deleted from featchunksloading
 					// by new drawing action
 					if (that.featchunksloading[chunk_id] === undefined) {
@@ -248,15 +353,37 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 					}
 
 					// verificar campos ATTRS
-
-					let feat, path_levels;
+					console.log(`[INFO] fetching ${responsejson.fcnt} risco feats on '${that.key}' layer`);
+					
+					let feat, path_levels, cnt = 0, skipped=0;
 					for (let id in responsejson.cont) {
 
 						feat = responsejson.cont[id];
-						path_levels = validateGeometry(feat.typ, feat);
+						// path_levels = validateGeometry(feat.typ, feat);
+						if (feat.crds === undefined || feat.crds == null) {
+							if (GlobalConst.getDebug("RISCOFEATS")) {
+								console.log(`[DBG:RISCOFEATS] null geom feat, id:${id} layer:${that.key}, beyond current graphic detail level, skipping ...`);
+							}
+							skipped++;
+							continue;
+						}
 
-						that.currFeatures.add(that.key, feat.crds, feat.a, path_levels, id);
+						path_levels = calcPathLevels(feat.crds); 
+
+						// console.log("path_levels:", path_levels);
+
+						// to terrain coords
+						const terrain_coords = [];
+						adaptCoords(path_levels, feat.crds, [responsejson.cenx, responsejson.ceny], responsejson.pxsz, terrain_coords)
+
+						that.currFeatures.add(that.key, terrain_coords, feat.a, path_levels, id);
 						that.currFeatures.draw(p_mapctxt, p_terrain_env, p_scr_env, p_dims, that.key, id);
+
+						cnt++;
+					}
+
+					if (responsejson.fcnt != cnt+skipped) {
+						console.error(`risco feat.count mismatch, expected:${responsejson.fcnt}, got: ${cnt} + ${skipped} (skipped) on '${that.key}' layer`);
 					}
 
 					

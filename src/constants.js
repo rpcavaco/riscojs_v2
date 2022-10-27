@@ -10,7 +10,9 @@ var SUBKEYS = {
 
 var GlobalConst = {
 
-	DEBUG: "RISCOFEATS",    // ALL, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, VECTLOAD, RISCOFEATS, none
+	DEBUG: "NONE",    // ALL, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, VECTLOAD, RISCOFEATS, none
+	DEBUG_FEAT_LAYER: null,
+	DEBUG_FEAT_ID: 387,
 
 	MMPD: 25.4 / 96.0,
 	IMGRELOAD_TIMEOUT_MSEC: 2000,  // Image loading time after which original request is discarded and a new image load is attempted 

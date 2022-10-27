@@ -1,5 +1,5 @@
 var RISCOJS_LAYERS_CFG = {
-	"lorder": ["ortos_2018", "mancha_constr", "gratMRK"], //, "mancha_constr", "gratMRK"],
+	"lorder": ["ortos_2018", "mancha_construida", "gratMRK"], //, "mancha_constr", "gratMRK"],
 	"layers": {
 		"grat": {
 			"type": "graticule",
@@ -55,13 +55,24 @@ var RISCOJS_LAYERS_CFG = {
 		"EV": {
 			"type": "riscofeats",
 			"geomtype": "line",
-			"oidfldname": "objectid",
 			"url": "https://geo.cm-porto.net/riscosrv_v2",
 			"envsplit": false,
-			"fillStyle": "#FF00007F",
-			"strokeStyle": "rgba(0.7,0.7,0.7)",
+			"fillStyle": "none",
+			"strokeStyle": "white",
 			"lineWidth": 2				
+		},
+
+		"mancha_construida": {
+			"type": "riscofeats",
+			"geomtype": "poly",
+			"url": "https://geo.cm-porto.net/riscosrv_v2",
+			"envsplit": false,
+			"fillStyle": "#0000FF7F",
+			"strokeStyle": "rgba(0.7,0.7,0.7)",
+			"lineWidth": 1	
 		}
+
+		
 		
 		
 

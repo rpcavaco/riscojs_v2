@@ -223,7 +223,7 @@ const vectorLayersMixin = (Base) => class extends Base {
 
 						//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
 
-						if (!this.refreshitem(p_mapctx, terrain_env, scr_env, dims, item_coords, item_attrs, item_path_levels)) {
+						if (!this.refreshitem(p_mapctx, terrain_env, scr_env, dims, item_coords, item_attrs, item_path_levels )) {
 							cancel = true;
 							break;
 						}
@@ -248,7 +248,7 @@ const vectorLayersMixin = (Base) => class extends Base {
 
 const featureLayersMixin = (Base) => class extends Base {
 	currFeatures;
-	fields;
+	fields = "";
 	setCurrFeatures(p_curr_feats, p_layer_key, p_layerobj) {
 		this.currFeatures = p_curr_feats;
 		this.currFeatures.setLayer(p_layer_key, p_layerobj);
@@ -294,7 +294,7 @@ export class VectorLayer extends featureLayersMixin(vectorLayersMixin(Layer)) {
 		// for each chunk in 'itemschunks', generate graphic items (graphics and attributes) to be drawn
 	}	
 
-	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_path_levels) {
+	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_path_levels, opt_feat_id) {
 
 		// to be implemented
 		// for each 'canvas' item just draw each 'layeritem'
@@ -401,7 +401,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 		return cancel;
 	}	
 
-	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_path_levels) {
+	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_path_levels, opt_feat_id) {
 
 		// to be implemented
 		// for each 'canvas' item just draw each 'layeritem'
