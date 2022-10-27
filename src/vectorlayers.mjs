@@ -97,8 +97,59 @@ export class PointGridLayer extends SimpleVectorLayer {
 
 				x = x + this.separation;
 				p_mapctxt.transformmgr.getRenderingCoordsPt([x, y], out_pt);
+				// item_coords, item_attrs, item_path_levels
 				yield [out_pt.slice(0), null, 1];
 			}
+		}
+
+		p_mapctxt.tocmgr.signalVectorLoadFinished(this.key);		
+	}
+
+}
+
+export class AreaGridLayer extends SimpleVectorLayer {
+
+	separation;
+	_geomtype = "poly";
+	areatype = "square";
+	// mrksize = 2;
+
+	constructor() {
+		super();
+		this._servmetadata_docollect = false;
+	}
+
+	* itemchunks(p_mapctxt, p_prep_data) {
+		yield [];
+	}	
+
+	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
+
+		let ll = [], ur = [];
+
+		let x, xorig = this.separation * Math.floor(p_terrain_env[0] / this.separation);
+		let x_lim = p_terrain_env[2];
+
+		let y = this.separation * Math.floor(p_terrain_env[1] / this.separation);
+		let y_lim = p_terrain_env[3];
+
+		while (y <= y_lim) {
+
+			x = xorig;
+			while (x <= x_lim) {
+
+				p_mapctxt.transformmgr.getRenderingCoordsPt([x, y], ll);
+				p_mapctxt.transformmgr.getRenderingCoordsPt([x + this.separation, y + this.separation], ur);
+	
+				yield [[ll.slice(0), [ur[0], ll[1]], ur.slice(0), [ll[0], ur[1]], ll.slice(0)], null, 1];
+	
+				x = x + this.separation;
+
+			}
+
+			y = y + this.separation;
+
+			
 		}
 
 		p_mapctxt.tocmgr.signalVectorLoadFinished(this.key);		

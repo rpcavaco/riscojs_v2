@@ -1,7 +1,7 @@
 
 import {GlobalConst} from './constants.js';
 import {dist2D} from './geom.mjs';
-import {GraticuleLayer, PointGridLayer, AGSQryLayer} from './vectorlayers.mjs';
+import {GraticuleLayer, PointGridLayer, AreaGridLayer, AGSQryLayer} from './vectorlayers.mjs';
 import { RiscoFeatsLayer } from './risco_ownlayers.mjs';
 
 const canvasVectorMethodsMixin = (Base) => class extends Base {
@@ -248,7 +248,7 @@ export class CanvasGraticuleLayer extends canvasVectorMethodsMixin(GraticuleLaye
 	}
 }
 
-export class CanvasGridLayer extends canvasVectorMethodsMixin(PointGridLayer) {
+export class CanvasPointGridLayer extends canvasVectorMethodsMixin(PointGridLayer) {
 
 	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id) {
 
@@ -256,25 +256,6 @@ export class CanvasGridLayer extends canvasVectorMethodsMixin(PointGridLayer) {
 			try {
 
 				this.default_symbol.drawsymb(p_mapctxt, this, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, opt_feat_id)
-
-				/*
-				const sclval = p_mapctxt.getScale();
-				const dim = this.mrksize * (10.0 / Math.log10(sclval));
-		
-				this._gfctx.beginPath();
-		
-				// horiz
-				this._gfctx.moveTo(p_coords[0] - dim, p_coords[1]);
-				this._gfctx.lineTo(p_coords[0] + dim, p_coords[1]);
-				this._gfctx.stroke();
-		
-				this._gfctx.beginPath();
-		
-				// vert
-				this._gfctx.moveTo(p_coords[0], p_coords[1] - dim);
-				this._gfctx.lineTo(p_coords[0], p_coords[1] + dim);
-				this._gfctx.stroke(); 
-				*/
 
 			} catch(e) {
 				throw e;
@@ -285,6 +266,34 @@ export class CanvasGridLayer extends canvasVectorMethodsMixin(PointGridLayer) {
 
 		return true;		
 	}	
+}
+
+export class CanvasAreaGridLayer extends canvasVectorMethodsMixin(AreaGridLayer) {
+
+	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id) {
+
+		if (this.grabGf2DCtx(p_mapctxt)) {
+			try {
+				this._gfctx.beginPath();
+				let cnt = 0;
+				for (const pt of p_coords) {
+					if (cnt < 1) {
+						this._gfctx.moveTo(...pt);
+					} else {
+						this._gfctx.lineTo(...pt);
+					}
+					cnt++;
+				}
+				this._gfctx.stroke();
+			} catch(e) {
+				throw e;
+			} finally {
+				this.releaseGf2DCtx();
+			}
+		}
+
+		return true;		
+	}
 }
 
 export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
