@@ -1,5 +1,5 @@
 var RISCOJS_LAYERS_CFG = {
-	"lorder": ["ortos_2018", "mancha_construida", "gratMRK"], //, "mancha_constr", "gratMRK"],
+	"lorder": ["ortos_2018", "mancha_construida", "gratMRK"], //, "mancha_constr", "mancha_construida", "gratMRK"],
 	"layers": {
 		"grat": {
 			"type": "graticule",

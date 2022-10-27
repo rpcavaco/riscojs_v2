@@ -7,7 +7,7 @@ export class FeatureCollection {
 		this.mapctx = p_mapctx;
 		this.featList = {};
 		this.layers = {};
-		this.spIndex = new SpatialIndex();
+		//this.spIndex = new SpatialIndex();
 	}
 
 	setLayer(p_layerkey, p_layerobj) {
@@ -40,11 +40,21 @@ export class FeatureCollection {
 			id = p_attrs[opt_id_fieldname];
 		}
 
-		this.featList[p_layerkey][id] = {
-			l: p_path_levels,
-			g: p_geom.slice(0),
-			a: {...p_attrs}
-		};
+		if (this.featList[p_layerkey][id] !== undefined) {
+
+			//delete this.featList[p_layerkey][id];
+			// probably wasn't properly garbage collected yet, returning id null prevents subsequent drawing
+			id = null;
+
+		} else {
+
+			this.featList[p_layerkey][id] = {
+				l: p_path_levels,
+				g: p_geom.slice(0),
+				a: {...p_attrs}
+			};
+
+		}
 
 		return id;
 	}
@@ -59,11 +69,7 @@ export class FeatureCollection {
 
 	emptyLayer(p_layerkey) {
 		if (this.featList[p_layerkey] !== undefined) {
-			for (let id in this.featList[p_layerkey]) {
-				if (this.featList[p_layerkey].hasOwnProperty(id)) {
-					delete this.featList[p_layerkey][id];
-				}
-			}
+			this.featList[p_layerkey] = {};
 		}
 	}
 
@@ -75,7 +81,7 @@ export class FeatureCollection {
 
 	invalidate() {
 		this.emptyAll();
-		this.spIndex.invalidate();
+		//this.spIndex.invalidate();
 	}
 	
 	draw(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_layerkey, opt_featid) {
