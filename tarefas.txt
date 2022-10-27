@@ -39,6 +39,7 @@
 - zoom janela e ferramenta base de desenho de janela
 - measuring tool
 - controle de erros em todos os fetches, copiar das feats de AGSQuery
+- cancelamento de uma layer não cancela a casta de layers seguintes durante refresh
 
 
 Nice to Have

@@ -167,7 +167,7 @@ export class Layer {
 		this._drawingcanceled = false;
 	}
 
-	refresh(p_mapctx) {
+	refresh(p_mapctx, p_prep_data) {
 
 		// to be extended
 		
@@ -179,7 +179,7 @@ export class Layer {
 const vectorLayersMixin = (Base) => class extends Base {
 	geomtype;
 	
-	refresh(p_mapctx) {
+	refresh(p_mapctx, p_prep_data) {
 
 		const [terrain_env, scr_env, dims] = genSingleEnv(p_mapctx);
 
@@ -215,9 +215,11 @@ const vectorLayersMixin = (Base) => class extends Base {
 			} else  {
 
 				// firstrec_order is zero - based
-				for (const [firstrec_order, reccount] of this.itemchunks(p_mapctx, terrain_env)) {
+				let item_chunk_params;
 
-					for (const [item_coords, item_attrs] of this.layeritems(p_mapctx, terrain_env, scr_env, dims, firstrec_order, reccount)) {
+				for (item_chunk_params of this.itemchunks(p_mapctx, p_prep_data)) {
+
+					for (const [item_coords, item_attrs] of this.layeritems(p_mapctx, terrain_env, scr_env, dims, item_chunk_params)) {
 
 						//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
 
@@ -261,12 +263,12 @@ export class SimpleVectorLayer extends vectorLayersMixin(Layer) {
 		super();
 	}
 	
-	* itemchunks(p_mapctxt, p_terrain_env) {
+	* itemchunks(p_mapctxt, p_prep_data) {
 		// to be implemented
 		// for each chunk, respond with firstrecid, reccount
 	}		
 
-	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, firstrecid, reccount) {
+	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
 		// to be extended
 		// for each chunk in 'itemschunks', generate graphic items (graphics and attributes) to be drawn
 	}	
@@ -283,12 +285,12 @@ export class VectorLayer extends featureLayersMixin(vectorLayersMixin(Layer)) {
 		super();
 	}
 	
-	* itemchunks(p_mapctxt, p_terrain_env) {
+	* itemchunks(p_mapctxt, p_prep_data) {
 		// to be implemented
-		// for each chunk, respond with firstrecid, reccount
+		// for each chunk, respond with item_chunk_params object, specific to layer type
 	}		
 
-	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, firstrecid, reccount) {
+	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
 		// to be extended
 		// for each chunk in 'itemschunks', generate graphic items (graphics and attributes) to be drawn
 	}	
@@ -310,7 +312,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 		super();
 	}
 
-	* itemchunks(p_mapctxt, p_feat_count, p_terrain_env) {
+	* itemchunks(p_mapctxt, p_prep_data) {
 		// to be implemented
 		// for each chunk, respond with firstrecid, reccount
 	}	
@@ -346,8 +348,8 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 	}
 
 	// overrides vectorLayersMixin refresh
-
-	refresh(p_mapctx, p_feat_count) {
+	// main diff: layeritems should not be a generator
+	refresh(p_mapctx, p_prep_data) {
 
 		const [terrain_env, scr_env, dims] = genSingleEnv(p_mapctx);
 
@@ -371,12 +373,13 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 				} 
 
 				// firstrec_order is zero - based
-				for (const [firstrec_order, reccount] of this.itemchunks(p_mapctx, p_feat_count, terrain_env)) {
+				let item_chunk_params;
+				for (item_chunk_params of this.itemchunks(p_mapctx, p_prep_data)) {
 
 					// console.log("--   >> 359 --", firstrec_order, reccount, this.constructor.name);
 					// console.log("## 360 FILLSTYLE ####", gfctx.fillStyle);
 
-					cancel = this.layeritems(p_mapctx, terrain_env, scr_env, dims, firstrec_order, reccount);
+					cancel = this.layeritems(p_mapctx, terrain_env, scr_env, dims, item_chunk_params);
 
 					if (cancel) {
 						cancel = true;
@@ -401,7 +404,6 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 
 	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_recvd_geomtype) {
 
-		console.log("RemoteVectorLayer refreshitem");
 		// to be implemented
 		// for each 'canvas' item just draw each 'layeritem'
 
@@ -450,7 +452,7 @@ export class RasterLayer extends Layer {
 
 	}	
 
-	refresh(p_mapctx) {
+	refresh(p_mapctx, p_prep_data) {
 
 		if (!this.defaultvisible) {
 			if (GlobalConst.getDebug("LAYERS")) {

@@ -231,8 +231,14 @@ export class TOCManager {
 		}
 
 		// Drawing first the single raster, draw in self canvas, can render at anytime
+		let canceled;
 		if (the_raster_layer_i >= 0) {
-			this.layers[the_raster_layer_i].refresh(this.mapctx, the_raster_layer_i);
+			canceled = this.layers[the_raster_layer_i].refresh(this.mapctx, the_raster_layer_i);
+		}
+
+		if (canceled) {
+			console.error(`[WARN] Drawing canceled after raster base`);
+			return;
 		}
 
 		for (let li=0; li < this.layers.length; li++) {
@@ -246,6 +252,8 @@ export class TOCManager {
 
 	// getStats and draw2D will launch processes that terminate by calling signalVectorLoadFinished
 	nextdraw() {
+
+		let canceled;
 		const bounds = [];
 
 		if (this.drawlist.length < 1) {
@@ -258,10 +266,13 @@ export class TOCManager {
 			if (this.layers[li] instanceof RemoteVectorLayer) {
 				if (this.layers[li].preRefresh(this.mapctx)) {
 					this.mapctx.getMapBounds(bounds);			
-					this.layers[li].getStats(this.mapctx, bounds, li);
+					this.layers[li].getStats(this.mapctx, bounds);
 				}
 			} else {
-				this.layers[li].refresh(this.mapctx, li);
+				canceled = this.layers[li].refresh(this.mapctx);
+				if (canceled) {
+					this.drawlist.length = 0;
+				}
 			}
 
 		} catch(e) {

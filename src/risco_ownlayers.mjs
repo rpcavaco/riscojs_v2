@@ -5,9 +5,6 @@ import { RemoteVectorLayer } from './layers.mjs';
 export class RiscoFeatsLayer extends RemoteVectorLayer {
 
 	url;     // https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer
-	_current_reqid;
-	_current_stats;
-
 
 	constructor() { 
 		super();
@@ -108,205 +105,50 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 			.then(response => response.json())
 			.then(
 				function(responsejson) {
+
 					console.log(responsejson);		
 					
-					that._current_reqid = responsejson.reqid;
-					that._current_stats = responsejson.stats[that.key];
+					that.refresh(p_mapctx, {
+						"reqid": responsejson.reqid,
+						"nchunks": responsejson.stats[that.key]['nchunks'],
+						"nvert": responsejson.stats[that.key]['nvert']
+					})
 
 				}
 			);	
 	}
 
-	* itemchunks(p_mapctxt, p_feat_count, p_terrain_env) {
+	* itemchunks(p_mapctxt, p_prep_data) {
 
-		if (p_feat_count == 0) {
-			console.log(`[WARN:AGSQRY] Empty feat set in layer '${this.key}', nothing to draw`);
-			return;
-		}
+		const reqid = p_prep_data["reqid"];
+		const numchunks = p_prep_data["nchunks"];
+		const nvert = p_prep_data["nvert"];
 
-		if (p_feat_count == 1) {
-			console.log(`[WARN:AGSQRY] QUASI Empty feat set in layer '${this.key}', 1 elem to draw`);
-			return;
-		}		
-
-		let numchunks, remainder, calc_chunksize;
-
-		if (p_feat_count > GlobalConst.MAXFEATCHUNKSIZE) {
-
-			numchunks = Math.floor(p_feat_count / GlobalConst.MAXFEATCHUNKSIZE);
-			calc_chunksize = p_feat_count / numchunks;
-			remainder = p_feat_count % numchunks;
-
-			while (calc_chunksize + remainder > GlobalConst.MAXFEATCHUNKSIZE) {
-				numchunks++;
-				calc_chunksize = Math.floor(p_feat_count / numchunks);
-				remainder = p_feat_count % numchunks;
-			}
-
-		} else {
-			numchunks = 1;
-			calc_chunksize = p_feat_count;
-			remainder = 0;
-		}
-
+		https://loc.cm-porto.net/riscosrv/feats?map=loc&reqid=13d5e2fe-5569-11ed-b265-005056a2682e&lname=EDIFICADO&chunks=2&vertxcnt=9298&chunk=1&_ts=1666814531077
+		
+		/*
 		if (GlobalConst.getDebug("AGSQRY")) {
 			console.log(`[DBG:AGSQRY] Vector layer '${this.key}' , chunks:${numchunks}, size:${calc_chunksize}, rem:${remainder}`);
-		}
+		}*/
 
 		for (let i=0; i<numchunks; i++) {
 
-			if (i < numchunks-1) {
-				yield [i*calc_chunksize, calc_chunksize];
-			} else {
-				// last chunk will fetch additional 'remainder' records, if remainder > 0
-				yield [i*calc_chunksize, calc_chunksize + remainder];
-			}
+			yield [reqid, numchunks, nvert, i];
+
 		}
 
 	}		
 
-	layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, firstrecid, reccount) {
+	layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_item_chunk_params) {
 
-		const urlstr = this.buildQueryURL(p_mapctxt, p_terrain_env, "GETCHUNK", firstrecid, reccount);
-		const that = this;
+	
 
-		const chunk_id = uuidv4();
-
-		fetch(urlstr)
-			.then((response) => {
-				if (response.ok) {
-					return response.json();
-				}
-				throw new Error(`Error fetching features chunk for layer '${that.key}'`);
-			})
-			.then(
-				function(responsejson) {
-
-					// chunk has become obsolete and was deleted from featchunksloading
-					// by new drawing action
-					if (that.featchunksloading[chunk_id] === undefined) {
-						return;
-					}
-
-					const esriGeomtype = responsejson.geometryType;
-					const svcReference = responsejson.spatialReference.wkid;
-					const crs = p_mapctxt.cfgvar["basic"]["crs"];
-
-					const gfctx = p_mapctxt.renderingsmgr.getDrwCtx(that.canvasKey, '2d');
-					gfctx.save();
-
-					try {
-
-						if (WKID_List[svcReference] != crs) {
-							throw new Error(`'${that.key}', incoerence in crs - config:${crs}, ret.from service:${WKID_List[svcReference]} (WKID: ${svcReference})`);
-						}
-
-						switch (that.geomtype) {
-
-							case "poly":
-
-								gfctx.fillStyle = that.default_symbol.fillStyle;
-								gfctx.strokeStyle = that.default_symbol.strokeStyle;
-								gfctx.lineWidth = that.default_symbol.lineWidth;
-			
-								if (esriGeomtype != "esriGeometryPolygon") {
-									throw new Error(`'${that.key}', incoerence in feat.types - config:${that.geomtype}, ret.from service:${esriGeomtype}`);
-								}
-								break;
-
-							case "line":
-
-								gfctx.strokeStyle = that.default_symbol.strokeStyle;
-								gfctx.lineWidth = that.default_symbol.lineWidth;
-			
-								if (esriGeomtype != "esriGeometryPolyline") {
-									throw new Error(`'${that.key}', incoerence in feat.types - config:${that.geomtype}, ret.from service:${esriGeomtype}`);
-								}
-								break;								
-
-						}
-
-						// verificar campos ATTRS
-
-						for (const feat of responsejson.features) {
-							that.refreshitem(p_mapctxt, gfctx, p_terrain_env, p_scr_env, p_dims, feat.geometry, feat.attributes, esriGeomtype);
-						}
-
-					} catch(e) {
-						console.error(e);
-					} finally {
-						gfctx.restore();
-
-						if (that.featchunksloading[chunk_id] !== undefined) {
-
-							if (GlobalConst.getDebug("VECTLOAD")) {
-								console.log(`[DBG:VECTLOAD] '${that.key}', timing for '${chunk_id}': ${new Date().getTime() - that.featchunksloading[chunk_id]["ts"]}, reloaded: ${that.featchunksloading[chunk_id]["reloaded"]}`);
-							}
-			
-							delete that.featchunksloading[chunk_id];
-
-							if (Object.keys(that.featchunksloading).length == 0) {
-								if (GlobalConst.getDebug("VECTLOAD")) {
-									console.log(`[DBG:VECTLOAD] Finished loading'${that.key}'`);
-								}
-								p_mapctxt.tocmgr.signalVectorLoadFinished(that.key);
-							}
-			
-						}						
-					}
-								
-				}
-			).catch((e) => {
-				console.error(e);
-			});	
-
-		this.featchunksloading[chunk_id] = {
-			"chunk_id": chunk_id,
-			"ts": new Date().getTime(),
-			"url": urlstr,
-			"reloaded": false
-		}
 
 
 	};
 
 	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_recvd_geomtype) {
 
-		const pt=[];
-		if (p_recvd_geomtype == "esriGeometryPolygon") {
-
-			if (p_coords.rings.length > 0) {
-
-				this.currFeatures.add(this.key, this.oidfldname, p_coords.rings, p_attrs);
-
-				p_gfctx.beginPath();
-
-				for (const ring of p_coords.rings) {
-					for (let pti=0; pti<ring.length; pti++) {
-
-						p_mapctxt.transformmgr.getRenderingCoordsPt(ring[pti], pt)
-
-						if (pti == 0){
-							p_gfctx.moveTo(...pt);
-						} else {
-							p_gfctx.lineTo(...pt);
-						}
-					}
-					p_gfctx.closePath();
-				}
-
-				// p_gfctx.fillStyle = this.fillStyle;
-				// p_gfctx.strokeStyle = this.strokeStyle;
-				// p_gfctx.lineWidth = this.lineWidth;
-				p_gfctx.fill();
-				p_gfctx.stroke();	
-				
-//				console.log("<<<< fim >>>>>");
-
-
-			}
-
-		}
 
 	}	
 

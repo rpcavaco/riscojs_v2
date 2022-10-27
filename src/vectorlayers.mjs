@@ -17,11 +17,11 @@ export class GraticuleLayer extends SimpleVectorLayer {
 		this._servmetadata_docollect = false;		
 	}
 
-	* itemchunks(p_mapctxt, p_terrain_env) {
-		yield [-1, -1];
+	* itemchunks(p_mapctxt, p_prep_data) {
+		yield [];
 	}	
 
-	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, firstrecid, reccount) {
+	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_item_chunk_params) {
 
 		let x, endlimit, crdlist = [], out_pt = [], crdlist_t;
 		for (const mode of ['horiz', 'vert']) {
@@ -74,11 +74,11 @@ export class GraticulePtsLayer extends SimpleVectorLayer {
 		this._servmetadata_docollect = false;
 	}
 
-	* itemchunks(p_mapctxt, p_terrain_env) {
+	* itemchunks(p_mapctxt, p_prep_data) {
 		yield [-1, -1];
 	}	
 
-	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, firstrecid, reccount) {
+	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
 
 		let out_pt = [];
 		let x, xorig = this.separation * Math.floor(p_terrain_env[0] / this.separation);
@@ -118,7 +118,7 @@ export class AGSQryLayer extends RemoteVectorLayer {
 		super();
 	}
 
-	buildQueryURL(p_mapctxt, p_terrain_bounds, p_mode, opt_firstrecid, opt_reccount) {
+	buildQueryURL(p_mapctxt, p_terrain_bounds, p_mode, p_firstrecid, p_reccount) {
 
 		const teststr = `/MapServer/${this.layerid}/query`;
 
@@ -157,8 +157,8 @@ export class AGSQryLayer extends RemoteVectorLayer {
 				sp.set('geometryPrecision', GlobalConst.GEOMPRECISION_DECIMALS.toString());
 				sp.set('outSR', crs);
 
-				sp.set('resultOffset', opt_firstrecid.toString());
-				sp.set('resultRecordCount', opt_reccount.toString());
+				sp.set('resultOffset', p_firstrecid.toString());
+				sp.set('resultRecordCount', p_reccount.toString());
 				 
 				break;
 					
@@ -520,39 +520,43 @@ export class AGSQryLayer extends RemoteVectorLayer {
 			.then(response => response.json())
 			.then(
 				function(responsejson) {
-					that.refresh(p_mapctx, responsejson.count);					
+					that.refresh(p_mapctx, {
+						"count": responsejson.count
+					});					
 				}
 			);	
 	}
 
-	* itemchunks(p_mapctxt, p_feat_count, p_terrain_env) {
+	* itemchunks(p_mapctxt, p_prep_data) {
 
-		if (p_feat_count == 0) {
+		const feat_count = p_prep_data["count"]
+
+		if (feat_count == 0) {
 			console.log(`[WARN:AGSQRY] Empty feat set in layer '${this.key}', nothing to draw`);
 			return;
 		}
 
-		if (p_feat_count == 1) {
+		if (feat_count == 1) {
 			console.log(`[WARN:AGSQRY] QUASI Empty feat set in layer '${this.key}', 1 elem to draw`);
 			return;
 		}		
 
 		let numchunks, remainder, calc_chunksize;
 
-		if (p_feat_count > GlobalConst.MAXFEATCHUNKSIZE) {
+		if (feat_count > GlobalConst.MAXFEATCHUNKSIZE) {
 
-			numchunks = Math.floor(p_feat_count / GlobalConst.MAXFEATCHUNKSIZE);
-			calc_chunksize = p_feat_count / numchunks;
-			remainder = p_feat_count % numchunks;
+			numchunks = Math.floor(feat_count / GlobalConst.MAXFEATCHUNKSIZE);
+			calc_chunksize = feat_count / numchunks;
+			remainder = feat_count % numchunks;
 
 			while (calc_chunksize + remainder > GlobalConst.MAXFEATCHUNKSIZE) {
 				numchunks++;
-				calc_chunksize = Math.floor(p_feat_count / numchunks);
-				remainder = p_feat_count % numchunks;
+				calc_chunksize = Math.floor(feat_count / numchunks);
+				remainder = feat_count % numchunks;
 			}
 		} else {
 			numchunks = 1;
-			calc_chunksize = p_feat_count;
+			calc_chunksize = feat_count;
 			remainder = 0;
 		}
 
@@ -563,17 +567,27 @@ export class AGSQryLayer extends RemoteVectorLayer {
 		for (let i=0; i<numchunks; i++) {
 
 			if (i < numchunks-1) {
-				yield [i*calc_chunksize, calc_chunksize];
+				yield {
+					"firstrecid": i*calc_chunksize, 
+					"reccount": calc_chunksize
+				};
 			} else {
 				// last chunk will fetch additional 'remainder' records, if remainder > 0
-				yield [i*calc_chunksize, calc_chunksize + remainder];
+				yield {
+					"firstrecid": i*calc_chunksize, 
+					"reccount": calc_chunksize + remainder
+				};
+
 			}
 		}
 
 	}		
 
-	layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, firstrecid, reccount) {
+	layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_item_chunks_params) {
 
+		const firstrecid = p_item_chunks_params["firstrecid"] 
+		const reccount = p_item_chunks_params["reccount"] 
+		
 		const urlstr = this.buildQueryURL(p_mapctxt, p_terrain_env, "GETCHUNK", firstrecid, reccount);
 		const that = this;
 
