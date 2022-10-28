@@ -66,7 +66,15 @@
 	}
 	
 	clearAll(p_ckeys) {
-		for (const ck of p_ckeys) {
+
+		let keys;
+		if (p_ckeys) {
+			keys = p_ckeys;
+		} else {
+			keys = this.canvaskeys;
+		}
+
+		for (const ck of keys) {
 			/* if (ck == 'base') {
 				continue;
 			} */

@@ -279,7 +279,6 @@ export class CanvasAreaGridLayer extends canvasVectorMethodsMixin(AreaGridLayer)
 				for (let pt of p_coords) {
 
 					p_mapctxt.transformmgr.getRenderingCoordsPt(pt, cpt);
-				//p_mapctxt.transformmgr.getRenderingCoordsPt([x + this.separation, y + this.separation], ur);
 
 					if (cnt < 1) {
 						this._gfctx.moveTo(...cpt);

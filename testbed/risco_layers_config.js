@@ -10,7 +10,6 @@ var RISCOJS_LAYERS_CFG = {
 	"layers": {
 		"grat": {
 			"type": "graticule",
-			"separation": 100,
 			"strokeStyle": "white",
 			"lineWidth": 1
 		},
@@ -18,14 +17,13 @@ var RISCOJS_LAYERS_CFG = {
 			"type": "ptgrid",
 			"marker": "vertcross",
 			"mrksize": 3,
-			"separation": 100,
 			"strokeStyle": "white",
 			"lineWidth": 2
 		},	
 		"grat_sqrs": {
 			"spindex": true,
 			"type": "areagrid",
-			"separation": 200,
+			"scaledep_separation_1k": 10,
 			"strokeStyle": "white",
 			"fillStyle": "none",
 			"lineWidth": 0.5

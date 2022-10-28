@@ -60,16 +60,19 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry) {
 
 	if (foundly) {
 
+		let sclval = p_mapctx.getScale();
+		let sep = foundly.separation(sclval);
+
 		p_mapctx.transformmgr.getTerrainPt([p_scrx, p_scry], terr_pt);
 
-		ref_x = foundly.separation * Math.floor(terrain_bounds[0] / foundly.separation);
-		col = Math.floor((terr_pt[0] - ref_x) / foundly.separation) + 1;
+		ref_x = sep * Math.floor(terrain_bounds[0] / sep);
+		col = Math.floor((terr_pt[0] - ref_x) / sep) + 1;
 
-		ref_y = foundly.separation * Math.floor(terrain_bounds[1] / foundly.separation);
-		row = Math.floor((terr_pt[1] - ref_y) / foundly.separation);
+		ref_y = sep * Math.floor(terrain_bounds[1] / sep);
+		row = Math.floor((terr_pt[1] - ref_y) / sep);
 
-		max_y = foundly.separation * Math.ceil(terrain_bounds[3] / foundly.separation);
-		maxrow = Math.floor((max_y - ref_y) / foundly.separation);
+		max_y = sep * Math.ceil(terrain_bounds[3] / sep);
+		maxrow = Math.floor((max_y - ref_y) / sep);
 
 		let cmin = (col < 2 ? 1 : col-1);
 		let cmax = (col > foundly._columns ? foundly._columns : col+1);
@@ -79,12 +82,9 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry) {
 
 		let rows, cols, feat;
 
-		/* console.log("c:", cmin, col, cmax);
-		console.log("r:", rmin, row, rmax, maxrow); */
-
 		if (cmin == col) {
 			cols = [col, cmax];
-		} else if (cmax == col) {
+		} else if (cmax == col || cmax > foundly._columns) {
 			cols = [cmin, col];
 		} else {
 			cols = [cmin, col, cmax];
@@ -97,6 +97,9 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry) {
 		} else {
 			rows = [rmin, row, rmax];
 		}
+
+		/*console.log("c:", cmin, col, cmax, foundly._columns);
+		console.log("r:", rmin, row, rmax, maxrow); */
 
 		p_mapctx.renderingsmgr.clearAll(['temporary']);
 		const related_ids = {};

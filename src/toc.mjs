@@ -114,8 +114,6 @@ export class TOCManager {
 						const scaneables = [currentLayer[0]];
 						currentLayer[0].key = lyk;
 
-						//console.log("## geomtype -- >", lyk, layerscfg.layers[lyk]["geomtype"], currentLayer[0].geomtype);
-
 						if (!(currentLayer[0] instanceof RasterLayer)) {
 							if (currentLayer[0].geomtype === undefined) { 
 								throw new Error(`Layer ${lyk} has no 'geomtype' defined`);
@@ -204,14 +202,16 @@ export class TOCManager {
 
 	refresh(p_scaleval) {
 
-		console.info(`[INFO] attemting to refresh ${this.layers.length} layers at scale 1:${p_scaleval}`);
+		console.info(`[INFO] attempting to refresh ${this.layers.length} layers at scale 1:${p_scaleval}`);
 		
 		let gfctx;
+		
 		const ckeys = new Set();
-
 		for (let li=0; li < this.layers.length; li++) {
 			ckeys.add(this.layers[li].canvasKey);
 		}
+		ckeys.add('transient');
+		ckeys.add('temporary');
 
 		this.mapctx.renderingsmgr.clearAll(ckeys);
 

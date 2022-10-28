@@ -26,6 +26,11 @@
 
 
 - >> - índice espacial
+	- relação entre 'area grid' e
+		- OK - polígonos
+
+- passar layer de indice espacial a fixa no código
+-  grid layer com separação proporcional à escala
 
 - > - info na multi tool (no mouse up sem drag) e ficha de feat no mouse move
 - > - fomatos risco - features

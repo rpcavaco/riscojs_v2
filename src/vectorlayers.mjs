@@ -9,7 +9,7 @@ import { SimpleVectorLayer, VectorLayer, RemoteVectorLayer } from './layers.mjs'
 
 export class GraticuleLayer extends SimpleVectorLayer {
 
-	separation;
+	fixedseparation = 100;
 	_geomtype = "line";
 
 	constructor() {
@@ -27,16 +27,16 @@ export class GraticuleLayer extends SimpleVectorLayer {
 		for (const mode of ['horiz', 'vert']) {
 
 			if (mode == 'vert') {
-				x = this.separation * Math.floor(p_terrain_env[0] / this.separation);
+				x = this.fixedseparation * Math.floor(p_terrain_env[0] / this.fixedseparation);
 				endlimit = p_terrain_env[2];
 			} else {
-				x = this.separation * Math.floor(p_terrain_env[1] / this.separation);
+				x = this.fixedseparation * Math.floor(p_terrain_env[1] / this.fixedseparation);
 				endlimit = p_terrain_env[3];
 			}
 
 			while (x <= endlimit) {
 
-				x = x + this.separation;
+				x = x + this.fixedseparation;
 				if (mode == 'vert') {
 					crdlist.length = 0;
 					crdlist.push(...[x, p_terrain_env[1], x, p_terrain_env[3]]);
@@ -65,7 +65,8 @@ export class GraticuleLayer extends SimpleVectorLayer {
 
 export class PointGridLayer extends SimpleVectorLayer {
 
-	separation;
+	fixedseparation = 100;
+	scaledep_separation_1k = -1;
 	_geomtype = "point";
 	marker;
 	// mrksize = 2;
@@ -79,23 +80,36 @@ export class PointGridLayer extends SimpleVectorLayer {
 		yield [];
 	}	
 
+	separation(opt_scaleval) {
+
+		let ret = this.fixedseparation;
+		if (opt_scaleval != null && this.scaledep_separation_1k > 1 ) {
+			ret = this.scaledep_separation_1k * (opt_scaleval / 1000.0);
+		}
+
+		return ret;
+	}
+
 	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
 
 		let out_pt = [];
-		let x, xorig = this.separation * Math.floor(p_terrain_env[0] / this.separation);
+		let sclval = p_mapctxt.getScale();
+		let sep = this.separation(sclval);
+
+		let x, xorig = sep * Math.floor(p_terrain_env[0] / sep);
 		let x_lim = p_terrain_env[2];
 
-		let y = this.separation * Math.floor(p_terrain_env[1] / this.separation);
+		let y = sep * Math.floor(p_terrain_env[1] / sep);
 		let y_lim = p_terrain_env[3];
 
 		while (y <= y_lim) {
 
-			y = y + this.separation;
+			y = y + sep;
 			x = xorig;
 
 			while (x <= x_lim) {
 
-				x = x + this.separation;
+				x = x + sep;
 				p_mapctxt.transformmgr.getRenderingCoordsPt([x, y], out_pt);
 				// item_coords, item_attrs, item_path_levels
 				yield [out_pt.slice(0), null, 1];
@@ -109,7 +123,8 @@ export class PointGridLayer extends SimpleVectorLayer {
 
 export class AreaGridLayer extends VectorLayer {
 
-	separation;
+	fixedseparation = 100;
+	scaledep_separation_1k = -1;
 	_geomtype = "poly";
 	areatype = "square";
 	_columns = 0;
@@ -123,6 +138,22 @@ export class AreaGridLayer extends VectorLayer {
 		this._servmetadata_docollect = false;
 	}
 
+	separation(opt_scaleval) {
+
+		let ret = this.fixedseparation;
+		if (opt_scaleval != null && this.scaledep_separation_1k > 1 ) {
+			ret = this.scaledep_separation_1k * (opt_scaleval / 1000.0);
+		}
+
+		ret = Math.floor(ret/10.0) * 10;
+
+		if (ret < 20) {
+			ret = 20;
+		}
+
+		return ret;
+	}
+
 	* itemchunks(p_mapctxt, p_prep_data) {
 		yield [];
 	}	
@@ -130,11 +161,13 @@ export class AreaGridLayer extends VectorLayer {
 	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
 
 		let ll = [], ur = [];
+		let sclval = p_mapctxt.getScale();
+		let sep = this.separation(sclval);
 
-		let preid, id, ring, x, xorig = this.separation * Math.floor(p_terrain_env[0] / this.separation);
+		let preid, id, ring, x, xorig = sep * Math.floor(p_terrain_env[0] / sep);
 		let x_lim = p_terrain_env[2];
 
-		let y = this.separation * Math.floor(p_terrain_env[1] / this.separation);
+		let y = sep * Math.floor(p_terrain_env[1] / sep);
 		let y_lim = p_terrain_env[3];
 
 		let cntcols=0, cntrows=0;
@@ -149,19 +182,18 @@ export class AreaGridLayer extends VectorLayer {
 				cntcols++;
 
 				//p_mapctxt.transformmgr.getRenderingCoordsPt([x, y], ll);
-				//p_mapctxt.transformmgr.getRenderingCoordsPt([x + this.separation, y + this.separation], ur);
-
-				ring = [[x, y], [x + this.separation, y], [x + this.separation, y + this.separation], [x, y + this.separation], [x, y]];
+				//p_mapctxt.transformmgr.getRenderingCoordsPt([x + sep, y + sep], ur);
+				ring = [[x, y], [x + sep, y], [x + sep, y + sep], [x, y + sep], [x, y]];
 				preid = this._columns * cntrows + cntcols;
 				id = this.currFeatures.add(this.key, ring, { "id": preid }, 1, null, "id");
-				
+
 				// If feature still exists  between cleanups that's because it might not have been properly garbage collected
 				// If exists, let's not try to draw it, id is null
 				if (id) {
 					yield [ring, null, 1];
 				}				
 		
-				x = x + this.separation;
+				x = x + sep;
 
 			}
 
@@ -169,13 +201,9 @@ export class AreaGridLayer extends VectorLayer {
 				this._columns = cntcols;				
 			}
 
-
-			y = y + this.separation;
+			y = y + sep;
 			cntrows++;
 
-			//console.log("nextrow:", cntrows);
-
-			
 		}
 
 		p_mapctxt.tocmgr.signalVectorLoadFinished(this.key);		
