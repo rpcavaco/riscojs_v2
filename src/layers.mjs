@@ -177,8 +177,9 @@ export class Layer {
 }
 
 const vectorLayersMixin = (Base) => class extends Base {
-	geomtype;
 	
+	geomtype;
+
 	refresh(p_mapctx, p_prep_data) {
 
 		const [terrain_env, scr_env, dims] = genSingleEnv(p_mapctx);
@@ -278,7 +279,7 @@ export class SimpleVectorLayer extends vectorLayersMixin(Layer) {
 // has feature mgmt, has attributes
 export class VectorLayer extends featureLayersMixin(vectorLayersMixin(Layer)) {
 
-	hiddengraphics = false;
+
 
 	constructor() {
 		super();

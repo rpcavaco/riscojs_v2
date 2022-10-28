@@ -127,6 +127,7 @@ export class AreaGridLayer extends VectorLayer {
 	scaledep_separation_1k = -1;
 	_geomtype = "poly";
 	areatype = "square";
+	hiddengraphics = false;
 	_columns = 0;
 
 	// TODO - check this layera acting as spatial index is unique
@@ -189,7 +190,7 @@ export class AreaGridLayer extends VectorLayer {
 
 				// If feature still exists  between cleanups that's because it might not have been properly garbage collected
 				// If exists, let's not try to draw it, id is null
-				if (id) {
+				if (id && !this.hiddengraphics) {
 					yield [ring, null, 1];
 				}				
 		

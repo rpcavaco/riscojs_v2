@@ -21,6 +21,7 @@ var RISCOJS_LAYERS_CFG = {
 			"lineWidth": 2
 		},	
 		"grat_sqrs": {
+			"hiddengraphics": true,
 			"spindex": true,
 			"type": "areagrid",
 			"scaledep_separation_1k": 10,

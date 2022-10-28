@@ -190,7 +190,7 @@ export class FeatureCollection {
 
 		const t0 = new Date().getTime();
 			
-		console.log("relating:")
+		console.log("[INFO] collecting relations ...")
 			
 		if (this.mapctx.cfgvar["layers"]["relations"] === undefined) {
 			console.info("[INFO] no relations configured");
@@ -217,19 +217,21 @@ export class FeatureCollection {
 				ff = this.featList[fr_lyk][idfrom];
 				for (let idto in this.featList[to_lyk]) {
 					tf = this.featList[to_lyk][idto];
-					if (bbTouch(ff.bb, tf.bb)) {
-						if (ff["r"] === undefined) {
-							ff["r"] = {};
-						} 
-						if (ff["r"][to_lyk] === undefined) {
-							ff["r"][to_lyk] = [];
-						} 						
-						ff.r[to_lyk].push(idto);
 
-						/*if (cnt > 0) {
-							console.log(ff);
-						}
-						cnt--; */
+					switch(rel["op"]) {
+
+						case "bbtouch":
+							if (bbTouch(ff.bb, tf.bb)) {
+								if (ff["r"] === undefined) {
+									ff["r"] = {};
+								} 
+								if (ff["r"][to_lyk] === undefined) {
+									ff["r"][to_lyk] = [];
+								} 						
+								ff.r[to_lyk].push(idto);
+							}
+							break;
+		
 					}
 					//console.log("bb:", ff.bb, tf.bb);
 				}
@@ -238,7 +240,7 @@ export class FeatureCollection {
 
 		const t1 = new Date().getTime();
 
-		console.log("all related:", (t1-t0))
+		console.log("[INFO] all relations collected in", (t1-t0), "ms")
 
 	}
 
