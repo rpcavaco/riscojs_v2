@@ -77,7 +77,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry) {
 		let rmin = (row < 1 ? 0 : row-1);
 		let rmax = (row > maxrow ? maxrow : row+1);
 
-		let rows, cols;
+		let rows, cols, feat;
 
 		/* console.log("c:", cmin, col, cmax);
 		console.log("r:", rmin, row, rmax, maxrow); */
@@ -99,12 +99,31 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry) {
 		}
 
 		p_mapctx.renderingsmgr.clearAll(['temporary']);
+		const related_ids = {};
 
 		for (let c of cols) {
 
 			for (let r of rows) {
 
 				sqrid = r * foundly._columns + c;
+
+				if (related_ids[foundly.key] === undefined) {
+					related_ids[foundly.key] = {}
+				}
+
+				feat = p_mapctx.currFeatures.get(foundly.key, sqrid);
+				if (feat) {
+					if (feat.r !== undefined) {
+						for (let lyk in feat.r) {
+							if (related_ids[foundly.key][lyk] === undefined) {
+								related_ids[foundly.key][lyk] = new Set();
+							}
+							for (let r of feat.r[lyk]) {
+								related_ids[foundly.key][lyk].add(r);
+							}
+						}
+					}
+				}
 
 				try {
 					p_mapctx.currFeatures.draw(p_mapctx, null, null, null, foundly.key, sqrid, 'temporary', { "fillStyle": "#ffff007f" });
@@ -117,6 +136,17 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry) {
 			}
 
 		}
+
+		for (let from_lyrk in related_ids) {
+			for (let to_lyrk in related_ids[from_lyrk]) {
+				if (related_ids[from_lyrk][to_lyrk].size > 0) {
+					for (let r of related_ids[from_lyrk][to_lyrk]) {
+						p_mapctx.currFeatures.draw(p_mapctx, null, null, null, to_lyrk, r, 'temporary', { "fillStyle": "#ff00007f" });
+					}
+				}
+			}
+		}
+
 
 		// console.log(row, col, foundly._columns, sqrid);
 	}

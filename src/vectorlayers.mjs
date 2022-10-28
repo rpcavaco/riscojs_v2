@@ -148,14 +148,13 @@ export class AreaGridLayer extends VectorLayer {
 
 				cntcols++;
 
-				p_mapctxt.transformmgr.getRenderingCoordsPt([x, y], ll);
-				p_mapctxt.transformmgr.getRenderingCoordsPt([x + this.separation, y + this.separation], ur);
+				//p_mapctxt.transformmgr.getRenderingCoordsPt([x, y], ll);
+				//p_mapctxt.transformmgr.getRenderingCoordsPt([x + this.separation, y + this.separation], ur);
 
-				ring = [ll.slice(0), [ur[0], ll[1]], ur.slice(0), [ll[0], ur[1]], ll.slice(0)];
-
+				ring = [[x, y], [x + this.separation, y], [x + this.separation, y + this.separation], [x, y + this.separation], [x, y]];
 				preid = this._columns * cntrows + cntcols;
-
 				id = this.currFeatures.add(this.key, ring, { "id": preid }, 1, null, "id");
+				
 				// If feature still exists  between cleanups that's because it might not have been properly garbage collected
 				// If exists, let's not try to draw it, id is null
 				if (id) {

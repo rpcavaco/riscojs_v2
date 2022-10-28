@@ -1,5 +1,12 @@
 var RISCOJS_LAYERS_CFG = {
 	"lorder": ["ortos_2018", "mancha_construida", "grat_sqrs"], //, "mancha_constr", "mancha_construida", "gratMRK"],
+	"relations": [
+		{
+			"from": "grat_sqrs",
+			"to": "mancha_construida",
+			"op": "bbtouch"
+		}
+	],
 	"layers": {
 		"grat": {
 			"type": "graticule",
@@ -18,7 +25,7 @@ var RISCOJS_LAYERS_CFG = {
 		"grat_sqrs": {
 			"spindex": true,
 			"type": "areagrid",
-			"separation": 20,
+			"separation": 200,
 			"strokeStyle": "white",
 			"fillStyle": "none",
 			"lineWidth": 0.5

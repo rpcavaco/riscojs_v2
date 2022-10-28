@@ -33,3 +33,20 @@ export function dist2D(p_pt1, p_pt2) {
 	return Math.sqrt(distSquared2D(p_pt1, p_pt2));
 }
 
+export function bbTouch(p_bb1, p_bb2) {
+
+	let ret = false;
+
+	if (p_bb1[2] > p_bb2[0]) {
+		if (p_bb1[0] < p_bb2[2] ) {
+			if (p_bb1[3] > p_bb2[1]) {
+				if (p_bb1[1] < p_bb2[3] ) {
+					ret = true;
+				}
+			}			
+		}
+	}
+
+	return ret;
+}
+

@@ -257,7 +257,11 @@ export class TOCManager {
 		const bounds = [];
 
 		if (this.drawlist.length < 1) {
+
+			// apply configured relations between feature layers
+			this.mapctx.currFeatures.relate();
 			return;
+
 		}
 
 		const li = this.drawlist[0];

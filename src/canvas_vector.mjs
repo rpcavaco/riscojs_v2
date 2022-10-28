@@ -182,7 +182,10 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		if (p_coords.length > 0) {
 
-			if (innerCycle(this, p_coords, 0, p_path_levels, opt_feat_id, false)) {
+			let retobj = innerCycle(this, p_coords, 0, p_path_levels, opt_feat_id, false);
+			let ret = retobj[0];
+
+			if (ret) {
 
 				this._gfctx.stroke();
 
@@ -191,77 +194,6 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 				}
 			}
 
-
-			/*
-
-			switch(p_path_levels) {
-
-				case 2:
-
-					this._gfctx.beginPath();
-					for (const part of p_coords) {
-		
-						for (let pti=0; pti<part.length; pti++) {
-		
-							if (ptini==null) {
-								ptini = part[pti].slice(0);
-							}
-		
-							p_mapctxt.transformmgr.getRenderingCoordsPt(part[pti], pt)
-
-							if (pti == 0){
-								this._gfctx.moveTo(...pt);
-							} else {
-								this._gfctx.lineTo(...pt);
-							}
-						}
-		
-						if (GlobalConst.TOLERANCEDIST_RINGCLOSED >= dist2D(ptini, pt)) {
-							this._gfctx.closePath();
-						}
-					}
-		
-					if (this.geomtype == "poly") {
-						this._gfctx.fill();
-					}
-					this._gfctx.stroke();
-
-					break;
-
-				default:
-
-					this._gfctx.beginPath();
-		
-					for (let pti=0; pti<p_coords.length; pti++) {
-	
-						if (ptini==null) {
-							ptini = p_coords[pti].slice(0);
-						}
-	
-						p_mapctxt.transformmgr.getRenderingCoordsPt(p_coords[pti], pt)
-
-						if (pti == 0){
-							this._gfctx.moveTo(...pt);
-						} else {
-							this._gfctx.lineTo(...pt);
-						}
-					}
-	
-					if (GlobalConst.TOLERANCEDIST_RINGCLOSED >= dist2D(ptini, pt)) {
-						this._gfctx.closePath();
-					}
-		
-					if (this.geomtype == "poly") {
-						this._gfctx.fill();
-					}
-					this._gfctx.stroke();
-
-
-			}
-
-			*/
-	
-			
 		}
 
 		return true;		
@@ -342,12 +274,17 @@ export class CanvasAreaGridLayer extends canvasVectorMethodsMixin(AreaGridLayer)
 		if (ok) {
 			try {
 				this._gfctx.beginPath();
-				let cnt = 0;
-				for (const pt of p_coords) {
+				let cnt = 0, cpt=[];
+
+				for (let pt of p_coords) {
+
+					p_mapctxt.transformmgr.getRenderingCoordsPt(pt, cpt);
+				//p_mapctxt.transformmgr.getRenderingCoordsPt([x + this.separation, y + this.separation], ur);
+
 					if (cnt < 1) {
-						this._gfctx.moveTo(...pt);
+						this._gfctx.moveTo(...cpt);
 					} else {
-						this._gfctx.lineTo(...pt);
+						this._gfctx.lineTo(...cpt);
 					}
 					cnt++;
 				}

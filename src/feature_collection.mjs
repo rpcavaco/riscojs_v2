@@ -1,4 +1,5 @@
 import {SpatialIndex} from './spatial_index.mjs';
+import {bbTouch} from './geom.mjs'
 import {Layer} from './layers.mjs'
 
 export class FeatureCollection {
@@ -24,6 +25,57 @@ export class FeatureCollection {
 
 	add(p_layerkey, p_geom, p_attrs, p_path_levels, opt_id, opt_id_fieldname) {
 
+		function innerCycle(pp_this, pp_bbox, pp_root, pp_call_level, pp_path_level, pp_feat_id) {
+	
+			let ptini=null, ret = false;
+
+			for (let pti=0; pti<pp_root.length; pti++) {
+
+				if (typeof pp_root[pti][0] != 'number' && ptini == null) {
+
+					ret = innerCycle(pp_this, pp_bbox, pp_root[pti], pp_call_level+1, pp_path_level-1, pp_feat_id);
+
+				} else {
+
+					if (ptini==null) {
+
+						if (pp_path_level != 1) {
+							console.error(`[WARN] non-zero bottom path level on layer '${pp_this.key}', feat.id:${pp_feat_id}`);
+						}
+
+						ptini = pp_root[pti].slice(0);
+
+					}
+
+					for (let p in p_geom) {
+						if (pp_root[pti][0] < pp_bbox[0]) {
+							pp_bbox[0] = pp_root[pti][0];
+						}
+						if (pp_root[pti][0] > pp_bbox[2]) {
+							pp_bbox[2] = pp_root[pti][0];
+						}
+						if (pp_root[pti][1] < pp_bbox[1]) {
+							pp_bbox[1] = pp_root[pti][1];
+						}
+						if (pp_root[pti][1] > pp_bbox[3]) {
+							pp_bbox[3] = pp_root[pti][1];
+						}
+					}
+
+				}
+			}
+
+			if (ptini != null) {
+
+				ret = true;
+
+			}
+
+			return ret;
+		}
+
+	
+
 		if (opt_id != null && opt_id_fieldname != null) {
 			throw new Error(`layer '${p_layerkey}' opt_id, opt_id_fieldname are mutually exclusive, both were given, opt_id:${opt_id}, opt_id_fieldname:${opt_id_fieldname}`);
 		}
@@ -48,11 +100,25 @@ export class FeatureCollection {
 
 		} else {
 
-			this.featList[p_layerkey][id] = {
-				l: p_path_levels,
-				g: p_geom.slice(0),
-				a: {...p_attrs}
-			};
+			if (p_geom.length > 0) {
+
+				const bbox = [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER]
+
+				innerCycle(this, bbox, p_geom, 0, p_path_levels, id);
+
+				//console.log(p_layerkey, bbox, p_geom)
+
+				this.featList[p_layerkey][id] = {
+					l: p_path_levels,
+					g: p_geom.slice(0),
+					a: {...p_attrs},
+					bb: bbox.slice(0)
+				};				
+			}	
+
+
+
+
 
 		}
 
@@ -108,6 +174,72 @@ export class FeatureCollection {
 				}
 			}
 		}
+	}
+
+	get(p_layerkey, p_id) {
+		let ret = null;
+		if (this.featList[p_layerkey][p_id] !== undefined) {
+			ret = this.featList[p_layerkey][p_id];
+		}
+		return ret;
+	}
+
+	relate() {
+		
+		let relcfgvar, fr_lyk, to_lyk;
+
+		const t0 = new Date().getTime();
+			
+		console.log("relating:")
+			
+		if (this.mapctx.cfgvar["layers"]["relations"] === undefined) {
+			console.info("[INFO] no relations configured");
+			return;
+		} else {
+			relcfgvar = this.mapctx.cfgvar["layers"]["relations"];
+		}
+
+		for (const rel of relcfgvar) {
+			fr_lyk = rel["from"];
+			to_lyk = rel["to"];
+
+			if (this.featList[fr_lyk] === undefined) {
+				throw new Error(`relations, no 'from' layer '${fr_lyk}' loaded in current feature collection`);
+			}
+
+			if (this.featList[to_lyk] === undefined) {
+				throw new Error(`relations, no 'to' layer '${to_lyk}' loaded in current feature collection`);
+			}	
+			
+			let ff, tf;
+			//let cnt = 20;
+			for (let idfrom in this.featList[fr_lyk]) {
+				ff = this.featList[fr_lyk][idfrom];
+				for (let idto in this.featList[to_lyk]) {
+					tf = this.featList[to_lyk][idto];
+					if (bbTouch(ff.bb, tf.bb)) {
+						if (ff["r"] === undefined) {
+							ff["r"] = {};
+						} 
+						if (ff["r"][to_lyk] === undefined) {
+							ff["r"][to_lyk] = [];
+						} 						
+						ff.r[to_lyk].push(idto);
+
+						/*if (cnt > 0) {
+							console.log(ff);
+						}
+						cnt--; */
+					}
+					//console.log("bb:", ff.bb, tf.bb);
+				}
+			}
+		}
+
+		const t1 = new Date().getTime();
+
+		console.log("all related:", (t1-t0))
+
 	}
 
 }
