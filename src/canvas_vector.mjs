@@ -10,48 +10,93 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 	default_symbol;	
 	_gfctx;  // current graphics context to be always updated at each refreshing / drawing
 
-	grabGf2DCtx(p_mapctx) {
+	grabGf2DCtx(p_mapctx, opt_alt_canvaskey, opt_symbs) {
 
-		this._gfctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvasKey, '2d');
+		let canvaskey;
+		let strokeflag = false;
+		let fillflag = false;
+
+		if (opt_alt_canvaskey) {
+			canvaskey = opt_alt_canvaskey;
+		} else {
+			canvaskey = this.canvasKey;
+		}
+
+		//console.log("canvaskey:", canvaskey, opt_symbs);
+
+		this._gfctx = p_mapctx.renderingsmgr.getDrwCtx(canvaskey, '2d');
 		this._gfctx.save();
 
-		switch (this.geomtype) {
+		if (canvaskey == 'temporary' || canvaskey == 'transient') {
+			p_mapctx.renderingsmgr.clearAll([canvaskey]);
+		}
 
-			case "poly":
+		if (opt_symbs) {
 
-				this._gfctx.fillStyle = this.default_symbol.fillStyle;
-				this._gfctx.strokeStyle = this.default_symbol.strokeStyle;
-				this._gfctx.lineWidth = this.default_symbol.lineWidth;
+			if (opt_symbs.strokeStyle !== undefined) {
+				this._gfctx.strokeStyle = opt_symbs.strokeStyle;
+				strokeflag = true;
+			}
 
-				break;
+			if (opt_symbs.lineWidth !== undefined) {
+				this._gfctx.lineWidth = opt_symbs.lineWidth;
+			}	
 
-			case "line":
+			if (opt_symbs.fillStyle !== undefined) {
+				this._gfctx.fillStyle = opt_symbs.fillStyle;
+				fillflag = true;
+			}	
 
-				this._gfctx.strokeStyle = this.default_symbol.strokeStyle;
-				this._gfctx.lineWidth = this.default_symbol.lineWidth;
+		} else {
 
-				break;
+			switch (this.geomtype) {
 
-			case "point":
+				case "poly":
 
-				if (this.marker !== undefined && this.marker != null && this.marker != "none") {
+					this._gfctx.fillStyle = this.default_symbol.fillStyle;
+					this._gfctx.strokeStyle = this.default_symbol.strokeStyle;
+					this._gfctx.lineWidth = this.default_symbol.lineWidth;
 
-					if (this.default_symbol.strokeStyle !== undefined) {
-						this._gfctx.strokeStyle = this.default_symbol.strokeStyle;
+					fillflag = (this.default_symbol.fillStyle.toLowerCase() != "none");
+					strokeflag = (this.default_symbol.strokeStyle.toLowerCase() != "none");
+
+					break;
+
+				case "line":
+
+					this._gfctx.strokeStyle = this.default_symbol.strokeStyle;
+					this._gfctx.lineWidth = this.default_symbol.lineWidth;
+
+					strokeflag = (this.default_symbol.strokeStyle.toLowerCase() != "none");
+
+					break;
+
+				case "point":
+
+					if (this.marker !== undefined && this.marker != null && this.marker != "none") {
+
+						if (this.default_symbol.strokeStyle !== undefined) {
+							this._gfctx.strokeStyle = this.default_symbol.strokeStyle;
+							strokeflag = true;
+						}
+
+						if (this.default_symbol.lineWidth !== undefined) {
+							this._gfctx.lineWidth = this.default_symbol.lineWidth;
+						}	
+
+						if (this.default_symbol.fillStyle !== undefined) {
+							this._gfctx.fillStyle = this.default_symbol.fillStyle;
+							fillflag = true;
+						}									
 					}
 
-					if (this.default_symbol.lineWidth !== undefined) {
-						this._gfctx.lineWidth = this.default_symbol.lineWidth;
-					}	
-
-					if (this.default_symbol.fillStyle !== undefined) {
-						this._gfctx.fillStyle = this.default_symbol.fillStyle;
-					}									
-				}
+			}
 
 		}
 
-		return true;
+		//console.log(">>", strokeflag, fillflag);
+
+		return [true, strokeflag, fillflag];
 	}
 
 	// must this.grabGf2DCtx first !	
@@ -229,14 +274,28 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 export class CanvasGraticuleLayer extends canvasVectorMethodsMixin(GraticuleLayer) {
 
-	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id) {
+	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
 
-		if (this.grabGf2DCtx(p_mapctxt)) {
+		const [ok, dostroke, dofill] = this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs);
+
+		if (ok && !dostroke && !dofill) {
+			throw new Error(`Layer ${this.key}, no 'dostroke' and no 'dofill' flags, nothin to draw`);
+		}
+
+		if (ok) {
 			try {
 				this._gfctx.beginPath();
 				this._gfctx.moveTo(p_coords[0], p_coords[1]);
 				this._gfctx.lineTo(p_coords[2], p_coords[3]);
-				this._gfctx.stroke();
+
+				if (dostroke) {
+					this._gfctx.stroke();
+				};
+				if (dofill) {
+					this._gfctx.fill();
+				};
+
+
 			} catch(e) {
 				throw e;
 			} finally {
@@ -250,9 +309,15 @@ export class CanvasGraticuleLayer extends canvasVectorMethodsMixin(GraticuleLaye
 
 export class CanvasPointGridLayer extends canvasVectorMethodsMixin(PointGridLayer) {
 
-	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id) {
+	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
 
-		if (this.grabGf2DCtx(p_mapctxt)) {
+		const [ok, dostroke, dofill] = this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs);
+
+		if (ok && !dostroke && !dofill) {
+			throw new Error(`Layer ${this.key}, no 'dostroke' and no 'dofill' flags, nothin to draw`);
+		}
+
+		if (ok) {
 			try {
 
 				this.default_symbol.drawsymb(p_mapctxt, this, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, opt_feat_id)
@@ -270,9 +335,15 @@ export class CanvasPointGridLayer extends canvasVectorMethodsMixin(PointGridLaye
 
 export class CanvasAreaGridLayer extends canvasVectorMethodsMixin(AreaGridLayer) {
 
-	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id) {
+	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
 
-		if (this.grabGf2DCtx(p_mapctxt)) {
+		const [ok, dostroke, dofill] = this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs);
+
+		if (ok && !dostroke && !dofill) {
+			throw new Error(`Layer ${this.key}, no 'dostroke' and no 'dofill' flags, nothin to draw`);
+		}
+
+		if (ok) {
 			try {
 				this._gfctx.beginPath();
 				let cnt = 0;
@@ -284,7 +355,12 @@ export class CanvasAreaGridLayer extends canvasVectorMethodsMixin(AreaGridLayer)
 					}
 					cnt++;
 				}
-				this._gfctx.stroke();
+				if (dostroke) {
+					this._gfctx.stroke();
+				};
+				if (dofill) {
+					this._gfctx.fill();
+				};
 			} catch(e) {
 				throw e;
 			} finally {
@@ -298,11 +374,11 @@ export class CanvasAreaGridLayer extends canvasVectorMethodsMixin(AreaGridLayer)
 
 export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
 
-	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id) {
+	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
 
 		let ret = true;
 
-		if (this.grabGf2DCtx(p_mapctxt)) {
+		if (this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs)) {
 
 			try {
 
@@ -325,13 +401,13 @@ export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
 
 export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLayer) {
 
-	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id) {
+	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
 
 		let ret = true;
 
 		//console.log("aa:", [p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs]);
 
-		if (this.grabGf2DCtx(p_mapctxt)) {
+		if (this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs)) {
 
 			try {
 

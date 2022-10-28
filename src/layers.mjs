@@ -294,7 +294,7 @@ export class VectorLayer extends featureLayersMixin(vectorLayersMixin(Layer)) {
 		// for each chunk in 'itemschunks', generate graphic items (graphics and attributes) to be drawn
 	}	
 
-	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_path_levels, opt_feat_id) {
+	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
 
 		// to be implemented
 		// for each 'canvas' item just draw each 'layeritem'
@@ -401,7 +401,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 		return cancel;
 	}	
 
-	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_path_levels, opt_feat_id) {
+	refreshitem(p_mapctxt, p_gfctx, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
 
 		// to be implemented
 		// for each 'canvas' item just draw each 'layeritem'

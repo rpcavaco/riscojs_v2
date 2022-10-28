@@ -84,7 +84,7 @@ export class FeatureCollection {
 		//this.spIndex.invalidate();
 	}
 	
-	draw(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_layerkey, opt_featid) {
+	draw(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_layerkey, opt_featid, opt_alt_canvaskey, opt_symbs) {
 
 		let feat;
 
@@ -94,13 +94,17 @@ export class FeatureCollection {
 
 		if (opt_featid) {
 			feat = this.featList[p_layerkey][opt_featid];
-			this.layers[p_layerkey].refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, feat.g, feat.a, feat.l, opt_featid);
+			if (feat == null) {
+				throw new Error(`layer '${p_layerkey}' no feature for id ${opt_featid}`);
+			}
+	
+			this.layers[p_layerkey].refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, feat.g, feat.a, feat.l, opt_featid, opt_alt_canvaskey, opt_symbs);
 		} else {
 
 			for (let id in this.featList[p_layerkey]) {
 				if (this.featList[p_layerkey].hasOwnProperty(id)) {
 					feat = this.featList[p_layerkey][id];
-					this.layers[p_layerkey].refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, feat.g, feat.a, feat.l, id);
+					this.layers[p_layerkey].refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, feat.g, feat.a, feat.l, id, opt_alt_canvaskey, opt_symbs);
 				}
 			}
 		}

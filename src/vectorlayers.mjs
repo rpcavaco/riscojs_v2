@@ -3,7 +3,7 @@ import {GlobalConst} from './constants.js';
 import {WKID_List} from './esri_wkids.js';
 import {uuidv4} from './utils.mjs';
 
-import { SimpleVectorLayer, RemoteVectorLayer } from './layers.mjs';
+import { SimpleVectorLayer, VectorLayer, RemoteVectorLayer } from './layers.mjs';
 
 
 
@@ -107,11 +107,15 @@ export class PointGridLayer extends SimpleVectorLayer {
 
 }
 
-export class AreaGridLayer extends SimpleVectorLayer {
+export class AreaGridLayer extends VectorLayer {
 
 	separation;
 	_geomtype = "poly";
 	areatype = "square";
+	_columns = 0;
+
+	// TODO - check this layera acting as spatial index is unique
+	spindex = false;    // acting as a spatial index ? (defautl is false, should only be ONE acting as spatialindex at a time)
 	// mrksize = 2;
 
 	constructor() {
@@ -127,27 +131,51 @@ export class AreaGridLayer extends SimpleVectorLayer {
 
 		let ll = [], ur = [];
 
-		let x, xorig = this.separation * Math.floor(p_terrain_env[0] / this.separation);
+		let preid, id, ring, x, xorig = this.separation * Math.floor(p_terrain_env[0] / this.separation);
 		let x_lim = p_terrain_env[2];
 
 		let y = this.separation * Math.floor(p_terrain_env[1] / this.separation);
 		let y_lim = p_terrain_env[3];
 
+		let cntcols=0, cntrows=0;
+		this._columns = 0;
+
 		while (y <= y_lim) {
 
 			x = xorig;
+			cntcols = 0;
 			while (x <= x_lim) {
+
+				cntcols++;
 
 				p_mapctxt.transformmgr.getRenderingCoordsPt([x, y], ll);
 				p_mapctxt.transformmgr.getRenderingCoordsPt([x + this.separation, y + this.separation], ur);
+
+				ring = [ll.slice(0), [ur[0], ll[1]], ur.slice(0), [ll[0], ur[1]], ll.slice(0)];
+
+				preid = this._columns * cntrows + cntcols;
+
+				id = this.currFeatures.add(this.key, ring, { "id": preid }, 1, null, "id");
+				// If feature still exists  between cleanups that's because it might not have been properly garbage collected
+				// If exists, let's not try to draw it, id is null
+				if (id) {
+					yield [ring, null, 1];
+				}				
 	
-				yield [[ll.slice(0), [ur[0], ll[1]], ur.slice(0), [ll[0], ur[1]], ll.slice(0)], null, 1];
 	
 				x = x + this.separation;
 
 			}
 
+			if (this._columns == 0) {
+				this._columns = cntcols;				
+			}
+
+
 			y = y + this.separation;
+			cntrows++;
+
+			//console.log("nextrow:", cntrows);
 
 			
 		}

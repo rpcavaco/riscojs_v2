@@ -16,8 +16,9 @@ var RISCOJS_LAYERS_CFG = {
 			"lineWidth": 2
 		},	
 		"grat_sqrs": {
+			"spindex": true,
 			"type": "areagrid",
-			"separation": 100,
+			"separation": 20,
 			"strokeStyle": "white",
 			"fillStyle": "none",
 			"lineWidth": 2

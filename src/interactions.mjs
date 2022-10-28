@@ -1,5 +1,7 @@
 
 import {GlobalConst} from './constants.js';
+import {AreaGridLayer} from './vectorlayers.mjs';
+
 
 export class BaseTool {
 
@@ -40,6 +42,44 @@ class DefaultTool extends BaseTool {
 		}
 		
 	}	
+}
+
+function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry) {
+	
+	let foundly = null, ref_x, ref_y, col, row, sqrid;
+
+	const terrain_bounds = [], terr_pt = [];
+	p_mapctx.getMapBounds(terrain_bounds);
+
+	for (let ly of p_mapctx.tocmgr.layers) {
+		if (ly.spindex !== undefined && ly.spindex && (ly instanceof AreaGridLayer)) {
+			foundly = ly;
+			break;
+		}
+	}
+
+	if (foundly) {
+
+		p_mapctx.transformmgr.getTerrainPt([p_scrx, p_scry], terr_pt);
+
+		ref_x = foundly.separation * Math.floor(terrain_bounds[0] / foundly.separation);
+		col = Math.floor((terr_pt[0] - ref_x) / foundly.separation) + 1;
+
+		ref_y = foundly.separation * Math.floor(terrain_bounds[1] / foundly.separation);
+		row = Math.floor((terr_pt[1] - ref_y) / foundly.separation);
+
+		sqrid = row * foundly._columns + col;
+
+		try {
+			p_mapctx.currFeatures.draw(p_mapctx, null, null, null, foundly.key, sqrid, 'temporary', { "fillStyle": "#ffff007f" });
+		} catch (e) {
+			if (GlobalConst.getDebug("INTERACT")) {
+				console.log(`[DBG:INTERACT] feature error '${e}'`);
+			}
+		}
+
+		// console.log(row, col, foundly._columns, sqrid);
+	}
 }
 
 // pan, zoom wheel, info
@@ -105,6 +145,8 @@ class MultiTool extends BaseTool {
 							p_mapctx.renderingsmgr.putImages(this.imgs_dict, [p_evt.clientX-this.start_screen[0], p_evt.clientY-this.start_screen[1]]);
 							ret = false;
 						}
+					} else {
+						interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY);
 					}
 					this.wheelscale = null;
 					break;
@@ -155,8 +197,8 @@ class MultiTool extends BaseTool {
 			}
 		} catch(e) {
 			this.start_screen = null;
-			throw e;
-		}
+			console.error(e);
+		}  
 		
 		return ret;
 	}	
