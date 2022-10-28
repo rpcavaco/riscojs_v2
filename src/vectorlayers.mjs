@@ -161,8 +161,7 @@ export class AreaGridLayer extends VectorLayer {
 				if (id) {
 					yield [ring, null, 1];
 				}				
-	
-	
+		
 				x = x + this.separation;
 
 			}

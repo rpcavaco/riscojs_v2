@@ -21,7 +21,7 @@ var RISCOJS_LAYERS_CFG = {
 			"separation": 20,
 			"strokeStyle": "white",
 			"fillStyle": "none",
-			"lineWidth": 2
+			"lineWidth": 0.5
 		},			
 		"orto2021": {
 			"type": "wms",

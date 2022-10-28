@@ -46,7 +46,7 @@ class DefaultTool extends BaseTool {
 
 function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry) {
 	
-	let foundly = null, ref_x, ref_y, col, row, sqrid;
+	let foundly = null, ref_x, ref_y, max_y, col, row, maxrow, sqrid;
 
 	const terrain_bounds = [], terr_pt = [];
 	p_mapctx.getMapBounds(terrain_bounds);
@@ -68,14 +68,54 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry) {
 		ref_y = foundly.separation * Math.floor(terrain_bounds[1] / foundly.separation);
 		row = Math.floor((terr_pt[1] - ref_y) / foundly.separation);
 
-		sqrid = row * foundly._columns + col;
+		max_y = foundly.separation * Math.ceil(terrain_bounds[3] / foundly.separation);
+		maxrow = Math.floor((max_y - ref_y) / foundly.separation);
 
-		try {
-			p_mapctx.currFeatures.draw(p_mapctx, null, null, null, foundly.key, sqrid, 'temporary', { "fillStyle": "#ffff007f" });
-		} catch (e) {
-			if (GlobalConst.getDebug("INTERACT")) {
-				console.log(`[DBG:INTERACT] feature error '${e}'`);
+		let cmin = (col < 2 ? 1 : col-1);
+		let cmax = (col > foundly._columns ? foundly._columns : col+1);
+
+		let rmin = (row < 1 ? 0 : row-1);
+		let rmax = (row > maxrow ? maxrow : row+1);
+
+		let rows, cols;
+
+		/* console.log("c:", cmin, col, cmax);
+		console.log("r:", rmin, row, rmax, maxrow); */
+
+		if (cmin == col) {
+			cols = [col, cmax];
+		} else if (cmax == col) {
+			cols = [cmin, col];
+		} else {
+			cols = [cmin, col, cmax];
+		}
+
+		if (rmin == row) {
+			rows = [row, rmax];
+		} else if (rmax == row) {
+			rows = [rmin, row];
+		} else {
+			rows = [rmin, row, rmax];
+		}
+
+		p_mapctx.renderingsmgr.clearAll(['temporary']);
+
+		for (let c of cols) {
+
+			for (let r of rows) {
+
+				sqrid = r * foundly._columns + c;
+
+				try {
+					p_mapctx.currFeatures.draw(p_mapctx, null, null, null, foundly.key, sqrid, 'temporary', { "fillStyle": "#ffff007f" });
+				} catch (e) {
+					if (GlobalConst.getDebug("INTERACT")) {
+						console.log(`[DBG:INTERACT] feature error '${e}'`);
+					}
+				}
+
 			}
+
 		}
 
 		// console.log(row, col, foundly._columns, sqrid);

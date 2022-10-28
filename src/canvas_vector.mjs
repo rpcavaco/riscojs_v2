@@ -27,10 +27,6 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 		this._gfctx = p_mapctx.renderingsmgr.getDrwCtx(canvaskey, '2d');
 		this._gfctx.save();
 
-		if (canvaskey == 'temporary' || canvaskey == 'transient') {
-			p_mapctx.renderingsmgr.clearAll([canvaskey]);
-		}
-
 		if (opt_symbs) {
 
 			if (opt_symbs.strokeStyle !== undefined) {
