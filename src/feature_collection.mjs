@@ -216,8 +216,8 @@ export class FeatureCollection {
 			for (let idfrom in this.featList[fr_lyk]) {
 				ff = this.featList[fr_lyk][idfrom];
 				for (let idto in this.featList[to_lyk]) {
+					
 					tf = this.featList[to_lyk][idto];
-
 					switch(rel["op"]) {
 
 						case "bbtouch":

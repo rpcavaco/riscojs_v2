@@ -94,8 +94,8 @@
 	getCanvasDims(out_dims) {
 		let bounds = this.paneldiv.getBoundingClientRect();	
 		out_dims.length = 2;
-		out_dims[0] = bounds.width;
-		out_dims[1] = bounds.height;
+		out_dims[0] = parseInt(bounds.width);
+		out_dims[1] = parseInt(bounds.height);
 	}
 	/**
 	 * Method getCanvasCenter
