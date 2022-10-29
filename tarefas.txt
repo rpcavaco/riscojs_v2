@@ -15,34 +15,41 @@
 - OK - limite sup escala nos obj simbologia
 - OK - ADD features
 - OK - clean ao inicio do draw request
+- OK - recolher attribs dos formatos vetoriais em FeatureCollection
 
 - OK - features AGS - primeira visão com polígonos
 	- faltam linhas e pontos
+
 - >> - fomatos risco - features (para garantir material de teste vetorial)
 	- OK - poly / line 
 	- points
-
-- >> - recolher attribs dos formatos vetoriais em FeatureCollection
-
 
 - >> - índice espacial
 	- relação entre 'area grid' e
 		- OK - polígonos
 
+- ? subconfigs 
+- relações
+	- represemtar individuos ou agregar: lugar para as funções de agregação
+
 - passar layer de indice espacial a fixa no código
--  grid layer com separação proporcional à escala
+  - OK -grid layer com separação proporcional à escala
+
+- validar main configs
+- config highlight no main
 
 - > - info na multi tool (no mouse up sem drag) e ficha de feat no mouse move
-- > - fomatos risco - features
 - > - simbologia pontos (para completar 'Fisca')
 - > - labeling 
 
 - risco server -- pedido de stats comum a várias layers
-	- getStatsURL opt_filter
+	- >> getStatsURL opt_filter
 
 - WFS xml
-- formatos risco - imagem
+
 - scaledep symbology
+- layered symbs
+
 - flatgeobuf
 
 - zoom janela e ferramenta base de desenho de janela
@@ -50,6 +57,8 @@
 - controle de erros em todos os fetches, copiar das feats de AGSQuery
 - cancelamento de uma layer não cancela a casta de layers seguintes durante refresh
 
+
+- formatos risco - imagem
 
 Nice to Have
 
