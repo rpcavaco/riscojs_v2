@@ -131,8 +131,8 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry) {
 				try {
 					p_mapctx.currFeatures.draw(p_mapctx, null, null, null, foundly.key, sqrid, 'temporary', { "fillStyle": "#ffff007f" });
 				} catch (e) {
-					if (GlobalConst.getDebug("INTERACT")) {
-						console.log(`[DBG:INTERACT] feature error '${e}'`);
+					if (GlobalConst.getDebug("GRAPHICSEL")) {
+						console.log(`[DBG:GRAPHICSEL] feature error '${e}'`);
 					}
 				}
 
@@ -140,14 +140,35 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry) {
 
 		}
 
+		let tmpd, nearestid=-1, nearestlyk=null, dist = Number.MAX_SAFE_INTEGER;
 		for (let from_lyrk in related_ids) {
 			for (let to_lyrk in related_ids[from_lyrk]) {
 				if (related_ids[from_lyrk][to_lyrk].size > 0) {
 					for (let r of related_ids[from_lyrk][to_lyrk]) {
+
+						tmpd = p_mapctx.currFeatures.distanceTo(terr_pt, to_lyrk, r);
+						if (tmpd < dist) {
+							nearestlyk = to_lyrk;
+							nearestid = r;
+							dist = tmpd;
+						}
+						if (GlobalConst.getDebug("GRAPHICSEL")) {
+							console.log(`[DBG:GRAPHICSEL] interactWithSpindexLayer ... distance ${tmpd} to id:${r}`);
+						}
+
 						p_mapctx.currFeatures.draw(p_mapctx, null, null, null, to_lyrk, r, 'temporary', { "fillStyle": "#ff00007f" });
 					}
 				}
 			}
+		}
+
+		if (nearestid >= 0) {
+
+			if (GlobalConst.getDebug("GRAPHICSEL")) {
+				console.log(`[DBG:GRAPHICSEL] interactWithSpindexLayer, NEAREST distance ${dist} to id:${nearestid}`);
+			}
+
+			p_mapctx.currFeatures.draw(p_mapctx, null, null, null, nearestlyk, nearestid, 'temporary', { "fillStyle": "#00ff007f" });
 		}
 
 

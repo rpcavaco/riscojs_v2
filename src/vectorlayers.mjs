@@ -186,7 +186,7 @@ export class AreaGridLayer extends VectorLayer {
 				//p_mapctxt.transformmgr.getRenderingCoordsPt([x + sep, y + sep], ur);
 				ring = [[x, y], [x + sep, y], [x + sep, y + sep], [x, y + sep], [x, y]];
 				preid = this._columns * cntrows + cntcols;
-				id = this.currFeatures.add(this.key, ring, { "id": preid }, 1, null, "id");
+				id = this.currFeatures.add(this.key, ring, { "id": preid }, this.geomtype, 1, null, "id");
 
 				// If feature still exists  between cleanups that's because it might not have been properly garbage collected
 				// If exists, let's not try to draw it, id is null
@@ -733,7 +733,8 @@ export class AGSQryLayer extends RemoteVectorLayer {
 
 							if (esriGeomtype == "esriGeometryPolygon") {
 								if (feat.geometry.rings.length > 0) {
-									id = that.currFeatures.add(that.key, feat.geometry.rings, feat.attributes, 2, null, that.oidfldname);
+										
+									id = that.currFeatures.add(that.key, feat.geometry.rings, feat.attributes, that.geomtype, 2, null, that.oidfldname);
 									// If feature still exists  between cleanups that's because it might not have been properly garbage collected
 									// If exists, let's not try to draw it, id is null
 									if (id) {

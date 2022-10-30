@@ -1,6 +1,8 @@
 import {GlobalConst} from './constants.js';
-import {rad2Deg} from './geom.mjs';
+import {geomTest, rad2Deg} from './geom.mjs';
 import {identity, multiply, inverse, scaling, translation, twod_shift, rotation, getCartoScaling, vectorMultiply} from './matrices3.mjs';
+		
+
 
 import {getCookie, setCookie} from './utils.mjs';
 
@@ -175,6 +177,8 @@ class TransformsQueue {
 		
 		this.transformsQueue = new TransformsQueue(this.mapctx);		
 		this.init();
+
+		geomTest();		
 
 		console.info("[init RISCO]  2D transform env prepared");
 

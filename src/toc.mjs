@@ -259,7 +259,7 @@ export class TOCManager {
 		if (this.drawlist.length < 1) {
 
 			// apply configured relations between feature layers
-			this.mapctx.currFeatures.relate();
+			this.mapctx.currFeatures.relateall();
 			return;
 
 		}

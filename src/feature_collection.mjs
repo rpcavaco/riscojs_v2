@@ -1,5 +1,4 @@
-import {SpatialIndex} from './spatial_index.mjs';
-import {bbTouch} from './geom.mjs'
+import {distanceToPoly, bbTouch} from './geom.mjs'
 import {Layer} from './layers.mjs'
 
 export class FeatureCollection {
@@ -23,7 +22,7 @@ export class FeatureCollection {
 		}	
 	}
 
-	add(p_layerkey, p_geom, p_attrs, p_path_levels, opt_id, opt_id_fieldname) {
+	add(p_layerkey, p_geom, p_attrs, p_geom_type, p_path_levels, opt_id, opt_id_fieldname) {
 
 		function innerCycle(pp_this, pp_bbox, pp_root, pp_call_level, pp_path_level, pp_feat_id) {
 	
@@ -74,8 +73,6 @@ export class FeatureCollection {
 			return ret;
 		}
 
-	
-
 		if (opt_id != null && opt_id_fieldname != null) {
 			throw new Error(`layer '${p_layerkey}' opt_id, opt_id_fieldname are mutually exclusive, both were given, opt_id:${opt_id}, opt_id_fieldname:${opt_id_fieldname}`);
 		}
@@ -109,17 +106,13 @@ export class FeatureCollection {
 				//console.log(p_layerkey, bbox, p_geom)
 
 				this.featList[p_layerkey][id] = {
+					gt: p_geom_type,
 					l: p_path_levels,
 					g: p_geom.slice(0),
 					a: {...p_attrs},
 					bb: bbox.slice(0)
 				};				
 			}	
-
-
-
-
-
 		}
 
 		return id;
@@ -184,7 +177,31 @@ export class FeatureCollection {
 		return ret;
 	}
 
-	relate() {
+	distanceTo(p_from_pt, p_layerkey, opt_featid) {
+
+		let ret = -1, feat = this.featList[p_layerkey][opt_featid];
+		if (feat == null) {
+			throw new Error(`layer '${p_layerkey}' no feature for id ${opt_featid}`);
+		}
+		
+		switch(feat.gt) {
+
+			case "poly":
+				ret = distanceToPoly(feat.g, feat.l, p_from_pt, false, opt_featid);
+				//throw new Error("PAF");
+				break;
+
+			case "line":
+				break;
+				
+			case "point":
+				break;					
+		}
+
+		return ret;
+	}
+
+	relateall() {
 		
 		let relcfgvar, fr_lyk, to_lyk;
 
@@ -200,6 +217,7 @@ export class FeatureCollection {
 		}
 
 		for (const rel of relcfgvar) {
+
 			fr_lyk = rel["from"];
 			to_lyk = rel["to"];
 
@@ -214,9 +232,10 @@ export class FeatureCollection {
 			let ff, tf;
 			//let cnt = 20;
 			for (let idfrom in this.featList[fr_lyk]) {
+
 				ff = this.featList[fr_lyk][idfrom];
 				for (let idto in this.featList[to_lyk]) {
-					
+
 					tf = this.featList[to_lyk][idto];
 					switch(rel["op"]) {
 
