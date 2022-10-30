@@ -1,8 +1,44 @@
 
+
+/*
+ * Code adapted from Gregg Tavares (https://webgl2fundamentals.org/)
+ *
+ *
+ * Copyright 2012, Gregg Tavares.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above
+ * copyright notice, this list of conditions and the following disclaimer
+ * in the documentation and/or other materials provided with the
+ * distribution.
+ *     * Neither the name of Gregg Tavares. nor the names of his
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
 /**
  * Function identity
  * Creates a 3x3 identity matrix
- * @returns {module:webgl2-2d-math.Matrix3} an identity matrix
+ * @returns {Matrix3} an identity matrix
  */
 export function identity(out_result) {
 	out_result.length = 9;
@@ -21,9 +57,9 @@ export function identity(out_result) {
  * Function multiply
  * Takes two Matrix3s, a and b, and computes the product in the order
  * that pre-composes b with a.  In other words, the matrix returned will
- * @param {module:webgl-2d-math.Matrix3} a A matrix.
- * @param {module:webgl-2d-math.Matrix3} b A matrix.
- * @returns {module:webgl-2d-math.Matrix3} the result.
+ * @param {Matrix3} a A matrix.
+ * @param {Matrix3} b A matrix.
+ * @returns {Matrix3} the result.
  */
 export function multiply(a, b, out_result) {
 		
@@ -73,7 +109,7 @@ export function inverse(m, out_result) {
  * Creates a 2D scaling matrix
  * @param {number} sx amount to scale in x
  * @param {number} sy amount to scale in y
- * @returns {module:webgl-2d-math.Matrix3} a scale matrix that scales by sx and sy.
+ * @returns {Matrix3} a scale matrix that scales by sx and sy.
  */
 export function scaling(sx, sy, out_result) {
 	out_result.length = 9;
@@ -95,7 +131,7 @@ export function scaling(sx, sy, out_result) {
  * Creates a 2D translation matrix
  * @param {number} tx amount to translate in x
  * @param {number} ty amount to translate in y
- * @returns {module:webgl-2d-math.Matrix3} a translation matrix that translates by tx and ty.
+ * @returns {Matrix3} a translation matrix that translates by tx and ty.
  */
 export function translation(tx, ty, out_result) {
 	out_result.length = 9;
@@ -120,7 +156,7 @@ export function twod_shift(m, dx, dy) {
 /**
  * Creates a 2D rotation matrix
  * @param {number} angleInRadians amount to rotate in radians
- * @returns {module:webgl-2d-math.Matrix3} a rotation matrix that rotates by angleInRadians
+ * @returns {Matrix3} a rotation matrix that rotates by angleInRadians
  */
 export function rotation(angleInRadians, out_result) {
 	var c = Math.cos(angleInRadians);
@@ -139,6 +175,11 @@ export function rotation(angleInRadians, out_result) {
 	out_result[7] = 0;
 	out_result[8] = 1;
 }
+
+/**
+ * ----------------- End of Gregg's code -------------------
+ *  */  
+
 
 export function getCartoScaling(m) {
 	return (m[0]-m[4])/2.0;

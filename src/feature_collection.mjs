@@ -7,7 +7,6 @@ export class FeatureCollection {
 		this.mapctx = p_mapctx;
 		this.featList = {};
 		this.layers = {};
-		//this.spIndex = new SpatialIndex();
 	}
 
 	setLayer(p_layerkey, p_layerobj) {
