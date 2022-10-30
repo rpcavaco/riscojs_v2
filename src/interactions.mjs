@@ -44,9 +44,11 @@ class DefaultTool extends BaseTool {
 	}	
 }
 
-function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry) {
+function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, opt_maxdist) {
 	
 	let foundly = null, ref_x, ref_y, max_y, col, row, maxrow, sqrid;
+
+	let ret_dir_interact = false;
 
 	const terrain_bounds = [], terr_pt = [];
 	p_mapctx.getMapBounds(terrain_bounds);
@@ -98,9 +100,6 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry) {
 			rows = [rmin, row, rmax];
 		}
 
-		/*console.log("c:", cmin, col, cmax, foundly._columns);
-		console.log("r:", rmin, row, rmax, maxrow); */
-
 		p_mapctx.renderingsmgr.clearAll(['temporary']);
 		const related_ids = {};
 
@@ -128,17 +127,19 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry) {
 					}
 				}
 
-				try {
-					p_mapctx.currFeatures.draw(p_mapctx, null, null, null, foundly.key, sqrid, 'temporary', { "fillStyle": "#ffff007f" });
-				} catch (e) {
-					if (GlobalConst.getDebug("GRAPHICSEL")) {
-						console.log(`[DBG:GRAPHICSEL] feature error '${e}'`);
+				if (GlobalConst.getDebug("FEATMOUSESEL")) {
+					try {
+						const symb = GlobalConst.DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB[foundly.geomtype];
+						p_mapctx.currFeatures.draw(p_mapctx, null, null, null, foundly.key, sqrid, 'temporary', symb);
+					} catch (e) {
+						console.log(`[DBG:FEATMOUSESEL] feature error '${e}'`);
 					}
 				}
 
 			}
-
 		}
+
+		
 
 		let tmpd, nearestid=-1, nearestlyk=null, dist = Number.MAX_SAFE_INTEGER;
 		for (let from_lyrk in related_ids) {
@@ -152,11 +153,11 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry) {
 							nearestid = r;
 							dist = tmpd;
 						}
-						if (GlobalConst.getDebug("GRAPHICSEL")) {
-							console.log(`[DBG:GRAPHICSEL] interactWithSpindexLayer ... distance ${tmpd} to id:${r}`);
+						if (GlobalConst.getDebug("FEATMOUSESEL")) {
+							console.log(`[DBG:FEATMOUSESEL] interactWithSpindexLayer ... distance ${tmpd} (max: ${opt_maxdist}) to id:${r}`);
+							const symb = GlobalConst.DEBUG_FEATMOUSESEL_SELUNDERMASK_SYMB[foundly.geomtype];
+							p_mapctx.currFeatures.draw(p_mapctx, null, null, null, to_lyrk, r, 'temporary', symb);
 						}
-
-						p_mapctx.currFeatures.draw(p_mapctx, null, null, null, to_lyrk, r, 'temporary', { "fillStyle": "#ff00007f" });
 					}
 				}
 			}
@@ -164,16 +165,19 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry) {
 
 		if (nearestid >= 0) {
 
-			if (GlobalConst.getDebug("GRAPHICSEL")) {
-				console.log(`[DBG:GRAPHICSEL] interactWithSpindexLayer, NEAREST distance ${dist} to id:${nearestid}`);
+			if (GlobalConst.getDebug("FEATMOUSESEL")) {
+				console.log(`[DBG:FEATMOUSESEL] interactWithSpindexLayer, NEAREST distance ${dist} (max: ${opt_maxdist}) to id:${nearestid}`);
 			}
 
-			p_mapctx.currFeatures.draw(p_mapctx, null, null, null, nearestlyk, nearestid, 'temporary', { "fillStyle": "#00ff007f" });
+			if (opt_maxdist == null || opt_maxdist >=  dist) {
+				const symb = GlobalConst.FEATMOUSESEL_HIGHLIGHT[foundly.geomtype];
+				p_mapctx.currFeatures.draw(p_mapctx, null, null, null, nearestlyk, nearestid, 'temporary', symb);
+			}
 		}
 
-
-		// console.log(row, col, foundly._columns, sqrid);
 	}
+
+	return ret_dir_interact;
 }
 
 // pan, zoom wheel, info
@@ -184,6 +188,11 @@ class MultiTool extends BaseTool {
 		this.start_screen = null;
 		this.imgs_dict={};
 		this.wheelscale = null;
+	}
+
+	static mouseselMaxdist(p_mapctx) {
+		const mscale = p_mapctx.getScale();
+		return GlobalConst.FEATMOUSESEL_MAXDIST_1K * mscale / 1000.0;
 	}
 
 	finishPan(p_transfmgr, p_x, p_y, opt_origin) {
@@ -205,7 +214,7 @@ class MultiTool extends BaseTool {
 	onEvent(p_mapctx, p_evt) {
 
 		let ret = true;
-		let scale;
+		let scale, mxdist;
 
 		try {
 			switch(p_evt.type) {
@@ -240,7 +249,8 @@ class MultiTool extends BaseTool {
 							ret = false;
 						}
 					} else {
-						interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY);
+						mxdist = this.constructor.mouseselMaxdist(p_mapctx);
+						interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist);
 					}
 					this.wheelscale = null;
 					break;

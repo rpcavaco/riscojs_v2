@@ -10,7 +10,8 @@ var SUBKEYS = {
 
 var GlobalConst = {
 
-	DEBUG: "NONE",    // ALL, GEOM, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, VECTLOAD, RISCOFEATS, GRAPHICSEL, none
+	DEBUG: "none",    // ALL, GEOM, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, VECTLOAD, RISCOFEATS, FEATMOUSESEL, none
+	FEATMOUSESEL_MAXDIST_1K: 2, // Max distance of graphic selection with mouse, meters at 1:1000 scale
 	DEBUG_FEAT_LAYER: null,
 	DEBUG_FEAT_ID: 387,
 
@@ -27,12 +28,59 @@ var GlobalConst = {
 	TOLERANCEDIST_RINGCLOSED: 0.1, // Max dist between line endpoints for it to be considered closed ring
 	//MAXLAYERCOUNT: 100,
 	MOUSEWHEEL_THROTTLE: 150,  // millisecs, interval between wheel events must span more than this interval for each event to be listened
-	ENVSPLIT_CFG_DEFAULT: {  // envelope division in chunking requests -- each entry:  display scales up to key value are split n-times horizontally and k-times vertically
+	ENVSPLIT_CFG_DEFAULT: {  // envelope division in chunking requests -- each entry:  display scales up to key value are split at [n,p]: n-times horizontally and p-times vertically
 		1000: [1, 1],
 		2000: [2, 1],
 		3000: [2, 2],
 		4000: [3, 2],
 		9999999999999: [3, 3]
+	},
+
+	FEATMOUSESEL_HIGHLIGHT: {
+		"poly" : { 
+			"fillStyle": "#11fbff7f",
+			"strokeStyle": "#11caff",
+			"lineWidth": 2
+		 },
+		"line" : { 
+			"strokeStyle": "#11fbff",
+			"lineWidth": 2
+		},
+		"point" : { 
+			"fillStyle": "#11fbff7f",
+			"strokeStyle": "#11caff",
+			"lineWidth": 2
+		}
+	},
+
+	DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB: { // Symbolize spatial index features selected on mouse position
+		"poly" : { 
+			"fillStyle": "#ffff007f"
+		 },
+		"line" : { 
+			"strokeStyle": "#ffff00",
+			"lineWidth": 2
+		},
+		"point" : { 
+			"fillStyle": "#ffff007f",
+			"strokeStyle": "#ffff00",
+			"lineWidth": 2
+		}
+	},
+
+	DEBUG_FEATMOUSESEL_SELUNDERMASK_SYMB: { // Symbolize features of found elements, of any layer, under spatial index features selected on mouse position
+		"poly" : { 
+			"fillStyle": "#ff00007f"
+		 },
+		"line" : { 
+			"strokeStyle": "#ff0000",
+			"lineWidth": 2
+		},
+		"point" : { 
+			"fillStyle": "#ff00007f",
+			"strokeStyle": "#ff0000",
+			"lineWidth": 2
+		}
 	},
 
 	getDebug: function(p_dbgkey) {
