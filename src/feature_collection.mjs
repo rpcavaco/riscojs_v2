@@ -215,50 +215,58 @@ export class FeatureCollection {
 			relcfgvar = this.mapctx.cfgvar["layers"]["relations"];
 		}
 
-		for (const rel of relcfgvar) {
+		if (relcfgvar.length > 0) {
 
-			fr_lyk = rel["from"];
-			to_lyk = rel["to"];
+			for (const rel of relcfgvar) {
 
-			if (this.featList[fr_lyk] === undefined) {
-				throw new Error(`relations, no 'from' layer '${fr_lyk}' loaded in current feature collection`);
-			}
+				fr_lyk = rel["from"];
+				to_lyk = rel["to"];
 
-			if (this.featList[to_lyk] === undefined) {
-				throw new Error(`relations, no 'to' layer '${to_lyk}' loaded in current feature collection`);
-			}	
+				if (this.featList[fr_lyk] === undefined) {
+					throw new Error(`relations, no 'from' layer '${fr_lyk}' loaded in current feature collection`);
+				}
+
+				if (this.featList[to_lyk] === undefined) {
+					throw new Error(`relations, no 'to' layer '${to_lyk}' loaded in current feature collection`);
+				}	
+				
+				let ff, tf;
+				//let cnt = 20;
+				for (let idfrom in this.featList[fr_lyk]) {
+
+					ff = this.featList[fr_lyk][idfrom];
+					for (let idto in this.featList[to_lyk]) {
+
+						tf = this.featList[to_lyk][idto];
+						switch(rel["op"]) {
+
+							case "bbtouch":
+								if (bbTouch(ff.bb, tf.bb)) {
+									if (ff["r"] === undefined) {
+										ff["r"] = {};
+									} 
+									if (ff["r"][to_lyk] === undefined) {
+										ff["r"][to_lyk] = [];
+									} 						
+									ff.r[to_lyk].push(idto);
+								}
+								break;
 			
-			let ff, tf;
-			//let cnt = 20;
-			for (let idfrom in this.featList[fr_lyk]) {
-
-				ff = this.featList[fr_lyk][idfrom];
-				for (let idto in this.featList[to_lyk]) {
-
-					tf = this.featList[to_lyk][idto];
-					switch(rel["op"]) {
-
-						case "bbtouch":
-							if (bbTouch(ff.bb, tf.bb)) {
-								if (ff["r"] === undefined) {
-									ff["r"] = {};
-								} 
-								if (ff["r"][to_lyk] === undefined) {
-									ff["r"][to_lyk] = [];
-								} 						
-								ff.r[to_lyk].push(idto);
-							}
-							break;
-		
+						}
+						//console.log("bb:", ff.bb, tf.bb);
 					}
-					//console.log("bb:", ff.bb, tf.bb);
 				}
 			}
+
+			const t1 = new Date().getTime();
+
+			console.info("[INFO] all relations collected in", (t1-t0), "ms")
+
+		} else {
+
+			console.info("[INFO] no relations to collect");
+
 		}
-
-		const t1 = new Date().getTime();
-
-		console.info("[INFO] all relations collected in", (t1-t0), "ms")
 
 	}
 

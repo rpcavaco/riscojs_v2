@@ -80,13 +80,17 @@ export class TOCManager {
 				lyk = layerscfg.lorder[i];
 				lyentry = layerscfg.layers[lyk];
 
-				if (selectable_feat_layer_types.indexOf(lyentry["type"]) >= 0) {
-					relcfgvar.push({
-						"from": "SPATIALIDX_GRID",
-						"to": lyk,
-						"op": "bbtouch"
-					});
-					addedtospidx.push(lyk);
+				if (!lyentry["notmouseselectable"]) {
+
+					if (selectable_feat_layer_types.indexOf(lyentry["type"]) >= 0) {
+						relcfgvar.push({
+							"from": "SPATIALIDX_GRID",
+							"to": lyk,
+							"op": "bbtouch"
+						});
+						addedtospidx.push(lyk);
+					}
+
 				}
 			}
 

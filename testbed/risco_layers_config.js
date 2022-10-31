@@ -1,5 +1,5 @@
 var RISCOJS_LAYERS_CFG = {
-	"lorder": ["ortos_2018", "mancha_constr"], //, "mancha_constr", "mancha_construida", "gratMRK"],
+	"lorder": ["ortos_2018", "mancha_construida"], //, "mancha_constr", "mancha_construida", "gratMRK"],
 	/*"relations": [
 		{
 			"from": "grat_sqrs",

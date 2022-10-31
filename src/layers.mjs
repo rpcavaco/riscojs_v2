@@ -113,6 +113,7 @@ export class Layer {
 	minscale = GlobalConst.MINSCALE;
 	maxscale = Number.MAX_SAFE_INTEGER;
 	defaultvisible = true;
+	notmouseselectable = false;
 
 	// Unconfigurables
 	//   If subclass has a non-null value in one of these fields,
