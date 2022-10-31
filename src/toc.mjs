@@ -1,5 +1,5 @@
 
-
+import {GlobalConst} from './constants.js';
 import {RasterLayer, RemoteVectorLayer} from './layers.mjs';
 import {layerClassAdapter, symbClassAdapter} from './layers_and_symbols_adapter.mjs'
 
@@ -44,27 +44,59 @@ export class TOCManager {
 
 	initLayersFromConfig() {
 
-		let currentLayer = [];
+		const selectable_feat_layer_types = [
+			"ptgrid",	
+			"areagrid",			
+			"ags_qry",
+			"riscofeats"
+		];
+
+		let currentLayer = [], addedtospidx = [];
 		let items;
 
 		const cfgvar = this.mapctx.cfgvar;
+		const layerscfg = cfgvar["layers"];
+		
+		if (layerscfg["relations"] === undefined) {
+			layerscfg["relations"] = [];
+		}
+		let relcfgvar = layerscfg["relations"];
 
 		// mandatory configs whose absence must be provisionally accepted at this stage, and be properly handled further ahead in initialization 
 		const missing_configs_to_letgo = ["layernames"]; 
 
 		this.layers.length = 0;
-		const layerscfg = cfgvar["layers"];
 
-		for (let lyk, i=0; i < layerscfg.lorder.length; i++) {
+		for (let lyentry, lyk, i=0; i <= layerscfg.lorder.length; i++) {
 
-			lyk = layerscfg.lorder[i];
-			if (layerscfg.layers[lyk] !== undefined) {
+			if (i == layerscfg.lorder.length) {
+				
+				// loading spatial grid layer as overlay over all others
+				lyk = "SPATIALIDX_GRID";
+				lyentry = GlobalConst.SPATIALIDX_GRID;
+
+			} else {
+
+				lyk = layerscfg.lorder[i];
+				lyentry = layerscfg.layers[lyk];
+
+				if (selectable_feat_layer_types.indexOf(lyentry["type"]) >= 0) {
+					relcfgvar.push({
+						"from": "SPATIALIDX_GRID",
+						"to": lyk,
+						"op": "bbtouch"
+					});
+					addedtospidx.push(lyk);
+				}
+			}
+
+			if (lyentry !== undefined) {
 					
-				if (layerscfg.layers[lyk]["type"] !== undefined) {
+				if (lyentry["type"] !== undefined) {
 
 					try {
 
-						currentLayer.push(new DynamicLayer(this.mode, layerscfg.layers[lyk]["type"]));
+						currentLayer.push(new DynamicLayer(this.mode, lyentry["type"]));
 
 						// connects feature collection to this layer, if applicable
 						// (if it implements featureLayersMixin)
@@ -73,7 +105,7 @@ export class TOCManager {
 						}
 
 						if (currentLayer.length == 0) {
-							console.error(`TOCManager, layer '${lyk}' type not known: '${layerscfg.layers[lyk]["type"]}'`);
+							console.error(`TOCManager, layer '${lyk}' type not known: '${lyentry["type"]}'`);
 							continue;
 						}
 
@@ -81,24 +113,24 @@ export class TOCManager {
 						
 						if (currentLayer[0]._geomtype != null) {
 							currentLayer[0].geomtype = currentLayer[0]._geomtype;
-							if (layerscfg.layers[lyk]["geomtype"] !== undefined) {
+							if (lyentry["geomtype"] !== undefined) {
 								console.error(`[WARN] layer '${lyk}' 'geomtype' property is not configurable in that layer type`);
 							}
 						} else {
-							if (layerscfg.layers[lyk]["geomtype"] !== undefined) {
-								currentLayer[0].geomtype = layerscfg.layers[lyk]["geomtype"];
+							if (lyentry["geomtype"] !== undefined) {
+								currentLayer[0].geomtype = lyentry["geomtype"];
 							}
 						}
 
-						if (layerscfg.layers[lyk]["fields"] !== undefined) {
-							currentLayer[0].fields = layerscfg.layers[lyk]["fields"];
+						if (lyentry["fields"] !== undefined) {
+							currentLayer[0].fields = lyentry["fields"];
 						}
-						if (layerscfg.layers[lyk]["marker"] !== undefined) {
-							currentLayer[0].marker = layerscfg.layers[lyk]["marker"];
+						if (lyentry["marker"] !== undefined) {
+							currentLayer[0].marker = lyentry["marker"];
 						}
 
-						if (currentLayer[0].oidfldname == null && layerscfg.layers[lyk]["oidfldname"] !== undefined) {
-							currentLayer[0].oidfldname = layerscfg.layers[lyk]["oidfldname"];
+						if (currentLayer[0].oidfldname == null && lyentry["oidfldname"] !== undefined) {
+							currentLayer[0].oidfldname = lyentry["oidfldname"];
 						}
 
 						// if exists oidfldname, addit  to 'fields' string, in case the user hasn't already done it
@@ -140,8 +172,8 @@ export class TOCManager {
 									continue;
 								}
 
-								if (layerscfg.layers[lyk][items[ii]] !== undefined) {
-									scaneables[si][items[ii]] = layerscfg.layers[lyk][items[ii]];
+								if (lyentry[items[ii]] !== undefined) {
+									scaneables[si][items[ii]] = lyentry[items[ii]];
 								} else {
 
 									// item is missing if has no default value
@@ -195,6 +227,10 @@ export class TOCManager {
 			} else {
 				console.error(`TOCManager, no layer with key '${lyk}' found in config.`);
 			}
+		}
+
+		if (addedtospidx.length > 0) {
+			console.info(`[init RISCO] TOCManager, added these to spatial index (mouse selection): ${addedtospidx}`);
 		}
 
 		console.info("[init RISCO] TOCManager, layers init finished");

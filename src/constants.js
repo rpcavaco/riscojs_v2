@@ -83,6 +83,16 @@ var GlobalConst = {
 		}
 	},
 
+	SPATIALIDX_GRID: {
+		"hiddengraphics": true,
+		"spindex": true,
+		"type": "areagrid",
+		"scaledep_separation_1k": 10,
+		"strokeStyle": "white",
+		"fillStyle": "none",
+		"lineWidth": 0.5
+	},	
+
 	getDebug: function(p_dbgkey) {
 		let ret = false, all = false;
 		if (this.DEBUG.toLowerCase() == "all" && !p_dbgkey.toLowerCase().startsWith('diseng')) {

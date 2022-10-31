@@ -1,12 +1,12 @@
 var RISCOJS_LAYERS_CFG = {
-	"lorder": ["ortos_2018", "mancha_construida", "grat_sqrs"], //, "mancha_constr", "mancha_construida", "gratMRK"],
-	"relations": [
+	"lorder": ["ortos_2018", "mancha_constr"], //, "mancha_constr", "mancha_construida", "gratMRK"],
+	/*"relations": [
 		{
 			"from": "grat_sqrs",
 			"to": "mancha_construida",
 			"op": "bbtouch"
 		}
-	],
+	], */
 	"layers": {
 		"grat": {
 			"type": "graticule",
@@ -20,15 +20,6 @@ var RISCOJS_LAYERS_CFG = {
 			"strokeStyle": "white",
 			"lineWidth": 2
 		},	
-		"grat_sqrs": {
-			"hiddengraphics": true,
-			"spindex": true,
-			"type": "areagrid",
-			"scaledep_separation_1k": 10,
-			"strokeStyle": "white",
-			"fillStyle": "none",
-			"lineWidth": 0.5
-		},			
 		"orto2021": {
 			"type": "wms",
 			"reuseurl": true, 

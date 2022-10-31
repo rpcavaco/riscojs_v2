@@ -206,12 +206,12 @@ export class FeatureCollection {
 
 		const t0 = new Date().getTime();
 			
-		console.info("[INFO] collecting relations ...")
 			
 		if (this.mapctx.cfgvar["layers"]["relations"] === undefined) {
-			console.info("[INFO] no relations configured");
+			console.info("[INFO] no feature layer relations configured.");
 			return;
 		} else {
+			console.info("[INFO] collecting relations between feature layers ...")
 			relcfgvar = this.mapctx.cfgvar["layers"]["relations"];
 		}
 

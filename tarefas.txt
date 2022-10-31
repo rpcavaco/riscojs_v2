@@ -22,18 +22,20 @@
 
 - >> - fomatos risco - features (para garantir material de teste vetorial)
 	- OK - poly / line 
-	- points
+	- >> points
 
 - >> - índice espacial
 	- relação entre 'area grid' e
 		- OK - polígonos
+		- >> - pontos
 
 - ? subconfigs 
 - relações
 	- represemtar individuos ou agregar: lugar para as funções de agregação
 
-- passar layer de indice espacial a fixa no código
+- layer de indice espacial
   - OK -grid layer com separação proporcional à escala
+  - >> - passar layer a fixa no código
 
 - validar main configs
 - config highlight no main
