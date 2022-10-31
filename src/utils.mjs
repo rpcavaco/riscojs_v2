@@ -32,3 +32,4 @@ export function getCookie(cname) {
 export function setCookie(p_name, p_value) {
 	document.cookie = `${p_name}=${p_value};  SameSite=None; Secure`;
 }
+

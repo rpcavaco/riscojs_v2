@@ -353,7 +353,7 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 					}
 
 					// verificar campos ATTRS
-					console.log(`[INFO] fetching ${responsejson.fcnt} risco feats on '${that.key}' layer`);
+					console.info(`[INFO] fetching ${responsejson.fcnt} risco feats on '${that.key}' layer`);
 					
 					try {
 					

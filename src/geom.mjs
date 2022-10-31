@@ -215,6 +215,20 @@ function insidePolygon(p_pointlist, p_path_levels, p_ptin) {
 		return inner_ret;
 	}
 
+
+	/*
+	// Avoid collections of one ring in path_levels == 3
+	if (p_path_levels == 3 && p_pointlist.length > 1) { 
+		//let p;
+		console.log("a:", p_pointlist)
+		for (let i=0; i<(p_pointlist.length-1); i++) {
+			if (p_pointlist[i].length == 1 && p_pointlist[i+1].length == 1) {
+				console.log("i:", i, p_pointlist[i].equals(p_pointlist[i+1]));
+			}
+		}
+
+	} */
+
 	switch (p_path_levels) {
 		
 		case 1:
@@ -222,8 +236,7 @@ function insidePolygon(p_pointlist, p_path_levels, p_ptin) {
 			break;
 		
 		case 2:
-			for (let i=0; i<p_pointlist.length; i++) {
-	
+			for (let i=0; i<p_pointlist.length; i++) {	
 				if (i==0) {
 					first_is_ccw = area2(p_pointlist[i]) > 0;  // first may be outer ring only when poly has holes, otherwise is first of n disjoint rings
 					this_is_ccw = first_is_ccw;
@@ -256,20 +269,39 @@ function insidePolygon(p_pointlist, p_path_levels, p_ptin) {
 			break;
 		
 		case 3:
+			//console.log(p_pointlist)
+			//throw new Error("puf!");
 			for (let i=0; i<p_pointlist.length; i++) 
 			{
-				for (let j=0; j<p_pointlist[i].length; j++) 
-				{
-					if (insideTest(p_pointlist[i][j], p_ptin)) {
-						ret = true;
-						//break;
-						console.log("   dentro", i);
+				for (let j=0; j<p_pointlist[i].length; j++) {	
+					if (j==0) {
+						first_is_ccw = area2(p_pointlist[i][j]) > 0;  // first may be outer ring only when poly has holes, otherwise is first of n disjoint rings
+						this_is_ccw = first_is_ccw;
 					} else {
-						console.log("   fora", i);
+						this_is_ccw = area2(p_pointlist[i][j]) > 0;
 					}
-				}
-				if (ret) {
-					break;
+	
+					if (insideTest(p_pointlist[i][j], p_ptin)) {
+						if (j==0) {
+							ret = true;
+						} else {
+							// inside of hole
+							if (this_is_ccw != first_is_ccw) {
+								ret = false;
+								break;
+							} else {
+								ret = true;
+							}
+						}
+	
+						if (GlobalConst.getDebug("GEOM")) {
+							console.log(`[DBG:GEOM] insidePolygon, inside ring ${i},${j}, ccw:${this_is_ccw}`);
+						}
+					} else {
+						if (GlobalConst.getDebug("GEOM")) {
+							console.log(`[DBG:GEOM] insidePolygon, outside ring ${i},${j}, ccw:${this_is_ccw}`);
+						}
+					}
 				}
 			}
 	}
