@@ -8,13 +8,13 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 	
 	canvasKey = 'normal';
 	default_symbol;	
+	fillflag = false;
+	strokeflag = false;
 	_gfctx;  // current graphics context to be always updated at each refreshing / drawing
 
 	grabGf2DCtx(p_mapctx, opt_alt_canvaskey, opt_symbs) {
 
 		let canvaskey;
-		let strokeflag = false;
-		let fillflag = false;
 
 		if (opt_alt_canvaskey) {
 			canvaskey = opt_alt_canvaskey;
@@ -31,7 +31,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 			if (opt_symbs.strokeStyle !== undefined) {
 				this._gfctx.strokeStyle = opt_symbs.strokeStyle;
-				strokeflag = true;
+				this.strokeflag = true;
 			}
 
 			if (opt_symbs.lineWidth !== undefined) {
@@ -40,59 +40,30 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 			if (opt_symbs.fillStyle !== undefined) {
 				this._gfctx.fillStyle = opt_symbs.fillStyle;
-				fillflag = true;
+				this.fillflag = true;
 			}	
 
 		} else {
 
-			switch (this.geomtype) {
-
-				case "poly":
-
-					this._gfctx.fillStyle = this.default_symbol.fillStyle;
-					this._gfctx.strokeStyle = this.default_symbol.strokeStyle;
-					this._gfctx.lineWidth = this.default_symbol.lineWidth;
-
-					fillflag = (this.default_symbol.fillStyle.toLowerCase() != "none");
-					strokeflag = (this.default_symbol.strokeStyle.toLowerCase() != "none");
-
-					break;
-
-				case "line":
-
-					this._gfctx.strokeStyle = this.default_symbol.strokeStyle;
-					this._gfctx.lineWidth = this.default_symbol.lineWidth;
-
-					strokeflag = (this.default_symbol.strokeStyle.toLowerCase() != "none");
-
-					break;
-
-				case "point":
-
-					if (this.marker !== undefined && this.marker != null && this.marker != "none") {
-
-						if (this.default_symbol.strokeStyle !== undefined) {
-							this._gfctx.strokeStyle = this.default_symbol.strokeStyle;
-							strokeflag = true;
-						}
-
-						if (this.default_symbol.lineWidth !== undefined) {
-							this._gfctx.lineWidth = this.default_symbol.lineWidth;
-						}	
-
-						if (this.default_symbol.fillStyle !== undefined) {
-							this._gfctx.fillStyle = this.default_symbol.fillStyle;
-							fillflag = true;
-						}									
-					}
-
+			if (this.default_symbol.strokeStyle !== undefined && this.default_symbol.strokeStyle.toLowerCase() !== "none") {
+				this._gfctx.strokeStyle = this.default_symbol.strokeStyle;
+				this.strokeflag = true;
 			}
+
+			if (this.default_symbol.lineWidth !== undefined && this.default_symbol.strokeStyle.toLowerCase() !== "none") {
+				this._gfctx.lineWidth = this.default_symbol.lineWidth;
+			}	
+
+			if (this.default_symbol.fillStyle !== undefined && this.default_symbol.fillStyle.toLowerCase() !== "none") {
+				this._gfctx.fillStyle = this.default_symbol.fillStyle;
+				this.fillflag = true;
+			}									
 
 		}
 
 		//console.log(">>", strokeflag, fillflag);
 
-		return [true, strokeflag, fillflag];
+		return true;
 	}
 
 	// must this.grabGf2DCtx first !	
@@ -150,7 +121,6 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 					}
 
 					ptfim = pp_root[pti].slice(0);
-
 					p_mapctxt.transformmgr.getRenderingCoordsPt(pp_root[pti], pt);
 
 					if (pti == 0){
@@ -187,10 +157,14 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 			if (ret) {
 
-				this._gfctx.stroke();
+				if (this.strokeflag) {
+					this._gfctx.stroke();
+				}
 
-				if (this.geomtype == "poly") {
-					this._gfctx.fill();
+				if (["poly", "point"].indexOf(this.geomtype) >= 0) {
+					if (this.fillflag) {
+						this._gfctx.fill();
+					}
 				}
 			}
 
@@ -204,9 +178,9 @@ export class CanvasGraticuleLayer extends canvasVectorMethodsMixin(GraticuleLaye
 
 	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
 
-		const [ok, dostroke, dofill] = this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs);
+		const ok = this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs);
 
-		if (ok && !dostroke && !dofill) {
+		if (ok && !this.strokeflag && !this.fillflag) {
 			throw new Error(`Layer ${this.key}, no 'dostroke' and no 'dofill' flags, nothin to draw`);
 		}
 
@@ -239,10 +213,10 @@ export class CanvasPointGridLayer extends canvasVectorMethodsMixin(PointGridLaye
 
 	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
 
-		const [ok, dostroke, dofill] = this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs);
+		const ok = this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs);
 
-		if (ok && !dostroke && !dofill) {
-			throw new Error(`Layer ${this.key}, no 'dostroke' and no 'dofill' flags, nothin to draw`);
+		if (ok && !this.strokeflag && !this.fillflag) {
+			throw new Error(`Layer ${this.key}, no 'stroke' and no 'fill' flags, nothin to draw`);
 		}
 
 		if (ok) {
@@ -265,10 +239,10 @@ export class CanvasAreaGridLayer extends canvasVectorMethodsMixin(AreaGridLayer)
 
 	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
 
-		const [ok, dostroke, dofill] = this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs);
+		const ok = this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs);
 
-		if (ok && !dostroke && !dofill) {
-			throw new Error(`Layer ${this.key}, no 'dostroke' and no 'dofill' flags, nothin to draw`);
+		if (ok && !this.strokeflag && !this.fillflag) {
+			throw new Error(`Layer ${this.key}, no 'stroke' and no 'fill' flags, nothin to draw`);
 		}
 
 		if (ok) {

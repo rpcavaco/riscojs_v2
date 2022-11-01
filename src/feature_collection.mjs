@@ -227,7 +227,7 @@ export class FeatureCollection {
 				}
 
 				if (this.featList[to_lyk] === undefined) {
-					throw new Error(`relations, no 'to' layer '${to_lyk}' loaded in current feature collection`);
+					console.info(`[INFO] relations, no 'to' layer '${to_lyk}' loaded in current feature collection`);
 				}	
 				
 				let ff, tf;
