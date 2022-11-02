@@ -80,6 +80,8 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 	// must this.grabGf2DCtx first !
 	drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id) {
 
+		// console.log("pl:", p_path_levels);
+
 		if (this._gfctx == null) {
 			throw new Error(`graphics context was not previously grabbed for layer '${this.key}'`);
 		}
@@ -190,10 +192,10 @@ export class CanvasGraticuleLayer extends canvasVectorMethodsMixin(GraticuleLaye
 				this._gfctx.moveTo(p_coords[0], p_coords[1]);
 				this._gfctx.lineTo(p_coords[2], p_coords[3]);
 
-				if (dostroke) {
+				if (this.strokeflag) {
 					this._gfctx.stroke();
 				};
-				if (dofill) {
+				if (this.fillflag) {
 					this._gfctx.fill();
 				};
 
@@ -261,10 +263,10 @@ export class CanvasAreaGridLayer extends canvasVectorMethodsMixin(AreaGridLayer)
 					}
 					cnt++;
 				}
-				if (dostroke) {
+				if (this.strokeflag) {
 					this._gfctx.stroke();
 				};
-				if (dofill) {
+				if (this.fillflag) {
 					this._gfctx.fill();
 				};
 			} catch(e) {

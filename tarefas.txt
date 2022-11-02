@@ -18,6 +18,10 @@
 - OK - recolher attribs dos formatos vetoriais em FeatureCollection
 - OK - config highlight nas constantes
 
+- dependências de escala
+	- visibilidade
+	- simbologia
+
 - OK - features AGS - primeira visão com polígonos
 	- faltam linhas e pontos
 
@@ -49,7 +53,7 @@
 
 - WFS xml
 
-- scaledep symbology
+
 - layered symbs
 
 - flatgeobuf
