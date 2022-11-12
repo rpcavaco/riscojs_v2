@@ -299,12 +299,16 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 			.then(response => response.json())
 			.then(
 				function(responsejson) {
+					if (responsejson.stats == null) {
+						console.warn(`[WARN] null stats on '${that.key}' get stats request`);
+					} else {
+						that.refresh(p_mapctx, {
+							"reqid": responsejson.reqid,
+							"nchunks": responsejson.stats[that.key]['nchunks'],
+							"nvert": responsejson.stats[that.key]['nvert']
+						}, true);
+					}
 
-					that.refresh(p_mapctx, {
-						"reqid": responsejson.reqid,
-						"nchunks": responsejson.stats[that.key]['nchunks'],
-						"nvert": responsejson.stats[that.key]['nvert']
-					})
 
 				}
 			);	
@@ -345,6 +349,23 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 			})
 			.then(
 				function(responsejson) {
+
+					let tmpchkid;
+					if (that.isCanceled()) {
+
+						console.log(`${that.key} was canceled , stop loading ... `);
+
+						if (that.featchunksloading[chunk_id] !== undefined) {
+							delete that.featchunksloading[chunk_id];
+						}
+						for (tmpchkid in that.featchunksloading[chunk_id]) {
+							if (this.featchunksloading.hasOwnProperty(tmpchkid)) {
+								delete that.featchunksloading[tmpchkid];
+							}
+						}
+						that._drawingcanceled = false;
+						return;
+					}
 
 					// chunk has become obsolete and was deleted from featchunksloading
 					// by new drawing action
@@ -408,6 +429,7 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 								if (GlobalConst.getDebug("VECTLOAD")) {
 									console.log(`[DBG:VECTLOAD] Finished loading'${that.key}'`);
 								}
+								that._drawingcanceled = false; 
 								p_mapctxt.tocmgr.signalVectorLoadFinished(that.key);
 							}
 			

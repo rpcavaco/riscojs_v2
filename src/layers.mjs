@@ -162,13 +162,27 @@ export class Layer {
 		return this._key;
 	}
 
-	onCancel() {
-		// to be extended
-		// At least must end with:
+	isCanceled() {
+		let ret =  this._drawingcanceled;
+		return ret;
+	}
+
+
+	resetCanceled() {
 		this._drawingcanceled = false;
 	}
 
-	refresh(p_mapctx, p_prep_data) {
+	doCancel() {
+		console.info(`[INFO] Layer ${this.key} was canceled`);
+		this._drawingcanceled = true;
+	}
+
+	onCancel() {
+		// to be extended
+	}
+
+	refresh(p_mapctx) {
+
 
 		// to be extended
 		
@@ -183,24 +197,28 @@ const vectorLayersMixin = (Base) => class extends Base {
 
 	refresh(p_mapctx, p_prep_data) {
 
+		if (this.isCanceled()) {
+			return true;
+		}
+
 		const [terrain_env, scr_env, dims] = genSingleEnv(p_mapctx);
 
 		if (!this.defaultvisible) {
 			if (GlobalConst.getDebug("LAYERS")) {
 				console.log(`[DBG:LAYERS] Vector layer '${this.key}' is not default visible`);
 			}
-			return;
+			return false;
 		}
 		if (!this.checkScaleVisibility(p_mapctx.getScale())) {
 			if (GlobalConst.getDebug("LAYERS")) {
 				console.log(`[DBG:LAYERS] Vector layer '${this.key}' is out of scale visibility for 1:${p_mapctx.getScale()}`);
 			}
-			return;
+			return false;
 		}
 		
 		if (!this.isInited()) {
 			console.log(`[WARN:LAYERS] Vector layer '${this.key}' is not inited`);
-			return;
+			return false;
 		}		
 
 		let cancel = false;
@@ -212,8 +230,7 @@ const vectorLayersMixin = (Base) => class extends Base {
 
 			if (this._drawingcanceled) {
 				this.onCancel();
-				cancel = true;
-			
+				cancel = true;		
 			} else  {
 
 				// firstrec_order is zero - based
@@ -249,8 +266,10 @@ const vectorLayersMixin = (Base) => class extends Base {
 }
 
 const featureLayersMixin = (Base) => class extends Base {
+
 	currFeatures;
 	fields = "";
+
 	setCurrFeatures(p_curr_feats, p_layer_key, p_layerobj) {
 		this.currFeatures = p_curr_feats;
 		this.currFeatures.setLayer(p_layer_key, p_layerobj);
@@ -308,6 +327,11 @@ export class VectorLayer extends featureLayersMixin(vectorLayersMixin(Layer)) {
 export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Layer)) {
 
 	featchunksloading = {};
+	_prefreshing = false;
+
+	isLoading() {
+		return this._prefreshing || (Object.keys(this.featchunksloading) > 0);
+	}
 
 	constructor() {
 		super();
@@ -319,6 +343,10 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 	}	
 
 	preRefresh(p_mapctx) {
+
+		if (this.isCanceled() || this.isLoading()) {
+			return false;
+		}
 
 		if (!this.defaultvisible) {
 			if (GlobalConst.getDebug("LAYERS")) {
@@ -338,6 +366,8 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 			console.log(`[WARN:LAYERS] Remote vector layer '${this.key}' is not inited`);
 			return false;
 		}
+		this._prefreshing = true;
+
 
 		return true;
 	}	
@@ -351,6 +381,12 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 	// overrides vectorLayersMixin refresh
 	// main diff: layeritems should not be a generator
 	refresh(p_mapctx, p_prep_data) {
+
+		this._prefreshing = false;
+
+		if (this.isCanceled()) {		
+			return true;
+		}
 
 		const [terrain_env, scr_env, dims] = genSingleEnv(p_mapctx);
 
@@ -453,24 +489,28 @@ export class RasterLayer extends Layer {
 
 	}	
 
-	refresh(p_mapctx, p_prep_data) {
+	refresh(p_mapctx) {
+
+		if (this.isCanceled()) {
+			return true;
+		}
 
 		if (!this.defaultvisible) {
 			if (GlobalConst.getDebug("LAYERS")) {
 				console.log(`[DBG:LAYERS] Raster layer '${this.key}' is not default visible`);
 			}
-			return;
+			return false;
 		}
 		if (!this.checkScaleVisibility(p_mapctx.getScale())) {
 			if (GlobalConst.getDebug("LAYERS")) {
 				console.log(`[DBG:LAYERS] Raster layer '${this.key}' is out of scale visibility for 1:${p_mapctx.getScale()}`);
 			}
-			return;
+			return false;
 		}
 		
 		if (!this.isInited()) {
 			console.log(`[WARN:LAYERS] Raster layer '${this.key}' is not inited`);
-			return;
+			return false;
 		}
 
 		let cancel = false;

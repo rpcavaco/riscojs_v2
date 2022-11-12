@@ -244,8 +244,6 @@ export class TOCManager {
 
 		console.info(`[INFO] attempting to refresh ${this.layers.length} layers at scale 1:${p_scaleval}`);
 		
-		let gfctx;
-		
 		const ckeys = new Set();
 		for (let li=0; li < this.layers.length; li++) {
 			ckeys.add(this.layers[li].canvasKey);
@@ -273,7 +271,7 @@ export class TOCManager {
 		// Drawing first the single raster, draw in self canvas, can render at anytime
 		let canceled;
 		if (the_raster_layer_i >= 0) {
-			canceled = this.layers[the_raster_layer_i].refresh(this.mapctx, the_raster_layer_i);
+			canceled = this.layers[the_raster_layer_i].refresh(this.mapctx);
 		}
 
 		if (canceled) {
@@ -281,11 +279,58 @@ export class TOCManager {
 			return;
 		}
 
-		for (let li=0; li < this.layers.length; li++) {
-			if (!(this.layers[li] instanceof RasterLayer)) {
-				this.drawlist.push(li);
+		function fillDrawlist(pp_this) {
+
+			let ret = true, isloading = false;
+			
+			for (let li=0; li < pp_this.layers.length; li++) {
+				if (!(pp_this.layers[li] instanceof RasterLayer)) {
+
+					if (pp_this.layers[li].isLoading !== undefined) {
+						isloading = pp_this.layers[li].isLoading();
+					}
+
+					if (isloading) {
+						pp_this.layers[li].doCancel()
+						if (GlobalConst.getDebug("VECTLOAD")) {
+							console.log("[DBG:VECTLOAD] fillDrawlist, ", pp_this.layers[li].key, " is loading, canceling and out ...");
+						}
+						ret = false;
+						break;
+					} else  {
+						pp_this.layers[li].resetCanceled();
+					}
+
+					if (GlobalConst.getDebug("VECTLOAD")) {
+						console.log("[DBG:VECTLOAD] fillDrawlist, added to dlist:", pp_this.layers[li].key, "loading:", isloading, "canceled:", pp_this.layers[li].isCanceled(), pp_this.layers[li]._drawingcanceled);
+					}
+					pp_this.drawlist.push(li);
+				}
+			}	
+
+			return ret;
+		}
+
+		/*
+		let cnt = 6;
+		(function loop(p_this, p_cnt) {
+			p_cnt--;
+			if (!fillDrawlist(p_this) && p_cnt >= 0) {
+				setTimeout(function() {
+					if (GlobalConst.getDebug("VECTLOAD")) {
+						console.log("[DBG:VECTLOAD] prev fillDrawlist failed, new attempt ...");
+					}
+					loop(p_this, p_cnt);
+				}, 20);
 			}
-		}	
+
+		})(this, cnt); */
+
+		fillDrawlist(this);
+
+		if (GlobalConst.getDebug("VECTLOAD")) {
+			console.log("[DBG:VECTLOAD] refresh final, initial drawlist:", this.drawlist);
+		}
 
 		this.nextdraw();
 	}
@@ -295,6 +340,7 @@ export class TOCManager {
 
 		let canceled;
 		const bounds = [];
+		let isloading = false;
 
 		if (this.drawlist.length < 1) {
 
@@ -307,13 +353,40 @@ export class TOCManager {
 		const li = this.drawlist[0];
 		try {
 
+			isloading = false;
+			if (this.layers[li].isLoading !== undefined) {
+				isloading = this.layers[li].isLoading();
+			}
+	
+			if (isloading) {
+				this.layers[li].doCancel();
+				return;
+			}
+
 			if (this.layers[li] instanceof RemoteVectorLayer) {
-				if (this.layers[li].preRefresh(this.mapctx)) {
-					this.mapctx.getMapBounds(bounds);			
-					this.layers[li].getStats(this.mapctx, bounds);
+
+				try {
+					if (GlobalConst.getDebug("VECTLOAD")) {
+						console.log("[DBG:VECTLOAD] nextdraw, before pre-refreshing", li, this.layers[li].key, "loading:", this.layers[li].isLoading());
+					}
+					if (this.layers[li].preRefresh(this.mapctx)) {
+						if (GlobalConst.getDebug("VECTLOAD")) {
+							console.log("[DBG:VECTLOAD] nextdraw, after pre-refreshing", li, this.layers[li].key, "loading:", this.layers[li].isLoading());
+						}
+						this.mapctx.getMapBounds(bounds);			
+						this.layers[li].getStats(this.mapctx, bounds);
+					}
+				} finally {
+					this._prefrefresh = false;
 				}
 			} else {
-				canceled = this.layers[li].refresh(this.mapctx);
+
+				// TODO 
+				if (GlobalConst.getDebug("VECTLOAD")) {
+					console.log("[DBG:VECTLOAD] nextdraw, refreshing", li, this.layers[li].key);
+				}
+		
+				canceled = this.layers[li].refresh(this.mapctx, null, false);
 				if (canceled) {
 					this.drawlist.length = 0;
 				}
@@ -325,7 +398,19 @@ export class TOCManager {
 	}
 
 	signalVectorLoadFinished(p_finished_key) {
+
+
 		const li = 0;
+
+		let dlistnames = [];
+
+		for (let di of this.drawlist) {
+			dlistnames.push(this.layers[di].key);
+		}
+
+		if (GlobalConst.getDebug("VECTLOAD")) {
+			console.log(`[DBG:VECTLOAD] finished:${p_finished_key}, dlistnames:${dlistnames}`);
+		}
 
 		if (this.drawlist.length == 0) {
 			return;
@@ -333,14 +418,23 @@ export class TOCManager {
 
 		try {
 			if (this.layers[this.drawlist[li]].key != p_finished_key) {
-				throw new Error(`Layer just finished '${p_finished_key}' is not in drawing list drawing position (zero), occupied by '${this.layers[this.drawlist[li]].key}'`)
+				throw new Error(`Layer just finished, '${p_finished_key}', is not in drawing list drawing position (zero), occupied by '${this.layers[this.drawlist[li]].key}'`)
 			}
 		} catch(e) {
-			console.log("li:", li, ", this.drawlist[li]:", this.drawlist[li], ", this.drawlist.len:", this.drawlist.length);
-			throw e;
+			console.warn(e.message);
+			if (GlobalConst.getDebug("VECTLOAD")) {
+				console.log("[DBG:VECTLOAD] ... error details - li:", li, ", this.drawlist[li]:", this.drawlist[li], ", this.drawlist.len:", this.drawlist.length, this.drawlist);
+			}
+			return;
 		}
 
 		this.drawlist.shift();
+
+		dlistnames.length = 0;
+		for (let di of this.drawlist) {
+			dlistnames.push(this.layers[di].key);
+		}
+
 		this.nextdraw();
 	}
 }

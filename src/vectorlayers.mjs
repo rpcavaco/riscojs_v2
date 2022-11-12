@@ -112,7 +112,7 @@ export class PointGridLayer extends SimpleVectorLayer {
 				x = x + sep;
 				p_mapctxt.transformmgr.getRenderingCoordsPt([x, y], out_pt);
 				// item_coords, item_attrs, item_path_levels
-				yield [out_pt.slice(0), null, 1];
+				yield [out_pt.slice(0), null, null];
 			}
 		}
 
@@ -629,7 +629,7 @@ export class AGSQryLayer extends RemoteVectorLayer {
 				function(responsejson) {
 					that.refresh(p_mapctx, {
 						"count": responsejson.count
-					});					
+					}, true);					
 				}
 			);	
 	}
@@ -710,6 +710,23 @@ export class AGSQryLayer extends RemoteVectorLayer {
 			.then(
 				function(responsejson) {
 
+					let tmpchkid;
+					if (that.isCanceled()) {
+
+						console.log(`${that.key} was canceled , stop loading ... `);
+
+						if (that.featchunksloading[chunk_id] !== undefined) {
+							delete that.featchunksloading[chunk_id];
+						}
+						for (tmpchkid in that.featchunksloading[chunk_id]) {
+							if (this.featchunksloading.hasOwnProperty(tmpchkid)) {
+								delete that.featchunksloading[tmpchkid];
+							}
+						}
+						that._drawingcanceled = false;
+						return;
+					}
+										
 					// chunk has become obsolete and was deleted from featchunksloading
 					// by new drawing action
 					if (that.featchunksloading[chunk_id] === undefined) {
@@ -760,6 +777,7 @@ export class AGSQryLayer extends RemoteVectorLayer {
 								if (GlobalConst.getDebug("VECTLOAD")) {
 									console.log(`[DBG:VECTLOAD] Finished loading'${that.key}'`);
 								}
+
 								p_mapctxt.tocmgr.signalVectorLoadFinished(that.key);
 							}
 			
