@@ -113,7 +113,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 						if (!started) {
 
 							started = true;
-							if (GlobalConst.DEBUG_FEAT_LAYER == pp_this.key && GlobalConst.DEBUG_FEAT_ID == pp_feat_id) {
+							if (GlobalConst.DEBUG_CANVASVECTOR_PATHCLOSING == pp_this.key && GlobalConst.DEBUG_CANVASVECTOR_PATHCLOSING_FEATID == pp_feat_id) {
 								console.log(`[DEBUG_FEAT] begin path on ${pp_feat_id}`)
 							}
 		
@@ -138,7 +138,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 				if (GlobalConst.TOLERANCEDIST_RINGCLOSED >= dist2D(ptini, ptfim)) {
 
-					if (GlobalConst.DEBUG_FEAT_LAYER == pp_this.key && GlobalConst.DEBUG_FEAT_ID == pp_feat_id) {
+					if (GlobalConst.DEBUG_CANVASVECTOR_PATHCLOSING == pp_this.key && GlobalConst.DEBUG_CANVASVECTOR_PATHCLOSING_FEATID == pp_feat_id) {
 						console.log(`[DEBUG_FEAT] closing path on ${pp_feat_id}`)
 					}
 

@@ -63,6 +63,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, opt_maxdist) {
 	if (foundly) {
 
 		let sclval = p_mapctx.getScale();
+		let minarea = sclval / 100.0;
 		let sep = foundly.separation(sclval);
 
 		p_mapctx.transformmgr.getTerrainPt([p_scrx, p_scry], terr_pt);
@@ -147,14 +148,14 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, opt_maxdist) {
 				if (related_ids[from_lyrk][to_lyrk].size > 0) {
 					for (let r of related_ids[from_lyrk][to_lyrk]) {
 
-						tmpd = p_mapctx.currFeatures.distanceTo(terr_pt, to_lyrk, r);
+						tmpd = p_mapctx.currFeatures.distanceTo(terr_pt, to_lyrk, r, minarea);
 						if (tmpd < dist) {
 							nearestlyk = to_lyrk;
 							nearestid = r;
 							dist = tmpd;
 						}
 						if (GlobalConst.getDebug("FEATMOUSESEL")) {
-							console.log(`[DBG:FEATMOUSESEL] interactWithSpindexLayer ... distance ${tmpd} (max: ${opt_maxdist}) to id:${r}`);
+							console.log(`[DBG:FEATMOUSESEL] interact with lyr:${to_lyrk}, dist:${tmpd} (max: ${opt_maxdist}) to id:${r}`);
 							const symb = GlobalConst.DEBUG_FEATMOUSESEL_SELUNDERMASK_SYMB[foundly.geomtype];
 							p_mapctx.currFeatures.draw(p_mapctx, null, null, null, to_lyrk, r, 'temporary', symb);
 						}
@@ -166,7 +167,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, opt_maxdist) {
 		if (nearestid >= 0) {
 
 			if (GlobalConst.getDebug("FEATMOUSESEL")) {
-				console.log(`[DBG:FEATMOUSESEL] interactWithSpindexLayer, NEAREST distance ${dist} (max: ${opt_maxdist}) to id:${nearestid}`);
+				console.log(`[DBG:FEATMOUSESEL] interact with NEAREST: ${nearestlyk}, dist:${dist} (max: ${opt_maxdist}) to id:${nearestid}`);
 			}
 
 			if (opt_maxdist == null || opt_maxdist >=  dist) {

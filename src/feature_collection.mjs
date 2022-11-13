@@ -1,4 +1,5 @@
-import {distanceToPoly, bbTouch} from './geom.mjs'
+import {GlobalConst} from './constants.js';
+import {distanceToPoly, distanceToLine, dist2D, bbTouch} from './geom.mjs'
 import {Layer} from './layers.mjs'
 
 export class FeatureCollection {
@@ -176,26 +177,42 @@ export class FeatureCollection {
 		return ret;
 	}
 
-	distanceTo(p_from_pt, p_layerkey, opt_featid) {
+	distanceTo(p_from_pt, p_layerkey, p_featid, p_minarea) {
 
-		let ret = -1, feat = this.featList[p_layerkey][opt_featid];
+		let ret = -1, feat = this.featList[p_layerkey][p_featid];
 		if (feat == null) {
-			throw new Error(`layer '${p_layerkey}' no feature for id ${opt_featid}`);
+			throw new Error(`layer '${p_layerkey}' no feature for id ${p_featid}`);
 		}
-		
+
+		let dodebug = false;
+		if (GlobalConst.DEBUG_FEATURE_DISTANCETO && GlobalConst.DEBUG_FEATURE_DISTANCETO_FEATID == p_featid) {
+			dodebug = true;
+		}
+
 		switch(feat.gt) {
 
 			case "poly":
-				ret = distanceToPoly(feat.g, feat.l, p_from_pt, false, opt_featid);
-				//throw new Error("PAF");
+				ret = distanceToPoly(feat.g, feat.l, p_from_pt, p_minarea, dodebug, p_featid);
 				break;
 
 			case "line":
+				ret = distanceToLine(feat.g, feat.l, p_from_pt, p_minarea, dodebug); 
 				break;
 				
 			case "point":
-				break;					
+				ret = dist2D(feat.g, p_from_pt);
+				if (dodebug) {
+					
+				}
+				break;		
+				
+			default:
+				throw new Error(`unknown feature geom type: ${feat.gt}`)
 		}
+
+		/*if (GlobalConst.getDebug("FEATMOUSESEL")) {
+			console.log(`[DBG:FEATMOUSESEL] layer '${p_layerkey}', feature id ${p_featid}, dist:${ret}`);
+		}*/
 
 		return ret;
 	}

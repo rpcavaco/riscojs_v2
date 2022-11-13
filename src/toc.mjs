@@ -312,6 +312,13 @@ export class TOCManager {
 		}
 
 		/*
+		*   In case filldrawlist would bre relaunched after failing.
+		* 
+		* 	Not needed, failing occurs in the middle a cascade of succesive refreshes, 
+		*    another following request should achieve a correct filldrawlist execution.
+		*   Relaunching fillings creates real havoc, worst than a rare eventual catastrophic failure of
+		*    this refresh process.
+
 		let cnt = 6;
 		(function loop(p_this, p_cnt) {
 			p_cnt--;
@@ -381,7 +388,6 @@ export class TOCManager {
 				}
 			} else {
 
-				// TODO 
 				if (GlobalConst.getDebug("VECTLOAD")) {
 					console.log("[DBG:VECTLOAD] nextdraw, refreshing", li, this.layers[li].key);
 				}

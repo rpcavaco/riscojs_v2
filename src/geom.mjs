@@ -79,33 +79,43 @@ function area2(p_pointlst) {
 	
 }
 
-function isPointOnSegment(p_ptseg1, p_ptseg2, p_ptin) {
-	let minval = 0.0001;		
-	return (
+function isPointOnSegment(p_ptseg1, p_ptseg2, p_ptin, p_minarea, opt_dodebug) {
+	//let minval = 0.0001;		
+	const partA = 
 		p_ptseg1[0] != p_ptseg2[0] &&
 			(p_ptseg1[0] <= p_ptin[0] && p_ptin[0] <= p_ptseg2[0] || p_ptseg2[0] <= p_ptin[0] && p_ptin[0] <= p_ptseg1[0]) ||
 		p_ptseg1[0] == p_ptseg2[0] && 
 			(p_ptseg1[1] <= p_ptin[1] && p_ptin[1] <= p_ptseg2[1] || p_ptseg2[1] <= p_ptin[1] && p_ptin[1] <= p_ptseg1[1])
-	) && Math.abs(area2_3p(p_ptseg1, p_ptseg2, p_ptin)) < minval;		
+	const absarea = Math.abs(area2_3p(p_ptseg1, p_ptseg2, p_ptin));
+
+	if (opt_dodebug)
+		console.log("ipos:", partA, absarea, "<", p_minarea);
+	
+	return partA && absarea < p_minarea;		
 }
 
-function projectPointOnSegment(p_ptseg1, p_ptseg2, p_ptin, out_projpt) {
+function projectPointOnSegment(p_ptseg1, p_ptseg2, p_ptin, p_minarea, out_projpt, opt_dodebug) {
 
 	out_projpt.length = 2;
 
 	//console.log(" pos >"+p_ptseg1+" "+p_ptseg2+" "+JSON.stringify(p_ptin));
 	
-	let d1, d2,dx = p_ptseg2[0] * 1.0 - p_ptseg1[0] * 1.0;
-	let dy = p_ptseg2[1] * 1.0 - p_ptseg1[1] * 1.0;
+	let d1, d2,dx = p_ptseg2[0] - p_ptseg1[0];
+	let dy = p_ptseg2[1] - p_ptseg1[1];
 	let len2 = (dx * dx) + (dy * dy);
 	let inprod = dx * (p_ptin[0] - p_ptseg1[0]) + dy * (p_ptin[1] - p_ptseg1[1]);
 	
-	//console.log("dx:"+dx+", dy:"+dy+", inprod:"+inprod+", len2:"+len2);
+	if (opt_dodebug)
+		console.log("[DBG:DISTANCETO] ppos dx:"+dx+", dy:"+dy+", inprod:"+inprod+", len2:"+len2+ ", rdx:"+ (inprod * (dx/len2)));
 	
 	out_projpt[0] = p_ptseg1[0] + (inprod * (dx/len2));
 	out_projpt[1] = p_ptseg1[1] + (inprod * (dy/len2));
 	
-	if (!isPointOnSegment(p_ptseg1, p_ptseg2, p_ptin)) {
+	if (!isPointOnSegment(p_ptseg1, p_ptseg2, p_ptin, p_minarea, opt_dodebug)) {
+
+		if (opt_dodebug)
+			console.log("not on seg");
+
 		d1 = distSquared2D(p_ptseg1, p_ptin);
 		d2 = distSquared2D(p_ptseg2, p_ptin);
 		if (d1 <= d2) {
@@ -119,7 +129,7 @@ function projectPointOnSegment(p_ptseg1, p_ptseg2, p_ptin, out_projpt) {
 	
 }
 
-function projectPointOnLine(p_pointlst, p_ptin, out_projpt, opt_debug) {
+function projectPointOnLine(p_pointlst, p_ptin, p_minarea, out_projpt, opt_debug) {
 
 	let p1, p2, dist2, mindist=9999999, tmppt=[];
 	out_projpt.length = 2;
@@ -127,37 +137,38 @@ function projectPointOnLine(p_pointlst, p_ptin, out_projpt, opt_debug) {
 	for (let i=0; i<(p_pointlst.length-1); i++ ) {
 		p1 = p_pointlst[i];
 		p2 = p_pointlst[i+1];
-		projectPointOnSegment(p1, p2, p_ptin, tmppt);
+		projectPointOnSegment(p1, p2, p_ptin, p_minarea, tmppt, opt_debug);
 		dist2 = distSquared2D(p_ptin, tmppt);
-		if (opt_debug) {
-			console.log("mindist:"+mindist+", dist2:"+dist2+" ptin:"+JSON.stringify(p_ptin)+" tmppt:"+JSON.stringify(tmppt)+" p1:"+JSON.stringify(p1)+" p2:"+JSON.stringify(p2));
-		}
 		if (dist2 < mindist) {
 			mindist = dist2;
 			out_projpt[0] = tmppt[0];
 			out_projpt[1] = tmppt[1];
 		}
+		if (opt_debug) {
+			console.log("[DBG:DISTANCETO]",i,"mindist:",mindist,"dist2:",dist2," ptin:",p_ptin," tmppt:",tmppt,"p1:",p1,"p2:",p2);
+		}
+
 	}
 	
 	return mindist;
 }
 
-export function distanceToLine(p_pointlist, p_path_levels, p_ptin, opt_debug) {
+export function distanceToLine(p_pointlist, p_path_levels, p_ptin, p_minarea, opt_debug) {
 	let d, ret = 0, prj=[], prjd=0;
 
 	switch (p_path_levels) {
 
 		case 1:
-			projectPointOnLine(p_pointlist, p_ptin, prj);
+			projectPointOnLine(p_pointlist, p_ptin, p_minarea, prj, opt_debug);
 			ret = dist2D(p_ptin, prj);
 			break;
 		
 		case 2:
 			for (let i=0; i<p_pointlist.length; i++) {
-				prjd = projectPointOnLine(p_pointlist[i], p_ptin, prj, opt_debug);
+				prjd = projectPointOnLine(p_pointlist[i], p_ptin, p_minarea, prj, opt_debug);
 				d = dist2D(p_ptin, prj);
 				if (opt_debug) {
-					console.log("i:"+i+", pt:"+JSON.stringify(p_ptin)+", prj:"+JSON.stringify(prj)+" pd:"+prjd+" d2:"+Math.pow(d,2));
+					console.log("[DBG:DISTANCETO] i:"+i+", pt:"+JSON.stringify(p_ptin)+", prj:"+JSON.stringify(prj)+" pd:"+prjd+" d2:"+Math.pow(d,2));
 				}
 				if (i==0) {
 					ret = d;
@@ -174,7 +185,7 @@ export function distanceToLine(p_pointlist, p_path_levels, p_ptin, opt_debug) {
 			{
 				for (let i=0; i<p_pointlist[j].length; i++) 
 				{
-					projectPointOnLine(p_pointlist[j][i], p_ptin, prj);
+					projectPointOnLine(p_pointlist[j][i], p_ptin, p_minarea, prj);
 					d = dist2D(p_ptin, prj);
 					if (i==0) {
 						ret = d;
@@ -309,18 +320,18 @@ function insidePolygon(p_pointlist, p_path_levels, p_ptin) {
 	return ret;
 }
 
-export function distanceToPoly(p_pointlist, p_path_levels, p_ptin, opt_debug, id) {
+export function distanceToPoly(p_pointlist, p_path_levels, p_ptin, p_minarea, opt_debug, opt_id) {
 	
 	let ret = 0.0;
 	
 	if (!insidePolygon(p_pointlist, p_path_levels, p_ptin) ) {
 		if (GlobalConst.getDebug("GEOM")) {
-			console.log(`[DBG:GEOM] distanceToPoly, outside id: ${id}`);
+			console.log(`[DBG:GEOM] distanceToPoly, outside id: ${opt_id}`);
 		}
-		ret = distanceToLine(p_pointlist, p_path_levels, p_ptin, opt_debug);
+		ret = distanceToLine(p_pointlist, p_path_levels, p_ptin, p_minarea, opt_debug);
 	} else {
 		if (GlobalConst.getDebug("GEOM")) {
-			console.log(`[DBG:GEOM] distanceToPoly, inside id: ${id}`);
+			console.log(`[DBG:GEOM] distanceToPoly, inside id: ${opt_id}`);
 		}
 	}
 	

@@ -12,8 +12,7 @@ var GlobalConst = {
 
 	DEBUG: "none",    // ALL, GEOM, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, VECTLOAD, RISCOFEATS, FEATMOUSESEL, none
 	FEATMOUSESEL_MAXDIST_1K: 2, // Max distance of graphic selection with mouse, meters at 1:1000 scale
-	DEBUG_FEAT_LAYER: null,
-	DEBUG_FEAT_ID: 387,
+	
 
 	MMPD: 25.4 / 96.0,
 	IMGRELOAD_TIMEOUT_MSEC: 2000,  // Image loading time after which original request is discarded and a new image load is attempted 
@@ -35,6 +34,15 @@ var GlobalConst = {
 		4000: [3, 2],
 		9999999999999: [3, 3]
 	},
+
+	// Specialized debugging - canvas path opening and closing
+	DEBUG_CANVASVECTOR_PATHCLOSING: null,
+	DEBUG_CANVASVECTOR_PATHCLOSING_FEATID: 387,
+
+	// Specialized debugging - canvas path opening and closing
+	DEBUG_FEATURE_DISTANCETO: false,
+	DEBUG_FEATURE_DISTANCETO_FEATID: 7455,
+
 
 	FEATMOUSESEL_HIGHLIGHT: {
 		"poly" : { 
