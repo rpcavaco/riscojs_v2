@@ -89,7 +89,7 @@ function isPointOnSegment(p_ptseg1, p_ptseg2, p_ptin, p_minarea, opt_dodebug) {
 	const absarea = Math.abs(area2_3p(p_ptseg1, p_ptseg2, p_ptin));
 
 	if (opt_dodebug)
-		console.log("ipos:", partA, absarea, "<", p_minarea);
+		console.log("[DBG:DISTANCETO] is pt on segm, init test:", partA, "area test:", absarea, "<", p_minarea);
 	
 	return partA && absarea < p_minarea;		
 }
@@ -106,7 +106,7 @@ function projectPointOnSegment(p_ptseg1, p_ptseg2, p_ptin, p_minarea, out_projpt
 	let inprod = dx * (p_ptin[0] - p_ptseg1[0]) + dy * (p_ptin[1] - p_ptseg1[1]);
 	
 	if (opt_dodebug)
-		console.log("[DBG:DISTANCETO] ppos dx:"+dx+", dy:"+dy+", inprod:"+inprod+", len2:"+len2+ ", rdx:"+ (inprod * (dx/len2)));
+		console.log("[DBG:DISTANCETO] prj pt on segm, dx:",dx,"dy:",dy,"inprod:",inprod,"len2:",len2, "rdx:", (inprod * (dx/len2)));
 	
 	out_projpt[0] = p_ptseg1[0] + (inprod * (dx/len2));
 	out_projpt[1] = p_ptseg1[1] + (inprod * (dy/len2));
@@ -145,7 +145,7 @@ function projectPointOnLine(p_pointlst, p_ptin, p_minarea, out_projpt, opt_debug
 			out_projpt[1] = tmppt[1];
 		}
 		if (opt_debug) {
-			console.log("[DBG:DISTANCETO]",i,"mindist:",mindist,"dist2:",dist2," ptin:",p_ptin," tmppt:",tmppt,"p1:",p1,"p2:",p2);
+			console.log("[DBG:DISTANCETO] proj pt on ln, segmidx:",i,"mindist2:",mindist,"dist2:",dist2,"given pt:",p_ptin,"tmppt:",tmppt,"p1:",p1,"p2:",p2);
 		}
 
 	}
@@ -161,6 +161,9 @@ export function distanceToLine(p_pointlist, p_path_levels, p_ptin, p_minarea, op
 		case 1:
 			projectPointOnLine(p_pointlist, p_ptin, p_minarea, prj, opt_debug);
 			ret = dist2D(p_ptin, prj);
+			if (opt_debug) {
+				console.log("[DBG:DISTANCETO] to line (single path) given pt:",p_ptin,"prj:",prj,"pd:",prjd,"d:",d);
+			}
 			break;
 		
 		case 2:
@@ -168,7 +171,7 @@ export function distanceToLine(p_pointlist, p_path_levels, p_ptin, p_minarea, op
 				prjd = projectPointOnLine(p_pointlist[i], p_ptin, p_minarea, prj, opt_debug);
 				d = dist2D(p_ptin, prj);
 				if (opt_debug) {
-					console.log("[DBG:DISTANCETO] i:"+i+", pt:"+JSON.stringify(p_ptin)+", prj:"+JSON.stringify(prj)+" pd:"+prjd+" d2:"+Math.pow(d,2));
+					console.log("[DBG:DISTANCETO] to line, subpath i:",i,"given pt:",p_ptin,"prj:",prj,"pd:",prjd,"d:",d);
 				}
 				if (i==0) {
 					ret = d;
@@ -181,12 +184,13 @@ export function distanceToLine(p_pointlist, p_path_levels, p_ptin, p_minarea, op
 			break;
 		
 		case 3:
-			for (let j=0; j<p_pointlist.length; j++) 
-			{
-				for (let i=0; i<p_pointlist[j].length; i++) 
-				{
-					projectPointOnLine(p_pointlist[j][i], p_ptin, p_minarea, prj);
+			for (let j=0; j<p_pointlist.length; j++) {
+				for (let i=0; i<p_pointlist[j].length; i++) {
+					prjd = projectPointOnLine(p_pointlist[j][i], p_ptin, p_minarea, prj);
 					d = dist2D(p_ptin, prj);
+					if (opt_debug) {
+						console.log("[DBG:DISTANCETO] to line, part j:",j,"subpath i:",i,"given pt:",p_ptin,"prj:",prj,"pd:",prjd,"d:",d);
+					}	
 					if (i==0) {
 						ret = d;
 					} else {
