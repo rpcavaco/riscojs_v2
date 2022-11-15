@@ -83,8 +83,9 @@ Integração geral
 
 ISSUES
 
-- Bug 0001 - Algumas features em redesenho, quando há muita intensidade de refresh
+- Bug 0001 - SOLVED,VERIFYING - Algumas features em redesenho, quando há muita intensidade de refresh
 - Bug 0002 - SOLVED,VERIFYING - Erro em signalVectorLoadFinished, "TypeError: this.layers[this.drawlist[li]] is undefined"
+- Bug 0003 - Seleção interativa troços Alameda 25 de Abril , será por serem horizontais ?
 
 
 

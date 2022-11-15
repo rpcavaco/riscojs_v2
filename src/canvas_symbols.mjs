@@ -1,4 +1,4 @@
-
+import {GlobalConst} from './constants.js';
 
 class LogicOperation {
 
@@ -49,7 +49,7 @@ export class CanvasPolygonSymbol extends fillSymbolMixin(strokeSymbolMixin(Symbo
 }
 
 class MarkerSymbol extends Symbol {
-	mrksize; 
+	markersize; 
 	constructor() {
 		super();
 	}
@@ -66,7 +66,7 @@ export class CanvasVertCross extends strokeSymbolMixin(MarkerSymbol) {
 	drawsymb(p_mapctxt, p_layer, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, opt_feat_id) {
 
 		const sclval = p_mapctxt.getScale();
-		const dim = this.mrksize * (10.0 / Math.log10(sclval));
+		const dim = this.markersize * GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval);
 
 		p_layer._gfctx.beginPath();
 
@@ -80,6 +80,28 @@ export class CanvasVertCross extends strokeSymbolMixin(MarkerSymbol) {
 		// vert
 		p_layer._gfctx.moveTo(p_coords[0], p_coords[1] - dim);
 		p_layer._gfctx.lineTo(p_coords[0], p_coords[1] + dim);
+		p_layer._gfctx.stroke();
+
+	}
+}
+
+export class CanvasCircle extends strokeSymbolMixin(MarkerSymbol) { 
+
+	constructor() {
+		super();
+	}
+	drawsymb(p_mapctxt, p_layer, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, opt_feat_id) {
+
+		const sclval = p_mapctxt.getScale();
+		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
+
+		p_layer._gfctx.beginPath();
+		p_layer._gfctx.arc(p_coords[0], p_coords[1], dim, 0, Math.PI * 2, true);
+
+		if (this["fillStyle"] !== undefined) {
+			p_layer._gfctx.fill();
+		}
+
 		p_layer._gfctx.stroke();
 
 	}

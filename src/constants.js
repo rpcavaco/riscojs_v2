@@ -12,9 +12,8 @@ var GlobalConst = {
 
 	DEBUG: "none",    // ALL, GEOM, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, VECTLOAD, RISCOFEATS, FEATMOUSESEL, none
 	FEATMOUSESEL_MAXDIST_1K: 2, // Max distance of graphic selection with mouse, meters at 1:1000 scale
-	
-
 	MMPD: 25.4 / 96.0,
+	MARKERSIZE_SCALEFACTOR: 10.0,
 	IMGRELOAD_TIMEOUT_MSEC: 2000,  // Image loading time after which original request is discarded and a new image load is attempted 
 	/*ACCPTBLE_LYRREDRAW_DELAY_MSEC: 10,
 	MAPCHANGE_TIMEOUT_MSEC: 8000,

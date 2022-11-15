@@ -21,7 +21,7 @@ class DynamicSymbol {
 		try {
 			return new symbClassAdapter[p_mode][p_classkey](opts);
 		} catch (e) {
-			console.log(p_mode, "class key:", p_classkey);
+			console.log("DynamicSymbol error, mode:", p_mode, "class key:", p_classkey, "opts:", opts);
 			console.error(e);
 		}
     }
@@ -131,6 +131,8 @@ export class TOCManager {
 						}
 						if (lyentry["marker"] !== undefined) {
 							currentLayer[0].marker = lyentry["marker"];
+							// ATTENTION - geomtype 'point' forced at this location!
+							currentLayer[0].geomtype = "point";
 						}
 
 						if (currentLayer[0].oidfldname == null && lyentry["oidfldname"] !== undefined) {
@@ -151,8 +153,8 @@ export class TOCManager {
 						currentLayer[0].key = lyk;
 
 						if (!(currentLayer[0] instanceof RasterLayer)) {
-							if (currentLayer[0].geomtype === undefined) { 
-								throw new Error(`Layer ${lyk} has no 'geomtype' defined`);
+							if (currentLayer[0].geomtype === undefined && currentLayer[0].marker === undefined) { 
+								throw new Error(`Layer ${lyk} has no 'geomtype' or 'marker' defined`);
 							} else {
 								if (currentLayer[0].marker !== undefined && currentLayer[0].marker != "none") { 
 									currentLayer[0].default_symbol = new DynamicSymbol(this.mode, currentLayer[0].marker);

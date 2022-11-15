@@ -1,5 +1,5 @@
 var RISCOJS_LAYERS_CFG = {
-	"lorder": ["ortos_2018", "mancha_construida", "EV", "grat_crosses"], //, "mancha_constr", "mancha_construida", "gratMRK"],
+	"lorder": ["ortos_2018", "mancha_construida", "EV", "pec_naolot", "grat_crosses"], //, "mancha_constr", "mancha_construida", "gratMRK"],
 	/*"relations": [
 		{
 			"from": "grat_sqrs",
@@ -15,8 +15,8 @@ var RISCOJS_LAYERS_CFG = {
 		},
 		"grat_crosses": {
 			"type": "ptgrid",
-			"marker": "vertcross",
-			"mrksize": 3,
+			"marker": "circle",
+			"markersize": 2,
 			"strokeStyle": "white",
 			"lineWidth": 2
 		},	
@@ -77,7 +77,19 @@ var RISCOJS_LAYERS_CFG = {
 			"fillStyle": "#0000FF7F",
 			"strokeStyle": "rgba(0.7,0.7,0.7)",
 			"lineWidth": 1	
-		}
+		},
+
+		"pec_naolot": {
+			"type": "riscofeats",
+			"url": "https://geo.cm-porto.net/riscosrv_v2bdt",
+			"envsplit": false,
+			"marker": "circle",
+			"markersize": 2,
+			"strokeStyle": "#ff5e32ff",
+			"lineWidth": 1,
+			"strokecolor": "#ff5e32ff",  
+			"fillStyle": "rgba(204, 204, 204, 0.5)"
+		}		
 
 		
 		
