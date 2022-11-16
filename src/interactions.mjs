@@ -188,12 +188,32 @@ class MultiTool extends BaseTool {
 		super(true, true); // part of general toggle group, default in toogle
 		this.start_screen = null;
 		this.imgs_dict={};
+		
 		this.wheelscale = null;
+		this._wheelevtTmoutID = null; // for deffered setScaleCenteredAtPoint after wheel event
+
+		this._wheelevtTmoutMethod = (
+			function(p_mapctx, p_evt, p_scaleval, b_dodebugonly) {
+				if (b_dodebugonly) {
+					console.log("[DBG:DISENG_WHEEL] would be firing at scale:", p_scaleval);
+				} else {
+					p_mapctx.transformmgr.setScaleCenteredAtPoint(p_scaleval, [p_evt.clientX, p_evt.clientY], true);
+				}
+			}
+		).bind(this);
+
 	}
 
 	static mouseselMaxdist(p_mapctx) {
 		const mscale = p_mapctx.getScale();
 		return GlobalConst.FEATMOUSESEL_MAXDIST_1K * mscale / 1000.0;
+	}
+
+	fireChangeAfterWheelEvt(p_mapctx, p_evt, p_scaleval, p_delay) {
+		if (this._wheelevtTmoutID != null) {
+			clearTimeout(this._wheelevtTmoutID);
+		}
+		this._wheelevtTmoutID = setTimeout(this._wheelevtTmoutMethod, p_delay, p_mapctx, p_evt, p_scaleval, GlobalConst.getDebug("DISENG_WHEEL"));
 	}
 
 	finishPan(p_transfmgr, p_x, p_y, opt_origin) {
@@ -258,9 +278,9 @@ class MultiTool extends BaseTool {
 
 				case 'wheel':
 
-					if (this.start_time == null) {
+					/* if (this.start_time == null) {
 						this.start_time = new Date().getTime();
-					}
+					} */
 
 					if (this.wheelscale == null) {
 						this.wheelscale = p_mapctx.transformmgr.getReadableCartoScale();
@@ -284,18 +304,23 @@ class MultiTool extends BaseTool {
 					if (GlobalConst.MAXSCALE !== undefined) {
 						scale = Math.min(scale, GlobalConst.MAXSCALE);
 					}
+
 					if (this.wheelscale != scale) {
 						this.wheelscale = scale;
 						//console.log(this.wheelscale);
-						const lap = new Date().getTime();
+						// const lap = new Date().getTime();
 						if (GlobalConst.getDebug("DISENG_WHEEL")) {
-							console.log("[DBG:DISENG_WHEEL] scale:", this.wheelscale, "time:", lap - this.start_time);
-						} else {
-							if ((lap - this.start_time) > GlobalConst.MOUSEWHEEL_THROTTLE) {
-								p_mapctx.transformmgr.setScaleCenteredAtPoint(this.wheelscale, [p_evt.clientX, p_evt.clientY], true);
-							}
+							console.log("[DBG:DISENG_WHEEL] scale:", this.wheelscale);
 						}
-						this.start_time = lap;
+
+						this.fireChangeAfterWheelEvt(p_mapctx, p_evt, scale, GlobalConst.MOUSEWHEEL_THROTTLE);
+
+						// } else {
+						// 	if ((lap - this.start_time) > GlobalConst.MOUSEWHEEL_THROTTLE) {
+						// 		p_mapctx.transformmgr.setScaleCenteredAtPoint(this.wheelscale, [p_evt.clientX, p_evt.clientY], true);
+						// 	}
+						// }
+						// this.start_time = null;
 					}
 					break;
 

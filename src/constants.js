@@ -25,7 +25,7 @@ var GlobalConst = {
 	GEOMPRECISION_DECIMALS: 3,	
 	TOLERANCEDIST_RINGCLOSED: 0.1, // Max dist between line endpoints for it to be considered closed ring
 	//MAXLAYERCOUNT: 100,
-	MOUSEWHEEL_THROTTLE: 180,  // millisecs, interval between wheel events must span more than this interval for each event to be listened
+	MOUSEWHEEL_THROTTLE: 250,  // millisecs, minimum interval between firing effective map change during a fast succession of mouse wheel events
 	ENVSPLIT_CFG_DEFAULT: {  // envelope division in chunking requests -- each entry:  display scales up to key value are split at [n,p]: n-times horizontally and p-times vertically
 		1000: [1, 1],
 		2000: [2, 1],
