@@ -134,6 +134,7 @@
 		}
 	}
 
+
 	/**
 	 * 
 	 * @param {*} p_imgdata_dict 
@@ -155,5 +156,40 @@
 		}
 	}
 
+	/**
+	 * 
+	 * @param {*} p_imgdata_dict 
+	 * @param {*} pt_ins_scrcoords 
+	 * @param {*} opt_img_dims se null, todo o canvas será limpo
+	 */
+	putTransientImages(p_imgdata_dict, p_scale, p_mouseevt) {
+		let ctx, c;
+		const dims=[];
+		for (const key in p_imgdata_dict) {
+			ctx = this.canvases[key].getContext('2d');
+			this.getCanvasDims(dims);
+			ctx.clearRect(0, 0, ...dims); 
+			if (p_scale != null) {
+				const f = (function(pp_scale) {
+					return function(bmp) {
+
+						ctx.save();
+
+						const divw =  p_mouseevt.clientX / p_imgdata_dict[key].width;
+						const divh =  p_mouseevt.clientY / p_imgdata_dict[key].height;
+						const ox = (p_mouseevt.clientX - (p_imgdata_dict[key].width * pp_scale * divw)) / pp_scale;
+						const oy = (p_mouseevt.clientY - (p_imgdata_dict[key].height * pp_scale * divh)) / pp_scale;
+
+						ctx.scale(pp_scale, pp_scale);
+						ctx.drawImage(bmp, ox, oy);
+
+						ctx.restore();	
+					}
+				})(p_scale);
+
+				createImageBitmap(p_imgdata_dict[key]).then(f);
+			}
+		}
+	}	
 }	
 

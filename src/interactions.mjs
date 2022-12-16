@@ -140,8 +140,6 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, opt_maxdist) {
 			}
 		}
 
-		
-
 		let tmpd, nearestid=-1, nearestlyk=null, dist = Number.MAX_SAFE_INTEGER;
 		for (let from_lyrk in related_ids) {
 			for (let to_lyrk in related_ids[from_lyrk]) {
@@ -181,6 +179,94 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, opt_maxdist) {
 	return ret_dir_interact;
 }
 
+class wheelEventCtrller {
+
+	constructor(p_sclval) {
+		this.wheelevtTmoutID = null; // for deffered setScaleCenteredAtPoint after wheel event
+		this.wheelscale = -1;
+		this.imgscale = 1.0;
+	}
+	clear() {
+		if (this.wheelevtTmoutID) {
+			clearTimeout(this.wheelevtTmoutID);
+			this.wheelevtTmoutID = null;
+		}
+		this.wheelscale = -1;
+	}
+	onWheelEvent(p_mapctx, p_mapimgs_dict, p_evt) {
+
+		let scale, auxscale; 
+
+		p_mapctx.renderingsmgr.getRenderedBitmaps(p_mapimgs_dict);
+
+		if (this.wheelscale < 0) {
+			auxscale = p_mapctx.transformmgr.getReadableCartoScale();
+		} else {
+			auxscale = this.wheelscale;
+		}
+
+		if (auxscale < 1500) {
+			scale = auxscale + (p_evt.deltaY * 1.2);
+		} else if (auxscale < 2000) {
+			scale = auxscale + (p_evt.deltaY * 2.4);
+		} else if (auxscale < 3000) {
+			scale = auxscale + (p_evt.deltaY * 3);
+		} else if (auxscale < 3000) {
+			scale = auxscale + (p_evt.deltaY * 4);
+		} else {
+			scale = auxscale + (p_evt.deltaY * 10);
+		}
+
+		if (GlobalConst.MINSCALE !== undefined) {
+			scale = Math.max(GlobalConst.MINSCALE, scale);
+		}
+		if (GlobalConst.MAXSCALE !== undefined) {
+			scale = Math.min(scale, GlobalConst.MAXSCALE);
+		}
+
+		if (auxscale != scale) {
+			this.wheelscale = scale;
+
+			this.imgscale = auxscale / scale;
+
+			// disparar alteração parcial
+			this.immediateAfterWheelEvt(p_mapctx, p_mapimgs_dict, p_evt);
+			// agendar alteração definitiva
+			this.timedAfterWheelEvt(p_mapctx, p_evt);
+		}
+
+	}
+	get scale() {
+		return this.wheelscale;
+	}
+	timedAfterWheelEvt(p_mapctx, p_evt) {
+		if (this.wheelevtTmoutID != null) {
+			clearTimeout(this.wheelevtTmoutID);
+		}
+
+
+		const f = (function(p_this, pp_mapctx, pp_evt) {
+			return function() {
+				if (GlobalConst.getDebug("DISENG_WHEEL")) {
+					console.log("[DBG:DISENG_WHEEL] would be firing at scaleu:", p_this.wheelscale);
+				} else {
+					pp_mapctx.transformmgr.setScaleCenteredAtPoint(p_this.wheelscale, [pp_evt.clientX, pp_evt.clientY], true);
+				}
+				p_this.wheelscale = -1;		
+			}
+		})(this, p_mapctx, p_evt, p_evt);
+
+		this.wheelevtTmoutID = setTimeout(f, GlobalConst.MOUSEWHEEL_THROTTLE);
+	}
+
+	immediateAfterWheelEvt(p_mapctx, p_mapimgs_dict, p_evt) {
+		p_mapctx.renderingsmgr.putTransientImages(p_mapimgs_dict, this.imgscale, p_evt);
+	}	
+
+
+}
+
+
 // pan, zoom wheel, info
 class MultiTool extends BaseTool {
 
@@ -189,31 +275,13 @@ class MultiTool extends BaseTool {
 		this.start_screen = null;
 		this.imgs_dict={};
 		
-		this.wheelscale = null;
-		this._wheelevtTmoutID = null; // for deffered setScaleCenteredAtPoint after wheel event
-
-		this._wheelevtTmoutMethod = (
-			function(p_mapctx, p_evt, p_scaleval, b_dodebugonly) {
-				if (b_dodebugonly) {
-					console.log("[DBG:DISENG_WHEEL] would be firing at scale:", p_scaleval);
-				} else {
-					p_mapctx.transformmgr.setScaleCenteredAtPoint(p_scaleval, [p_evt.clientX, p_evt.clientY], true);
-				}
-			}
-		).bind(this);
+		this.wheelevtctrlr = new wheelEventCtrller();
 
 	}
 
 	static mouseselMaxdist(p_mapctx) {
 		const mscale = p_mapctx.getScale();
 		return GlobalConst.FEATMOUSESEL_MAXDIST_1K * mscale / 1000.0;
-	}
-
-	fireChangeAfterWheelEvt(p_mapctx, p_evt, p_scaleval, p_delay) {
-		if (this._wheelevtTmoutID != null) {
-			clearTimeout(this._wheelevtTmoutID);
-		}
-		this._wheelevtTmoutID = setTimeout(this._wheelevtTmoutMethod, p_delay, p_mapctx, p_evt, p_scaleval, GlobalConst.getDebug("DISENG_WHEEL"));
 	}
 
 	finishPan(p_transfmgr, p_x, p_y, opt_origin) {
@@ -235,7 +303,7 @@ class MultiTool extends BaseTool {
 	onEvent(p_mapctx, p_evt) {
 
 		let ret = true;
-		let scale, mxdist;
+		let scale, auxscale, mxdist;
 
 		try {
 			switch(p_evt.type) {
@@ -249,7 +317,7 @@ class MultiTool extends BaseTool {
 							ret = false;
 						}
 					}
-					this.wheelscale = null;
+					this.wheelevtctrlr.clear();
 					break;
 
 				case 'mouseup':
@@ -260,7 +328,7 @@ class MultiTool extends BaseTool {
 						this.start_screen = null;
 						ret = false;
 					}
-					this.wheelscale = null;
+					this.wheelevtctrlr.clear();
 					break;
 
 				case 'mousemove':
@@ -273,55 +341,12 @@ class MultiTool extends BaseTool {
 						mxdist = this.constructor.mouseselMaxdist(p_mapctx);
 						interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist);
 					}
-					this.wheelscale = null;
+					this.wheelevtctrlr.clear();
 					break;
 
 				case 'wheel':
 
-					/* if (this.start_time == null) {
-						this.start_time = new Date().getTime();
-					} */
-
-					if (this.wheelscale == null) {
-						this.wheelscale = p_mapctx.transformmgr.getReadableCartoScale();
-					}
-
-					if (this.wheelscale < 1500) {
-						scale = this.wheelscale + (p_evt.deltaY * 1.2);
-					} else if (this.wheelscale < 2000) {
-						scale = this.wheelscale + (p_evt.deltaY * 2.4);
-					} else if (this.wheelscale < 3000) {
-						scale = this.wheelscale + (p_evt.deltaY * 3);
-					} else if (this.wheelscale < 3000) {
-						scale = this.wheelscale + (p_evt.deltaY * 4);
-					} else {
-						scale = this.wheelscale + (p_evt.deltaY * 10);
-					}
-
-					if (GlobalConst.MINSCALE !== undefined) {
-						scale = Math.max(GlobalConst.MINSCALE, scale);
-					}
-					if (GlobalConst.MAXSCALE !== undefined) {
-						scale = Math.min(scale, GlobalConst.MAXSCALE);
-					}
-
-					if (this.wheelscale != scale) {
-						this.wheelscale = scale;
-						//console.log(this.wheelscale);
-						// const lap = new Date().getTime();
-						if (GlobalConst.getDebug("DISENG_WHEEL")) {
-							console.log("[DBG:DISENG_WHEEL] scale:", this.wheelscale);
-						}
-
-						this.fireChangeAfterWheelEvt(p_mapctx, p_evt, scale, GlobalConst.MOUSEWHEEL_THROTTLE);
-
-						// } else {
-						// 	if ((lap - this.start_time) > GlobalConst.MOUSEWHEEL_THROTTLE) {
-						// 		p_mapctx.transformmgr.setScaleCenteredAtPoint(this.wheelscale, [p_evt.clientX, p_evt.clientY], true);
-						// 	}
-						// }
-						// this.start_time = null;
-					}
+					this.wheelevtctrlr.onWheelEvent(p_mapctx, this.imgs_dict, p_evt);
 					break;
 
 			}
