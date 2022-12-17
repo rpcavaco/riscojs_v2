@@ -112,7 +112,7 @@ class MapScalePrint extends PermanentMessaging {
 			ctx.fillStyle = this.fillStyleFront;
 			ctx.font = this.font;
 
-			ctx.fillText(this.i18n.msg('ESCL', true) + " 1:"+p_scaleval, this.right-this.boxw+12, this.bottom-6);		
+			ctx.fillText(this.i18n.msg('ESCL', true) + " 1:"+p_scaleval, this.right-this.boxw+GlobalConst.MESSAGING_STYLES.TEXT_OFFSET, this.bottom-6);		
 
 		} catch(e) {
 			throw e;
