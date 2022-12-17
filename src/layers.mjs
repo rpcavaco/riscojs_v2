@@ -163,6 +163,7 @@ export class Layer {
 	}
 
 	isCanceled() {
+		// console.info(`[***] Checking layer ${this.key} is canceled: ${this._drawingcanceled}`);
 		let ret =  this._drawingcanceled;
 		return ret;
 	}
@@ -175,10 +176,6 @@ export class Layer {
 	doCancel() {
 		console.info(`[INFO] Layer ${this.key} was canceled`);
 		this._drawingcanceled = true;
-	}
-
-	onCancel() {
-		// to be extended
 	}
 
 	refresh(p_mapctx) {
@@ -229,7 +226,6 @@ const vectorLayersMixin = (Base) => class extends Base {
 			// console.log("-- 239 --", gfctx.strokeStyle, gfctx.lineWidth);
 
 			if (this._drawingcanceled) {
-				this.onCancel();
 				cancel = true;		
 			} else  {
 
@@ -248,7 +244,6 @@ const vectorLayersMixin = (Base) => class extends Base {
 						}
 
 						if (this._drawingcanceled) {
-							this.onCancel();
 							cancel = true;
 							break;
 						}				
@@ -327,14 +322,19 @@ export class VectorLayer extends featureLayersMixin(vectorLayersMixin(Layer)) {
 export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Layer)) {
 
 	featchunksloading = {};
-	_prefreshing = false;
+	_prefreshed = false;
 
 	isLoading() {
-		return this._prefreshing || (Object.keys(this.featchunksloading) > 0);
+		return this._prefreshed || (Object.keys(this.featchunksloading) > 0);
 	}
 
 	constructor() {
 		super();
+	}
+
+	doCancel() {
+		this._prefreshed = false;
+		super.doCancel();
 	}
 
 	* itemchunks(p_mapctxt, p_prep_data) {
@@ -366,7 +366,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 			console.log(`[WARN:LAYERS] Remote vector layer '${this.key}' is not inited`);
 			return false;
 		}
-		this._prefreshing = true;
+		this._prefreshed = true;
 
 
 		return true;
@@ -382,7 +382,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 	// main diff: layeritems should not be a generator
 	refresh(p_mapctx, p_prep_data) {
 
-		this._prefreshing = false;
+		this._prefreshed = false;
 
 		if (this.isCanceled()) {		
 			return true;
@@ -397,7 +397,6 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 			//console.log("-- 338 --", gfctx.strokeStyle, gfctx.lineWidth);
 
 			if (this._drawingcanceled) {
-				this.onCancel();
 				cancel = true;
 			
 			} else  {
@@ -424,7 +423,6 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 					}
 
 					if (this._drawingcanceled) {
-						this.onCancel();
 						cancel = true;
 						break;
 					}
@@ -537,7 +535,6 @@ export class RasterLayer extends Layer {
 					//console.log("-- 221 screnv,dims,envk --", scr_env, dims, envkey);
 
 					if (this._drawingcanceled) {
-						this.onCancel();
 						cancel = true;
 						break;
 					}
@@ -553,7 +550,6 @@ export class RasterLayer extends Layer {
 							break;
 						}
 						if (this._drawingcanceled) {
-							this.onCancel();
 							cancel = true;
 							break;
 						}				
