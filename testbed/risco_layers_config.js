@@ -62,6 +62,7 @@ var RISCOJS_LAYERS_CFG = {
 		"EV": {
 			"type": "riscofeats",
 			"geomtype": "line",
+			"label": "Eixos de via",
 			"url": "https://geo.cm-porto.net/riscosrv_v2",
 			"envsplit": false,
 			"fillStyle": "none",

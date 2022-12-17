@@ -4,6 +4,7 @@ import {ToolManager} from './interactions.mjs';
 import {TOCManager} from './toc.mjs';
 import {FeatureCollection} from './feature_collection.mjs';
 
+
 /**
  * Class RiscoMapOverlay
  * 
@@ -144,6 +145,7 @@ export class RiscoMapCtx {
 		this.toolmgr = new ToolManager(p_config_var["basic"]);
 		this.tocmgr = new TOCManager(this, p_mode);
 
+
 		this.#customization_instance = null;
 
 		// Attach event listeners to this map context panel
@@ -199,10 +201,8 @@ export class RiscoMapCtx {
 s 	 * @param {object} p_evt - Event (user event expected)
 	 */
 	onEvent(p_evt) {
-
-		if (!this.toolmgr.onEvent(this, p_evt)) {
-			p_evt.stopPropagation();
-		}		
+		this.toolmgr.onEvent(this, p_evt);
+		p_evt.stopPropagation();
 	}	
 
 	getCanvasDims(out_env) {

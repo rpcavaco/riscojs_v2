@@ -4,7 +4,7 @@ var RISCOJS_BASIC_CFG = {
 	"crs": 3763,
 	"scale": 5000.0 , 
 	"terrain_center": [-40094.0,164608.0],
-	"togglable_tools": ["MultiTool"],
+	"togglable_tools": ["InfoTool"],
 	"maxscaleview": {
 		"scale": 30000,
 		"terrain_center": [-41200.0,166000.0]

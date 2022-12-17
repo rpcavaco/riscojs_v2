@@ -1,7 +1,7 @@
 
 import {GlobalConst} from './constants.js';
 import {AreaGridLayer} from './vectorlayers.mjs';
-
+import {EditManager} from './edit_manager.mjs';
 
 export class BaseTool {
 
@@ -44,7 +44,7 @@ class DefaultTool extends BaseTool {
 	}	
 }
 
-function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, opt_maxdist) {
+function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_actonselfeat) {
 	
 	let foundly = null, ref_x, ref_y, max_y, col, row, maxrow, sqrid;
 
@@ -153,7 +153,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, opt_maxdist) {
 							dist = tmpd;
 						}
 						if (GlobalConst.getDebug("FEATMOUSESEL")) {
-							console.log(`[DBG:FEATMOUSESEL] interact with lyr:${to_lyrk}, dist:${tmpd} (max: ${opt_maxdist}) to id:${r}`);
+							console.log(`[DBG:FEATMOUSESEL] interact with lyr:${to_lyrk}, dist:${tmpd} (max: ${p_maxdist}) to id:${r}`);
 							const symb = GlobalConst.DEBUG_FEATMOUSESEL_SELUNDERMASK_SYMB[foundly.geomtype];
 							p_mapctx.currFeatures.draw(p_mapctx, null, null, null, to_lyrk, r, 'temporary', symb);
 						}
@@ -165,12 +165,16 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, opt_maxdist) {
 		if (nearestid >= 0) {
 
 			if (GlobalConst.getDebug("FEATMOUSESEL")) {
-				console.log(`[DBG:FEATMOUSESEL] interact with NEAREST: ${nearestlyk}, dist:${dist} (max: ${opt_maxdist}) to id:${nearestid}`);
+				console.log(`[DBG:FEATMOUSESEL] interact with NEAREST: ${nearestlyk}, dist:${dist} (max: ${p_maxdist}) to id:${nearestid}`);
 			}
 
-			if (opt_maxdist == null || opt_maxdist >=  dist) {
+			if (p_maxdist == null || p_maxdist >=  dist) {
+
 				const symb = GlobalConst.FEATMOUSESEL_HIGHLIGHT[foundly.geomtype];
 				p_mapctx.currFeatures.draw(p_mapctx, null, null, null, nearestlyk, nearestid, 'temporary', symb);
+				if (opt_actonselfeat) {
+					opt_actonselfeat(nearestlyk, nearestid);
+				}
 			}
 		}
 
@@ -267,21 +271,15 @@ class wheelEventCtrller {
 }
 
 
-// pan, zoom wheel, info
+// pan, zoom wheel
 class MultiTool extends BaseTool {
 
 	constructor() {
-		super(true, true); // part of general toggle group, default in toogle
+		super(false, false); // not part of general toggle group, surely not default in toogle
 		this.start_screen = null;
-		this.imgs_dict={};
-		
+		this.imgs_dict={};		
 		this.wheelevtctrlr = new wheelEventCtrller();
 
-	}
-
-	static mouseselMaxdist(p_mapctx) {
-		const mscale = p_mapctx.getScale();
-		return GlobalConst.FEATMOUSESEL_MAXDIST_1K * mscale / 1000.0;
 	}
 
 	finishPan(p_transfmgr, p_x, p_y, opt_origin) {
@@ -302,9 +300,6 @@ class MultiTool extends BaseTool {
 
 	onEvent(p_mapctx, p_evt) {
 
-		let ret = true;
-		let scale, auxscale, mxdist;
-
 		try {
 			switch(p_evt.type) {
 
@@ -314,7 +309,6 @@ class MultiTool extends BaseTool {
 						if ((p_evt.buttons & 1) == 1) {						
 							this.start_screen = [p_evt.clientX, p_evt.clientY];		
 							p_mapctx.renderingsmgr.getRenderedBitmaps(this.imgs_dict);
-							ret = false;
 						}
 					}
 					this.wheelevtctrlr.clear();
@@ -326,7 +320,6 @@ class MultiTool extends BaseTool {
 					if (this.start_screen != null) {
 						this.finishPan(p_mapctx.transformmgr, p_evt.clientX, p_evt.clientY, 'mouse');	
 						this.start_screen = null;
-						ret = false;
 					}
 					this.wheelevtctrlr.clear();
 					break;
@@ -335,11 +328,7 @@ class MultiTool extends BaseTool {
 					if (this.start_screen != null) {
 						if ((p_evt.buttons & 1) == 1) {
 							p_mapctx.renderingsmgr.putImages(this.imgs_dict, [p_evt.clientX-this.start_screen[0], p_evt.clientY-this.start_screen[1]]);
-							ret = false;
 						}
-					} else {
-						mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-						interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist);
 					}
 					this.wheelevtctrlr.clear();
 					break;
@@ -355,7 +344,56 @@ class MultiTool extends BaseTool {
 			console.error(e);
 		}  
 		
-		return ret;
+	}	
+}
+
+class InfoTool extends BaseTool {
+
+	constructor() {
+		super(true, true); // part of general toggle group, default in toogle
+	}
+
+	static mouseselMaxdist(p_mapctx) {
+		const mscale = p_mapctx.getScale();
+		return GlobalConst.FEATMOUSESEL_MAXDIST_1K * mscale / 1000.0;
+	}
+
+	onEvent(p_mapctx, p_evt) {
+
+		let mxdist;
+		const ci = p_mapctx.getCustomizationInstance();
+		if (ci == null) {
+			throw new Error("InfoTool, customization instance is missing")
+		}
+
+		const ic = ci.instances["infoclass"];
+
+		try {
+			switch(p_evt.type) {
+
+				case 'mouseup':
+					if (ic.pick !== undefined) {
+						mxdist = this.constructor.mouseselMaxdist(p_mapctx);
+						interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, ic.pick);
+					} else {
+						console.warn(`infoclass customization unavailable, cannot pick feature`);			
+					}						
+					break;
+
+				case 'mousemove':
+					if (ic.hover !== undefined) {
+						mxdist = this.constructor.mouseselMaxdist(p_mapctx);
+						interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, ic.hover);
+					} else {
+						console.warn(`infoclass customization unavailable, cannot hover / maptip feature`);			
+					}						
+					break;
+
+			}
+		} catch(e) {
+			console.error(e);
+		}  
+		
 	}	
 }
 
@@ -367,13 +405,14 @@ export class ToolManager {
 			throw new Error("Class ToolManager, null mapctx_config_var");
 		}
 
-		this.maptools = [new DefaultTool()];
+		this.editmgr = new EditManager(this);
+		this.maptools = [new DefaultTool(), new MultiTool()];
 		
 		if (p_mapctx_config_var["togglable_tools"] !== undefined) {
 			for (let i=0; i<p_mapctx_config_var["togglable_tools"].length; i++) {
 				switch (p_mapctx_config_var["togglable_tools"][i]) {
-					case "MultiTool":
-						this.addTool(new MultiTool());
+					case "InfoTool":
+						this.addTool(new InfoTool());
 						break;
 				}
 			}

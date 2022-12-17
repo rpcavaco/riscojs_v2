@@ -172,13 +172,23 @@ class LoadingPrint extends LoadingMessaging {
 	}	
 }
 
+class Info {
+	hover(p_layerkey, p_featid) {
+		console.log(p_layerkey + " feat:" + p_featid);
+	}
+	pick(p_layerkey, p_featid) {
+		console.log(p_layerkey + " feat:" + p_featid);
+	}	
+}
+
 export class MapCustomizations {
 
 	constructor() {
 		this.instances = {
 			"mousecoordsprint": new MousecoordsPrint(),
 			"mapscaleprint": new MapScalePrint(),
-			"loadingmsgprint": new LoadingPrint()			
+			"loadingmsgprint": new LoadingPrint(),
+			"infoclass": new Info()						
 		}
 		
 	}
