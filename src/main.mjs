@@ -270,6 +270,21 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		}
 	}
 
+	printLoadingMsg(p_layername) {
+		const ci = this.getCustomizationInstance();
+		if (ci) {
+			const mpc = ci.instances["loadingmsgprint"];
+			if (mpc.print !== undefined) {
+				mpc.print(this, p_layername);
+			} else {
+				console.error(`loadingmsgprint customization unavailable, cannot print message '${p_layername}'`);
+
+			}	
+		} else {
+			console.error("printLoadingMsg, no map customizations available");
+		}
+	}
+
 	removePrint(p_type) {
 		const ci = this.getCustomizationInstance();
 		if (ci) {

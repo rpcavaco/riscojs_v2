@@ -245,6 +245,7 @@ export class TOCManager {
 	refresh(p_scaleval) {
 
 		console.info(`[INFO] attempting to refresh ${this.layers.length} layers at scale 1:${p_scaleval}`);
+		//this.mapctx.printLoadingMsg(`${this.layers.length} layers`);
 		
 		const ckeys = new Set();
 		for (let li=0; li < this.layers.length; li++) {
@@ -286,6 +287,7 @@ export class TOCManager {
 			let ret = true, isloading = false;
 			
 			for (let li=0; li < pp_this.layers.length; li++) {
+
 				if (!(pp_this.layers[li] instanceof RasterLayer)) {
 
 					if (pp_this.layers[li].isLoading !== undefined) {
@@ -337,6 +339,8 @@ export class TOCManager {
 
 		fillDrawlist(this);
 
+		// this.mapctx.removePrint("loadingmsgprint");
+
 		if (GlobalConst.getDebug("VECTLOAD")) {
 			console.log("[DBG:VECTLOAD] refresh final, initial drawlist:", this.drawlist);
 		}
@@ -347,11 +351,14 @@ export class TOCManager {
 	// getStats and draw2D will launch processes that terminate by calling signalVectorLoadFinished
 	nextdraw() {
 
-		let canceled;
+		let canceled, lbl;
 		const bounds = [];
 		let isloading = false;
 
+		// Finish drawing layers from drawlist
 		if (this.drawlist.length < 1) {
+
+			this.mapctx.removePrint("loadingmsgprint");
 
 			// apply configured relations between feature layers
 			this.mapctx.currFeatures.relateall();
@@ -371,6 +378,12 @@ export class TOCManager {
 				this.layers[li].doCancel();
 				return;
 			}
+
+			if (this.layers[li].label !== undefined && this.layers[li].label != "NONE")
+				lbl = this.layers[li].label;
+			else
+				lbl = this.layers[li].key;
+			this.mapctx.printLoadingMsg(lbl);
 
 			if (this.layers[li] instanceof RemoteVectorLayer) {
 

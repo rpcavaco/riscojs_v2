@@ -72,6 +72,7 @@ var RISCOJS_LAYERS_CFG = {
 		"mancha_construida": {
 			"type": "riscofeats",
 			"geomtype": "poly",
+			"label": "Mancha construída",
 			"url": "https://geo.cm-porto.net/riscosrv_v2",
 			"envsplit": false,
 			"fillStyle": "#0000FF7F",

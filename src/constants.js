@@ -100,6 +100,18 @@ var GlobalConst = {
 		"lineWidth": 0.5
 	},	
 
+	MESSAGING_STYLES: {
+		PERMANENT_BCKGRD: "rgb(216, 216, 216)",
+		PERMANENT_COLOR: "rgb(65, 65, 65)",
+		PERMANENT_FONT: "8pt Arial",
+
+		LOADING_BCKGRD: "#fc4040",
+		LOADING_COLOR: "#ffffff",
+		LOADING_FONT: "8pt Arial",
+		LOADING_WIDTH: 250,
+		TEXT_OFFSET: 12
+	},
+
 	getDebug: function(p_dbgkey) {
 		let ret = false, all = false;
 		if (this.DEBUG.toLowerCase() == "all" && !p_dbgkey.toLowerCase().startsWith('diseng')) {

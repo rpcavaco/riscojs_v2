@@ -5,10 +5,12 @@ export class I18n {
 	constructor() {
 		this.msgs = {
 			"pt": {
-				"ESCL": "escala"
+				"ESCL": "escala",
+				"LDNG": "a carregar"
 			}, 
 			"en": {
-				"ESCL": "scale"
+				"ESCL": "scale",
+				"LDNG": "loading"
 			}
 		};		
 	}
