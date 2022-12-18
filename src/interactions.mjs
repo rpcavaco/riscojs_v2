@@ -169,11 +169,10 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 			}
 
 			if (p_maxdist == null || p_maxdist >=  dist) {
-
 				const symb = GlobalConst.FEATMOUSESEL_HIGHLIGHT[foundly.geomtype];
 				p_mapctx.currFeatures.draw(p_mapctx, null, null, null, nearestlyk, nearestid, 'temporary', symb);
 				if (opt_actonselfeat) {
-					opt_actonselfeat(nearestlyk, nearestid);
+					opt_actonselfeat(p_mapctx, nearestlyk, nearestid, p_mapctx.currFeatures.get(nearestlyk, nearestid), p_scrx, p_scry);
 				}
 			}
 		}

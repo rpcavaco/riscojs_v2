@@ -113,7 +113,7 @@ export class Layer {
 	minscale = GlobalConst.MINSCALE;
 	maxscale = Number.MAX_SAFE_INTEGER;
 	defaultvisible = true;
-	notmouseselectable = false;
+	mouseinteraction = false;
 	label = "NONE";
 
 	// Unconfigurables

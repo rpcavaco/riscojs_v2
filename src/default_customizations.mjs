@@ -173,12 +173,13 @@ class LoadingPrint extends LoadingMessaging {
 }
 
 class Info {
-	hover(p_layerkey, p_featid) {
-		console.log(p_layerkey + " feat:" + p_featid);
+	hover(p_mapctx, p_layerkey, p_featid, p_feature, p_scrx, p_scry) {
+		console.log("Maptip, layer:", p_layerkey, " feat:", p_featid);
 	}
-	pick(p_layerkey, p_featid) {
-		console.log(p_layerkey + " feat:" + p_featid);
-	}	
+	pick(p_mapctx, p_layerkey, p_featid, p_feature, p_scrx, p_scry) {
+		console.log("Info, layer:", p_layerkey, " feat:", p_featid);
+		console.log(p_feature);
+	} 
 }
 
 export class MapCustomizations {

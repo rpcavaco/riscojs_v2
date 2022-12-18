@@ -63,6 +63,7 @@ var RISCOJS_LAYERS_CFG = {
 			"type": "riscofeats",
 			"geomtype": "line",
 			"label": "Eixos de via",
+			"mouseinteraction": true,
 			"url": "https://geo.cm-porto.net/riscosrv_v2",
 			"envsplit": false,
 			"fillStyle": "none",
@@ -83,13 +84,12 @@ var RISCOJS_LAYERS_CFG = {
 
 		"pec_naolot": {
 			"type": "riscofeats",
+			"geomtype": "poly",
 			"url": "https://geo.cm-porto.net/riscosrv_v2bdt",
+			"mouseinteraction": true,
 			"envsplit": false,
-			"marker": "circle",
-			"markersize": 2,
 			"strokeStyle": "#ff5e32ff",
 			"lineWidth": 1,
-			"strokecolor": "#ff5e32ff",  
 			"fillStyle": "rgba(204, 204, 204, 0.5)"
 		}		
 

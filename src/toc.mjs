@@ -80,7 +80,7 @@ export class TOCManager {
 				lyk = layerscfg.lorder[i];
 				lyentry = layerscfg.layers[lyk];
 
-				if (!lyentry["notmouseselectable"]) {
+				if (lyentry["mouseinteraction"]) {
 
 					if (selectable_feat_layer_types.indexOf(lyentry["type"]) >= 0) {
 						relcfgvar.push({
