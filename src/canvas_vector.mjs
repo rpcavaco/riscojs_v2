@@ -29,7 +29,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		if (opt_symbs) {
 
-			if (opt_symbs.strokeStyle !== undefined) {
+			if (opt_symbs.strokeStyle !== undefined && opt_symbs.strokeStyle.toLowerCase() !== "none") {
 				this._gfctx.strokeStyle = opt_symbs.strokeStyle;
 				this.strokeflag = true;
 			}
@@ -38,9 +38,13 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 				this._gfctx.lineWidth = opt_symbs.lineWidth;
 			}	
 
-			if (opt_symbs.fillStyle !== undefined) {
+			if (opt_symbs.fillStyle !== undefined && opt_symbs.fillStyle.toLowerCase() !== "none") {
 				this._gfctx.fillStyle = opt_symbs.fillStyle;
 				this.fillflag = true;
+			}	
+
+			if (opt_symbs.font !== undefined) {
+				this._gfctx.font = opt_symbs.font;
 			}	
 
 		} else {
@@ -50,15 +54,18 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 				this.strokeflag = true;
 			}
 
-			if (this.default_symbol.lineWidth !== undefined && this.default_symbol.strokeStyle.toLowerCase() !== "none") {
+			if (this.default_symbol.lineWidth !== undefined) {
 				this._gfctx.lineWidth = this.default_symbol.lineWidth;
 			}	
 
 			if (this.default_symbol.fillStyle !== undefined && this.default_symbol.fillStyle.toLowerCase() !== "none") {
 				this._gfctx.fillStyle = this.default_symbol.fillStyle;
 				this.fillflag = true;
-			}									
+			}	
 
+			if (this.default_symbol.font !== undefined) {
+				this._gfctx.font = this.default_symbol.font;
+			}				
 		}
 
 		//console.log(">>", strokeflag, fillflag);
