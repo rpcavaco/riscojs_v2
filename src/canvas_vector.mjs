@@ -181,13 +181,17 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		return true;		
 	}
+
+	drawLabel(p_mapctxt, p_coords, p_labeltxt) {
+		this._gfctx.fillText(p_labeltxt, ...p_coords)
+	}
 }
 
 export class CanvasGraticuleLayer extends canvasVectorMethodsMixin(GraticuleLayer) {
 
-	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
+	simplerefreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels) {
 
-		const ok = this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs);
+		const ok = this.grabGf2DCtx(p_mapctxt);
 
 		if (ok && !this.strokeflag && !this.fillflag) {
 			throw new Error(`Layer ${this.key}, no 'dostroke' and no 'dofill' flags, nothin to draw`);
@@ -220,9 +224,9 @@ export class CanvasGraticuleLayer extends canvasVectorMethodsMixin(GraticuleLaye
 
 export class CanvasPointGridLayer extends canvasVectorMethodsMixin(PointGridLayer) {
 
-	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
+	simplerefreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels) {
 
-		const ok = this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs);
+		const ok = this.grabGf2DCtx(p_mapctxt);
 
 		if (ok && !this.strokeflag && !this.fillflag) {
 			throw new Error(`Layer ${this.key}, no 'stroke' and no 'fill' flags, nothin to draw`);
@@ -231,7 +235,7 @@ export class CanvasPointGridLayer extends canvasVectorMethodsMixin(PointGridLaye
 		if (ok) {
 			try {
 
-				this.default_symbol.drawsymb(p_mapctxt, this, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, opt_feat_id)
+				this.default_symbol.drawsymb(p_mapctxt, this, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs)
 
 			} catch(e) {
 				throw e;
@@ -246,9 +250,9 @@ export class CanvasPointGridLayer extends canvasVectorMethodsMixin(PointGridLaye
 
 export class CanvasAreaGridLayer extends canvasVectorMethodsMixin(AreaGridLayer) {
 
-	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
+	simplerefreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels) {
 
-		const ok = this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs);
+		const ok = this.grabGf2DCtx(p_mapctxt);
 
 		if (ok && !this.strokeflag && !this.fillflag) {
 			throw new Error(`Layer ${this.key}, no 'stroke' and no 'fill' flags, nothin to draw`);
@@ -289,7 +293,7 @@ export class CanvasAreaGridLayer extends canvasVectorMethodsMixin(AreaGridLayer)
 
 export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
 
-	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
+	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_lblfield, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
 
 		let ret = true;
 
@@ -316,28 +320,37 @@ export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
 
 export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLayer) {
 
-	refreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
+	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_lblfield, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
 
 		let ret = true;
 
 		//console.log("aa:", [p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs]);
 
 		if (this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs)) {
-
 			try {
-
 				// console.log(p_coords, p_path_levels);
-
 				ret = this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
-
 			} catch(e) {
 				console.log(p_coords, p_path_levels);
 				throw e;
 			} finally {
 				this.releaseGf2DCtx();
-			}	
-			
+			}				
 		}
+
+		/*if (ret && opt_lblfield != null) {
+			if (this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs)) {
+				try {
+					// console.log(p_coords, p_path_levels);
+					ret = this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
+				} catch(e) {
+					console.log(p_coords, p_path_levels);
+					throw e;
+				} finally {
+					this.releaseGf2DCtx();
+				}				
+			}
+		}*/
 
 		return ret;
 

@@ -65,6 +65,7 @@ var RISCOJS_LAYERS_CFG = {
 			"label": "Eixos de via",
 			"mouseinteraction": true,
 			"url": "https://geo.cm-porto.net/riscosrv_v2",
+			"labelfield": "toponimo",
 			"envsplit": false,
 			"fillStyle": "none",
 			"strokeStyle": "white",
