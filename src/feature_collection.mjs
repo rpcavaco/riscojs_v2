@@ -28,6 +28,8 @@ export class FeatureCollection {
 			throw new Error(`layer '${p_layerkey}' already set`);
 		}	
 
+		console.log("+##+ lblfld:",p_layerkey, p_layerobj['labelfield']);
+
 		if (p_layerobj['labelfield'] !== undefined && p_layerobj['labelfield'] != "NONE") {
 			this.labelfield = p_layerobj['labelfield'];
 		}
@@ -167,7 +169,6 @@ export class FeatureCollection {
 			if (feat == null) {
 				throw new Error(`layer '${p_layerkey}' no feature for id ${opt_featid}`);
 			}
-	
 			this.layers[p_layerkey].refreshitem(p_mapctxt, feat.g, feat.a, feat.l, this.labelfield, opt_featid, opt_alt_canvaskey, opt_symbs);
 		} else {
 

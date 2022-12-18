@@ -69,6 +69,8 @@ export class TOCManager {
 
 		for (let lyentry, lyk, i=0; i <= layerscfg.lorder.length; i++) {
 
+			console.log("initing ", lyk);
+
 			if (i == layerscfg.lorder.length) {
 				
 				// loading spatial grid layer as overlay over all others
@@ -101,12 +103,6 @@ export class TOCManager {
 					try {
 
 						currentLayer.push(new DynamicLayer(this.mode, lyentry["type"]));
-
-						// connects feature collection to this layer, if applicable
-						// (if it implements featureLayersMixin)
-						if (currentLayer[0].setCurrFeatures !== undefined) {
-							currentLayer[0].setCurrFeatures(this.mapctx.currFeatures, lyk, currentLayer[0]);
-						}
 
 						if (currentLayer.length == 0) {
 							console.error(`TOCManager, layer '${lyk}' type not known: '${lyentry["type"]}'`);
@@ -205,7 +201,7 @@ export class TOCManager {
 								}
 							}
 
-							// console.log(currentLayer[0].default_symbol);
+							//console.log(Object.keys(currentLayer[0]));
 	
 						}
 					} catch(e) {
@@ -219,6 +215,12 @@ export class TOCManager {
 						}
 					} catch(e) {
 						console.error(e);
+					}
+
+					// connects feature collection to this layer, if applicable
+					// (if it implements featureLayersMixin)
+					if (currentLayer[0].setCurrFeatures !== undefined) {
+						currentLayer[0].setCurrFeatures(this.mapctx.featureCollection, lyk, currentLayer[0]);
 					}
 
 					this.layers.push(currentLayer[0]);
@@ -361,7 +363,7 @@ export class TOCManager {
 			this.mapctx.removePrint("loadingmsgprint");
 
 			// apply configured relations between feature layers
-			this.mapctx.currFeatures.relateall();
+			this.mapctx.featureCollection.relateall();
 			return;
 
 		}

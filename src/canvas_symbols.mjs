@@ -32,11 +32,16 @@ const strokeSymbolMixin = (Base) => class extends Base {
 	lineWidth;	
 }
 
+const labelSymbolMixin = (Base) => class extends Base {
+	labelFillStyle = "white";
+	labelFont = "Arial 8pt";
+}
+
 const fillSymbolMixin = (Base) => class extends Base {
 	fillStyle;
 }
 
-export class CanvasLineSymbol extends strokeSymbolMixin(Symbol) { 
+export class CanvasLineSymbol extends labelSymbolMixin(strokeSymbolMixin(Symbol)) { 
 	constructor() {
 		super();
 	}

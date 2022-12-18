@@ -399,11 +399,11 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 							const terrain_coords = [];
 							adaptCoords(path_levels, feat.crds, [responsejson.cenx, responsejson.ceny], responsejson.pxsz, terrain_coords)
 
-							id2 = that.currFeatures.add(that.key, terrain_coords, feat.a, that.geomtype, path_levels, id);
+							id2 = that._currFeatures.add(that.key, terrain_coords, feat.a, that.geomtype, path_levels, id);
 							// If feature still exists  between cleanups that's because it might not have been properly garbage collected
 							// If exists, let's not try to draw it, id is null
 							if (id2) {
-								that.currFeatures.draw(p_mapctxt, that.key, id2);
+								that._currFeatures.draw(p_mapctxt, that.key, id2);
 							}
 
 							cnt++;

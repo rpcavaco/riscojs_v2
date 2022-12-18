@@ -264,12 +264,12 @@ const vectorLayersMixin = (Base) => class extends Base {
 
 const featureLayersMixin = (Base) => class extends Base {
 
-	currFeatures;
+	_currFeatures;
 	fields = "";
 
 	setCurrFeatures(p_curr_feats, p_layer_key, p_layerobj) {
-		this.currFeatures = p_curr_feats;
-		this.currFeatures.setLayer(p_layer_key, p_layerobj);
+		this._currFeatures = p_curr_feats;
+		this._currFeatures.setLayer(p_layer_key, p_layerobj);
 	}
 }
 
@@ -295,8 +295,6 @@ export class SimpleVectorLayer extends vectorLayersMixin(Layer) {
 
 // has feature mgmt, has attributes
 export class VectorLayer extends featureLayersMixin(vectorLayersMixin(Layer)) {
-
-
 
 	constructor() {
 		super();
@@ -439,7 +437,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 		return cancel;
 	}	
 
-	refreshitem(p_mapctxt, p_gfctx, item_geom, item_atts, p_path_levels, opt_lblfield, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
+	refreshitem(p_mapctxt, item_geom, item_atts, p_path_levels, opt_lblfield, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
 
 		// to be implemented
 		// for each 'canvas' item just draw each 'layeritem'

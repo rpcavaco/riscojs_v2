@@ -140,7 +140,7 @@ export class RiscoMapCtx {
 				break;
 
 		}
-		this.currFeatures = new FeatureCollection(this);
+		this.featureCollection = new FeatureCollection(this);
 		this.transformmgr = new Transform2DMgr(this, p_config_var["basic"]);	
 		this.toolmgr = new ToolManager(p_config_var["basic"]);
 		this.tocmgr = new TOCManager(this, p_mode);
@@ -231,7 +231,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		//console.info(">>>>>           draw            <<<<<");
 		const sv = this.transformmgr.getReadableCartoScale();
 		this.printScale(sv);
-		this.currFeatures.invalidate();
+		this.featureCollection.invalidate();
 		this.tocmgr.refresh(sv);
 	}
 

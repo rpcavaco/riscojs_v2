@@ -12,9 +12,9 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 	strokeflag = false;
 	_gfctx;  // current graphics context to be always updated at each refreshing / drawing
 
-	grabGf2DCtx(p_mapctx, opt_alt_canvaskey, opt_symbs) {
+	_grabGf2DCtx(p_mapctx, b_forlabel, opt_alt_canvaskey, opt_symbs) {
 
-		let canvaskey;
+		let canvaskey, symb;
 
 		if (opt_alt_canvaskey) {
 			canvaskey = opt_alt_canvaskey;
@@ -28,50 +28,54 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 		this._gfctx.save();
 
 		if (opt_symbs) {
+			symb = opt_symbs;
+		} else {
+			symb = this.default_symbol;
+		}	
 
-			if (opt_symbs.strokeStyle !== undefined && opt_symbs.strokeStyle.toLowerCase() !== "none") {
-				this._gfctx.strokeStyle = opt_symbs.strokeStyle;
-				this.strokeflag = true;
-			}
+		if (b_forlabel) {
 
-			if (opt_symbs.lineWidth !== undefined) {
-				this._gfctx.lineWidth = opt_symbs.lineWidth;
-			}	
-
-			if (opt_symbs.fillStyle !== undefined && opt_symbs.fillStyle.toLowerCase() !== "none") {
-				this._gfctx.fillStyle = opt_symbs.fillStyle;
+			this.strokeflag = false;
+	
+			if (symb.labelFillStyle !== undefined && symb.labelFillStyle.toLowerCase() !== "none") {
+				this._gfctx.labelFillStyle = symb.labelFillStyle;
 				this.fillflag = true;
 			}	
 
-			if (opt_symbs.font !== undefined) {
-				this._gfctx.font = opt_symbs.font;
+			if (symb.labelFont !== undefined) {
+				this._gfctx.font = symb.labelFont;
 			}	
-
+	
+	
 		} else {
 
-			if (this.default_symbol.strokeStyle !== undefined && this.default_symbol.strokeStyle.toLowerCase() !== "none") {
-				this._gfctx.strokeStyle = this.default_symbol.strokeStyle;
+			if (symb.strokeStyle !== undefined && symb.strokeStyle.toLowerCase() !== "none") {
+				this._gfctx.strokeStyle = symb.strokeStyle;
 				this.strokeflag = true;
 			}
-
-			if (this.default_symbol.lineWidth !== undefined) {
-				this._gfctx.lineWidth = this.default_symbol.lineWidth;
+	
+			if (symb.lineWidth !== undefined) {
+				this._gfctx.lineWidth = symb.lineWidth;
 			}	
-
-			if (this.default_symbol.fillStyle !== undefined && this.default_symbol.fillStyle.toLowerCase() !== "none") {
-				this._gfctx.fillStyle = this.default_symbol.fillStyle;
+	
+			if (symb.fillStyle !== undefined && symb.fillStyle.toLowerCase() !== "none") {
+				this._gfctx.fillStyle = symb.fillStyle;
 				this.fillflag = true;
-			}	
-
-			if (this.default_symbol.font !== undefined) {
-				this._gfctx.font = this.default_symbol.font;
-			}				
+			}
 		}
+	
 
 		//console.log(">>", strokeflag, fillflag);
-
 		return true;
 	}
+
+	grabGf2DCtx(p_mapctx, opt_alt_canvaskey, opt_symbs) {
+		return this._grabGf2DCtx(p_mapctx, false, opt_alt_canvaskey, opt_symbs);
+	}
+
+	grabLabelGf2DCtx(p_mapctx, opt_alt_canvaskey, opt_symbs) {
+		return this._grabGf2DCtx(p_mapctx, true, opt_alt_canvaskey, opt_symbs);
+	}	
 
 	// must this.grabGf2DCtx first !	
 	releaseGf2DCtx() {
@@ -323,10 +327,19 @@ export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLa
 	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_lblfield, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
 
 		let ret = true;
+		let pathoptsymbs = null;
+		let lbloptsymbs = null;
+
+		if (opt_symbs) {
+			if (opt_symbs['path'] !== undefined)
+				pathoptsymbs = opt_symbs['path'];
+			if (opt_symbs['label'] !== undefined)
+				lbloptsymbs = opt_symbs['label'];
+		}
 
 		//console.log("aa:", [p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs]);
 
-		if (this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs)) {
+		if (this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, pathoptsymbs)) {
 			try {
 				// console.log(p_coords, p_path_levels);
 				ret = this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
@@ -338,19 +351,21 @@ export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLa
 			}				
 		}
 
-		/*if (ret && opt_lblfield != null) {
-			if (this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs)) {
+		console.log(ret, opt_lblfield);
+
+		if (ret && opt_lblfield != null) {
+			if (this.grabLabelGf2DCtx(p_mapctxt, opt_alt_canvaskey, lbloptsymbs)) {
 				try {
-					// console.log(p_coords, p_path_levels);
-					ret = this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
+					//console.log(p_coords, p_attrs[opt_lblfield]);
+					//ret = this.drawLabel(p_mapctxt, p_coords, p_attrs[opt_lblfield]);
 				} catch(e) {
-					console.log(p_coords, p_path_levels);
+					console.log(p_coords, opt_lblfield, p_attrs[opt_lblfield]);
 					throw e;
 				} finally {
 					this.releaseGf2DCtx();
 				}				
 			}
-		}*/
+		}
 
 		return ret;
 
