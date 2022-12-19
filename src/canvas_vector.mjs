@@ -1,8 +1,113 @@
 
 import {GlobalConst} from './constants.js';
-import {dist2D} from './geom.mjs';
 import {GraticuleLayer, PointGridLayer, AreaGridLayer, AGSQryLayer} from './vectorlayers.mjs';
 import { RiscoFeatsLayer } from './risco_ownlayers.mjs';
+import {pathLength, dist2D, segmentMeasureToPoint, area2} from './geom.mjs';
+
+function textDrawAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_coords, p_path_levels, p_labeltxt, out_data) {
+	// console.log("pl:", p_path_levels);
+
+	const ubRendCoordsFunc = p_mapctxt.transformmgr.getRenderingCoordsPt;
+	const pl = pathLength(p_coords, p_path_levels, ubRendCoordsFunc.bind(p_mapctxt.transformmgr));
+	const tl = p_gfctx.measureText(p_labeltxt).width;
+
+	let cursor_position;
+	let poppable_string = (' ' + p_labeltxt).slice(1);
+
+	out_data.length = 0;
+	console.log("INICIO> pl e tl:", pl, tl);
+	// TODO - tl > pl
+
+	function partLoop(pp_root, pp_path_level, p_cursor_position, p_char, p_pontosdiv) {
+
+		let a, d, meas;
+		let pt1 = null, acclength = 0, ring;
+		const pt=[], xpt=[];
+
+		// TODO - 
+		let txthh = 10; 
+
+		let dx, dy, ang, done = false;
+		for (let pti=0; pti<pp_root.length; pti++) {
+
+			if (typeof pp_root[pti][0] != 'number') {
+
+				partLoop(pp_root[pti], pp_path_level-1);
+
+			} else {
+
+				// Garantir ring está desenhado no sentido dos ponteiros do relógio
+				ring = [...pp_root];
+				if (area2(pp_root) > 0) {
+					ring.reverse(); 
+				}
+
+				// passar ponto a coordenadas do ecrã
+				p_mapctxt.transformmgr.getRenderingCoordsPt(ring[pti], pt);
+				if (pt1 == null) {
+					pt1 = [...pt];
+				} else {
+					d = dist2D(pt1, pt);
+					acclength += d;
+					//console.log("acclength:", acclength, "cursor_length:", cursor_position);
+					if (acclength > p_cursor_position) {
+
+						if (!done) {
+							meas = (p_cursor_position - acclength + d) / d;
+							segmentMeasureToPoint(pt1, pt, meas, xpt)
+
+							if (dx == 0) {
+								xpt[0] -= txthh;
+							} else if (dy == 0) {
+								xpt[1] -= txthh;
+							} else {
+								dy = pt1[1] - pt[1];
+								dx = pt1[0] - pt[0];
+								ang = Math.atan(dy/dx);
+								a = txthh * Math.sin(ang);
+								xpt[0] -= dy;
+								xpt[1] -= a;
+							}
+
+							p_pontosdiv.push([[...xpt], ang, p_char]);
+
+
+						}
+
+						done = true;
+						//pp_this._gfctx.fillText(p_labeltxt, ...pt);
+						//break;
+					}
+					pt1 = [...pt];
+				}
+
+				
+
+			}
+		}
+	}
+
+
+	let char, seccount = 200;
+	if (p_coords.length > 0) {
+		cursor_position = (pl - tl) / 2.0;
+		while(cursor_position < pl && seccount > 0) {
+
+			seccount--;
+			partLoop(p_coords, p_path_levels, cursor_position, char, out_data);
+
+			if (poppable_string.length < 1) {
+				break;
+			}
+
+			char = poppable_string.charAt(0);
+			poppable_string = poppable_string.slice(1);
+			cursor_position += p_gfctx.measureText(char).width;
+
+		}
+	}
+
+}
 
 const canvasVectorMethodsMixin = (Base) => class extends Base {
 	
@@ -38,7 +143,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 			this.strokeflag = false;
 	
 			if (symb.labelFillStyle !== undefined && symb.labelFillStyle.toLowerCase() !== "none") {
-				this._gfctx.labelFillStyle = symb.labelFillStyle;
+				this._gfctx.fillStyle = symb.labelFillStyle;
 				this.fillflag = true;
 			}	
 
@@ -186,8 +291,24 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 		return true;		
 	}
 
-	drawLabel(p_mapctxt, p_coords, p_labeltxt) {
-		this._gfctx.fillText(p_labeltxt, ...p_coords)
+	drawLabel(p_mapctxt, p_coords, p_path_levels, p_labeltxt) {
+		// console.log("pl:", p_path_levels);
+
+		if (this._gfctx == null) {
+			throw new Error(`graphics context was not previously grabbed for layer '${this.key}'`);
+		}
+
+		const textDrawData=[];
+		textDrawAlongStraightSegmentsPath(p_mapctxt, this._gfctx, p_coords, p_path_levels, p_labeltxt, textDrawData)
+
+		for (const [pt, ang, char] of textDrawData) {
+			this._gfctx.beginPath();
+			this._gfctx.ellipse(pt[0], pt[1], 3, 3, 0, 0, 2 * Math.PI);
+			this._gfctx.fill();
+
+		}
+
+		return true;	
 	}
 }
 
@@ -351,13 +472,16 @@ export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLa
 			}				
 		}
 
-		console.log(ret, opt_lblfield);
+		if (p_attrs["cod_topo"] === undefined || p_attrs["cod_topo"] != "JTBRA0") {
+			return ret;
+		}
+
+		console.log(ret, opt_lblfield, p_path_levels);
 
 		if (ret && opt_lblfield != null) {
 			if (this.grabLabelGf2DCtx(p_mapctxt, opt_alt_canvaskey, lbloptsymbs)) {
 				try {
-					//console.log(p_coords, p_attrs[opt_lblfield]);
-					//ret = this.drawLabel(p_mapctxt, p_coords, p_attrs[opt_lblfield]);
+					ret = this.drawLabel(p_mapctxt, p_coords, p_path_levels, p_attrs[opt_lblfield]);
 				} catch(e) {
 					console.log(p_coords, opt_lblfield, p_attrs[opt_lblfield]);
 					throw e;

@@ -28,8 +28,6 @@ export class FeatureCollection {
 			throw new Error(`layer '${p_layerkey}' already set`);
 		}	
 
-		console.log("+##+ lblfld:",p_layerkey, p_layerobj['labelfield']);
-
 		if (p_layerobj['labelfield'] !== undefined && p_layerobj['labelfield'] != "NONE") {
 			this.labelfield = p_layerobj['labelfield'];
 		}

@@ -34,6 +34,48 @@ export function dist2D(p_pt1, p_pt2) {
 	return Math.sqrt(distSquared2D(p_pt1, p_pt2));
 }
 
+export function pathLength(p_pathcoords, p_path_levels, opt_transform_func) {
+
+	console.log("39", p_path_levels);
+
+	let global_ret = 0;
+
+	function subPathLength(p_coords) {
+		let ret = 0, pt1 = null, ptt=[];
+
+		for (const pt of  p_coords) {
+			if (opt_transform_func) {
+				opt_transform_func(pt, ptt);
+			} else {
+				ptt = pt;
+			}
+			if (pt1 == null) {
+				pt1 = [...ptt];
+				continue;
+			}
+
+			ret += dist2D(pt1, ptt); 
+			pt1 = [...ptt];
+		}
+
+		return ret;
+	} 
+
+	function innerCycle(pp_current_coords, pp_current_path_level) {
+		if (pp_current_path_level == 1) {
+			global_ret += subPathLength(pp_current_coords);
+			return;
+		} else {	
+			for (const subpath in pp_current_coords) {
+				innerCycle(subpath, pp_current_path_level-1);
+			}
+		}
+	}
+
+	innerCycle(p_pathcoords, p_path_levels);
+
+	return global_ret;
+}
 
 function area2_3p(p_pt1, p_pt2, p_pt3) {
 	return (p_pt1[0] - p_pt3[0]) * (p_pt2[1] - p_pt3[1]) - (p_pt1[1] - p_pt3[1]) * (p_pt2[0] - p_pt3[0]);
@@ -63,7 +105,7 @@ function ccw(p_pt_sequence) {
 }
 */
 
-function area2(p_pointlst) {
+export function area2(p_pointlst) {
 	
 	let ret = 0.0;
 	
@@ -409,6 +451,22 @@ export function geomTest() {
 
 	if (v > 0) {
 		throw new Error("CW/CCW logic is flawed, wrong result on geometry test 4");
+	}
+
+}
+
+export function segmentMeasureToPoint(pt1, pt2, p_measure, out_pt) {
+	const dx = pt2[0] - pt1[0];
+	const dy = pt2[1] - pt1[1];	
+
+	out_pt.length = 2;
+	
+	if (dx == 0) {
+		out_pt[1] = pt1[1] + p_measure * dy;
+		out_pt[0] = pt1[0] + (dx / dy)  * p_measure * dy;
+	} else {
+		out_pt[0] = pt1[0] + p_measure * dx;
+		out_pt[1] = pt1[1] + (dy / dx)  * p_measure * dx;
 	}
 
 }
