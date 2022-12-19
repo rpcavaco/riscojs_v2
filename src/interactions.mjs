@@ -2,6 +2,7 @@
 import {GlobalConst} from './constants.js';
 import {AreaGridLayer} from './vectorlayers.mjs';
 import {EditManager} from './edit_manager.mjs';
+import {dist2D} from './geom.mjs';
 
 export class BaseTool {
 
@@ -396,6 +397,62 @@ class InfoTool extends BaseTool {
 	}	
 }
 
+class MeasureTool extends BaseTool {
+
+	accumdist;
+	prevpt;
+	constructor() {
+		// TODO - remove default in toogle
+		super(true, true); // part of general toggle group, default in toogle
+		this.accumdist = 0;
+		this.prevpt = null;
+	}
+
+	onEvent(p_mapctx, p_evt) {
+
+		let d, pt;
+		// const ci = p_mapctx.getCustomizationInstance();
+		// if (ci == null) {
+		// 	throw new Error("InfoTool, customization instance is missing")
+		// }
+
+		// const ic = ci.instances["infoclass"];
+
+		try {
+			switch(p_evt.type) {
+
+				case 'dblclick':
+					this.accumdist = 0;
+					this.prevpt = null;
+					break;
+
+				case 'mouseup':
+					if (this.prevpt == null) {
+						this.prevpt = [p_evt.clientX, p_evt.clientY];
+						console.log("dist start");
+					} else {
+						pt = [p_evt.clientX, p_evt.clientY];
+						d = dist2D(this.prevpt, pt);
+						if (d < 2) {
+							this.accumdist = 0;
+							this.prevpt = null;	
+							console.log("dist reset");	
+						} else {
+							this.accumdist += d;
+							this.prevpt = [p_evt.clientX, p_evt.clientY];
+							console.log("dist:", this.accumdist);
+						}
+					}						
+					break;
+
+			}
+		} catch(e) {
+			console.error(e);
+		}  
+		
+	}	
+}
+
 export class ToolManager {
 
 	constructor(p_mapctx_config_var) {
@@ -413,7 +470,10 @@ export class ToolManager {
 					case "InfoTool":
 						this.addTool(new InfoTool());
 						break;
-				}
+					case "MeasureTool":
+						this.addTool(new MeasureTool());
+						break;
+					}
 			}
 		}	
 	}
