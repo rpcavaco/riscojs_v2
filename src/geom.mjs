@@ -36,8 +36,6 @@ export function dist2D(p_pt1, p_pt2) {
 
 export function pathLength(p_pathcoords, p_path_levels, opt_transform_func) {
 
-	console.log("39", p_path_levels);
-
 	let global_ret = 0;
 
 	function subPathLength(p_coords) {
@@ -467,6 +465,31 @@ export function segmentMeasureToPoint(pt1, pt2, p_measure, out_pt) {
 	} else {
 		out_pt[0] = pt1[0] + p_measure * dx;
 		out_pt[1] = pt1[1] + (dy / dx)  * p_measure * dx;
+	}
+
+}
+
+export function loopPathParts(p_pathcoords, p_pathlevels, p_applyfunction, ...p_func_args) {
+
+	if (p_pathlevels == 0) {
+		return;
+	}
+
+	if (p_pathlevels == 1) {
+		if (typeof p_pathcoords[0][0] != 'number') {
+			throw new Error(`loopPathParts error, pathlevel is 1 but current path is not array of points (array of array of coordinates): ${p_pathcoords}`);
+		}
+		p_applyfunction(p_pathcoords, p_pathlevels, ...p_func_args);
+	
+	} else {
+
+		for (const pathpart of p_pathcoords) {
+			if (typeof pathpart[0][0] == 'number') {
+				throw new Error(`loopPathParts error, pathlevel is ${p_pathlevels} > 1 but current path is a array of points (array of array of coordinates): ${pathpart}`);
+			}
+			loopPathParts(pathpart, p_pathlevels-1, p_applyfunction, p_func_args);
+		}
+
 	}
 
 }
