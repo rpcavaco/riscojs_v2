@@ -33,7 +33,7 @@ const strokeSymbolMixin = (Base) => class extends Base {
 }
 
 const labelSymbolMixin = (Base) => class extends Base {
-	labelFillStyle = "red";
+	labelFillStyle = "white";
 	labelFont = "20px Helvetica";
 }
 

@@ -2,99 +2,196 @@
 import {GlobalConst} from './constants.js';
 import {GraticuleLayer, PointGridLayer, AreaGridLayer, AGSQryLayer} from './vectorlayers.mjs';
 import { RiscoFeatsLayer } from './risco_ownlayers.mjs';
-import {pathLength, dist2D, segmentMeasureToPoint, area2} from './geom.mjs';
+import {pathLength, dist2D, segmentMeasureToPoint, area2, loopPathParts} from './geom.mjs';
 
-function textDrawAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_coords, p_path_levels, p_labeltxt, out_data) {
+
+function evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, p_labeltxtlen) {
+
+	function qtize(p_val) {
+		return parseInt(p_val / GlobalConst.LBL_QUANTIZE_SIZE);
+	}
+
+	function verticalityTest(p_dx, p_dy) {
+		if (p_dx == 0) {
+			return true;
+		} else {
+			return qtize(Math.abs(p_dy)) / qtize(Math.abs(p_dx)) > 2;
+		}
+	}
+
+	if (p_coords.length < 1) {
+		return null;
+	}
+
+	const ubRendCoordsFunc = p_mapctxt.transformmgr.getRenderingCoordsPt;
+	const tl = p_labeltxtlen;
+	let retobj = null;
+	let globaldx = 0;
+
+	// Check if there is enough horizontal on near-horizontal continuous path to hold the whole text length
+
+	let collected_paths = [];
+	let check_verticality = true;
+	let loop_count = 0;
+
+	//console.log(p_coords);
+
+	while(loop_count < 2) {
+
+		loopPathParts(p_coords, p_path_levels, function(p_pathpart, p_collected_paths, p_check_verticality) { 
+			
+			let dx, dy, pl, prev_positive_dir=null;
+			let current_collected_path = [];
+			for (let pi=1; pi<p_pathpart.length; pi++) {
+				
+				dy = p_pathpart[pi][1] - p_pathpart[pi-1][1];
+				dx = p_pathpart[pi][0] - p_pathpart[pi-1][0];
+
+				if (p_check_verticality && verticalityTest(dx, dy) || (prev_positive_dir!=null && prev_positive_dir != (dx > 0))) {
+					if (current_collected_path.length > 0) {
+						pl = pathLength(current_collected_path, 1, ubRendCoordsFunc.bind(p_mapctxt.transformmgr));
+						if (tl <= GlobalConst.LBL_MAX_ALONGPATH_OCCUPATION * pl) {
+							p_collected_paths.push([...current_collected_path]);
+							current_collected_path.length = 0;
+						}
+					}
+				} else {
+					if (pi==1) {
+						current_collected_path.push([...p_pathpart[pi-1]]);
+					}
+					current_collected_path.push([...p_pathpart[pi]]);
+				}
+				prev_positive_dir = (dx > 0);
+			}
+			if (current_collected_path.length > 0) {
+				pl = pathLength(current_collected_path, 1, ubRendCoordsFunc.bind(p_mapctxt.transformmgr));
+				//console.log(tl, pl, 0.98 * pl);
+				//console.log(p_collected_paths);
+				if (tl <= GlobalConst.LBL_MAX_ALONGPATH_OCCUPATION * pl) {
+					p_collected_paths.push([...current_collected_path]);
+				}
+			}
+		}, collected_paths, check_verticality);
+
+		if (loop_count == 0 && collected_paths.length > 0) {
+			break;
+		}
+
+		check_verticality = false;
+		loop_count++;
+	}
+
+	if (collected_paths.length > 0) {
+
+		collected_paths.sort((a, b) => {
+			return pathLength(b, 1) - pathLength(a, 1);
+		})
+	
+		for (let pi=1; pi<collected_paths[0].length; pi++) {
+			globaldx += collected_paths[0][pi][0] - collected_paths[0][pi-1][0];
+		}
+
+		if (globaldx > 0) {
+			retobj = collected_paths[0];
+		} else {
+			retobj = collected_paths[0].reverse();
+		}
+	}
+
+	return retobj;
+}
+
+
+function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coords, p_labeltxt, p_label_len, out_data) {
 	// console.log("pl:", p_path_levels);
 
 	const ubRendCoordsFunc = p_mapctxt.transformmgr.getRenderingCoordsPt;
-	const pl = pathLength(p_coords, p_path_levels, ubRendCoordsFunc.bind(p_mapctxt.transformmgr));
-	const tl = p_gfctx.measureText(p_labeltxt).width;
+	const pl = pathLength(p_path_coords, 1, ubRendCoordsFunc.bind(p_mapctxt.transformmgr));
 
 	let cursor_position;
 	let poppable_string = (' ' + p_labeltxt).slice(1);
 
 	out_data.length = 0;
-	console.log("INICIO> pl e tl:", pl, tl);
-	// TODO - tl > pl
 
-	function partLoop(pp_root, pp_path_level, p_cursor_position, p_char, p_pontosdiv) {
+	//console.log(p_labeltxt)
 
-		let a, d, meas;
-		let pt1 = null, acclength = 0, ring;
+	function partLoop(pp_root, pp_path_level, p_prevstops, p_cursor_position, p_char, p_charw, out_txtparams) {
+
+		let d, ar, meas, seccount = 50;
+		let pt1, acclength = 0, ring;
 		const pt=[], xpt=[];
 
-		// TODO - 
-		let txthh = 10; 
-
-		let dx, dy, ang, done = false;
+		let done, ri;
 		for (let pti=0; pti<pp_root.length; pti++) {
 
 			if (typeof pp_root[pti][0] != 'number') {
 
-				partLoop(pp_root[pti], pp_path_level-1);
+				partLoop(pp_root[pti], pp_path_level-1, p_prevstops, p_cursor_position, p_char, p_charw, out_txtparams);
 
 			} else {
 
-				// Garantir ring está desenhado no sentido dos ponteiros do relógio
-				ring = [...pp_root];
-				if (area2(pp_root) > 0) {
-					ring.reverse(); 
-				}
+				pt1 = null;
+				done = false;
 
-				// passar ponto a coordenadas do ecrã
-				p_mapctxt.transformmgr.getRenderingCoordsPt(ring[pti], pt);
-				if (pt1 == null) {
-					pt1 = [...pt];
+				if (p_prevstops[pp_path_level] !== undefined && p_prevstops[pp_path_level][pti] !== undefined) {
+					ri = p_prevstops[pp_path_level][pti]["ri"];
+					acclength = p_prevstops[pp_path_level][pti]["al"];
+					pt1 = p_prevstops[pp_path_level][pti]["pt1"];
 				} else {
-					d = dist2D(pt1, pt);
-					acclength += d;
-					//console.log("acclength:", acclength, "cursor_length:", cursor_position);
-					if (acclength > p_cursor_position) {
+					ri = 0;
+				}
+				// console.log("    ri inicial:", ri, acclength, p_cursor_position, pt1);
+				while (ri<pp_root.length && !done && seccount >= 0) {
 
-						if (!done) {
+					seccount--;
+					
+					// passar ponto a coordenadas do ecrã
+					p_mapctxt.transformmgr.getRenderingCoordsPt(pp_root[ri], pt);
+
+					if (pt1 == null) {
+
+						pt1 = [...pt];
+
+					} else {
+
+						d = dist2D(pt1, pt);
+						acclength += d;
+
+						if (acclength > p_cursor_position) {
+
 							meas = (p_cursor_position - acclength + d) / d;
 							segmentMeasureToPoint(pt1, pt, meas, xpt)
 
-							if (dx == 0) {
-								xpt[0] -= txthh;
-							} else if (dy == 0) {
-								xpt[1] -= txthh;
-							} else {
-								dy = pt1[1] - pt[1];
-								dx = pt1[0] - pt[0];
-								ang = Math.atan(dy/dx);
-								a = txthh * Math.sin(ang);
-								xpt[0] -= dy;
-								xpt[1] -= a;
-							}
+							out_txtparams.push([[...xpt], p_charw, p_char]);
 
-							p_pontosdiv.push([[...xpt], ang, p_char]);
-
-
+							if (p_prevstops[pp_path_level] === undefined) {
+								p_prevstops[pp_path_level] = {};
+							}							
+							p_prevstops[pp_path_level][pti] = {
+								"ri": ri,
+								"al": p_cursor_position,
+								"pt1": xpt
+							}							
+							done = true;
 						}
-
-						done = true;
-						//pp_this._gfctx.fillText(p_labeltxt, ...pt);
-						//break;
+						pt1 = [...pt];
 					}
-					pt1 = [...pt];
+					ri++;
 				}
 
-				
-
+				break;
 			}
 		}
 	}
 
-
-	let char, seccount = 200;
-	if (p_coords.length > 0) {
-		cursor_position = (pl - tl) / 2.0;
+	let char=null, prevstops = {}, seccount = 200, prev_out_data=[];
+	let ang, dx, dy, charw = 0;
+	if (p_path_coords.length > 0) {
+		cursor_position = (pl - p_label_len) / 2.0;
 		while(cursor_position < pl && seccount > 0) {
 
 			seccount--;
-			partLoop(p_coords, p_path_levels, cursor_position, char, out_data);
+			partLoop(p_path_coords, 1, prevstops, cursor_position, char, charw, prev_out_data);
 
 			if (poppable_string.length < 1) {
 				break;
@@ -102,8 +199,26 @@ function textDrawAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_coords, p_path_
 
 			char = poppable_string.charAt(0);
 			poppable_string = poppable_string.slice(1);
-			cursor_position += p_gfctx.measureText(char).width;
+			charw = p_gfctx.measureText(char).width;
+			cursor_position += charw;
+		}
+	}
+	if (prev_out_data.length > 0) {
+		let dlt, prevpt = null;
+		for (const [pt, w, char] of prev_out_data) {
+			if (prevpt != null) {
 
+				dy = pt[1] - prevpt[1];
+				dx = pt[0] - prevpt[0];
+
+				if (dx != 0 && dx != 0) {
+					dlt = dy / Math.abs(dx);
+					ang = Math.atan(dlt);
+				}
+
+				out_data.push([[prevpt[0]+(dx/2), prevpt[1]+(dy/2)], ang, char, w, 20]);
+			}
+			prevpt = [...pt];
 		}
 	}
 
@@ -298,15 +413,52 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 			throw new Error(`graphics context was not previously grabbed for layer '${this.key}'`);
 		}
 
-		const textDrawData=[];
-		textDrawAlongStraightSegmentsPath(p_mapctxt, this._gfctx, p_coords, p_path_levels, p_labeltxt, textDrawData)
+		const tl = this._gfctx.measureText(p_labeltxt).width;
+		const path = evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, tl);
+		if (path == null) {
+			// console.warn("drawLabel, no path", p_labeltxt);
+			return;
+		}
 
-		for (const [pt, ang, char] of textDrawData) {
-			this._gfctx.beginPath();
-			this._gfctx.ellipse(pt[0], pt[1], 3, 3, 0, 0, 2 * Math.PI);
-			this._gfctx.fill();
+		const textDrawData=[];
+		textDrawParamsAlongStraightSegmentsPath(p_mapctxt, this._gfctx, path, p_labeltxt, tl, textDrawData)
+
+		//let cnt = 10;
+
+		this._gfctx.textAlign = "center";
+		this._gfctx.textBaseline = "middle";
+
+		this._gfctx.save();
+		this._gfctx.fillStyle = "#808080a0";
+		for (const [pt, ang, char, w, h] of textDrawData) {
+
+			this._gfctx.save();
+			this._gfctx.translate(pt[0], pt[1]);
+			this._gfctx.rotate(ang);
+			this._gfctx.translate(-pt[0], -pt[1]);
+
+			this._gfctx.fillRect(pt[0]-(w/2), pt[1]-(h/2), w, h);
+			//console.log("..", char, pt)
+			this._gfctx.restore();
 
 		}
+		this._gfctx.restore();
+
+		this._gfctx.save();
+		for (const [pt, ang, char, w, h] of textDrawData) {
+
+
+			this._gfctx.save();
+			this._gfctx.translate(pt[0], pt[1]);
+			this._gfctx.rotate(ang);
+			this._gfctx.translate(-pt[0], -pt[1]);
+
+			this._gfctx.fillText(char, ...pt)
+			//console.log("..", char, pt)
+			this._gfctx.restore();
+
+		}
+		this._gfctx.restore();
 
 		return true;	
 	}
@@ -462,7 +614,6 @@ export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLa
 
 		if (this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, pathoptsymbs)) {
 			try {
-				// console.log(p_coords, p_path_levels);
 				ret = this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
 			} catch(e) {
 				console.log(p_coords, p_path_levels);
@@ -472,13 +623,7 @@ export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLa
 			}				
 		}
 
-		if (p_attrs["cod_topo"] === undefined || p_attrs["cod_topo"] != "JTBRA0") {
-			return ret;
-		}
-
-		console.log(ret, opt_lblfield, p_path_levels);
-
-		if (ret && opt_lblfield != null) {
+		if (ret && opt_lblfield != null && p_attrs[opt_lblfield] !== undefined) {
 			if (this.grabLabelGf2DCtx(p_mapctxt, opt_alt_canvaskey, lbloptsymbs)) {
 				try {
 					ret = this.drawLabel(p_mapctxt, p_coords, p_path_levels, p_attrs[opt_lblfield]);

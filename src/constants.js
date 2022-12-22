@@ -34,6 +34,10 @@ var GlobalConst = {
 		9999999999999: [3, 3]
 	},
 
+	LBL_QUANTIZE_SIZE: 4,
+	LBL_VERTICALITY_TEST: 2,
+	LBL_MAX_ALONGPATH_OCCUPATION: 0.98,
+
 	// Specialized debugging - canvas path opening and closing
 	DEBUG_CANVASVECTOR_PATHCLOSING: null,
 	DEBUG_CANVASVECTOR_PATHCLOSING_FEATID: 387,
@@ -41,7 +45,6 @@ var GlobalConst = {
 	// Specialized debugging - canvas path opening and closing
 	DEBUG_FEATURE_DISTANCETO: false,
 	DEBUG_FEATURE_DISTANCETO_FEATID: 7455,
-
 
 	FEATMOUSESEL_HIGHLIGHT: {
 		"poly" : { 

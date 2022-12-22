@@ -479,13 +479,13 @@ export function loopPathParts(p_pathcoords, p_pathlevels, p_applyfunction, ...p_
 		if (typeof p_pathcoords[0][0] != 'number') {
 			throw new Error(`loopPathParts error, pathlevel is 1 but current path is not array of points (array of array of coordinates): ${p_pathcoords}`);
 		}
-		p_applyfunction(p_pathcoords, p_pathlevels, ...p_func_args);
+		p_applyfunction(p_pathcoords, ...p_func_args);
 	
 	} else {
 
 		for (const pathpart of p_pathcoords) {
-			if (typeof pathpart[0][0] == 'number') {
-				throw new Error(`loopPathParts error, pathlevel is ${p_pathlevels} > 1 but current path is a array of points (array of array of coordinates): ${pathpart}`);
+			if (typeof pathpart[0][0] == 'number' && p_pathlevels > 2) {
+				throw new Error(`loopPathParts error, pathlevel is ${p_pathlevels-1} > 1 but current path is an array of points (array of array of coordinates): ${JSON.stringify(pathpart)}`);
 			}
 			loopPathParts(pathpart, p_pathlevels-1, p_applyfunction, p_func_args);
 		}
