@@ -28,7 +28,9 @@ function evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, p_labelt
 	let retobj = null;
 	let globaldx = 0;
 
-	// Check if there is enough horizontal on near-horizontal continuous path to hold the whole text length
+	// First, check if there is enough horizontal on near-horizontal continuous path to hold the whole text length.
+	// If such path doesn't exist, include run same test including verticallly aligned segments.
+	// In either case, delta - x must always be of same sign.
 
 	let collected_paths = [];
 	let check_verticality = true;
@@ -47,19 +49,22 @@ function evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, p_labelt
 				dy = p_pathpart[pi][1] - p_pathpart[pi-1][1];
 				dx = p_pathpart[pi][0] - p_pathpart[pi-1][0];
 
-				if (p_check_verticality && verticalityTest(dx, dy) || (prev_positive_dir!=null && prev_positive_dir != (dx > 0))) {
+				//console.log("dx:", p_check_verticality, verticalityTest(dx, dy), p_pathpart[pi], prev_positive_dir, dx, (dx > 0));
+
+				if ((p_check_verticality && verticalityTest(dx, dy)) || (prev_positive_dir!==null && prev_positive_dir != (dx > 0))) {
 					if (current_collected_path.length > 0) {
 						pl = pathLength(current_collected_path, 1, ubRendCoordsFunc.bind(p_mapctxt.transformmgr));
 						if (tl <= GlobalConst.LBL_MAX_ALONGPATH_OCCUPATION * pl) {
 							p_collected_paths.push([...current_collected_path]);
-							current_collected_path.length = 0;
 						}
+						current_collected_path.length = 0;
 					}
 				} else {
 					if (pi==1) {
 						current_collected_path.push([...p_pathpart[pi-1]]);
 					}
 					current_collected_path.push([...p_pathpart[pi]]);
+					//console.log("    --->", p_pathpart[pi]);
 				}
 				prev_positive_dir = (dx > 0);
 			}
@@ -80,6 +85,8 @@ function evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, p_labelt
 		check_verticality = false;
 		loop_count++;
 	}
+
+	// console.log(collected_paths);
 
 	if (collected_paths.length > 0) {
 
@@ -185,7 +192,7 @@ function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coor
 	}
 
 	let char=null, prevstops = {}, seccount = 200, prev_out_data=[];
-	let ang, dx, dy, charw = 0;
+	let prevang=null, ang, dx, dy, charw = 0;
 	if (p_path_coords.length > 0) {
 		cursor_position = (pl - p_label_len) / 2.0;
 		while(cursor_position < pl && seccount > 0) {
@@ -216,7 +223,12 @@ function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coor
 					ang = Math.atan(dlt);
 				}
 
+				if (prevang != null && Math.abs(ang - prevang) > (3 * Math.PI / 7)) {
+					ang = ang / 2;
+				}
+
 				out_data.push([[prevpt[0]+(dx/2), prevpt[1]+(dy/2)], ang, char, w, 20]);
+				prevang = ang;
 			}
 			prevpt = [...pt];
 		}
@@ -624,7 +636,12 @@ export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLa
 		}
 
 		if (ret && opt_lblfield != null && p_attrs[opt_lblfield] !== undefined) {
-			if (this.grabLabelGf2DCtx(p_mapctxt, opt_alt_canvaskey, lbloptsymbs)) {
+
+			/*if (p_attrs["cod_topo"] != "JMOLI0") {
+				return;
+			}*/
+
+ 			if (this.grabLabelGf2DCtx(p_mapctxt, opt_alt_canvaskey, lbloptsymbs)) {
 				try {
 					ret = this.drawLabel(p_mapctxt, p_coords, p_path_levels, p_attrs[opt_lblfield]);
 				} catch(e) {
