@@ -755,7 +755,7 @@ export class AGSQryLayer extends RemoteVectorLayer {
 									// If feature still exists  between cleanups that's because it might not have been properly garbage collected
 									// If exists, let's not try to draw it, id is null
 									if (id) {
-										that._currFeatures.draw(p_mapctxt, that.key, id);
+										that._currFeatures.draw(p_mapctxt, that.key, id, null, null, p_terrain_env);
 									}
 								}
 							}							

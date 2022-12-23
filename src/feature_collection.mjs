@@ -154,7 +154,7 @@ export class FeatureCollection {
 		//this.spIndex.invalidate();
 	}
 	
-	draw(p_mapctxt, p_layerkey, opt_featid, opt_alt_canvaskey, opt_symbs) {
+	draw(p_mapctxt, p_layerkey, opt_featid, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
 
 		let feat;
 
@@ -163,17 +163,19 @@ export class FeatureCollection {
 		}
 
 		if (opt_featid) {
+
 			feat = this.featList[p_layerkey][opt_featid];
 			if (feat == null) {
 				throw new Error(`layer '${p_layerkey}' no feature for id ${opt_featid}`);
 			}
-			this.layers[p_layerkey].refreshitem(p_mapctxt, feat.g, feat.a, feat.l, this.labelfield, opt_featid, opt_alt_canvaskey, opt_symbs);
+			this.layers[p_layerkey].refreshitem(p_mapctxt, feat.g, feat.a, feat.l, this.labelfield, opt_featid, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
+
 		} else {
 
 			for (let id in this.featList[p_layerkey]) {
 				if (this.featList[p_layerkey].hasOwnProperty(id)) {
 					feat = this.featList[p_layerkey][id];
-					this.layers[p_layerkey].refreshitem(p_mapctxt, feat.g, feat.a, feat.l, this.labelfield, id, opt_alt_canvaskey, opt_symbs);
+					this.layers[p_layerkey].refreshitem(p_mapctxt, feat.g, feat.a, feat.l, this.labelfield, id, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
 				}
 			}
 		}

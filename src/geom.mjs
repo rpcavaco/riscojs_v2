@@ -364,6 +364,10 @@ function insidePolygon(p_pointlist, p_path_levels, p_ptin) {
 	return ret;
 }
 
+export function ptInsideEnv(p_env, p_pt) {
+	return p_pt[0] >= p_env[0] && p_pt[0] <= p_env[2] && p_pt[1] >= p_env[1] && p_pt[1] <= p_env[3];
+}
+
 export function distanceToPoly(p_pointlist, p_path_levels, p_ptin, p_minarea, opt_debug, opt_id) {
 	
 	let ret = 0.0;
@@ -493,3 +497,4 @@ export function loopPathParts(p_pathcoords, p_pathlevels, p_applyfunction, ...p_
 	}
 
 }
+

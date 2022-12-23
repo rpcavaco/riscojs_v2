@@ -2,10 +2,10 @@
 import {GlobalConst} from './constants.js';
 import {GraticuleLayer, PointGridLayer, AreaGridLayer, AGSQryLayer} from './vectorlayers.mjs';
 import { RiscoFeatsLayer } from './risco_ownlayers.mjs';
-import {pathLength, dist2D, segmentMeasureToPoint, area2, loopPathParts} from './geom.mjs';
+import {pathLength, dist2D, segmentMeasureToPoint, ptInsideEnv, loopPathParts} from './geom.mjs';
 
 
-function evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, p_labeltxtlen) {
+function evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, p_labeltxtlen, opt_terrain_env) {
 
 	function qtize(p_val) {
 		return parseInt(p_val / GlobalConst.LBL_QUANTIZE_SIZE);
@@ -45,11 +45,22 @@ function evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, p_labelt
 			let dx, dy, pl, prev_positive_dir=null;
 			let current_collected_path = [];
 			for (let pi=1; pi<p_pathpart.length; pi++) {
-				
+
 				dy = p_pathpart[pi][1] - p_pathpart[pi-1][1];
 				dx = p_pathpart[pi][0] - p_pathpart[pi-1][0];
 
-				//console.log("dx:", p_check_verticality, verticalityTest(dx, dy), p_pathpart[pi], prev_positive_dir, dx, (dx > 0));
+				// skip if terrain env is given and beginning point of segment is out of it
+				if (opt_terrain_env != null) {
+					if (dx > 0) {
+						if (!ptInsideEnv(opt_terrain_env, p_pathpart[pi-1])) {
+							continue;
+						}
+					} else {
+						if (!ptInsideEnv(opt_terrain_env, p_pathpart[pi])) {
+							continue;
+						}
+					}
+				}
 
 				if ((p_check_verticality && verticalityTest(dx, dy)) || (prev_positive_dir!==null && prev_positive_dir != (dx > 0))) {
 					if (current_collected_path.length > 0) {
@@ -64,14 +75,11 @@ function evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, p_labelt
 						current_collected_path.push([...p_pathpart[pi-1]]);
 					}
 					current_collected_path.push([...p_pathpart[pi]]);
-					//console.log("    --->", p_pathpart[pi]);
 				}
 				prev_positive_dir = (dx > 0);
 			}
 			if (current_collected_path.length > 0) {
 				pl = pathLength(current_collected_path, 1, ubRendCoordsFunc.bind(p_mapctxt.transformmgr));
-				//console.log(tl, pl, 0.98 * pl);
-				//console.log(p_collected_paths);
 				if (tl <= GlobalConst.LBL_MAX_ALONGPATH_OCCUPATION * pl) {
 					p_collected_paths.push([...current_collected_path]);
 				}
@@ -85,8 +93,6 @@ function evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, p_labelt
 		check_verticality = false;
 		loop_count++;
 	}
-
-	// console.log(collected_paths);
 
 	if (collected_paths.length > 0) {
 
@@ -110,7 +116,6 @@ function evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, p_labelt
 
 
 function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coords, p_labeltxt, p_label_len, out_data) {
-	// console.log("pl:", p_path_levels);
 
 	const ubRendCoordsFunc = p_mapctxt.transformmgr.getRenderingCoordsPt;
 	const pl = pathLength(p_path_coords, 1, ubRendCoordsFunc.bind(p_mapctxt.transformmgr));
@@ -119,8 +124,6 @@ function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coor
 	let poppable_string = (' ' + p_labeltxt).slice(1);
 
 	out_data.length = 0;
-
-	//console.log(p_labeltxt)
 
 	function partLoop(pp_root, pp_path_level, p_prevstops, p_cursor_position, p_char, p_charw, out_txtparams) {
 
@@ -147,7 +150,7 @@ function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coor
 				} else {
 					ri = 0;
 				}
-				// console.log("    ri inicial:", ri, acclength, p_cursor_position, pt1);
+
 				while (ri<pp_root.length && !done && seccount >= 0) {
 
 					seccount--;
@@ -260,8 +263,6 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 		} else {
 			canvaskey = this.canvasKey;
 		}
-
-		//console.log("canvaskey:", canvaskey, opt_symbs);
 
 		this._gfctx = p_mapctx.renderingsmgr.getDrwCtx(canvaskey, '2d');
 		this._gfctx.save();
@@ -430,7 +431,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 		return true;		
 	}
 
-	drawLabel(p_mapctxt, p_coords, p_path_levels, p_labeltxt) {
+	drawLabel(p_mapctxt, p_coords, p_path_levels, p_labeltxt, opt_terrain_env) {
 		// console.log("pl:", p_path_levels);
 
 		if (this._gfctx == null) {
@@ -438,7 +439,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 		}
 
 		const tl = this._gfctx.measureText(p_labeltxt).width;
-		const path = evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, tl);
+		const path = evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, tl, opt_terrain_env);
 		if (path == null) {
 			// console.warn("drawLabel, no path", p_labeltxt);
 			return;
@@ -602,7 +603,7 @@ export class CanvasAreaGridLayer extends canvasVectorMethodsMixin(AreaGridLayer)
 
 export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
 
-	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_lblfield, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
+	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_lblfield, opt_feat_id, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
 
 		let ret = true;
 
@@ -627,7 +628,7 @@ export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
 
 export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLayer) {
 
-	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_lblfield, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
+	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_lblfield, opt_feat_id, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
 
 		let ret = true;
 		let pathoptsymbs = null;
@@ -661,7 +662,7 @@ export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLa
 
  			if (this.grabLabelGf2DCtx(p_mapctxt, opt_alt_canvaskey, lbloptsymbs)) {
 				try {
-					ret = this.drawLabel(p_mapctxt, p_coords, p_path_levels, p_attrs[opt_lblfield]);
+					ret = this.drawLabel(p_mapctxt, p_coords, p_path_levels, p_attrs[opt_lblfield], opt_terrain_env);
 				} catch(e) {
 					console.log(p_coords, opt_lblfield, p_attrs[opt_lblfield]);
 					throw e;

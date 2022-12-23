@@ -437,7 +437,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 		return cancel;
 	}	
 
-	refreshitem(p_mapctxt, item_geom, item_atts, p_path_levels, opt_lblfield, opt_feat_id, opt_alt_canvaskey, opt_symbs) {
+	refreshitem(p_mapctxt, item_geom, item_atts, p_path_levels, opt_lblfield, opt_feat_id, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
 
 		// to be implemented
 		// for each 'canvas' item just draw each 'layeritem'
