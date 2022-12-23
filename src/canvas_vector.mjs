@@ -211,7 +211,13 @@ function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coor
 		}
 	}
 	if (prev_out_data.length > 0) {
-		let dlt, prevpt = null;
+		let tm, dlt, prevpt = null, desc=0, asc=0, h;
+		for (const [pt, w, char] of prev_out_data) {
+			tm = p_gfctx.measureText(char);
+			asc = Math.max(asc, tm.actualBoundingBoxAscent);
+			desc = Math.max(desc, tm.actualBoundingBoxDescent);
+		}
+		h = asc - desc;
 		for (const [pt, w, char] of prev_out_data) {
 			if (prevpt != null) {
 
@@ -227,7 +233,7 @@ function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coor
 					ang = ang / 2;
 				}
 
-				out_data.push([[prevpt[0]+(dx/2), prevpt[1]+(dy/2)], ang, char, w, 20]);
+				out_data.push([[prevpt[0]+(dx/2), prevpt[1]+(dy/2)], ang, char, w, h]);
 				prevang = ang;
 			}
 			prevpt = [...pt];
@@ -243,10 +249,11 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 	fillflag = false;
 	strokeflag = false;
 	_gfctx;  // current graphics context to be always updated at each refreshing / drawing
+	_currentsymb;
 
 	_grabGf2DCtx(p_mapctx, b_forlabel, opt_alt_canvaskey, opt_symbs) {
 
-		let canvaskey, symb;
+		let canvaskey;
 
 		if (opt_alt_canvaskey) {
 			canvaskey = opt_alt_canvaskey;
@@ -260,43 +267,48 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 		this._gfctx.save();
 
 		if (opt_symbs) {
-			symb = opt_symbs;
+			this._currentsymb = opt_symbs;
 		} else {
-			symb = this.default_symbol;
+			this._currentsymb = this.default_symbol;
 		}	
 
 		if (b_forlabel) {
 
 			this.strokeflag = false;
 	
-			if (symb.labelFillStyle !== undefined && symb.labelFillStyle.toLowerCase() !== "none") {
-				this._gfctx.fillStyle = symb.labelFillStyle;
+			if (this._currentsymb.labelFillStyle !== undefined && this._currentsymb.labelFillStyle.toLowerCase() !== "none") {
+				this._gfctx.fillStyle = this._currentsymb.labelFillStyle;
 				this.fillflag = true;
 			}	
 
-			if (symb.labelFont !== undefined) {
-				this._gfctx.font = symb.labelFont;
-			}	
-	
+			let fontface='Helvetica', fntsz = 14;
+			if (this._currentsymb.labelFontSizePX !== undefined) {
+				fntsz = this._currentsymb.labelFontSizePX;
+			}
+
+			if (this._currentsymb.labelFontFace !== undefined) {
+				fontface = this._currentsymb.labelFontFace;
+			}			
+
+			this._gfctx.font = `${fntsz}px ${fontface}`;	
 	
 		} else {
 
-			if (symb.strokeStyle !== undefined && symb.strokeStyle.toLowerCase() !== "none") {
-				this._gfctx.strokeStyle = symb.strokeStyle;
+			if (this._currentsymb.strokeStyle !== undefined && this._currentsymb.strokeStyle.toLowerCase() !== "none") {
+				this._gfctx.strokeStyle = this._currentsymb.strokeStyle;
 				this.strokeflag = true;
 			}
 	
-			if (symb.lineWidth !== undefined) {
-				this._gfctx.lineWidth = symb.lineWidth;
+			if (this._currentsymb.lineWidth !== undefined) {
+				this._gfctx.lineWidth = this._currentsymb.lineWidth;
 			}	
 	
-			if (symb.fillStyle !== undefined && symb.fillStyle.toLowerCase() !== "none") {
-				this._gfctx.fillStyle = symb.fillStyle;
+			if (this._currentsymb.fillStyle !== undefined && this._currentsymb.fillStyle.toLowerCase() !== "none") {
+				this._gfctx.fillStyle = this._currentsymb.fillStyle;
 				this.fillflag = true;
 			}
 		}
 	
-
 		//console.log(">>", strokeflag, fillflag);
 		return true;
 	}
@@ -437,11 +449,13 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		//let cnt = 10;
 
-		this._gfctx.textAlign = "center";
-		this._gfctx.textBaseline = "middle";
+		this._gfctx.textAlign = this._currentsymb.labelTextAlign;
+		this._gfctx.textBaseline = this._currentsymb.labelTextBaseline;
 
+		// Draw a rectangular mask behind each letter
 		this._gfctx.save();
-		this._gfctx.fillStyle = "#808080a0";
+		this._gfctx.fillStyle = this._currentsymb.labelMaskFillStyle;
+		let count= 0;
 		for (const [pt, ang, char, w, h] of textDrawData) {
 
 			this._gfctx.save();
@@ -449,16 +463,22 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 			this._gfctx.rotate(ang);
 			this._gfctx.translate(-pt[0], -pt[1]);
 
-			this._gfctx.fillRect(pt[0]-(w/2), pt[1]-(h/2), w, h);
+			if (count == 0) {
+				this._gfctx.fillRect(pt[0]-(w/2)-3, pt[1]-(h/2)-1, w+4, h+2);
+			} else if (count == textDrawData.length - 1) {
+				this._gfctx.fillRect(pt[0]-(w/2)-1, pt[1]-(h/2)-1, w+2, h+2);
+			} else {
+				this._gfctx.fillRect(pt[0]-(w/2)-1, pt[1]-(h/2)-1, w+4, h+2);
+			}
 			//console.log("..", char, pt)
 			this._gfctx.restore();
 
+			count++;
 		}
 		this._gfctx.restore();
 
 		this._gfctx.save();
 		for (const [pt, ang, char, w, h] of textDrawData) {
-
 
 			this._gfctx.save();
 			this._gfctx.translate(pt[0], pt[1]);
@@ -603,8 +623,6 @@ export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
 		return ret;
 
 	}
-
-
 }
 
 export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLayer) {
@@ -637,7 +655,7 @@ export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLa
 
 		if (ret && opt_lblfield != null && p_attrs[opt_lblfield] !== undefined) {
 
-			/*if (p_attrs["cod_topo"] != "JMOLI0") {
+			/* if (p_attrs["cod_topo"] != "JMOLI0") {
 				return;
 			}*/
 
