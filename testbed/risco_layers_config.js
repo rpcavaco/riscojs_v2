@@ -69,6 +69,7 @@ var RISCOJS_LAYERS_CFG = {
 			"labelfield": "toponimo",
 			"labelFontSizePX": 20,
 			"labelFontFace": "Calibri",
+			"labelMaskFillStyle": "none",
 
 			"envsplit": false,
 			"fillStyle": "none",

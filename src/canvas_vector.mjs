@@ -454,29 +454,31 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 		this._gfctx.textBaseline = this._currentsymb.labelTextBaseline;
 
 		// Draw a rectangular mask behind each letter
-		this._gfctx.save();
-		this._gfctx.fillStyle = this._currentsymb.labelMaskFillStyle;
-		let count= 0;
-		for (const [pt, ang, char, w, h] of textDrawData) {
-
+		if (this._currentsymb.labelMaskFillStyle.toLowerCase() != "none") {
 			this._gfctx.save();
-			this._gfctx.translate(pt[0], pt[1]);
-			this._gfctx.rotate(ang);
-			this._gfctx.translate(-pt[0], -pt[1]);
+			this._gfctx.fillStyle = this._currentsymb.labelMaskFillStyle;
+			let count= 0;
+			for (const [pt, ang, char, w, h] of textDrawData) {
 
-			if (count == 0) {
-				this._gfctx.fillRect(pt[0]-(w/2)-3, pt[1]-(h/2)-1, w+4, h+2);
-			} else if (count == textDrawData.length - 1) {
-				this._gfctx.fillRect(pt[0]-(w/2)-1, pt[1]-(h/2)-1, w+2, h+2);
-			} else {
-				this._gfctx.fillRect(pt[0]-(w/2)-1, pt[1]-(h/2)-1, w+4, h+2);
+				this._gfctx.save();
+				this._gfctx.translate(pt[0], pt[1]);
+				this._gfctx.rotate(ang);
+				this._gfctx.translate(-pt[0], -pt[1]);
+
+				if (count == 0) {
+					this._gfctx.fillRect(pt[0]-(w/2)-3, pt[1]-(h/2)-1, w+4, h+2);
+				} else if (count == textDrawData.length - 1) {
+					this._gfctx.fillRect(pt[0]-(w/2)-1, pt[1]-(h/2)-1, w+2, h+2);
+				} else {
+					this._gfctx.fillRect(pt[0]-(w/2)-1, pt[1]-(h/2)-1, w+4, h+2);
+				}
+				//console.log("..", char, pt)
+				this._gfctx.restore();
+
+				count++;
 			}
-			//console.log("..", char, pt)
 			this._gfctx.restore();
-
-			count++;
 		}
-		this._gfctx.restore();
 
 		this._gfctx.save();
 		for (const [pt, ang, char, w, h] of textDrawData) {
