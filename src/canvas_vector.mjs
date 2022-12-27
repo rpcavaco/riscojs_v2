@@ -322,17 +322,12 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 	}
 
 	drawLabel(p_mapctxt, p_coords, p_path_levels, p_labeltxt, opt_terrain_env) {
-		// console.log("pl:", p_path_levels);
 
 		if (this._gfctx == null) {
 			throw new Error(`graphics context was not previously grabbed for layer '${this.key}'`);
 		}
 
 		const tl = this._gfctx.measureText(p_labeltxt).width;
-		const path = evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, tl, opt_terrain_env);
-		if (path == null) {
-			return;
-		}
 
 		this._gfctx.textAlign = this._currentsymb.labelTextAlign;
 		this._gfctx.textBaseline = this._currentsymb.labelTextBaseline;
@@ -342,6 +337,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 		if ([2,3].indexOf(p_coords.length) >= 0 && typeof p_coords[0] == 'number') {
 			placement = "centroid";
 		} else {
+
 			tmpp = this._currentsymb.labelplacement.toLowerCase();
 			if (tmpp == "along" && this.geomtype !== "line") {
 				throw new Error("Label placement 'along' on non-line geometry type.");
@@ -351,6 +347,11 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		if (placement == "along") {
 
+			const path = evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, tl, opt_terrain_env);
+			if (path == null) {
+				return;
+			}
+	
 			const textDrawData=[];
 			textDrawParamsAlongStraightSegmentsPath(p_mapctxt, this._gfctx, path, p_labeltxt, tl, textDrawData);
 
@@ -401,7 +402,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 				
 		} else if (placement == "centroid") {
 
-			let lpt=[], cpt = [];
+			let lpt=[], cpt = [], pt=[];
 			let minarea = p_mapctxt.getScale() / 100.0;
 	
 			if (this._currentsymb.labelRotation.toString().toLowerCase() != "none") {
@@ -410,7 +411,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 				}
 			}
 
-			if (this.geomtype == "point" && p_path_levels == 1) {
+			if (this.geomtype == "point") {
 
 				if (p_path_levels == 1) 
 					lpt = [...p_coords];
@@ -419,10 +420,12 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 			} else {
 
+				cpt.length = 2;
 				loopPathParts(p_coords, p_path_levels, function(p_pathpart, o_cpt) {
 					for (let pi=0; pi<p_pathpart.length; pi++) {
 						if (pi==0) {
-							o_cpt.push([...p_pathpart[pi]]);  
+							o_cpt[0] = p_pathpart[pi][0];  
+							o_cpt[1] = p_pathpart[pi][1];  
 						} else {
 							o_cpt[0] = (pi * o_cpt[0] + p_pathpart[pi][0] ) / (pi + 1);
 							o_cpt[1] = (pi * o_cpt[1] + p_pathpart[pi][1] ) / (pi + 1);
@@ -447,13 +450,15 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 				throw new Error("empty label anchor point");
 			}
 
+			p_mapctxt.transformmgr.getRenderingCoordsPt(lpt, pt);
+
 			this._gfctx.save();
 			if (this._currentsymb.labelRotation.toString().toLowerCase() != "none") {
-				this._gfctx.translate(lpt[0], lpt[1]);
+				this._gfctx.translate(pt[0], pt[1]);
 				this._gfctx.rotate(this._currentsymb.labelRotation);
-				this._gfctx.translate(-lpt[0], -lpt[1]);	
+				this._gfctx.translate(-pt[0], -pt[1]);	
 			}
-			this._gfctx.fillText(p_labeltxt, ...lpt)
+			this._gfctx.fillText(p_labeltxt, ...pt);
 			this._gfctx.restore();
 
 		}
@@ -568,7 +573,7 @@ export class CanvasAreaGridLayer extends canvasVectorMethodsMixin(AreaGridLayer)
 
 export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
 
-	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_lblfield, opt_feat_id, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
+	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
 
 		let ret = true;
 
@@ -593,11 +598,17 @@ export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
 
 export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLayer) {
 
-	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_lblfield, opt_feat_id, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
+	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
 
 		let ret = true;
 		let pathoptsymbs = null;
 		let lbloptsymbs = null;
+		let lblcontent = null;
+		let labelfield = null;
+
+		if (this['labelfield'] !== undefined && this['labelfield'] != "none") {
+			labelfield = this['labelfield'];
+		}
 
 		if (opt_symbs) {
 			if (opt_symbs['path'] !== undefined)
@@ -619,22 +630,33 @@ export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLa
 			}				
 		}
 
-		if (ret && opt_lblfield != null && p_attrs[opt_lblfield] !== undefined) {
-
-			/* if (p_attrs["cod_topo"] != "JMOLI0") {
-				return;
-			}*/
-
- 			if (this.grabLabelGf2DCtx(p_mapctxt, opt_alt_canvaskey, lbloptsymbs)) {
-				try {
-					ret = this.drawLabel(p_mapctxt, p_coords, p_path_levels, p_attrs[opt_lblfield], opt_terrain_env);
-				} catch(e) {
-					console.log(p_coords, opt_lblfield, p_attrs[opt_lblfield]);
-					throw e;
-				} finally {
-					this.releaseGf2DCtx();
-				}				
+		if (ret && labelfield != null) {
+		
+			lblcontent = null;
+			if (p_attrs[labelfield] !== undefined) {
+				lblcontent = p_attrs[labelfield];
+			} else if (opt_feat_id != null && GlobalConst.TYPICAL_OIDFLDNAMES.indexOf(labelfield.toLowerCase()) >= 0) {
+				lblcontent = opt_feat_id.toString();
 			}
+
+			if (lblcontent !== null) {
+
+				/* if (p_attrs["cod_topo"] != "JMOLI0") {
+					return;
+				}*/
+
+				if (this.grabLabelGf2DCtx(p_mapctxt, opt_alt_canvaskey, lbloptsymbs)) {
+					try {
+						ret = this.drawLabel(p_mapctxt, p_coords, p_path_levels, lblcontent, opt_terrain_env);
+					} catch(e) {
+						console.log(p_coords, labelfield, lblcontent);
+						throw e;
+					} finally {
+						this.releaseGf2DCtx();
+					}				
+				}
+			}
+
 		}
 
 		return ret;

@@ -78,6 +78,7 @@ var RISCOJS_LAYERS_CFG = {
 		},
 
 		"mancha_construida": {
+
 			"type": "riscofeats",
 			"geomtype": "poly",
 			"label": "Mancha construída",
@@ -85,7 +86,14 @@ var RISCOJS_LAYERS_CFG = {
 			"envsplit": false,
 			"fillStyle": "#0000FF7F",
 			"strokeStyle": "rgba(0.7,0.7,0.7)",
-			"lineWidth": 1	
+			"lineWidth": 1,
+			
+
+			"labelfield": "objectid",
+			"labelplacement": "centroid",
+			"labelFontSizePX": 18,
+			"labelFontFace": "Calibri",
+			
 		},
 
 		"pec_naolot": {

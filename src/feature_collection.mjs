@@ -8,7 +8,7 @@ export class FeatureCollection {
 		this.mapctx = p_mapctx;
 		this.featList = {};
 		this.layers = {};
-		this.labelfield = null;
+		//this.labelfield = null;
 	}
 
 	setLayer(p_layerkey, p_layerobj) {
@@ -28,9 +28,9 @@ export class FeatureCollection {
 			throw new Error(`layer '${p_layerkey}' already set`);
 		}	
 
-		if (p_layerobj['labelfield'] !== undefined && p_layerobj['labelfield'] != "NONE") {
+		/* if (p_layerobj['labelfield'] !== undefined && p_layerobj['labelfield'] != "none") {
 			this.labelfield = p_layerobj['labelfield'];
-		}
+		} */
 	}
 
 	add(p_layerkey, p_geom, p_attrs, p_geom_type, p_path_levels, opt_id, opt_id_fieldname) {
@@ -168,14 +168,14 @@ export class FeatureCollection {
 			if (feat == null) {
 				throw new Error(`layer '${p_layerkey}' no feature for id ${opt_featid}`);
 			}
-			this.layers[p_layerkey].refreshitem(p_mapctxt, feat.g, feat.a, feat.l, this.labelfield, opt_featid, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
+			this.layers[p_layerkey].refreshitem(p_mapctxt, feat.g, feat.a, feat.l, opt_featid, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
 
 		} else {
 
 			for (let id in this.featList[p_layerkey]) {
 				if (this.featList[p_layerkey].hasOwnProperty(id)) {
 					feat = this.featList[p_layerkey][id];
-					this.layers[p_layerkey].refreshitem(p_mapctxt, feat.g, feat.a, feat.l, this.labelfield, id, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
+					this.layers[p_layerkey].refreshitem(p_mapctxt, feat.g, feat.a, feat.l, id, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
 				}
 			}
 		}

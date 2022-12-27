@@ -33,6 +33,7 @@ var GlobalConst = {
 		4000: [3, 2],
 		9999999999999: [3, 3]
 	},
+	TYPICAL_OIDFLDNAMES: ["objectid", "oid", "oidfld"],
 
 	LBL_QUANTIZE_SIZE: 4,
 	LBL_VERTICALITY_TEST: 2,

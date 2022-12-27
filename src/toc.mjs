@@ -381,7 +381,7 @@ export class TOCManager {
 				return;
 			}
 
-			if (this.layers[li].label !== undefined && this.layers[li].label != "NONE")
+			if (this.layers[li].label !== undefined && this.layers[li].label != "none")
 				lbl = this.layers[li].label;
 			else
 				lbl = this.layers[li].key;

@@ -53,13 +53,13 @@ export class CanvasLineSymbol extends labelSymbolMixin(strokeSymbolMixin(Symbol)
 	}
 }
 
-export class CanvasPolygonSymbol extends fillSymbolMixin(strokeSymbolMixin(Symbol)) { 
+export class CanvasPolygonSymbol extends labelSymbolMixin(fillSymbolMixin(strokeSymbolMixin(Symbol))) { 
 	constructor() {
 		super();
 	}
 }
 
-class MarkerSymbol extends Symbol {
+class MarkerSymbol extends labelSymbolMixin(Symbol) {
 	markersize; 
 	constructor() {
 		super();

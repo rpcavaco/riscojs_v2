@@ -479,7 +479,7 @@ export function segmentMeasureToPoint(pt1, pt2, p_measure, out_pt) {
 
 }
 
-export function loopPathParts(p_pathcoords, p_pathlevels, p_applyfunction, ...p_func_args) {
+export function loopPathParts(p_pathcoords, p_pathlevels, p_applyfunction, p_func_args_list) {
 
 	if (p_pathlevels == 0) {
 		return;
@@ -489,7 +489,7 @@ export function loopPathParts(p_pathcoords, p_pathlevels, p_applyfunction, ...p_
 		if (typeof p_pathcoords[0][0] != 'number') {
 			throw new Error(`loopPathParts error, pathlevel is 1 but current path is not array of points (array of array of coordinates): ${p_pathcoords}`);
 		}
-		p_applyfunction(p_pathcoords, ...p_func_args);
+		p_applyfunction(p_pathcoords, p_func_args_list);
 	
 	} else {
 
@@ -497,7 +497,7 @@ export function loopPathParts(p_pathcoords, p_pathlevels, p_applyfunction, ...p_
 			if (typeof pathpart[0][0] == 'number' && p_pathlevels > 2) {
 				throw new Error(`loopPathParts error, pathlevel is ${p_pathlevels-1} > 1 but current path is an array of points (array of array of coordinates): ${JSON.stringify(pathpart)}`);
 			}
-			loopPathParts(pathpart, p_pathlevels-1, p_applyfunction, p_func_args);
+			loopPathParts(pathpart, p_pathlevels-1, p_applyfunction, p_func_args_list);
 		}
 
 	}
@@ -539,10 +539,13 @@ export function evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, p
 
 	while(loop_count < 2) {
 
-		loopPathParts(p_coords, p_path_levels, function(p_pathpart, p_collected_paths, p_check_verticality) { 
+		loopPathParts(p_coords, p_path_levels, function(p_pathpart, p_func_args_list) { 
 			
 			let dx, dy, pl, prev_positive_dir=null;
 			let current_collected_path = [];
+
+			const [p_collected_paths, p_check_verticality] = p_func_args_list;
+
 			for (let pi=1; pi<p_pathpart.length; pi++) {
 
 				dy = p_pathpart[pi][1] - p_pathpart[pi-1][1];
@@ -583,7 +586,7 @@ export function evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, p
 					p_collected_paths.push([...current_collected_path]);
 				}
 			}
-		}, collected_paths, check_verticality);
+		}, [collected_paths, check_verticality]);
 
 		if (loop_count == 0 && collected_paths.length > 0) {
 			break;
@@ -620,8 +623,8 @@ export function pathEnv(p_coords, p_path_levels) {
 		for (const pt of p_pathpart) {
 			p_ret[0] = Math.min(pt[0], p_ret[0]);
 			p_ret[1] = Math.min(pt[1], p_ret[1]);
-			p_ret[2] = Math.max(pt[2], p_ret[2]);
-			p_ret[3] = Math.max(pt[3], p_ret[3]);
+			p_ret[2] = Math.max(pt[0], p_ret[2]);
+			p_ret[3] = Math.max(pt[1], p_ret[3]);
 		}
 	}, ret);
 
@@ -644,6 +647,9 @@ export function findPolygonCentroid(p_coords, p_path_levels, p_cpt, p_step) {
 	let movidx = 0;
 
 	const env = pathEnv(p_coords, p_path_levels);
+
+	//console.log(test_pt, "env:", env);
+
 	let secloopcnt = 200;
 
 	// TODO - não progredir para fora do envelope
@@ -676,9 +682,11 @@ export function findPolygonCentroid(p_coords, p_path_levels, p_cpt, p_step) {
 		test_pt[1] = curr_row * p_step + p_cpt[1];
 
 		if (!ptInsideEnv(env, test_pt)) {
-			throw new Error("no inside centroid found for polygon");
+			throw new Error(`no inside centroid found for polygon, secloopcnt:${secloopcnt}`);
 		}
 	}
+
+	//console.log("out secloopcnt:", secloopcnt);
 
 	return test_pt;
 
