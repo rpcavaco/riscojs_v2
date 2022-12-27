@@ -2,7 +2,7 @@
 import {GlobalConst} from './constants.js';
 import {GraticuleLayer, PointGridLayer, AreaGridLayer, AGSQryLayer} from './vectorlayers.mjs';
 import { RiscoFeatsLayer } from './risco_ownlayers.mjs';
-import {evalTextAlongPathViability, pathLength, findPolygonCentroid, dist2D, segmentMeasureToPoint, loopPathParts, distanceToLine} from './geom.mjs';
+import {evalTextAlongPathViability, pathLength, findPolygonCentroid, dist2D, segmentMeasureToPoint, loopPathParts, distanceToLine, deg2Rad} from './geom.mjs';
 
 
 function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coords, p_labeltxt, p_label_len, out_data) {
@@ -402,13 +402,15 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 				
 		} else if (placement == "centroid") {
 
-			let lpt=[], cpt = [], pt=[];
+			let lpt=[], cpt = [], pt=[], finalpt=[], rot=null;
 			let minarea = p_mapctxt.getScale() / 100.0;
 	
 			if (this._currentsymb.labelRotation.toString().toLowerCase() != "none") {
 				if (isNaN(this._currentsymb.labelRotation)) {
 					throw new Error("invalid label rotation:", this._currentsymb.labelRotation);
 				}
+
+				rot = deg2Rad(this._currentsymb.labelRotation);
 			}
 
 			if (this.geomtype == "point") {
@@ -448,17 +450,50 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 			if (lpt.length < 1) {
 				throw new Error("empty label anchor point");
-			}
-
+			}			
 			p_mapctxt.transformmgr.getRenderingCoordsPt(lpt, pt);
 
-			this._gfctx.save();
-			if (this._currentsymb.labelRotation.toString().toLowerCase() != "none") {
-				this._gfctx.translate(pt[0], pt[1]);
-				this._gfctx.rotate(this._currentsymb.labelRotation);
-				this._gfctx.translate(-pt[0], -pt[1]);	
+			if (this._currentsymb.labelLeaderLength != "none") {
+
+				let leadrot = 0;
+				if (this._currentsymb.labelLeaderRotation != "none") {
+					leadrot = deg2Rad(this._currentsymb.labelLeaderRotation);
+				}
+
+				console.log(leadrot, this._currentsymb.labelLeaderStroke, this._currentsymb.labelLeaderLength);
+
+				this._gfctx.save();
+
+				
+				if (this._currentsymb.labelLeaderStroke != "none") {
+					this._gfctx.strokeStyle = this._currentsymb.labelLeaderStroke;
+				}
+				if (this._currentsymb.labelLeaderLinewidth != "none") {
+					this._gfctx.lineWidth = this._currentsymb.labelLeaderLinewidth;
+				}
+
+				this._gfctx.beginPath();
+				this._gfctx.moveTo(...pt);
+
+				finalpt.length = 2;
+				finalpt[0] = pt[0] + this._currentsymb.labelLeaderLength * Math.cos(leadrot);
+				finalpt[1] = pt[1] + this._currentsymb.labelLeaderLength * Math.sin(leadrot);
+				this._gfctx.lineTo(...finalpt);
+				this._gfctx.stroke();
+
+				this._gfctx.restore();
+
+			} else {
+				finalpt = pt;
 			}
-			this._gfctx.fillText(p_labeltxt, ...pt);
+
+			this._gfctx.save();
+			if (rot != null) {
+				this._gfctx.translate(finalpt[0], finalpt[1]);
+				this._gfctx.rotate(rot);
+				this._gfctx.translate(-finalpt[0], -finalpt[1]);	
+			}
+			this._gfctx.fillText(p_labeltxt, ...finalpt);
 			this._gfctx.restore();
 
 		}

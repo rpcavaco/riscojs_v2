@@ -40,7 +40,12 @@ const labelSymbolMixin = (Base) => class extends Base {
 	labelMaskFillStyle = "#808080a0";
 	labelTextAlign = "center";	
 	labelTextBaseline = "middle";	
-	labelRotation = "none";			
+	labelRotation = "none";	
+	
+	labelLeaderLength = "none";
+	labelLeaderStroke = "none";
+	labelLeaderLinewidth = "none";	
+	labelLeaderRotation = "none";	
 }
 
 const fillSymbolMixin = (Base) => class extends Base {

@@ -92,7 +92,13 @@ var RISCOJS_LAYERS_CFG = {
 			"labelfield": "objectid",
 			"labelplacement": "centroid",
 			"labelFontSizePX": 18,
-			"labelFontFace": "Calibri",
+			"labelFontFace": "CourierNew",
+			"labelRotation": 45,
+
+			"labelLeaderLength": 100,
+			"labelLeaderStroke": "green",
+			"labelLeaderLinewidth": 2,
+			"labelLeaderRotation": -80				
 			
 		},
 
