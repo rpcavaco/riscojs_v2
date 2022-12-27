@@ -189,8 +189,11 @@ class wheelEventCtrller {
 		this.wheelevtTmoutID = null; // for deffered setScaleCenteredAtPoint after wheel event
 		this.wheelscale = -1;
 		this.imgscale = 1.0;
+		this.lastwheelscales = [];
+		this.lastwheelscalelen = 0;
 	}
 	clear() {
+		//console.log(" ---- clear METHOD, id:", this.wheelevtTmoutID);
 		if (this.wheelevtTmoutID) {
 			clearTimeout(this.wheelevtTmoutID);
 			this.wheelevtTmoutID = null;
@@ -244,30 +247,34 @@ class wheelEventCtrller {
 		return this.wheelscale;
 	}
 	timedAfterWheelEvt(p_mapctx, p_evt) {
-		if (this.wheelevtTmoutID != null) {
-			clearTimeout(this.wheelevtTmoutID);
-		}
+		//console.log(" ---- timed:", this.wheelevtTmoutID)
 
+		if (this.wheelevtTmoutID != null) {
+			//console.log(" ---- clear id", this.wheelevtTmoutID)
+			clearTimeout(this.wheelevtTmoutID);
+			this.wheelevtTmoutID = null;
+		}
 
 		const f = (function(p_this, pp_mapctx, pp_evt) {
 			return function() {
+				//console.log(" ---- timed out", p_this.wheelevtTmoutID)
 				if (GlobalConst.getDebug("DISENG_WHEEL")) {
-					console.log("[DBG:DISENG_WHEEL] would be firing at scaleu:", p_this.wheelscale);
+					console.log("[DBG:DISENG_WHEEL] would be firing at scale:", p_this.wheelscale);
 				} else {
 					pp_mapctx.transformmgr.setScaleCenteredAtPoint(p_this.wheelscale, [pp_evt.clientX, pp_evt.clientY], true);
 				}
 				p_this.wheelscale = -1;		
+				this.wheelevtTmoutID = null;
 			}
 		})(this, p_mapctx, p_evt, p_evt);
 
 		this.wheelevtTmoutID = setTimeout(f, GlobalConst.MOUSEWHEEL_THROTTLE);
+		//console.log(" ---- launched:", this.wheelevtTmoutID)
 	}
-
 	immediateAfterWheelEvt(p_mapctx, p_mapimgs_dict, p_evt) {
+		// console.log(" ----  immed:", this.wheelevtTmoutID)
 		p_mapctx.renderingsmgr.putTransientImages(p_mapimgs_dict, this.imgscale, p_evt);
 	}	
-
-
 }
 
 
@@ -330,7 +337,7 @@ class MultiTool extends BaseTool {
 							p_mapctx.renderingsmgr.putImages(this.imgs_dict, [p_evt.clientX-this.start_screen[0], p_evt.clientY-this.start_screen[1]]);
 						}
 					}
-					this.wheelevtctrlr.clear();
+					//this.wheelevtctrlr.clear();
 					break;
 
 				case 'wheel':
