@@ -33,12 +33,14 @@ const strokeSymbolMixin = (Base) => class extends Base {
 }
 
 const labelSymbolMixin = (Base) => class extends Base {
+	labelplacement = "along";
 	labelFillStyle = "white";
 	labelFontFace = "Helvetica"
 	labelFontSizePX = 14;
 	labelMaskFillStyle = "#808080a0";
 	labelTextAlign = "center";	
-	labelTextBaseline = "middle";		
+	labelTextBaseline = "middle";	
+	labelRotation = "none";			
 }
 
 const fillSymbolMixin = (Base) => class extends Base {

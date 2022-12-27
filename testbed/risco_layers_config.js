@@ -67,9 +67,9 @@ var RISCOJS_LAYERS_CFG = {
 			"url": "https://geo.cm-porto.net/riscosrv_v2",
 
 			"labelfield": "toponimo",
-			"labelFontSizePX": 20,
+			"labelplacement": "along",
+			"labelFontSizePX": 18,
 			"labelFontFace": "Calibri",
-			"labelMaskFillStyle": "none",
 
 			"envsplit": false,
 			"fillStyle": "none",

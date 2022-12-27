@@ -2,117 +2,7 @@
 import {GlobalConst} from './constants.js';
 import {GraticuleLayer, PointGridLayer, AreaGridLayer, AGSQryLayer} from './vectorlayers.mjs';
 import { RiscoFeatsLayer } from './risco_ownlayers.mjs';
-import {pathLength, dist2D, segmentMeasureToPoint, ptInsideEnv, loopPathParts} from './geom.mjs';
-
-
-function evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, p_labeltxtlen, opt_terrain_env) {
-
-	function qtize(p_val) {
-		return parseInt(p_val / GlobalConst.LBL_QUANTIZE_SIZE);
-	}
-
-	function verticalityTest(p_dx, p_dy) {
-		if (p_dx == 0) {
-			return true;
-		} else {
-			return qtize(Math.abs(p_dy)) / qtize(Math.abs(p_dx)) > 2;
-		}
-	}
-
-	if (p_coords.length < 1) {
-		return null;
-	}
-
-	const ubRendCoordsFunc = p_mapctxt.transformmgr.getRenderingCoordsPt;
-	const tl = p_labeltxtlen;
-	let retobj = null;
-	let globaldx = 0;
-
-	// First, check if there is enough horizontal on near-horizontal continuous path to hold the whole text length.
-	// If such path doesn't exist, include run same test including verticallly aligned segments.
-	// In either case, delta - x must always be of same sign.
-
-	let collected_paths = [];
-	let check_verticality = true;
-	let loop_count = 0;
-
-	//console.log(p_coords);
-
-	while(loop_count < 2) {
-
-		loopPathParts(p_coords, p_path_levels, function(p_pathpart, p_collected_paths, p_check_verticality) { 
-			
-			let dx, dy, pl, prev_positive_dir=null;
-			let current_collected_path = [];
-			for (let pi=1; pi<p_pathpart.length; pi++) {
-
-				dy = p_pathpart[pi][1] - p_pathpart[pi-1][1];
-				dx = p_pathpart[pi][0] - p_pathpart[pi-1][0];
-
-				// skip if terrain env is given and beginning point of segment is out of it
-				if (opt_terrain_env != null) {
-					if (dx > 0) {
-						if (!ptInsideEnv(opt_terrain_env, p_pathpart[pi-1])) {
-							continue;
-						}
-					} else {
-						if (!ptInsideEnv(opt_terrain_env, p_pathpart[pi])) {
-							continue;
-						}
-					}
-				}
-
-				if ((p_check_verticality && verticalityTest(dx, dy)) || (prev_positive_dir!==null && prev_positive_dir != (dx > 0))) {
-					if (current_collected_path.length > 0) {
-						pl = pathLength(current_collected_path, 1, ubRendCoordsFunc.bind(p_mapctxt.transformmgr));
-						if (tl <= GlobalConst.LBL_MAX_ALONGPATH_OCCUPATION * pl) {
-							p_collected_paths.push([...current_collected_path]);
-						}
-						current_collected_path.length = 0;
-					}
-				} else {
-					if (pi==1) {
-						current_collected_path.push([...p_pathpart[pi-1]]);
-					}
-					current_collected_path.push([...p_pathpart[pi]]);
-				}
-				prev_positive_dir = (dx > 0);
-			}
-			if (current_collected_path.length > 0) {
-				pl = pathLength(current_collected_path, 1, ubRendCoordsFunc.bind(p_mapctxt.transformmgr));
-				if (tl <= GlobalConst.LBL_MAX_ALONGPATH_OCCUPATION * pl) {
-					p_collected_paths.push([...current_collected_path]);
-				}
-			}
-		}, collected_paths, check_verticality);
-
-		if (loop_count == 0 && collected_paths.length > 0) {
-			break;
-		}
-
-		check_verticality = false;
-		loop_count++;
-	}
-
-	if (collected_paths.length > 0) {
-
-		collected_paths.sort((a, b) => {
-			return pathLength(b, 1) - pathLength(a, 1);
-		})
-	
-		for (let pi=1; pi<collected_paths[0].length; pi++) {
-			globaldx += collected_paths[0][pi][0] - collected_paths[0][pi-1][0];
-		}
-
-		if (globaldx > 0) {
-			retobj = collected_paths[0];
-		} else {
-			retobj = collected_paths[0].reverse();
-		}
-	}
-
-	return retobj;
-}
+import {evalTextAlongPathViability, pathLength, findPolygonCentroid, dist2D, segmentMeasureToPoint, loopPathParts, distanceToLine} from './geom.mjs';
 
 
 function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coords, p_labeltxt, p_label_len, out_data) {
@@ -220,7 +110,7 @@ function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coor
 			asc = Math.max(asc, tm.actualBoundingBoxAscent);
 			desc = Math.max(desc, tm.actualBoundingBoxDescent);
 		}
-		h = asc - desc;
+		h = asc + desc;
 		for (const [pt, w, char] of prev_out_data) {
 			if (prevpt != null) {
 
@@ -441,23 +331,60 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 		const tl = this._gfctx.measureText(p_labeltxt).width;
 		const path = evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, tl, opt_terrain_env);
 		if (path == null) {
-			// console.warn("drawLabel, no path", p_labeltxt);
 			return;
 		}
 
-		const textDrawData=[];
-		textDrawParamsAlongStraightSegmentsPath(p_mapctxt, this._gfctx, path, p_labeltxt, tl, textDrawData)
-
-		//let cnt = 10;
-
 		this._gfctx.textAlign = this._currentsymb.labelTextAlign;
 		this._gfctx.textBaseline = this._currentsymb.labelTextBaseline;
+		
+		// if geometry is point, 'centroid' placement is default and only allowed
+		let placement, tmpp;
+		if ([2,3].indexOf(p_coords.length) >= 0 && typeof p_coords[0] == 'number') {
+			placement = "centroid";
+		} else {
+			tmpp = this._currentsymb.labelplacement.toLowerCase();
+			if (tmpp == "along" && this.geomtype !== "line") {
+				throw new Error("Label placement 'along' on non-line geometry type.");
+			}
+			placement = tmpp;
+		}
 
-		// Draw a rectangular mask behind each letter
-		if (this._currentsymb.labelMaskFillStyle.toLowerCase() != "none") {
+		if (placement == "along") {
+
+			const textDrawData=[];
+			textDrawParamsAlongStraightSegmentsPath(p_mapctxt, this._gfctx, path, p_labeltxt, tl, textDrawData);
+
+			// Draw a rectangular mask behind each letter
+			if (this._currentsymb.labelMaskFillStyle.toLowerCase() != "none") {
+				
+				this._gfctx.save();
+				this._gfctx.fillStyle = this._currentsymb.labelMaskFillStyle;
+				let count= 0;
+				for (const [pt, ang, char, w, h] of textDrawData) {
+
+					this._gfctx.save();
+					this._gfctx.translate(pt[0], pt[1]);
+					this._gfctx.rotate(ang);
+					this._gfctx.translate(-pt[0], -pt[1]);
+
+					// console.log(pt, w, h);
+
+					if (count == 0) {
+						this._gfctx.fillRect(pt[0]-(w/2)-3, pt[1]-(h/2)-1, w+4, h+2);
+					} else if (count == textDrawData.length - 1) {
+						this._gfctx.fillRect(pt[0]-(w/2)-1, pt[1]-(h/2)-1, w+2, h+2);
+					} else {
+						this._gfctx.fillRect(pt[0]-(w/2)-1, pt[1]-(h/2)-1, w+4, h+2);
+					}
+					//console.log("..", char, pt)
+					this._gfctx.restore();
+
+					count++;
+				}
+				this._gfctx.restore();
+			}
+
 			this._gfctx.save();
-			this._gfctx.fillStyle = this._currentsymb.labelMaskFillStyle;
-			let count= 0;
 			for (const [pt, ang, char, w, h] of textDrawData) {
 
 				this._gfctx.save();
@@ -465,35 +392,71 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 				this._gfctx.rotate(ang);
 				this._gfctx.translate(-pt[0], -pt[1]);
 
-				if (count == 0) {
-					this._gfctx.fillRect(pt[0]-(w/2)-3, pt[1]-(h/2)-1, w+4, h+2);
-				} else if (count == textDrawData.length - 1) {
-					this._gfctx.fillRect(pt[0]-(w/2)-1, pt[1]-(h/2)-1, w+2, h+2);
-				} else {
-					this._gfctx.fillRect(pt[0]-(w/2)-1, pt[1]-(h/2)-1, w+4, h+2);
-				}
+				this._gfctx.fillText(char, ...pt)
 				//console.log("..", char, pt)
 				this._gfctx.restore();
 
-				count++;
 			}
 			this._gfctx.restore();
-		}
+				
+		} else if (placement == "centroid") {
 
-		this._gfctx.save();
-		for (const [pt, ang, char, w, h] of textDrawData) {
+			let lpt=[], cpt = [];
+			let minarea = p_mapctxt.getScale() / 100.0;
+	
+			if (this._currentsymb.labelRotation.toString().toLowerCase() != "none") {
+				if (isNaN(this._currentsymb.labelRotation)) {
+					throw new Error("invalid label rotation:", this._currentsymb.labelRotation);
+				}
+			}
+
+			if (this.geomtype == "point" && p_path_levels == 1) {
+
+				if (p_path_levels == 1) 
+					lpt = [...p_coords];
+				else if (p_path_levels == 2)
+					lpt = [...p_coords[0]];
+
+			} else {
+
+				loopPathParts(p_coords, p_path_levels, function(p_pathpart, o_cpt) {
+					for (let pi=0; pi<p_pathpart.length; pi++) {
+						if (pi==0) {
+							o_cpt.push([...p_pathpart[pi]]);  
+						} else {
+							o_cpt[0] = (pi * o_cpt[0] + p_pathpart[pi][0] ) / (pi + 1);
+							o_cpt[1] = (pi * o_cpt[1] + p_pathpart[pi][1] ) / (pi + 1);
+						}
+					}
+				}, cpt);
+
+				if (this.geomtype == "line") {
+
+					// distanceToLine to obtain projection point in line
+					distanceToLine(p_coords, p_path_levels, cpt, minarea, false, lpt); 
+
+				} else if (this.geomtype == "poly") {
+
+					lpt = findPolygonCentroid(p_coords, p_path_levels, cpt, GlobalConst.LBL_QUANTIZE_SIZE);
+
+				}
+
+			}
+
+			if (lpt.length < 1) {
+				throw new Error("empty label anchor point");
+			}
 
 			this._gfctx.save();
-			this._gfctx.translate(pt[0], pt[1]);
-			this._gfctx.rotate(ang);
-			this._gfctx.translate(-pt[0], -pt[1]);
-
-			this._gfctx.fillText(char, ...pt)
-			//console.log("..", char, pt)
+			if (this._currentsymb.labelRotation.toString().toLowerCase() != "none") {
+				this._gfctx.translate(lpt[0], lpt[1]);
+				this._gfctx.rotate(this._currentsymb.labelRotation);
+				this._gfctx.translate(-lpt[0], -lpt[1]);	
+			}
+			this._gfctx.fillText(p_labeltxt, ...lpt)
 			this._gfctx.restore();
 
 		}
-		this._gfctx.restore();
 
 		return true;	
 	}

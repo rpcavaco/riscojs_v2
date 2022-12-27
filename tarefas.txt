@@ -47,6 +47,7 @@
 - > - info na multi tool (no mouse up sem drag) e ficha de feat no mouse move
 - > - simbologia pontos (para completar 'Fisca')
 - > - labeling 
+- > - centroide de poligonos para ponto de etiquetagem
 
 - risco server -- pedido de stats comum a várias layers
 	- getStatsURL opt_filter

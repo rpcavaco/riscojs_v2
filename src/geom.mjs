@@ -193,8 +193,14 @@ function projectPointOnLine(p_pointlst, p_ptin, p_minarea, out_projpt, opt_debug
 	return mindist;
 }
 
-export function distanceToLine(p_pointlist, p_path_levels, p_ptin, p_minarea, opt_debug) {
-	let d, ret = 0, prj=[], prjd=0;
+export function distanceToLine(p_pointlist, p_path_levels, p_ptin, p_minarea, opt_debug, opt_out_projpt) {
+	let d, ret = 0, prj, prjd=0;
+
+	if (opt_out_projpt) {
+		prj=opt_out_projpt;
+	} else {
+		prj=[];
+	}
 
 	switch (p_path_levels) {
 
@@ -498,3 +504,182 @@ export function loopPathParts(p_pathcoords, p_pathlevels, p_applyfunction, ...p_
 
 }
 
+export function evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, p_labeltxtlen, opt_terrain_env) {
+
+	function qtize(p_val) {
+		return parseInt(p_val / GlobalConst.LBL_QUANTIZE_SIZE);
+	}
+
+	function verticalityTest(p_dx, p_dy) {
+		if (p_dx == 0) {
+			return true;
+		} else {
+			return qtize(Math.abs(p_dy)) / qtize(Math.abs(p_dx)) > 2;
+		}
+	}
+
+	if (p_coords.length < 1) {
+		return null;
+	}
+
+	const ubRendCoordsFunc = p_mapctxt.transformmgr.getRenderingCoordsPt;
+	const tl = p_labeltxtlen;
+	let retobj = null;
+	let globaldx = 0;
+
+	// First, check if there is enough horizontal on near-horizontal continuous path to hold the whole text length.
+	// If such path doesn't exist, include run same test including verticallly aligned segments.
+	// In either case, delta - x must always be of same sign.
+
+	let collected_paths = [];
+	let check_verticality = true;
+	let loop_count = 0;
+
+	//console.log(p_coords);
+
+	while(loop_count < 2) {
+
+		loopPathParts(p_coords, p_path_levels, function(p_pathpart, p_collected_paths, p_check_verticality) { 
+			
+			let dx, dy, pl, prev_positive_dir=null;
+			let current_collected_path = [];
+			for (let pi=1; pi<p_pathpart.length; pi++) {
+
+				dy = p_pathpart[pi][1] - p_pathpart[pi-1][1];
+				dx = p_pathpart[pi][0] - p_pathpart[pi-1][0];
+
+				// skip if terrain env is given and beginning point of segment is out of it
+				if (opt_terrain_env != null) {
+					if (dx > 0) {
+						if (!ptInsideEnv(opt_terrain_env, p_pathpart[pi-1])) {
+							continue;
+						}
+					} else {
+						if (!ptInsideEnv(opt_terrain_env, p_pathpart[pi])) {
+							continue;
+						}
+					}
+				}
+
+				if ((p_check_verticality && verticalityTest(dx, dy)) || (prev_positive_dir!==null && prev_positive_dir != (dx > 0))) {
+					if (current_collected_path.length > 0) {
+						pl = pathLength(current_collected_path, 1, ubRendCoordsFunc.bind(p_mapctxt.transformmgr));
+						if (tl <= GlobalConst.LBL_MAX_ALONGPATH_OCCUPATION * pl) {
+							p_collected_paths.push([...current_collected_path]);
+						}
+						current_collected_path.length = 0;
+					}
+				} else {
+					if (pi==1) {
+						current_collected_path.push([...p_pathpart[pi-1]]);
+					}
+					current_collected_path.push([...p_pathpart[pi]]);
+				}
+				prev_positive_dir = (dx > 0);
+			}
+			if (current_collected_path.length > 0) {
+				pl = pathLength(current_collected_path, 1, ubRendCoordsFunc.bind(p_mapctxt.transformmgr));
+				if (tl <= GlobalConst.LBL_MAX_ALONGPATH_OCCUPATION * pl) {
+					p_collected_paths.push([...current_collected_path]);
+				}
+			}
+		}, collected_paths, check_verticality);
+
+		if (loop_count == 0 && collected_paths.length > 0) {
+			break;
+		}
+
+		check_verticality = false;
+		loop_count++;
+	}
+
+	if (collected_paths.length > 0) {
+
+		collected_paths.sort((a, b) => {
+			return pathLength(b, 1) - pathLength(a, 1);
+		})
+	
+		for (let pi=1; pi<collected_paths[0].length; pi++) {
+			globaldx += collected_paths[0][pi][0] - collected_paths[0][pi-1][0];
+		}
+
+		if (globaldx > 0) {
+			retobj = collected_paths[0];
+		} else {
+			retobj = collected_paths[0].reverse();
+		}
+	}
+
+	return retobj;
+}
+
+export function pathEnv(p_coords, p_path_levels) {
+
+	const ret = [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER];
+	loopPathParts(p_coords, p_path_levels, function(p_pathpart, p_ret) { 
+		for (const pt of p_pathpart) {
+			p_ret[0] = Math.min(pt[0], p_ret[0]);
+			p_ret[1] = Math.min(pt[1], p_ret[1]);
+			p_ret[2] = Math.max(pt[2], p_ret[2]);
+			p_ret[3] = Math.max(pt[3], p_ret[3]);
+		}
+	}, ret);
+
+	return ret;
+}
+
+export function findPolygonCentroid(p_coords, p_path_levels, p_cpt, p_step) {
+
+	const movs = [
+		[1,0],
+		[0,1],
+		[-1,0],
+		[0,-1]
+	];
+
+	const visited = {};
+	
+	let test_col, test_row, next_movidx, curr_col = 0, curr_row = 0;
+	let test_pt = [...p_cpt];
+	let movidx = 0;
+
+	const env = pathEnv(p_coords, p_path_levels);
+	let secloopcnt = 200;
+
+	// TODO - não progredir para fora do envelope
+	while (!insidePolygon(p_coords, p_path_levels, test_pt)) {
+
+		secloopcnt--;
+		if (secloopcnt < 0) {
+			throw new Error("no inside centroid found for polygon, point test limit count exceeded");
+		}
+
+		if (visited[curr_row] === undefined) {
+			visited[curr_row] = [];
+		}
+		visited[curr_row].push(curr_col);
+
+		next_movidx = (movidx + 1) % 4;
+		test_col = curr_col + movs[next_movidx][0];
+		test_row = curr_row + movs[next_movidx][1];
+
+		if (visited[test_row] !== undefined && visited[test_row].indexOf(test_col) >= 0) {
+			curr_col = curr_col + movs[movidx][0];
+			curr_row = curr_row + movs[movidx][1];	
+		} else {
+			curr_col = test_col;
+			curr_row = test_row;
+			movidx = next_movidx;
+		}
+
+		test_pt[0] = curr_col * p_step + p_cpt[0];
+		test_pt[1] = curr_row * p_step + p_cpt[1];
+
+		if (!ptInsideEnv(env, test_pt)) {
+			throw new Error("no inside centroid found for polygon");
+		}
+	}
+
+	return test_pt;
+
+}
