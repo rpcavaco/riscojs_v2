@@ -205,6 +205,10 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 			if (this._currentsymb.lineWidth !== undefined) {
 				this._gfctx.lineWidth = this._currentsymb.lineWidth;
 			}	
+
+			if (this._currentsymb.lineDash !== undefined && this._currentsymb.lineDash.length > 0) {
+				this._gfctx.setLineDash(this._currentsymb.lineDash);
+			}	
 	
 			if (this._currentsymb.fillStyle !== undefined && this._currentsymb.fillStyle.toLowerCase() !== "none") {
 				this._gfctx.fillStyle = this._currentsymb.fillStyle;

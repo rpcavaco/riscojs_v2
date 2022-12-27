@@ -76,6 +76,9 @@ var RISCOJS_LAYERS_CFG = {
 			"label": "Eixos de via",
 			"mouseinteraction": true,
 			"url": "https://geo.cm-porto.net/riscosrv_v2",
+			"lineDash": [8,2], 
+			"lineWidth": 1,
+			"strokeStyle": "#c0c0c0",
 
 			"labelfield": "toponimo",
 			"labelplacement": "along",
@@ -84,8 +87,6 @@ var RISCOJS_LAYERS_CFG = {
 
 			"envsplit": false,
 			"fillStyle": "none",
-			"strokeStyle": "white",
-			"lineWidth": 2				
 		},
 
 		"mancha_construida": {
@@ -97,7 +98,7 @@ var RISCOJS_LAYERS_CFG = {
 			"envsplit": false,
 			"fillStyle": "#0000FF7F",
 			"strokeStyle": "rgba(0.7,0.7,0.7)",
-			"lineWidth": 1,
+			"lineWidth": 1
 			
 
 			/*"labelfield": "objectid",

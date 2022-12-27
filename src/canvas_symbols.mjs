@@ -30,6 +30,7 @@ class Symbol {
 const strokeSymbolMixin = (Base) => class extends Base {
 	strokeStyle;
 	lineWidth;	
+	lineDash = [];
 }
 
 const labelSymbolMixin = (Base) => class extends Base {
