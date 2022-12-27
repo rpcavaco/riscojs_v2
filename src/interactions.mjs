@@ -187,16 +187,18 @@ class wheelEventCtrller {
 
 	constructor(p_sclval) {
 		this.wheelevtTmoutID = null; // for deffered setScaleCenteredAtPoint after wheel event
+		this.wheelevtTmoutFunc = null;
 		this.wheelscale = -1;
 		this.imgscale = 1.0;
-		this.lastwheelscales = [];
-		this.lastwheelscalelen = 0;
 	}
 	clear() {
 		//console.log(" ---- clear METHOD, id:", this.wheelevtTmoutID);
 		if (this.wheelevtTmoutID) {
 			clearTimeout(this.wheelevtTmoutID);
 			this.wheelevtTmoutID = null;
+			if (this.wheelevtTmoutFunc) {
+				this.wheelevtTmoutFunc();
+			}
 		}
 		this.wheelscale = -1;
 	}
@@ -253,11 +255,15 @@ class wheelEventCtrller {
 			//console.log(" ---- clear id", this.wheelevtTmoutID)
 			clearTimeout(this.wheelevtTmoutID);
 			this.wheelevtTmoutID = null;
+			this.wheelevtTmoutFunc = null;
 		}
 
-		const f = (function(p_this, pp_mapctx, pp_evt) {
+		this.wheelevtTmoutFunc = (function(p_this, pp_mapctx, pp_evt) {
 			return function() {
 				//console.log(" ---- timed out", p_this.wheelevtTmoutID)
+				if (p_this.wheelscale < 0) {
+					return;
+				}			
 				if (GlobalConst.getDebug("DISENG_WHEEL")) {
 					console.log("[DBG:DISENG_WHEEL] would be firing at scale:", p_this.wheelscale);
 				} else {
@@ -268,7 +274,7 @@ class wheelEventCtrller {
 			}
 		})(this, p_mapctx, p_evt, p_evt);
 
-		this.wheelevtTmoutID = setTimeout(f, GlobalConst.MOUSEWHEEL_THROTTLE);
+		this.wheelevtTmoutID = setTimeout(this.wheelevtTmoutFunc, GlobalConst.MOUSEWHEEL_THROTTLE);
 		//console.log(" ---- launched:", this.wheelevtTmoutID)
 	}
 	immediateAfterWheelEvt(p_mapctx, p_mapimgs_dict, p_evt) {
