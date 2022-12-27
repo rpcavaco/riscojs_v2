@@ -76,6 +76,7 @@ const canvasRasterMethodsMixin = (Base) => class extends Base {
 
 	static imageEvtsHandling(pp_mapctxt, p_lyr, p_img, pp_scr_env, pp_dims, pp_envkey, p_raster_id) {
 		
+		const that = this;
 		p_img.onload = function() {
 
 			const gfctx = pp_mapctxt.renderingsmgr.getDrwCtx(p_lyr.canvasKey, '2d');
@@ -84,11 +85,9 @@ const canvasRasterMethodsMixin = (Base) => class extends Base {
 			try {
 
 				//p_gfctx.clearRect(pp_scr_env[0], pp_scr_env[3], ...pp_dims);
-
 				gfctx.drawImage(p_img, pp_scr_env[0], pp_scr_env[3]);
-
 				if (p_lyr.filter == 'grayscale') {
-					this.constructor.toGrayScaleImgFilter(gfctx, p_img, pp_scr_env[0], pp_scr_env[3], ...pp_dims);
+					that.toGrayScaleImgFilter(gfctx, p_img, pp_scr_env[0], pp_scr_env[3], ...pp_dims);
 				}
 
 				//processHDREffect(gfctx, [0,0], pp_dims)
@@ -104,11 +103,9 @@ const canvasRasterMethodsMixin = (Base) => class extends Base {
 					}
 
 					delete p_lyr.rastersloading[p_raster_id];
-
 				}
 				// console.log(`(rstrs still loading at t1 x ${p_envkey}):`, Object.keys(p_lyr.rastersloading[p_envkey]));
 			}
-
 		}
 
 		p_img.onerror = function() {

@@ -132,7 +132,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 				if (GlobalConst.getDebug("FEATMOUSESEL")) {
 					try {
 						const symb = {'path': GlobalConst.DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB[foundly.geomtype] };
-						p_mapctx.featureCollection.draw(p_mapctx, foundly.key, sqrid, 'temporary', symb);
+						p_mapctx.featureCollection.draw(p_mapctx, foundly.key, sqrid, {'base': 'temporary', 'labels': 'temporary' }, symb);
 					} catch (e) {
 						console.log(`[DBG:FEATMOUSESEL] feature error '${e}'`);
 					}
@@ -156,7 +156,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 						if (GlobalConst.getDebug("FEATMOUSESEL")) {
 							console.log(`[DBG:FEATMOUSESEL] interact with lyr:${to_lyrk}, dist:${tmpd} (max: ${p_maxdist}) to id:${r}`);
 							const symb = {'path': GlobalConst.DEBUG_FEATMOUSESEL_SELUNDERMASK_SYMB[foundly.geomtype] };
-							p_mapctx.featureCollection.draw(p_mapctx, to_lyrk, r, 'temporary', symb);
+							p_mapctx.featureCollection.draw(p_mapctx, to_lyrk, r, {'base': 'temporary', 'labels': 'temporary' }, symb);
 						}
 					}
 				}
@@ -171,7 +171,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 
 			if (p_maxdist == null || p_maxdist >=  dist) {
 				const symb = {'path': GlobalConst.FEATMOUSESEL_HIGHLIGHT[foundly.geomtype] };
-				p_mapctx.featureCollection.draw(p_mapctx, nearestlyk, nearestid, 'temporary', symb);
+				p_mapctx.featureCollection.draw(p_mapctx, nearestlyk, nearestid, {'base': 'temporary', 'labels': 'temporary' }, symb);
 				if (opt_actonselfeat) {
 					opt_actonselfeat(p_mapctx, nearestlyk, nearestid, p_mapctx.featureCollection.get(nearestlyk, nearestid), p_scrx, p_scry);
 				}

@@ -158,8 +158,13 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 			canvaskeyLabels = this.canvasKeyLabels;
 		}
 
-		this._gfctx = p_mapctx.renderingsmgr.getDrwCtx(canvaskey, '2d');
-		this._gfctx.save();
+		try {
+			this._gfctx = p_mapctx.renderingsmgr.getDrwCtx(canvaskey, '2d');
+			this._gfctx.save();
+		} catch(e) {
+			console.error("canvaskey:", canvaskey, opt_alt_canvaskeys, this.canvasKey);
+			throw e;
+		}
 
 		this._gfctxlbl = p_mapctx.renderingsmgr.getDrwCtx(canvaskeyLabels, '2d');
 		this._gfctxlbl.save();
