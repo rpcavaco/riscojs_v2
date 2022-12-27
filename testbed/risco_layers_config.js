@@ -55,7 +55,18 @@ var RISCOJS_LAYERS_CFG = {
 			"envsplit": false,
 			"fillStyle": "#FF00007F",
 			"strokeStyle": "rgba(0.7,0.7,0.7)",
-			"lineWidth": 1	
+			"lineWidth": 1,
+
+			"labelfield": "objectid",
+			"labelplacement": "centroid",
+			"labelFontSizePX": 18,
+			"labelFontFace": "CourierNew",
+			"labelRotation": 45,
+
+			"labelLeaderLength": 100,
+			"labelLeaderStroke": "green",
+			"labelLeaderLinewidth": 2,
+			"labelLeaderRotation": -80					
 			//"filter": "grayscale"
 		},	
 
@@ -89,16 +100,17 @@ var RISCOJS_LAYERS_CFG = {
 			"lineWidth": 1,
 			
 
-			"labelfield": "objectid",
+			/*"labelfield": "objectid",
 			"labelplacement": "centroid",
 			"labelFontSizePX": 18,
-			"labelFontFace": "CourierNew",
-			"labelRotation": 45,
+			"labelFontFace": "Tahoma",
+			"labelRotation": -18,
+			"labelTextAlign": "left",
 
 			"labelLeaderLength": 100,
 			"labelLeaderStroke": "green",
 			"labelLeaderLinewidth": 2,
-			"labelLeaderRotation": -80				
+			"labelLeaderRotation": -60		*/		
 			
 		},
 

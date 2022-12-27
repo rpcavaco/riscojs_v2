@@ -138,24 +138,31 @@ function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coor
 const canvasVectorMethodsMixin = (Base) => class extends Base {
 	
 	canvasKey = 'normal';
+	canvasKeyLabels = 'labels';
 	default_symbol;	
 	fillflag = false;
 	strokeflag = false;
 	_gfctx;  // current graphics context to be always updated at each refreshing / drawing
 	_currentsymb;
 
-	_grabGf2DCtx(p_mapctx, b_forlabel, opt_alt_canvaskey, opt_symbs) {
+	_grabGf2DCtx(p_mapctx, b_forlabel, opt_alt_canvaskeys, opt_symbs) {
 
 		let canvaskey;
+		let canvaskeyLabels;
 
-		if (opt_alt_canvaskey) {
-			canvaskey = opt_alt_canvaskey;
+		if (opt_alt_canvaskeys) {
+			canvaskey = opt_alt_canvaskeys["base"];
+			canvaskeyLabels = opt_alt_canvaskeys["labels"];
 		} else {
 			canvaskey = this.canvasKey;
+			canvaskeyLabels = this.canvasKeyLabels;
 		}
 
 		this._gfctx = p_mapctx.renderingsmgr.getDrwCtx(canvaskey, '2d');
 		this._gfctx.save();
+
+		this._gfctxlbl = p_mapctx.renderingsmgr.getDrwCtx(canvaskeyLabels, '2d');
+		this._gfctxlbl.save();
 
 		if (opt_symbs) {
 			this._currentsymb = opt_symbs;
@@ -168,7 +175,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 			this.strokeflag = false;
 	
 			if (this._currentsymb.labelFillStyle !== undefined && this._currentsymb.labelFillStyle.toLowerCase() !== "none") {
-				this._gfctx.fillStyle = this._currentsymb.labelFillStyle;
+				this._gfctxlbl.fillStyle = this._currentsymb.labelFillStyle;
 				this.fillflag = true;
 			}	
 
@@ -181,7 +188,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 				fontface = this._currentsymb.labelFontFace;
 			}			
 
-			this._gfctx.font = `${fntsz}px ${fontface}`;	
+			this._gfctxlbl.font = `${fntsz}px ${fontface}`;	
 	
 		} else {
 
@@ -323,14 +330,14 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 	drawLabel(p_mapctxt, p_coords, p_path_levels, p_labeltxt, opt_terrain_env) {
 
-		if (this._gfctx == null) {
-			throw new Error(`graphics context was not previously grabbed for layer '${this.key}'`);
+		if (this._gfctxlbl == null) {
+			throw new Error(`label graphics context was not previously grabbed for layer '${this.key}'`);
 		}
 
-		const tl = this._gfctx.measureText(p_labeltxt).width;
+		const tl = this._gfctxlbl.measureText(p_labeltxt).width;
 
-		this._gfctx.textAlign = this._currentsymb.labelTextAlign;
-		this._gfctx.textBaseline = this._currentsymb.labelTextBaseline;
+		this._gfctxlbl.textAlign = this._currentsymb.labelTextAlign;
+		this._gfctxlbl.textBaseline = this._currentsymb.labelTextBaseline;
 		
 		// if geometry is point, 'centroid' placement is default and only allowed
 		let placement, tmpp;
@@ -353,52 +360,52 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 			}
 	
 			const textDrawData=[];
-			textDrawParamsAlongStraightSegmentsPath(p_mapctxt, this._gfctx, path, p_labeltxt, tl, textDrawData);
+			textDrawParamsAlongStraightSegmentsPath(p_mapctxt, this._gfctxlbl, path, p_labeltxt, tl, textDrawData);
 
 			// Draw a rectangular mask behind each letter
 			if (this._currentsymb.labelMaskFillStyle.toLowerCase() != "none") {
 				
-				this._gfctx.save();
-				this._gfctx.fillStyle = this._currentsymb.labelMaskFillStyle;
+				this._gfctxlbl.save();
+				this._gfctxlbl.fillStyle = this._currentsymb.labelMaskFillStyle;
 				let count= 0;
 				for (const [pt, ang, char, w, h] of textDrawData) {
 
-					this._gfctx.save();
-					this._gfctx.translate(pt[0], pt[1]);
-					this._gfctx.rotate(ang);
-					this._gfctx.translate(-pt[0], -pt[1]);
+					this._gfctxlbl.save();
+					this._gfctxlbl.translate(pt[0], pt[1]);
+					this._gfctxlbl.rotate(ang);
+					this._gfctxlbl.translate(-pt[0], -pt[1]);
 
 					// console.log(pt, w, h);
 
 					if (count == 0) {
-						this._gfctx.fillRect(pt[0]-(w/2)-3, pt[1]-(h/2)-1, w+4, h+2);
+						this._gfctxlbl.fillRect(pt[0]-(w/2)-3, pt[1]-(h/2)-1, w+4, h+2);
 					} else if (count == textDrawData.length - 1) {
-						this._gfctx.fillRect(pt[0]-(w/2)-1, pt[1]-(h/2)-1, w+2, h+2);
+						this._gfctxlbl.fillRect(pt[0]-(w/2)-1, pt[1]-(h/2)-1, w+2, h+2);
 					} else {
-						this._gfctx.fillRect(pt[0]-(w/2)-1, pt[1]-(h/2)-1, w+4, h+2);
+						this._gfctxlbl.fillRect(pt[0]-(w/2)-1, pt[1]-(h/2)-1, w+4, h+2);
 					}
 					//console.log("..", char, pt)
-					this._gfctx.restore();
+					this._gfctxlbl.restore();
 
 					count++;
 				}
-				this._gfctx.restore();
+				this._gfctxlbl.restore();
 			}
 
-			this._gfctx.save();
+			this._gfctxlbl.save();
 			for (const [pt, ang, char, w, h] of textDrawData) {
 
-				this._gfctx.save();
-				this._gfctx.translate(pt[0], pt[1]);
-				this._gfctx.rotate(ang);
-				this._gfctx.translate(-pt[0], -pt[1]);
+				this._gfctxlbl.save();
+				this._gfctxlbl.translate(pt[0], pt[1]);
+				this._gfctxlbl.rotate(ang);
+				this._gfctxlbl.translate(-pt[0], -pt[1]);
 
-				this._gfctx.fillText(char, ...pt)
+				this._gfctxlbl.fillText(char, ...pt)
 				//console.log("..", char, pt)
-				this._gfctx.restore();
+				this._gfctxlbl.restore();
 
 			}
-			this._gfctx.restore();
+			this._gfctxlbl.restore();
 				
 		} else if (placement == "centroid") {
 
@@ -460,46 +467,106 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 					leadrot = deg2Rad(this._currentsymb.labelLeaderRotation);
 				}
 
-				console.log(leadrot, this._currentsymb.labelLeaderStroke, this._currentsymb.labelLeaderLength);
-
-				this._gfctx.save();
-
+				this._gfctxlbl.save();
 				
 				if (this._currentsymb.labelLeaderStroke != "none") {
-					this._gfctx.strokeStyle = this._currentsymb.labelLeaderStroke;
+					this._gfctxlbl.strokeStyle = this._currentsymb.labelLeaderStroke;
 				}
 				if (this._currentsymb.labelLeaderLinewidth != "none") {
-					this._gfctx.lineWidth = this._currentsymb.labelLeaderLinewidth;
+					this._gfctxlbl.lineWidth = this._currentsymb.labelLeaderLinewidth;
 				}
 
-				this._gfctx.beginPath();
-				this._gfctx.moveTo(...pt);
+				this._gfctxlbl.beginPath();
+				this._gfctxlbl.moveTo(...pt);
 
 				finalpt.length = 2;
 				finalpt[0] = pt[0] + this._currentsymb.labelLeaderLength * Math.cos(leadrot);
 				finalpt[1] = pt[1] + this._currentsymb.labelLeaderLength * Math.sin(leadrot);
-				this._gfctx.lineTo(...finalpt);
-				this._gfctx.stroke();
+				this._gfctxlbl.lineTo(...finalpt);
+				this._gfctxlbl.stroke();
 
-				this._gfctx.restore();
+				this._gfctxlbl.restore();
 
 			} else {
 				finalpt = pt;
 			}
 
-			this._gfctx.save();
+			this._gfctxlbl.save();
 			if (rot != null) {
-				this._gfctx.translate(finalpt[0], finalpt[1]);
-				this._gfctx.rotate(rot);
-				this._gfctx.translate(-finalpt[0], -finalpt[1]);	
+				this._gfctxlbl.translate(finalpt[0], finalpt[1]);
+				this._gfctxlbl.rotate(rot);
+				this._gfctxlbl.translate(-finalpt[0], -finalpt[1]);	
 			}
-			this._gfctx.fillText(p_labeltxt, ...finalpt);
-			this._gfctx.restore();
+			this._gfctxlbl.fillText(p_labeltxt, ...finalpt);
+			this._gfctxlbl.restore();
 
 		}
 
 		return true;	
 	}
+
+	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskeys, opt_symbs, opt_terrain_env) {
+
+		let ret = true;
+		let pathoptsymbs = null;
+		let lbloptsymbs = null;
+		let lblcontent = null;
+		let labelfield = null;
+
+		if (this['labelfield'] !== undefined && this['labelfield'] != "none") {
+			labelfield = this['labelfield'];
+		}
+
+		if (opt_symbs) {
+			if (opt_symbs['path'] !== undefined)
+				pathoptsymbs = opt_symbs['path'];
+			if (opt_symbs['label'] !== undefined)
+				lbloptsymbs = opt_symbs['label'];
+		}
+
+		if (this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskeys, pathoptsymbs)) {
+			try {
+				ret = this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
+			} catch(e) {
+				console.log(p_coords, p_path_levels);
+				throw e;
+			} finally {
+				this.releaseGf2DCtx();
+			}				
+		}
+
+		if (ret && labelfield != null) {
+		
+			lblcontent = null;
+			if (p_attrs[labelfield] !== undefined) {
+				lblcontent = p_attrs[labelfield];
+			} else if (opt_feat_id != null && GlobalConst.TYPICAL_OIDFLDNAMES.indexOf(labelfield.toLowerCase()) >= 0) {
+				lblcontent = opt_feat_id.toString();
+			}
+
+			if (lblcontent !== null) {
+
+				/* if (p_attrs["cod_topo"] != "JMOLI0") {
+					return;
+				}*/
+
+				if (this.grabLabelGf2DCtx(p_mapctxt, opt_alt_canvaskeys, lbloptsymbs)) {
+					try {
+						ret = this.drawLabel(p_mapctxt, p_coords, p_path_levels, lblcontent, opt_terrain_env);
+					} catch(e) {
+						console.log(p_coords, labelfield, lblcontent);
+						throw e;
+					} finally {
+						this.releaseGf2DCtx();
+					}				
+				}
+			}
+
+		}
+
+		return ret;
+
+	}	
 }
 
 export class CanvasGraticuleLayer extends canvasVectorMethodsMixin(GraticuleLayer) {
@@ -608,6 +675,7 @@ export class CanvasAreaGridLayer extends canvasVectorMethodsMixin(AreaGridLayer)
 
 export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
 
+	/*
 	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
 
 		let ret = true;
@@ -629,10 +697,12 @@ export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
 		return ret;
 
 	}
+	*/
 }
 
 export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLayer) {
 
+	/*
 	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
 
 		let ret = true;
@@ -651,8 +721,6 @@ export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLa
 			if (opt_symbs['label'] !== undefined)
 				lbloptsymbs = opt_symbs['label'];
 		}
-
-		//console.log("aa:", [p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs]);
 
 		if (this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, pathoptsymbs)) {
 			try {
@@ -676,9 +744,9 @@ export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLa
 
 			if (lblcontent !== null) {
 
-				/* if (p_attrs["cod_topo"] != "JMOLI0") {
-					return;
-				}*/
+				// if (p_attrs["cod_topo"] != "JMOLI0") {
+				//	return;
+				//}
 
 				if (this.grabLabelGf2DCtx(p_mapctxt, opt_alt_canvaskey, lbloptsymbs)) {
 					try {
@@ -697,6 +765,7 @@ export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLa
 		return ret;
 
 	}
+	*/
 
 
 }

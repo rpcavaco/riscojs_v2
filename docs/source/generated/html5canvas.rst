@@ -8,6 +8,8 @@
 
 	b) 'normal' vector drawing
 
+	b) 'labels' vector labels drawing
+
 	c) 'temporary' vector, like highlights
 
 	d) 'transient' vectors, e.g.: mouse interaction or viewport manipulation artifacts
