@@ -301,6 +301,7 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 				function(responsejson) {
 					if (responsejson.stats == null) {
 						console.warn(`[WARN] null stats on '${that.key}' get stats request`);
+						// TODO - NULL STATS WARNING - p_mapctx.removePrint("loadingmsgprint");
 					} else {
 						that.refresh(p_mapctx, {
 							"reqid": responsejson.reqid,

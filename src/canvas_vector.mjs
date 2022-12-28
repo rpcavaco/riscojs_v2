@@ -509,6 +509,8 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 			this._gfctxlbl.fillText(p_labeltxt, ...finalpt);
 			this._gfctxlbl.restore();
 
+		} else if (placement == "leader") {
+
 		}
 
 		return true;	

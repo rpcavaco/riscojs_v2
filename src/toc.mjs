@@ -399,10 +399,14 @@ export class TOCManager {
 						}
 						this.mapctx.getMapBounds(bounds);			
 						this.layers[li].getStats(this.mapctx, bounds);
+						if (GlobalConst.getDebug("VECTLOAD")) {
+							console.log("[DBG:VECTLOAD] nextdraw, after getStats", li, this.layers[li].key, "loading:", this.layers[li].isLoading());
+						}
 					}
 				} finally {
 					this._prefrefresh = false;
 				}
+				//this.mapctx.removePrint("loadingmsgprint");
 			} else {
 
 				if (GlobalConst.getDebug("VECTLOAD")) {
@@ -416,6 +420,7 @@ export class TOCManager {
 			}
 
 		} catch(e) {
+			
 			console.error(e);
 		}
 	}
