@@ -629,12 +629,16 @@ export class AGSQryLayer extends RemoteVectorLayer {
 				function(responsejson) {
 					that.refresh(p_mapctx, {
 						"count": responsejson.count
-					}, true);					
+					});					
 				}
 			);	
 	}
 
 	* itemchunks(p_mapctxt, p_prep_data) {
+
+		if (p_prep_data == null) {
+			throw new Error("null prep_data in itemchunks");
+		}
 
 		const feat_count = p_prep_data["count"]
 

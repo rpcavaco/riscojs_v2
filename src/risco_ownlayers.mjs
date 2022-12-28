@@ -301,13 +301,13 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 				function(responsejson) {
 					if (responsejson.stats == null) {
 						console.warn(`[WARN] null stats on '${that.key}' get stats request`);
-						// TODO - NULL STATS WARNING - p_mapctx.removePrint("loadingmsgprint");
+						p_mapctx.tocmgr.signalVectorLoadFinished(that.key);
 					} else {
 						that.refresh(p_mapctx, {
 							"reqid": responsejson.reqid,
 							"nchunks": responsejson.stats[that.key]['nchunks'],
 							"nvert": responsejson.stats[that.key]['nvert']
-						}, true);
+						});
 					}
 
 

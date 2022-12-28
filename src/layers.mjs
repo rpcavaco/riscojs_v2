@@ -182,7 +182,6 @@ export class Layer {
 
 	refresh(p_mapctx) {
 
-
 		// to be extended
 		
 		let cancel = false;

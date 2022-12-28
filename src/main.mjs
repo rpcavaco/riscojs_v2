@@ -159,7 +159,7 @@ export class RiscoMapCtx {
 		})(this);	
 
 		if (!this.wait_for_customization_avail) {
-			this.refresh();
+			this.maprefresh();
 		}
 
 		console.info(`[init RISCO] ==  End of map context init for '${this.panelwidget.id}'  ==`);
@@ -171,7 +171,7 @@ export class RiscoMapCtx {
 	setCustomizationObj(p_instance) {
 		this.#customization_instance = p_instance;
 		if (this.wait_for_customization_avail) {
-			this.refresh();
+			this.maprefresh();
 		}		
 	}
 	getCustomizationInstance() {
@@ -182,7 +182,7 @@ export class RiscoMapCtx {
 	 */	
 	resize() {
 		this.renderingsmgr.init();
-		this.refresh();
+		this.maprefresh();
 		this.customResize(this);
 	}
 
@@ -227,12 +227,12 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		return this.transformmgr.getPixSize();
 	}
 
-	refresh() {
+	maprefresh() {
 		//console.info(">>>>>           draw            <<<<<");
 		const sv = this.transformmgr.getReadableCartoScale();
 		this.printScale(sv);
 		this.featureCollection.invalidate();
-		this.tocmgr.refresh(sv);
+		this.tocmgr.tocrefresh(sv);
 	}
 
 	transformsChanged(b_dodraw) {
@@ -241,7 +241,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		// invalidate spatial index - aqui ou em draw
 		
 		if (b_dodraw) {
-			this.refresh();
+			this.maprefresh();
 		}
 	}
 

@@ -244,7 +244,7 @@ export class TOCManager {
 		console.info("[init RISCO] TOCManager, layers init finished");
 	}
 
-	refresh(p_scaleval) {
+	tocrefresh(p_scaleval) {
 
 		console.info(`[INFO] attempting to refresh ${this.layers.length} layers at scale 1:${p_scaleval}`);
 		//this.mapctx.printLoadingMsg(`${this.layers.length} layers`);
@@ -413,7 +413,7 @@ export class TOCManager {
 					console.log("[DBG:VECTLOAD] nextdraw, refreshing", li, this.layers[li].key);
 				}
 		
-				canceled = this.layers[li].refresh(this.mapctx, null, false);
+				canceled = this.layers[li].refresh(this.mapctx, null);
 				if (canceled) {
 					this.drawlist.length = 0;
 				}
