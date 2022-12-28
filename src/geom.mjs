@@ -34,37 +34,38 @@ export function dist2D(p_pt1, p_pt2) {
 	return Math.sqrt(distSquared2D(p_pt1, p_pt2));
 }
 
+function subPathLength(p_coords, opt_transform_func) {
+	let ret = 0, pt1 = null, ptt=[];
+
+	for (const pt of  p_coords) {
+		if (opt_transform_func) {
+			opt_transform_func(pt, ptt);
+		} else {
+			ptt = pt;
+		}
+		if (pt1 == null) {
+			pt1 = [...ptt];
+			continue;
+		}
+
+		ret += dist2D(pt1, ptt); 
+		pt1 = [...ptt];
+	}
+
+	return ret;
+} 
+
 export function pathLength(p_pathcoords, p_path_levels, opt_transform_func) {
 
 	let global_ret = 0;
 
-	function subPathLength(p_coords) {
-		let ret = 0, pt1 = null, ptt=[];
-
-		for (const pt of  p_coords) {
-			if (opt_transform_func) {
-				opt_transform_func(pt, ptt);
-			} else {
-				ptt = pt;
-			}
-			if (pt1 == null) {
-				pt1 = [...ptt];
-				continue;
-			}
-
-			ret += dist2D(pt1, ptt); 
-			pt1 = [...ptt];
-		}
-
-		return ret;
-	} 
-
 	function innerCycle(pp_current_coords, pp_current_path_level) {
 		if (pp_current_path_level == 1) {
-			global_ret += subPathLength(pp_current_coords);
+			global_ret += subPathLength(pp_current_coords, opt_transform_func);
 			return;
 		} else {	
-			for (const subpath in pp_current_coords) {
+			for (const subpath of pp_current_coords) {
+				console.log("subpath:", subpath);
 				innerCycle(subpath, pp_current_path_level-1);
 			}
 		}
@@ -409,60 +410,6 @@ export function bbTouch(p_bb1, p_bb2) {
 	return ret;
 }
 
-export function geomTest() {
-
-	let v = area2_3p([0, 0], [2 ,0], [2, 2]);
-	if (GlobalConst.getDebug("GEOM")) {
-		console.log(`[DBG:GEOM] test 1, area2, 3 pts: ${v}, CCW: ${v > 0} == true`);
-	}
-
-	if (v <= 0) {
-		throw new Error("CW/CCW logic is flawed, wrong result on geometry test 1");
-	}
-
-	v = area2_3p([2, 2], [2 ,0], [0, 0] );
-	if (GlobalConst.getDebug("GEOM")) {
-		console.log(`[DBG:GEOM] test 2, area2, 3 pts: ${v}, CCW: ${v > 0} == false`)
-	}
-
-	if (v > 0) {
-		throw new Error("CW/CCW logic is flawed, wrong result on geometry test 2");
-	}
-
-	v = area2([
-		[0, 0],
-		[2, 0],
-		[2, 2],
-		[0, 2],
-		[0, 0]
-	]);
-
-	if (GlobalConst.getDebug("GEOM")) {
-		console.log(`[DBG:GEOM] test 3, area2: ${v}, CCW: ${v > 0} == true`);
-	}
-
-	if (v <= 0) {
-		throw new Error("CW/CCW logic is flawed, wrong result on geometry test 3");
-	}
-
-	v = area2([
-		[0, 0],
-		[0, 2],
-		[2, 2],
-		[2, 0],
-		[0, 0]
-	]);
-
-	if (GlobalConst.getDebug("GEOM")) {
-		console.log(`[DBG:GEOM] test 4, area2: ${v}, CCW: ${v > 0} == false`);
-	}
-
-	if (v > 0) {
-		throw new Error("CW/CCW logic is flawed, wrong result on geometry test 4");
-	}
-
-}
-
 export function segmentMeasureToPoint(pt1, pt2, p_measure, out_pt) {
 	const dx = pt2[0] - pt1[0];
 	const dy = pt2[1] - pt1[1];	
@@ -503,6 +450,55 @@ export function loopPathParts(p_pathcoords, p_pathlevels, p_applyfunction, p_fun
 	}
 
 }
+
+export function lineMeasureToPoint(p_pathcoords, p_path_levels, p_measure, opt_transform_func, out_pt) {
+	
+	out_pt.length = 2;
+
+	const totalLength = pathLength(p_pathcoords, p_path_levels, opt_transform_func);
+	const refLen = p_measure * totalLength;
+	let accLen = 0;
+
+	loopPathParts(p_pathcoords, p_path_levels, function(p_pathpart, p_func_args_list) {
+		//const [reflen, opt_transf_func, outpt, reflen, acclen] = p_func_args_list;
+
+		const len = pathLength(p_pathpart, 1, p_func_args_list[1]);
+
+		if ((p_func_args_list[4] + len) > p_func_args_list[0]) {
+
+			let d, meas, acc, pt1 = null, ptt=[];
+			acc = p_func_args_list[4];
+
+			for (const pt of  p_pathpart) {
+				if (opt_transform_func) {
+					opt_transform_func(pt, ptt);
+				} else {
+					ptt = pt;
+				}
+				if (pt1 == null) {
+					pt1 = [...ptt];
+					continue;
+				}
+		
+				d = dist2D(pt1, ptt); 
+				if ((acc + d) > p_func_args_list[0]) {
+					meas = (p_func_args_list[0] - acc) / d;
+					segmentMeasureToPoint(pt1, ptt, meas, p_func_args_list[2]);
+					break;
+				} else {
+					acc += d;
+				}
+
+				pt1 = [...ptt];
+			}
+
+		} else {
+			p_func_args_list[4] = p_func_args_list[4] + len;
+		}
+
+	}, [refLen, opt_transform_func, out_pt, refLen, accLen]);
+}
+
 
 export function evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, p_labeltxtlen, opt_terrain_env) {
 
@@ -689,5 +685,69 @@ export function findPolygonCentroid(p_coords, p_path_levels, p_cpt, p_step) {
 	//console.log("out secloopcnt:", secloopcnt);
 
 	return test_pt;
+
+}
+
+
+export function geomTest() {
+
+	let v = area2_3p([0, 0], [2 ,0], [2, 2]);
+	if (GlobalConst.getDebug("GEOM")) {
+		console.log(`[DBG:GEOM] test 1, area2, 3 pts: ${v}, CCW: ${v > 0} == true`);
+	}
+
+	if (v <= 0) {
+		throw new Error("CW/CCW logic is flawed, wrong result on geometry test 1");
+	}
+
+	v = area2_3p([2, 2], [2 ,0], [0, 0] );
+	if (GlobalConst.getDebug("GEOM")) {
+		console.log(`[DBG:GEOM] test 2, area2, 3 pts: ${v}, CCW: ${v > 0} == false`)
+	}
+
+	if (v > 0) {
+		throw new Error("CW/CCW logic is flawed, wrong result on geometry test 2");
+	}
+
+	v = area2([
+		[0, 0],
+		[2, 0],
+		[2, 2],
+		[0, 2],
+		[0, 0]
+	]);
+
+	if (GlobalConst.getDebug("GEOM")) {
+		console.log(`[DBG:GEOM] test 3, area2: ${v}, CCW: ${v > 0} == true`);
+	}
+
+	if (v <= 0) {
+		throw new Error("CW/CCW logic is flawed, wrong result on geometry test 3");
+	}
+
+	v = area2([
+		[0, 0],
+		[0, 2],
+		[2, 2],
+		[2, 0],
+		[0, 0]
+	]);
+
+	if (GlobalConst.getDebug("GEOM")) {
+		console.log(`[DBG:GEOM] test 4, area2: ${v}, CCW: ${v > 0} == false`);
+	}
+
+	if (v > 0) {
+		throw new Error("CW/CCW logic is flawed, wrong result on geometry test 4");
+	}
+
+
+	const ptmeas = [];
+	lineMeasureToPoint([[[-3,-4], [0,0], [3,4]],[[3,4],[0,8]]], 2, 0.5, null, ptmeas);
+
+	if (ptmeas[0] != 1.5 || ptmeas[1] != 2) {
+		console.error("ptmeas:", ptmeas);
+		throw new Error("lineMeasureToPoint test failed");
+	}
 
 }
