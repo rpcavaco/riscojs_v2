@@ -65,7 +65,6 @@ export function pathLength(p_pathcoords, p_path_levels, opt_transform_func) {
 			return;
 		} else {	
 			for (const subpath of pp_current_coords) {
-				console.log("subpath:", subpath);
 				innerCycle(subpath, pp_current_path_level-1);
 			}
 		}
@@ -499,6 +498,21 @@ export function lineMeasureToPoint(p_pathcoords, p_path_levels, p_measure, opt_t
 	}, [refLen, opt_transform_func, out_pt, refLen, accLen]);
 }
 
+export function lineExtremePoints(p_pathcoords, p_path_levels, out_pts_list) {
+	
+	out_pts_list.length = 0;
+
+	loopPathParts(p_pathcoords, p_path_levels, function(p_pathpart, out_list) {
+
+		if (out_list.length == 0) {
+			out_list.push([...p_pathpart[0]]);
+			out_list.push([...p_pathpart[p_pathpart.length-1]]);			
+		} else {
+			out_list[1][0] = p_pathpart[p_pathpart.length-1][0];
+			out_list[1][1] = p_pathpart[p_pathpart.length-1][1];
+		}
+	}, out_pts_list);
+}
 
 export function evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, p_labeltxtlen, opt_terrain_env) {
 
@@ -743,11 +757,20 @@ export function geomTest() {
 
 
 	const ptmeas = [];
-	lineMeasureToPoint([[[-3,-4], [0,0], [3,4]],[[3,4],[0,8]]], 2, 0.5, null, ptmeas);
+	const testlin = [[[-3,-4], [0,0], [3,4]],[[3,4],[0,8]]];
+	lineMeasureToPoint(testlin, 2, 0.5, null, ptmeas);
 
 	if (ptmeas[0] != 1.5 || ptmeas[1] != 2) {
 		console.error("ptmeas:", ptmeas);
 		throw new Error("lineMeasureToPoint test failed");
+	}
+
+	const extpts = [];
+	lineExtremePoints(testlin, 2, extpts);
+
+	if (extpts[0][0] != -3 || extpts[0][1] != -4 || extpts[1][0] != 0 || extpts[1][1] != 8) {
+		console.error("extpts:", extpts);
+		throw new Error("lineExtremePoints test failed");
 	}
 
 }
