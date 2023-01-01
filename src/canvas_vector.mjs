@@ -157,7 +157,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 		let canvaskeyLabels;
 
 		if (opt_alt_canvaskeys) {
-			canvaskey = opt_alt_canvaskeys["base"];
+			canvaskey = opt_alt_canvaskeys["normal"];
 			canvaskeyLabels = opt_alt_canvaskeys["labels"];
 		} else {
 			canvaskey = this.canvasKey;

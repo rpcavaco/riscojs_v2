@@ -262,6 +262,7 @@ export class TOCManager {
 		for (let li=0; li < this.layers.length; li++) {
 			ckeys.add(this.layers[li].canvasKey);
 		}
+		ckeys.add('labels');
 		ckeys.add('transient');
 		ckeys.add('temporary');
 
