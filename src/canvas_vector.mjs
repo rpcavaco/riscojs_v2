@@ -117,9 +117,15 @@ function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coor
 				dy = pt[1] - prevpt[1];
 				dx = pt[0] - prevpt[0];
 
-				if (dx != 0 && dx != 0) {
+				if (dx != 0) {
 					dlt = dy / Math.abs(dx);
 					ang = Math.atan(dlt);
+				} else {
+					if (dx * dy < 0) {
+						ang = Math.PI / 2.0;
+					} else {
+						ang = - Math.PI / 2.0;
+					}
 				}
 
 				if (prevang != null && Math.abs(ang - prevang) > (3 * Math.PI / 7)) {
@@ -342,6 +348,10 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 		if (this._gfctxlbl == null) {
 			throw new Error(`label graphics context was not previously grabbed for layer '${this.key}'`);
 		}
+
+		/* if (p_labeltxt != "Avenida dos Aliados") {
+			return true;
+		} */
 
 		const tl = this._gfctxlbl.measureText(p_labeltxt).width;
 
