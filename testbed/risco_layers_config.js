@@ -133,6 +133,7 @@ var RISCOJS_LAYERS_CFG = {
 			"mouseinteraction": false,
 			"strokeStyle": "none",
 			//"lineWidth": 1,
+			"maxscale": 1000,
 
 
 			"labelfield": "n_policia",

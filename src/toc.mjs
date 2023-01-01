@@ -95,7 +95,7 @@ export class TOCManager {
 			}
 
 			if (lyentry !== undefined) {
-					
+
 				if (lyentry["type"] !== undefined) {
 
 					currentLayer.length = 0;
@@ -299,6 +299,11 @@ export class TOCManager {
 			
 			for (let li=0; li < pp_this.layers.length; li++) {
 
+				if (pp_this.mapctx.getScale() >= pp_this.layers[li]["maxscale"]) {
+					console.info(`[INFO] layer '${pp_this.layers[li].key}' out of max display scale of 1:${pp_this.layers[li]["maxscale"]}`);
+					continue;
+				}
+					
 				if (!(pp_this.layers[li] instanceof RasterLayer)) {
 
 					if (pp_this.layers[li].isLoading !== undefined) {
