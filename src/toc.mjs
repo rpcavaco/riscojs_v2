@@ -69,8 +69,6 @@ export class TOCManager {
 
 		for (let lyentry, lyk, i=0; i <= layerscfg.lorder.length; i++) {
 
-			console.log("initing ", lyk);
-
 			if (i == layerscfg.lorder.length) {
 				
 				// loading spatial grid layer as overlay over all others
@@ -99,6 +97,8 @@ export class TOCManager {
 			if (lyentry !== undefined) {
 					
 				if (lyentry["type"] !== undefined) {
+
+					currentLayer.length = 0;
 
 					try {
 
@@ -180,7 +180,18 @@ export class TOCManager {
 
 									// item is missing if has no default value
 									if (scaneables[si][items[ii]] == null) {
-										currentLayer[0].missing_mandatory_configs.push(items[ii]);
+										
+											switch (items[ii]) {
+
+												case "lineWidth":
+													if (scaneables[si]["strokeStyle"] != "none") {
+														currentLayer[0].missing_mandatory_configs.push(items[ii]);
+													}
+													break;
+
+												default:
+													currentLayer[0].missing_mandatory_configs.push(items[ii]);
+											}
 									}
 							
 								}
@@ -225,8 +236,6 @@ export class TOCManager {
 
 					this.layers.push(currentLayer[0]);
 					console.info(`[init RISCO] TOCManager, layer '${lyk}' (${currentLayer[0].constructor.name}) prepared`);
-
-					currentLayer.length = 0;
 
 				} else {
 					console.error(`TOCManager, layer with key '${lyk}' has no type, cannot be read.`);

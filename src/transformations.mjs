@@ -454,7 +454,7 @@ class TransformsQueue {
 		vectorMultiply(v1, mx1, v2);
 		
 		out_pt[0] = Math.round(v2[0]);
-		out_pt[1] = Math.floor(v2[1]);
+		out_pt[1] = Math.round(v2[1]);
 	}	
 
 	getMapBounds(p_canvasdims, out_env) {

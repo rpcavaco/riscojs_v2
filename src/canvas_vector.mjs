@@ -2,7 +2,7 @@
 import {GlobalConst} from './constants.js';
 import {GraticuleLayer, PointGridLayer, AreaGridLayer, AGSQryLayer} from './vectorlayers.mjs';
 import { RiscoFeatsLayer } from './risco_ownlayers.mjs';
-import {evalTextAlongPathViability, pathLength, findPolygonCentroid, dist2D, segmentMeasureToPoint, loopPathParts, distanceToLine, deg2Rad} from './geom.mjs';
+import {evalTextAlongPathViability, pathLength, findPolygonCentroid, dist2D, segmentMeasureToPoint, loopPathParts, distanceToLine, deg2Rad, lineMeasureToPoint, lineExtremePoints} from './geom.mjs';
 
 
 function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coords, p_labeltxt, p_label_len, out_data) {
@@ -509,7 +509,77 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 			this._gfctxlbl.fillText(p_labeltxt, ...finalpt);
 			this._gfctxlbl.restore();
 
-		} else if (placement == "leader") {
+		} else if (placement == "extend") {
+		
+			if (this._currentsymb.labelextend.toLowerCase() == "none") {
+				throw new Error("Empty 'labelextend' config, needs filling");
+			}
+
+			// "meas-inner-offset:length-outer-offset:symbol-name-or-none"
+			const [innermeas_str, outer_len_str, symb_name] = this._currentsymb.labelextend.split(':');
+			const innermeas = parseFloat(innermeas_str);
+			const outer_len = parseFloat(outer_len_str);
+
+			const pt = [], extpts=[], ep=[];
+			let ang, dy, dx, dy2, dx2, anchpt;
+			lineMeasureToPoint(p_coords, p_path_levels, innermeas, p_mapctxt.transformmgr.getRenderingCoordsPt.bind(p_mapctxt.transformmgr), pt);			
+			lineExtremePoints(p_coords, p_path_levels, extpts);
+
+			if (innermeas < 0.5) {
+				p_mapctxt.transformmgr.getRenderingCoordsPt(extpts[0], ep);
+				dx = ep[0] - pt[0];
+				dy = ep[1] - pt[1];
+			} else {
+				p_mapctxt.transformmgr.getRenderingCoordsPt(extpts[1], ep);
+				dx = pt[0] - ep[0];
+				dy = pt[1] - ep[1];				
+			}
+
+			ang = Math.atan(dy/dx);
+			dx2 = outer_len * Math.cos(ang);
+			dy2 = outer_len * Math.sin(ang);
+
+			if (dx < 0) {
+				this._gfctxlbl.textAlign = "right";
+				anchpt = [ep[0]-dx2, ep[1]-dy2];
+			} else {
+				this._gfctxlbl.textAlign = "left";
+				anchpt = [ep[0]+dx2, ep[1]+dy2];
+			}
+
+			this._gfctxlbl.save();
+			if (ang != 0) {
+				this._gfctxlbl.translate(...anchpt);
+				this._gfctxlbl.rotate(ang);
+				this._gfctxlbl.translate(-anchpt[0], -anchpt[1]);	
+			}
+
+			p_mapctxt.transformmgr.getRenderingCoordsPt(anchpt, pt);
+			this._gfctxlbl.fillText(p_labeltxt, ...anchpt);
+
+			switch (symb_name) {
+
+				case "arrow":
+					this._gfctxlbl.beginPath();
+					const a = outer_len / 5;
+					const a1 = outer_len / 4;
+					const b = 3 * outer_len / 5;
+					if (dx < 0) {
+						this._gfctxlbl.moveTo(anchpt[0]+a, anchpt[1]);
+						this._gfctxlbl.lineTo(anchpt[0]+outer_len-2, anchpt[1]+a1);
+						this._gfctxlbl.lineTo(anchpt[0]+outer_len-2, anchpt[1]-a1);
+					} else {
+						this._gfctxlbl.moveTo(anchpt[0]-a, anchpt[1]);
+						this._gfctxlbl.lineTo(anchpt[0]-outer_len+2, anchpt[1]+a1);
+						this._gfctxlbl.lineTo(anchpt[0]-outer_len+2, anchpt[1]-a1);
+					}
+					this._gfctxlbl.fill();
+		
+					break;
+
+			}
+
+			this._gfctxlbl.restore();
 
 		}
 

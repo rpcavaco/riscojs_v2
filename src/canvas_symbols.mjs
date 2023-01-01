@@ -34,7 +34,7 @@ const strokeSymbolMixin = (Base) => class extends Base {
 }
 
 const labelSymbolMixin = (Base) => class extends Base {
-	labelplacement = "along";
+	labelplacement = "centroid";
 	labelFillStyle = "white";
 	labelFontFace = "Helvetica"
 	labelFontSizePX = 14;
@@ -42,6 +42,7 @@ const labelSymbolMixin = (Base) => class extends Base {
 	labelTextAlign = "center";	
 	labelTextBaseline = "middle";	
 	labelRotation = "none";	
+	labelextend = "none "; // "meas-inner-offset:length-outer-offset:symbol-name-or-none"
 	
 	labelLeaderLength = "none";
 	labelLeaderStroke = "none";

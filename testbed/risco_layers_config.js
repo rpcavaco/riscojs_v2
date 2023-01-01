@@ -131,8 +131,16 @@ var RISCOJS_LAYERS_CFG = {
 			"geomtype": "line",
 			"url": "https://geo.cm-porto.net/riscosrv_v2",
 			"mouseinteraction": false,
-			"strokeStyle": "#545454",
-			"lineWidth": 1
+			"strokeStyle": "none",
+			//"lineWidth": 1,
+
+
+			"labelfield": "n_policia",
+			"labelplacement": "extend",
+			"labelextend": "0.2:10:arrow",
+			"labelFontSizePX": 14,
+			"labelFontFace": "Tahoma",
+			"labelTextAlign": "left",			
 		}
 		
 		
