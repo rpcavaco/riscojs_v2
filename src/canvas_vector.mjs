@@ -245,6 +245,34 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 	
 	}	
 
+	drawMarker(p_mapctxt, p_coords, opt_feat_id) {
+
+		if (this._gfctx == null) {
+			throw new Error(`graphics context was not previously grabbed for layer '${this.key}'`);
+		}
+
+		if (p_coords.length != 2 || typeof p_coords[0] != 'number') {
+			console.error("pc:", p_coords);
+			throw new Error(`p_coords doesn't contain point, for layer '${this.key}'`);
+		}
+
+		const pt = [];
+		p_mapctxt.transformmgr.getRenderingCoordsPt(p_coords, pt);
+
+		this.default_symbol.drawsymb(p_mapctxt, this, pt, null, opt_feat_id);
+
+		if (this.strokeflag) {
+			this._gfctx.stroke();
+		}
+
+		if (this.fillflag) {
+			this._gfctx.fill();
+		}
+
+		return true;	
+			
+	}
+
 	// must this.grabGf2DCtx first !
 	drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id) {
 
@@ -615,9 +643,15 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 				lbloptsymbs = opt_symbs['label'];
 		}
 
+		// console.log(">>", this.key, this.default_symbol);
+
 		if (this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskeys, pathoptsymbs)) {
 			try {
-				ret = this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
+				if (this.geomtype == "point") {
+					ret = this.drawMarker( p_mapctxt, p_coords[0], opt_feat_id);
+				} else {
+					ret = this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
+				}
 			} catch(e) {
 				console.log(p_coords, p_path_levels);
 				throw e;
@@ -704,7 +738,7 @@ export class CanvasPointGridLayer extends canvasVectorMethodsMixin(PointGridLaye
 		if (ok) {
 			try {
 
-				this.default_symbol.drawsymb(p_mapctxt, this, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs)
+				this.default_symbol.drawsymb(p_mapctxt, this, p_coords, p_attrs)
 
 			} catch(e) {
 				throw e;

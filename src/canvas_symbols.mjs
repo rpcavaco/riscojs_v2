@@ -71,7 +71,7 @@ class MarkerSymbol extends labelSymbolMixin(Symbol) {
 	constructor() {
 		super();
 	}
-	drawsymb(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords, p_attrs, opt_feat_id) {
 		// asbtract, to be implemented by subclasses
 	}
 }
@@ -81,7 +81,7 @@ export class CanvasVertCross extends strokeSymbolMixin(MarkerSymbol) {
 	constructor() {
 		super();
 	}
-	drawsymb(p_mapctxt, p_layer, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords, p_attrs, opt_feat_id) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = this.markersize * GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval);
@@ -103,12 +103,12 @@ export class CanvasVertCross extends strokeSymbolMixin(MarkerSymbol) {
 	}
 }
 
-export class CanvasCircle extends strokeSymbolMixin(MarkerSymbol) { 
+export class CanvasCircle extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol)) { 
 
 	constructor() {
 		super();
 	}
-	drawsymb(p_mapctxt, p_layer, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords, p_attrs, opt_feat_id) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));

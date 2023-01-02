@@ -152,6 +152,7 @@ var RISCOJS_LAYERS_CFG = {
 			"marker": "circle",
 			"markersize": 2,
 			"strokeStyle": "white",
+			"fillStyle": "rgba(204, 204, 204, 0.5)",
 			"lineWidth": 2,
 			"maxscale": 5000,
 
