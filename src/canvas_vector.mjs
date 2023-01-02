@@ -637,10 +637,6 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 			if (lblcontent !== null) {
 
-				/* if (p_attrs["cod_topo"] != "JMOLI0") {
-					return;
-				}*/
-
 				if (this.grabLabelGf2DCtx(p_mapctxt, opt_alt_canvaskeys, lbloptsymbs)) {
 					try {
 						ret = this.drawLabel(p_mapctxt, p_coords, p_path_levels, lblcontent, opt_terrain_env);

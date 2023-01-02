@@ -1,7 +1,7 @@
 
 import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
-
+import {CalloutBox} from './canvas_customization_helpers.mjs';
 
 class MapPrintInRect {
 
@@ -173,13 +173,39 @@ class LoadingPrint extends LoadingMessaging {
 }
 
 class Info {
+	// curr_layerkey;
+	// curr_featid;
+	callout;
+	canvaslayer = 'temporary';
+	styles;
+
+	constructor(p_styles) {
+		this.styles = p_styles;
+		this.callout = null;
+	}
 	hover(p_mapctx, p_layerkey, p_featid, p_feature, p_scrx, p_scry) {
-		console.log("Maptip, layer:", p_layerkey, " feat:", p_featid);
+		// this.curr_layerkey = p_layerkey;
+		// this.curr_featid = p_featid;
+		//console.log("Maptip, layer:", p_layerkey, " feat:", p_featid);
+		const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
+		this.callout = new CalloutBox(p_mapctx, currlayer, p_featid, p_feature, this.styles, p_scrx, p_scry);
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		this.callout.draw(ctx);
 	}
 	pick(p_mapctx, p_layerkey, p_featid, p_feature, p_scrx, p_scry) {
+		this.clear(p_mapctx, p_layerkey, p_featid, p_scrx, p_scry)
+		// this.curr_layerkey = p_layerkey;
+		// this.curr_featid = p_featid;
 		console.log("Info, layer:", p_layerkey, " feat:", p_featid);
 		console.log(p_feature);
 	} 
+	clear(p_mapctx, p_layerkey, p_featid, p_scrx, p_scry) {
+		//console.log("info/tip clear, prev layer:", p_layerkey, " feat:", p_featid);
+		if (this.callout) {
+			const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+			this.callout.clear(ctx);
+		}
+	} 	
 }
 
 export class MapCustomizations {
@@ -189,7 +215,7 @@ export class MapCustomizations {
 			"mousecoordsprint": new MousecoordsPrint(),
 			"mapscaleprint": new MapScalePrint(),
 			"loadingmsgprint": new LoadingPrint(),
-			"infoclass": new Info()						
+			"infoclass": new Info(GlobalConst.INFO_MAPTIPS_BOXSTYLE)						
 		}
 		
 	}

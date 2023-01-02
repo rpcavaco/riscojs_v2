@@ -45,7 +45,7 @@ class DefaultTool extends BaseTool {
 	}	
 }
 
-function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_actonselfeat) {
+function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_actonselfeat, opt_clearafterselfeat) {
 	
 	let foundly = null, ref_x, ref_y, max_y, col, row, maxrow, sqrid;
 
@@ -163,6 +163,8 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 			}
 		}
 
+		// console.log("nearestid:", nearestid);
+
 		if (nearestid >= 0) {
 
 			if (GlobalConst.getDebug("FEATMOUSESEL")) {
@@ -174,6 +176,10 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 				p_mapctx.featureCollection.draw(p_mapctx, nearestlyk, nearestid, {'normal': 'temporary', 'labels': 'temporary' }, symb);
 				if (opt_actonselfeat) {
 					opt_actonselfeat(p_mapctx, nearestlyk, nearestid, p_mapctx.featureCollection.get(nearestlyk, nearestid), p_scrx, p_scry);
+				}
+			} else {
+				if (opt_clearafterselfeat) {
+					opt_clearafterselfeat(p_mapctx, nearestlyk, nearestid, p_scrx, p_scry);
 				}
 			}
 		}
@@ -387,7 +393,7 @@ class InfoTool extends BaseTool {
 				case 'mouseup':
 					if (ic.pick !== undefined) {
 						mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-						interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, ic.pick);
+						interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, ic.pick.bind(ic));
 					} else {
 						console.warn(`infoclass customization unavailable, cannot pick feature`);			
 					}						
@@ -396,7 +402,7 @@ class InfoTool extends BaseTool {
 				case 'mousemove':
 					if (ic.hover !== undefined) {
 						mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-						interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, ic.hover);
+						interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, ic.hover.bind(ic), ic.clear.bind(ic));
 					} else {
 						console.warn(`infoclass customization unavailable, cannot hover / maptip feature`);			
 					}						

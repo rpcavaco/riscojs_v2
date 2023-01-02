@@ -42,6 +42,18 @@ export class TOCManager {
 		}
 	}
 
+	getLayer(p_layerkey) {
+		let lidx = 0;
+		let ret = null;
+		while (lidx < this.layers.length && this.layers[lidx].key != p_layerkey) {
+			lidx++;
+		}
+		if (lidx < this.layers.length && this.layers[lidx].key == p_layerkey) {
+			ret = this.layers[lidx];
+		}
+		return ret;
+	}
+
 	initLayersFromConfig() {
 
 		const selectable_feat_layer_types = [

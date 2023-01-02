@@ -64,6 +64,13 @@ var GlobalConst = {
 		}
 	},
 
+	INFO_MAPTIPS_BOXSTYLE: {
+		"fillStyle": "#596363a0",
+		"strokeStyle": "white",
+		"lineWidth": 1,
+		"font": "12pt Calibri",	
+	},
+
 	DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB: { // Symbolize spatial index features selected on mouse position
 		"poly" : { 
 			"fillStyle": "#ffff007f"

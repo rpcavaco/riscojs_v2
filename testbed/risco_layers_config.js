@@ -1,5 +1,5 @@
 var RISCOJS_LAYERS_CFG = {
-	"lorder": ["ortos_2018", "mancha_construida", "EV", "pec_naolot", "NPOLPROJ", "grat_crosses"], //, "mancha_constr", "mancha_construida", "gratMRK"],
+	"lorder": ["ortos_2018", "mancha_construida", "EV", "procs_fisca", "NPOLPROJ", "grat_crosses"], //, "mancha_constr", "mancha_construida", "gratMRK"],
 	/*"relations": [
 		{
 			"from": "grat_sqrs",
@@ -135,15 +135,31 @@ var RISCOJS_LAYERS_CFG = {
 			//"lineWidth": 1,
 			"maxscale": 1000,
 
-
 			"labelfield": "n_policia",
 			"labelplacement": "extend",
 			"labelextend": "0.2:10:arrow",
-			"labelFontSizePX": 14,
+			"labelFontSizePX": 12,
 			"labelFontFace": "Tahoma",
 			"labelTextAlign": "left",			
-		}
+		},
 		
+		"procs_fisca": {
+
+			"type": "riscofeats",
+			"geomtype": "point",
+			"url": "https://geo.cm-porto.net/riscosrv_v2",
+			"mouseinteraction": false,
+			"marker": "circle",
+			"markersize": 2,
+			"strokeStyle": "white",
+			"lineWidth": 2,
+			"maxscale": 5000,
+
+			"label": "Processos fiscalizacao"
+
+
+		},			
+
 		
 
 	}
