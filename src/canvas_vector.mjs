@@ -146,12 +146,13 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 	canvasKey = 'normal';
 	canvasKeyLabels = 'labels';
 	default_symbol;	
+	varstyles_symbols = [];
 	fillflag = false;
 	strokeflag = false;
 	_gfctx;  // current graphics context to be always updated at each refreshing / drawing
 	_currentsymb;
 
-	_grabGf2DCtx(p_mapctx, b_forlabel, opt_alt_canvaskeys, opt_symbs) {
+	_grabGf2DCtx(p_mapctx, b_forlabel, opt_attrs, opt_alt_canvaskeys, opt_symbs) {
 
 		let canvaskey;
 		let canvaskeyLabels;
@@ -179,6 +180,14 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 			this._currentsymb = opt_symbs;
 		} else {
 			this._currentsymb = this.default_symbol;
+			if (this["varstyles_symbols"]!==undefined && opt_attrs) {
+				for (let vi=0; vi<this.varstyles_symbols.length; vi++) {										
+					if (this.varstyles_symbols[vi].func(p_mapctx.getScale(), opt_attrs)) {
+						this._currentsymb = this.varstyles_symbols[vi];
+						break;
+					}
+				}
+			}	
 		}	
 
 		if (b_forlabel) {
@@ -226,12 +235,12 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 		return true;
 	}
 
-	grabGf2DCtx(p_mapctx, opt_alt_canvaskey, opt_symbs) {
-		return this._grabGf2DCtx(p_mapctx, false, opt_alt_canvaskey, opt_symbs);
+	grabGf2DCtx(p_mapctx, opt_attrs, opt_alt_canvaskey, opt_symbs) {
+		return this._grabGf2DCtx(p_mapctx, false, opt_attrs, opt_alt_canvaskey, opt_symbs);
 	}
 
-	grabLabelGf2DCtx(p_mapctx, opt_alt_canvaskey, opt_symbs) {
-		return this._grabGf2DCtx(p_mapctx, true, opt_alt_canvaskey, opt_symbs);
+	grabLabelGf2DCtx(p_mapctx, opt_attrs, opt_alt_canvaskey, opt_symbs) {
+		return this._grabGf2DCtx(p_mapctx, true, opt_attrs, opt_alt_canvaskey, opt_symbs);
 	}	
 
 	// must this.grabGf2DCtx first !	
@@ -259,7 +268,9 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 		const pt = [];
 		p_mapctxt.transformmgr.getRenderingCoordsPt(p_coords, pt);
 
-		this.default_symbol.drawsymb(p_mapctxt, this, pt, null, opt_feat_id);
+		//console.log(this.key, symbol.key, this.varstyles_symbols);
+
+		this._currentsymb.drawsymb(p_mapctxt, this, pt, opt_feat_id);
 
 		if (this.strokeflag) {
 			this._gfctx.stroke();
@@ -645,7 +656,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		// console.log(">>", this.key, this.default_symbol);
 
-		if (this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskeys, pathoptsymbs)) {
+		if (this.grabGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, pathoptsymbs)) {
 			try {
 				if (this.geomtype == "point") {
 					ret = this.drawMarker( p_mapctxt, p_coords[0], opt_feat_id);
@@ -738,7 +749,7 @@ export class CanvasPointGridLayer extends canvasVectorMethodsMixin(PointGridLaye
 		if (ok) {
 			try {
 
-				this.default_symbol.drawsymb(p_mapctxt, this, p_coords, p_attrs)
+				this.default_symbol.drawsymb(p_mapctxt, this, p_coords)
 
 			} catch(e) {
 				throw e;

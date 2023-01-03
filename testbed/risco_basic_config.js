@@ -10,4 +10,5 @@ var RISCOJS_BASIC_CFG = {
 		"terrain_center": [-41200.0,166000.0]
 	}
 
+
 }

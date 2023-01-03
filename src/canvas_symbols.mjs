@@ -1,5 +1,6 @@
 import {GlobalConst} from './constants.js';
 
+/*
 class LogicOperation {
 
 	constructor(p_fname, p_value, p_op, opt_prevop) {
@@ -18,12 +19,15 @@ class WhereClause {
 		this.ops.append(new LogicOperation(p_fname, p_value, p_op, opt_prevop))
 	}
 }
+*/
 
 class Symbol {
 	greaterOrEqualScale = Number.MAX_SAFE_INTEGER; // limit above the current scale
-	constructor() {
+	func = "none";
+	key = "default";
+	/* constructor() {
 		this.whereClause = new WhereClause();
-	}
+	} */
 		
 }
 
@@ -68,20 +72,29 @@ export class CanvasPolygonSymbol extends labelSymbolMixin(fillSymbolMixin(stroke
 
 class MarkerSymbol extends labelSymbolMixin(Symbol) {
 	markersize; 
-	constructor() {
+	_variablesymb_idx;
+	constructor(opt_variablesymb_idx) {
 		super();
+		if (opt_variablesymb_idx != null) {
+			this._variablesymb_idx = opt_variablesymb_idx;
+		} else {
+			this._variablesymb_idx = -1;
+		}
 	}
-	drawsymb(p_mapctxt, p_layer, p_coords, p_attrs, opt_feat_id) {
+	get variablesymb_idx() {
+		return this._variablesymb_idx;
+	}	
+	drawsymb(p_mapctxt, p_layer, p_coords, opt_feat_id) {
 		// asbtract, to be implemented by subclasses
 	}
 }
 
 export class CanvasVertCross extends strokeSymbolMixin(MarkerSymbol) { 
 
-	constructor() {
-		super();
+	constructor(opt_variablesymb_idx) {
+		super(opt_variablesymb_idx);
 	}
-	drawsymb(p_mapctxt, p_layer, p_coords, p_attrs, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords, opt_feat_id) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = this.markersize * GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval);
@@ -105,10 +118,10 @@ export class CanvasVertCross extends strokeSymbolMixin(MarkerSymbol) {
 
 export class CanvasCircle extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol)) { 
 
-	constructor() {
-		super();
+	constructor(opt_variablesymb_idx) {
+		super(opt_variablesymb_idx);
 	}
-	drawsymb(p_mapctxt, p_layer, p_coords, p_attrs, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords, opt_feat_id) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));

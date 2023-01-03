@@ -17,11 +17,11 @@ class DynamicLayer {
 
 class DynamicSymbol {
 	// p_mode: only 'canvas' for now
-    constructor (p_mode, p_classkey, opts) {
+    constructor (p_mode, p_classkey, opt_variablesymb_idx, opts) {
 		try {
-			return new symbClassAdapter[p_mode][p_classkey](opts);
+			return new symbClassAdapter[p_mode][p_classkey](opt_variablesymb_idx, opts);
 		} catch (e) {
-			console.log("DynamicSymbol error, mode:", p_mode, "class key:", p_classkey, "opts:", opts);
+			console.error("DynamicSymbol error, mode:", p_mode, "class key:", p_classkey, "opts:", opts);
 			console.error(e);
 		}
     }
@@ -161,21 +161,33 @@ export class TOCManager {
 						currentLayer[0].key = lyk;
 
 						if (!(currentLayer[0] instanceof RasterLayer)) {
+							
 							if (currentLayer[0].geomtype === undefined && currentLayer[0].marker === undefined) { 
+								
 								throw new Error(`Layer ${lyk} has no 'geomtype' or 'marker' defined`);
+
 							} else {
+
+								let classkey;
 								if (currentLayer[0].marker !== undefined && currentLayer[0].marker != "none") { 
-									currentLayer[0].default_symbol = new DynamicSymbol(this.mode, currentLayer[0].marker);
+									classkey = currentLayer[0].marker;
 								} else {
-									currentLayer[0].default_symbol = new DynamicSymbol(this.mode, currentLayer[0].geomtype);
+									classkey = currentLayer[0].geomtype;
 								}
-								scaneables.push(currentLayer[0].default_symbol);		
+								currentLayer[0].default_symbol = new DynamicSymbol(this.mode, classkey);
+								scaneables.push(currentLayer[0].default_symbol);	
+								
+								if (lyentry.varstyles) {
+									for (let vi=0; vi<lyentry.varstyles.length; vi++) {										
+										currentLayer[0].varstyles_symbols[vi] = new DynamicSymbol(this.mode, classkey, vi);
+										scaneables.push(currentLayer[0].varstyles_symbols[vi]);
+									}
+								}
 							}
 						}
 
 					// console.log(currentLayer[0].default_symbol);
 					// console.log(scaneables);
-
 						for (let si=0; si < scaneables.length; si++) {
 
 							items = Object.keys(scaneables[si]);
@@ -186,26 +198,31 @@ export class TOCManager {
 									continue;
 								}
 
-								if (lyentry[items[ii]] !== undefined) {
+								if (scaneables[si].variablesymb_idx >= 0 && lyentry.varstyles[scaneables[si].variablesymb_idx][items[ii]] !== undefined) {
+
+									scaneables[si][items[ii]] = lyentry.varstyles[scaneables[si].variablesymb_idx][items[ii]];
+
+								} else if (lyentry[items[ii]] !== undefined) {
+
 									scaneables[si][items[ii]] = lyentry[items[ii]];
+		
 								} else {
 
 									// item is missing if has no default value
 									if (scaneables[si][items[ii]] == null) {
 										
-											switch (items[ii]) {
+										switch (items[ii]) {
 
-												case "lineWidth":
-													if (scaneables[si]["strokeStyle"] != "none") {
-														currentLayer[0].missing_mandatory_configs.push(items[ii]);
-													}
-													break;
-
-												default:
+											case "lineWidth":
+												if (scaneables[si]["strokeStyle"] != "none") {
 													currentLayer[0].missing_mandatory_configs.push(items[ii]);
-											}
-									}
-							
+												}
+												break;
+
+											default:
+												currentLayer[0].missing_mandatory_configs.push(items[ii]);
+										}
+									}							
 								}
 							}	
 							
@@ -227,6 +244,9 @@ export class TOCManager {
 							//console.log(Object.keys(currentLayer[0]));
 	
 						}
+
+						// console.log("aft", lyk, scaneables);
+
 					} catch(e) {
 						console.error(e);
 						continue;

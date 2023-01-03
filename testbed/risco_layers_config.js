@@ -145,6 +145,7 @@ var RISCOJS_LAYERS_CFG = {
 		
 		"procs_fisca": {
 
+			"label": "Processos fiscalizacao",
 			"type": "riscofeats",
 			"geomtype": "point",
 			"url": "https://geo.cm-porto.net/riscosrv_v2",
@@ -156,7 +157,14 @@ var RISCOJS_LAYERS_CFG = {
 			"lineWidth": 2,
 			"maxscale": 5000,
 
-			"label": "Processos fiscalizacao"
+			"varstyles": [
+				{
+					"func": (scl, attrs) => { return attrs.cnt == 1; },
+					"key": "um_processo",
+					"fillStyle": RISCOJS_COLORRAMPS.RAMPS4X4.green_blue.b,
+				}
+			]
+
 
 
 		},			
