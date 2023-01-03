@@ -62,6 +62,11 @@ var GlobalConst = {
 	DEBUG_FEATURE_DISTANCETO: false,
 	DEBUG_FEATURE_DISTANCETO_FEATID: 7455,
 
+	FONTS: {
+		"OpenSans-CondensedBold": "fonts/OpenSans-CondensedBold.ttf",
+		"OpenSans-CondensedRegular": "fonts/OpenSans-CondensedRegular.ttf"
+	},
+
 	FEATMOUSESEL_HIGHLIGHT: {
 		"poly" : { 
 			"fillStyle": "#11fbff7f",
@@ -84,7 +89,8 @@ var GlobalConst = {
 		"fillStyle": "#596363a0",
 		"strokeStyle": "white",
 		"lineWidth": 1,
-		"font": "12pt Calibri",	
+		"captionfont": "20px OpenSans-CondensedBold",	
+		"font": "16px OpenSans-CondensedRegular",			
 	},
 
 	DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB: { // Symbolize spatial index features selected on mouse position

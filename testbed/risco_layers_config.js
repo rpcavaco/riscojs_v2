@@ -83,7 +83,7 @@ var RISCOJS_LAYERS_CFG = {
 			"labelfield": "toponimo",
 			"labelplacement": "along",
 			"labelFontSizePX": 18,
-			"labelFontFace": "Calibri",
+			"labelFontFace": "OpenSans-CondensedRegular",
 
 			"envsplit": false,
 			"fillStyle": "none",
@@ -139,13 +139,13 @@ var RISCOJS_LAYERS_CFG = {
 			"labelplacement": "extend",
 			"labelextend": "0.2:10:arrow",
 			"labelFontSizePX": 12,
-			"labelFontFace": "Tahoma",
+			"labelFontFace": "OpenSans-CondensedRegular",
 			"labelTextAlign": "left",			
 		},
 		
 		"procs_fisca": {
 
-			"label": "Processos fiscalizacao",
+			"label": "Processos fiscalização",
 			"type": "riscofeats",
 			"geomtype": "point",
 			"url": "https://geo.cm-porto.net/riscosrv_v2",
@@ -156,7 +156,6 @@ var RISCOJS_LAYERS_CFG = {
 			"fillStyle": "rgba(204, 204, 204, 0.5)",
 			"lineWidth": 2,
 			"maxscale": 10000,
-
 			"varstyles": [
 				{
 					"func": (scl, attrs) => { return attrs.cnt == 1; },
@@ -178,7 +177,19 @@ var RISCOJS_LAYERS_CFG = {
 					"key": "mais_dez_procs",
 					"fillStyle": RISCOJS_COLORRAMPS.RAMPS4X4.mag_ora.a,
 				}												
-			]
+			],
+			"msgsdict": {
+				"deflang": "pt",
+				"pt": {
+					"cnt": "núm.processos"
+				}
+			},
+			"infofields": {
+				"add": [
+					"cnt",
+					"assuntos"
+				]
+			}
 
 
 

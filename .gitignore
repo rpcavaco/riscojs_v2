@@ -4,6 +4,7 @@ testbed/js/
 dist/
 src/_*.*js
 docs/build/
+fonts/
 venv38/
 *.zip
 passos_*

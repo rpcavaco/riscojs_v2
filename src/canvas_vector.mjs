@@ -149,6 +149,8 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 	varstyles_symbols = [];
 	fillflag = false;
 	strokeflag = false;
+	msgsdict = {};
+	infofields = {}; // 'add' and 'remove'
 	_gfctx;  // current graphics context to be always updated at each refreshing / drawing
 	_currentsymb;
 

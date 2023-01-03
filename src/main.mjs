@@ -4,7 +4,7 @@ import {ToolManager} from './interactions.mjs';
 import {TOCManager} from './toc.mjs';
 import {FeatureCollection} from './feature_collection.mjs';
 import {I18n} from './i18n.mjs';
-
+import {GlobalConst} from './constants.js';
 
 /**
  * Class RiscoMapOverlay
@@ -162,6 +162,17 @@ export class RiscoMapCtx {
 
 		if (!this.wait_for_customization_avail) {
 			this.maprefresh();
+		}
+
+		let f;
+		for (let fkey in GlobalConst.FONTS) {
+			f = new FontFace(fkey, `url(${GlobalConst.FONTS[fkey]})`);
+			f.load().then(() => {
+				console.info(`[init RISCO] ${fkey} font loaded`);
+			}, (err) => {
+				console.error(err);
+			});
+			document.fonts.add(f);			
 		}
 
 		console.info(`[init RISCO] ==  End of map context init for '${this.panelwidget.id}'  ==`);
