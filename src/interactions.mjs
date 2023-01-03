@@ -131,7 +131,16 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 
 				if (GlobalConst.getDebug("FEATMOUSESEL")) {
 					try {
-						const symb = {'path': GlobalConst.DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB[foundly.geomtype] };
+						let symb;
+						if (foundly.geomtype == "point") {
+							symb = {
+								'path': GlobalConst.DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB[foundly.geomtype]
+							}
+						} else {
+							symb = {
+								'point': null
+							}
+						}
 						p_mapctx.featureCollection.draw(p_mapctx, foundly.key, sqrid, {'normal': 'temporary', 'labels': 'temporary' }, symb);
 					} catch (e) {
 						console.log(`[DBG:FEATMOUSESEL] feature error '${e}'`);
@@ -144,6 +153,19 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 		let tmpd, nearestid=-1, nearestlyk=null, dist = Number.MAX_SAFE_INTEGER;
 		for (let from_lyrk in related_ids) {
 			for (let to_lyrk in related_ids[from_lyrk]) {
+
+				foundly = null;
+				for (let ly of p_mapctx.tocmgr.layers) {
+					if (ly.key == to_lyrk) {
+						foundly = ly;
+						break;
+					}
+				}
+
+				if (foundly == null) {
+					throw new Error(`to layer '${to_lyrk}' not found`);
+				}
+
 				if (related_ids[from_lyrk][to_lyrk].size > 0) {
 					for (let r of related_ids[from_lyrk][to_lyrk]) {
 
@@ -155,7 +177,16 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 						}
 						if (GlobalConst.getDebug("FEATMOUSESEL")) {
 							console.log(`[DBG:FEATMOUSESEL] interact with lyr:${to_lyrk}, dist:${tmpd} (max: ${p_maxdist}) to id:${r}`);
-							const symb = {'path': GlobalConst.DEBUG_FEATMOUSESEL_SELUNDERMASK_SYMB[foundly.geomtype] };
+							let symb;
+							if (foundly.geomtype == "point") {
+								symb = {
+									'path': GlobalConst.DEBUG_FEATMOUSESEL_SELUNDERMASK_SYMB[foundly.geomtype]
+								}
+							} else {
+								symb = {
+									'point': null
+								}
+							}	
 							p_mapctx.featureCollection.draw(p_mapctx, to_lyrk, r, {'normal': 'temporary', 'labels': 'temporary' }, symb);
 						}
 					}
@@ -171,8 +202,29 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 				console.log(`[DBG:FEATMOUSESEL] interact with NEAREST: ${nearestlyk}, dist:${dist} (max: ${p_maxdist}) to id:${nearestid}`);
 			}
 
+			foundly = null;
+			for (let ly of p_mapctx.tocmgr.layers) {
+				if (ly.key == nearestlyk) {
+					foundly = ly;
+					break;
+				}
+			}
+
+			if (foundly == null) {
+				throw new Error(`to layer '${nearestlyk}' not found`);
+			}
+
 			if (p_maxdist == null || p_maxdist >=  dist) {
-				const symb = {'path': GlobalConst.FEATMOUSESEL_HIGHLIGHT[foundly.geomtype] };
+				let symb;
+				if (foundly.geomtype == "point") {
+					symb = {
+						'path': GlobalConst.FEATMOUSESEL_HIGHLIGHT[foundly.geomtype]
+					}
+				} else {
+					symb = {
+						'point': null
+					}
+				}				
 				p_mapctx.featureCollection.draw(p_mapctx, nearestlyk, nearestid, {'normal': 'temporary', 'labels': 'temporary' }, symb);
 				if (opt_actonselfeat) {
 					opt_actonselfeat(p_mapctx, nearestlyk, nearestid, p_mapctx.featureCollection.get(nearestlyk, nearestid), p_scrx, p_scry);

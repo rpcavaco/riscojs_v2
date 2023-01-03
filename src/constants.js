@@ -8,6 +8,21 @@ var SUBKEYS = {
 
 // DISENG_WHEEL - "disengage wheel" desliga a mousewheel das respetivas acoes, apenas gera msgs de debug
 
+var sel_drawsymb_func = function(p_mapctxt, p_layer, p_coords, opt_feat_id) {
+
+	const sclval = p_mapctxt.getScale();
+	const dim = 10;
+
+	p_layer._gfctx.beginPath();
+	p_layer._gfctx.arc(p_coords[0], p_coords[1], dim, 0, Math.PI * 2, true);
+
+	if (this["fillStyle"] !== undefined) {
+		p_layer._gfctx.fill();
+	}
+
+	p_layer._gfctx.stroke();
+}
+
 var GlobalConst = {
 
 	DEBUG: "none",    // ALL, GEOM, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, VECTLOAD, RISCOFEATS, FEATMOUSESEL, none
@@ -60,7 +75,8 @@ var GlobalConst = {
 		"point" : { 
 			"fillStyle": "#11fbff7f",
 			"strokeStyle": "#11caff",
-			"lineWidth": 2
+			"lineWidth": 2,
+			"drawsymb": sel_drawsymb_func
 		}
 	},
 
@@ -82,7 +98,8 @@ var GlobalConst = {
 		"point" : { 
 			"fillStyle": "#ffff007f",
 			"strokeStyle": "#ffff00",
-			"lineWidth": 2
+			"lineWidth": 2,
+			"drawsymb": sel_drawsymb_func		
 		}
 	},
 
@@ -97,7 +114,8 @@ var GlobalConst = {
 		"point" : { 
 			"fillStyle": "#ff00007f",
 			"strokeStyle": "#ff0000",
-			"lineWidth": 2
+			"lineWidth": 2,
+			"drawsymb": sel_drawsymb_func
 		}
 	},
 
@@ -123,18 +141,18 @@ var GlobalConst = {
 		TEXT_OFFSET: 12
 	},
 
-	getDebug: function(p_dbgkey) {
+	getDebug: function(dbgkey) {
 		let ret = false, all = false;
-		if (this.DEBUG.toLowerCase() == "all" && !p_dbgkey.toLowerCase().startsWith('diseng')) {
+		if (this.DEBUG.toLowerCase() == "all" && !dbgkey.toLowerCase().startsWith('diseng')) {
 			all = true;
 			ret = true;
 		} else {
-			ret = (p_dbgkey.toLowerCase() == this.DEBUG.toLowerCase() ? true : false);
+			ret = (dbgkey.toLowerCase() == this.DEBUG.toLowerCase() ? true : false);
 		}
 		if (!all) {
 			switch(this.DEBUG.toLowerCase()) {
 				case "layers":
-					ret = (SUBKEYS["layers"].indexOf(p_dbgkey.toLowerCase()) >= 0 ? true : false);
+					ret = (SUBKEYS["layers"].indexOf(dbgkey.toLowerCase()) >= 0 ? true : false);
 					break;
 
 

@@ -178,12 +178,15 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		if (opt_symbs) {
 			this._currentsymb = opt_symbs;
+			// console.log("set _currentsymb A:", this.key, opt_symbs);
 		} else {
 			this._currentsymb = this.default_symbol;
+			//console.log("set _currentsymb B:", this.key, this._currentsymb);
 			if (this["varstyles_symbols"]!==undefined && opt_attrs) {
 				for (let vi=0; vi<this.varstyles_symbols.length; vi++) {										
 					if (this.varstyles_symbols[vi].func(p_mapctx.getScale(), opt_attrs)) {
 						this._currentsymb = this.varstyles_symbols[vi];
+						//console.log("set _currentsymb C:", this.key, this._currentsymb);
 						break;
 					}
 				}
@@ -271,7 +274,13 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 		//const symblabel = p_mapctxt.i18n.msg(this._currentsymb.key, true);
 		//console.log(this.key, symblabel, this.varstyles_symbols);
 
-		this._currentsymb.drawsymb(p_mapctxt, this, pt, opt_feat_id);
+		try {
+			this._currentsymb.drawsymb(p_mapctxt, this, pt, opt_feat_id);
+		} catch(e) {
+			console.error(this,  pt, opt_feat_id);
+			console.error(this._currentsymb);
+			throw e;
+		}
 
 		if (this.strokeflag) {
 			this._gfctx.stroke();
@@ -667,8 +676,11 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 		}
 
 		if (opt_symbs) {
-			if (opt_symbs['path'] !== undefined)
+			if (opt_symbs['path'] !== undefined) {
 				pathoptsymbs = opt_symbs['path'];
+			} else if (opt_symbs['point'] !== undefined) {
+				pathoptsymbs = opt_symbs['point'];
+			}
 			if (opt_symbs['label'] !== undefined)
 				lbloptsymbs = opt_symbs['label'];
 		}
@@ -683,7 +695,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 					ret = this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
 				}
 			} catch(e) {
-				console.log(p_coords, p_path_levels);
+				console.error(p_coords, p_path_levels, this.geomtype);
 				throw e;
 			} finally {
 				this.releaseGf2DCtx();

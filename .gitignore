@@ -8,3 +8,4 @@ venv38/
 *.zip
 passos_*
 *.qgz
+quick-lint-js.config
