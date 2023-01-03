@@ -212,7 +212,7 @@ export class FeatureCollection {
 				break;
 				
 			case "point":
-				ret = dist2D(feat.g, p_from_pt);
+				ret = dist2D(feat.g[0], p_from_pt);
 				if (dodebug) {
 					console.log("[DBG:DISTANCETO] point layer:", p_layerkey, "feat.id:", p_featid, "dist:", ret);
 				}
