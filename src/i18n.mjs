@@ -8,6 +8,7 @@ export class I18n {
 			this.msgs = opt_msgs_source;		
 		} else {
 			this.msgs = {
+				"deflang": "pt",
 				"pt": {
 					"ESCL": "escala",
 					"LDNG": "a carregar"
@@ -20,21 +21,28 @@ export class I18n {
 		}
 	}
 	msg(p_msgkey, b_capitalize) {
+
 		let langstr = navigator.language || navigator.userLanguage;
-		let ret = "", lang = langstr.substring(0,2);		
+		let ret = "", reallang, lang = langstr.substring(0,2);		
 
 		if (this.msgs[lang] === undefined) {
+			if (this.msgs["deflang"] === undefined) {
+				reallang = "en";
+			} else {
+				reallang = this.msgs["deflang"];
+			}
 			if (GlobalConst.getDebug("I18N"))
-				console.info(`browser lang not found ${lang}, defaulting to 'en'`);
+				console.info(`browser lang not found '${lang}', defaulting to '${reallang}'`);
 			lang = "en";
 		} else {
+			reallang = lang;
 			if (GlobalConst.getDebug("I18N"))
-				console.info("[DBG:I18N] using browser lang:", lang);
+				console.info("[DBG:I18N] using browser lang:", reallang);
 		}
-		
-		if (this.msgs[lang] !== undefined && this.msgs[lang][p_msgkey] !== undefined) {
+
+		if (this.msgs[reallang] !== undefined && this.msgs[reallang][p_msgkey] !== undefined) {
 			
-			ret = this.msgs[lang][p_msgkey];
+			ret = this.msgs[reallang][p_msgkey];
 
 			if (b_capitalize) {
 				ret = ret.charAt(0).toUpperCase() + ret.slice(1);
