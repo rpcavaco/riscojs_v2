@@ -607,13 +607,14 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 			p_mapctxt.transformmgr.getRenderingCoordsPt(anchpt, pt);
 			this._gfctxlbl.fillText(p_labeltxt, ...anchpt);
 
+			let a, a1;
+
 			switch (symb_name) {
 
-				case "arrow":
+				case "invarrow":
 					this._gfctxlbl.beginPath();
-					const a = outer_len / 5;
-					const a1 = outer_len / 4;
-					const b = 3 * outer_len / 5;
+					a = outer_len / 5;
+					a1 = outer_len / 4;
 					if (dx < 0) {
 						this._gfctxlbl.moveTo(anchpt[0]+a, anchpt[1]);
 						this._gfctxlbl.lineTo(anchpt[0]+outer_len-2, anchpt[1]+a1);
@@ -627,6 +628,23 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 		
 					break;
 
+				case "arrow":
+					this._gfctxlbl.beginPath();
+					a = outer_len / 5;
+					a1 = outer_len / 4;
+					if (dx < 0) {
+						this._gfctxlbl.moveTo(anchpt[0]+outer_len-2, anchpt[1]);
+						this._gfctxlbl.lineTo(anchpt[0]+a, anchpt[1]+a1);
+						this._gfctxlbl.lineTo(anchpt[0]+a, anchpt[1]-a1);
+					} else {
+						this._gfctxlbl.moveTo(anchpt[0]-outer_len+2, anchpt[1]);
+						this._gfctxlbl.lineTo(anchpt[0]-a, anchpt[1]+a1);
+						this._gfctxlbl.lineTo(anchpt[0]-a, anchpt[1]-a1);
+					}
+					this._gfctxlbl.fill();
+		
+					break;
+	
 			}
 
 			this._gfctxlbl.restore();
