@@ -152,17 +152,32 @@ var RISCOJS_LAYERS_CFG = {
 			"mouseinteraction": false,
 			"marker": "circle",
 			"markersize": 2,
-			"strokeStyle": "white",
+			"strokeStyle": "#40a3a3",
 			"fillStyle": "rgba(204, 204, 204, 0.5)",
 			"lineWidth": 2,
-			"maxscale": 5000,
+			"maxscale": 10000,
 
 			"varstyles": [
 				{
 					"func": (scl, attrs) => { return attrs.cnt == 1; },
 					"key": "um_processo",
 					"fillStyle": RISCOJS_COLORRAMPS.RAMPS4X4.green_blue.b,
-				}
+				},
+				{
+					"func": (scl, attrs) => { return attrs.cnt >= 2 && attrs.cnt <= 4; },
+					"key": "dois_a_quatro_procs",
+					"fillStyle": RISCOJS_COLORRAMPS.RAMPS4X4.green_blue.c,
+				},
+				{
+					"func": (scl, attrs) => { return attrs.cnt >= 5 && attrs.cnt <= 10; },
+					"key": "cinco_a_dez_procs",
+					"fillStyle": RISCOJS_COLORRAMPS.RAMPS4X4.green_blue.b,
+				},
+				{
+					"func": (scl, attrs) => { return attrs.cnt > 10; },
+					"key": "mais_dez_procs",
+					"fillStyle": RISCOJS_COLORRAMPS.RAMPS4X4.mag_ora.a,
+				}												
 			]
 
 
