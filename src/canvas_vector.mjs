@@ -268,7 +268,8 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 		const pt = [];
 		p_mapctxt.transformmgr.getRenderingCoordsPt(p_coords, pt);
 
-		//console.log(this.key, symbol.key, this.varstyles_symbols);
+		//const symblabel = p_mapctxt.i18n.msg(this._currentsymb.key, true);
+		//console.log(this.key, symblabel, this.varstyles_symbols);
 
 		this._currentsymb.drawsymb(p_mapctxt, this, pt, opt_feat_id);
 

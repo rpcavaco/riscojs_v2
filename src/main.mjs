@@ -3,6 +3,7 @@ import {Transform2DMgr} from './transformations.mjs';
 import {ToolManager} from './interactions.mjs';
 import {TOCManager} from './toc.mjs';
 import {FeatureCollection} from './feature_collection.mjs';
+import {I18n} from './i18n.mjs';
 
 
 /**
@@ -144,7 +145,8 @@ export class RiscoMapCtx {
 		this.transformmgr = new Transform2DMgr(this, p_config_var["basic"]);	
 		this.toolmgr = new ToolManager(p_config_var["basic"]);
 		this.tocmgr = new TOCManager(this, p_mode);
-
+		this.i18n = new I18n(p_config_var["text"]);
+	
 
 		this.#customization_instance = null;
 
