@@ -152,7 +152,7 @@ var RISCOJS_LAYERS_CFG = {
 			"mouseinteraction": true,
 			"marker": "circle",
 			"markersize": 2,
-			"strokeStyle": "#40a3a3",
+			"strokeStyle": "#b1dbdb",
 			"fillStyle": "rgba(204, 204, 204, 0.5)",
 			"lineWidth": 2,
 			"maxscale": 10000,

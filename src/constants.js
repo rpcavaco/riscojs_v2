@@ -78,15 +78,15 @@ var GlobalConst = {
 			"lineWidth": 2
 		},
 		"point" : { 
-			"fillStyle": "#11fbff7f",
-			"strokeStyle": "#11caff",
+			"fillStyle": "#ffffff00",
+			"strokeStyle": "#ffff03",
 			"lineWidth": 2,
 			"drawsymb": sel_drawsymb_func
 		}
 	},
 
 	INFO_MAPTIPS_BOXSTYLE: {
-		"fillStyle": "#596363a0",
+		"fillStyle": "#596363d0",
 		"strokeStyle": "white",
 		"lineWidth": 1,		
 		"layercaptionszPX": 20,

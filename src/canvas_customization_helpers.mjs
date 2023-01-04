@@ -16,17 +16,16 @@ export class CalloutBox {
 	constructor(p_mapctx, p_layer, p_featid, p_feature, p_styles, p_scrx, p_scry) {
 
 		this.origin = [20,20];
+		this.anchorpt = [20,20];
 		this.leftpad = 10;
 		this.rightpad = 10;
 		this.betweencols = 10;
 		this.layer = p_layer;
 		this.featid = p_featid;
 		this.feature = p_feature;
-		// this.leaderorig = [p_scrx, p_scry];
 		this.layercaptionfontfamily = "sans-serif";
 		this.captionfontfamily = "sans-serif";
 		this.fontfamily = "sans-serif";
-
 
 		if (p_styles["fillStyle"] !== undefined) {
 			this.fillStyle = p_styles["fillStyle"];
@@ -57,13 +56,22 @@ export class CalloutBox {
 		}	
 		if (p_styles["layercaptionszPX"] !== undefined) {
 			this.layercaptionszPX = p_styles["layercaptionszPX"];
-		}			
+		}	
+		
+		this.mapdims = [];
+		p_mapctx.renderingsmgr.getCanvasDims(this.mapdims);
+
+		this.userpt = [p_scrx, p_scry];
 	}
 
-	stroke(p_ctx) {
+	stroke(p_ctx, opt_lwidth) {
 		if (!this.strokeStyle.toLowerCase() != "none") {
 			p_ctx.strokeStyle = this.strokeStyle;
-			p_ctx.lineWidth = this.lwidth;
+			if (opt_lwidth) {
+				p_ctx.lineWidth = opt_lwidth;
+			} else {
+				p_ctx.lineWidth = this.lwidth;
+			}
 			p_ctx.stroke();
 		}		
 	}
@@ -74,6 +82,33 @@ export class CalloutBox {
 			p_ctx.fill();
 		}	
 	}	
+	_setorigin(p_width, p_height) {
+
+		const xdelta = 50;
+		const ydelta = 50;
+		
+		if (this.userpt[0] > p_width + xdelta) {
+			// left of user point
+			this.origin[0] = this.userpt[0] - p_width - xdelta;
+			this.anchorpt[0] = this.userpt[0] - xdelta;
+		} else {
+			// right of upt
+			this.origin[0] = this.userpt[0] + xdelta;
+			this.anchorpt[0] = this.origin[0];
+		}
+
+		if (this.userpt[1] > (this.mapdims[1] / 2)) {
+			// below of upt
+			this.origin[1] = this.userpt[1] - 2 * ydelta;
+			this.anchorpt[1] = this.origin[1] + p_height;
+		} else {
+			// obove of upt
+			this.origin[1] = this.userpt[1] + ydelta;
+			this.anchorpt[1] = this.origin[1];
+		}
+
+
+	}
 	_drawBackground(p_ctx, p_width, p_numrows) {
 
 		p_ctx.beginPath();
@@ -85,8 +120,11 @@ export class CalloutBox {
 		const realwidth = Math.max(p_width, this.leftpad + lbltm.width + this.rightpad);
 		
 		const hsz = 2 * height;
+		const realheight = p_numrows * hsz + 2 * hsz;
 
-		p_ctx.rect(...this.origin, realwidth, p_numrows * hsz + 2 * hsz);
+		this._setorigin(realwidth, realheight);
+
+		p_ctx.rect(...this.origin, realwidth, realheight);
 		this.fill(p_ctx);
 		this.stroke(p_ctx);
 
@@ -97,6 +135,10 @@ export class CalloutBox {
 
 		p_ctx.fillStyle = this.strokeStyle;
 		p_ctx.fillText(this.layer.label, this.origin[0]+this.leftpad, this.origin[1]+1.1*hsz);
+
+		p_ctx.moveTo(...this.userpt);
+		p_ctx.lineTo(...this.anchorpt);
+		this.stroke(p_ctx, 2);
 
 		return [height, realwidth];
 	}
