@@ -81,24 +81,24 @@ export class CalloutBox {
 		p_ctx.font = `${this.layercaptionszPX}px ${this.layercaptionfontfamily}`;
 		const lbltm = p_ctx.measureText(this.layer.label);
 		const height = lbltm.actualBoundingBoxAscent - lbltm.actualBoundingBoxDescent;
+
+		const realwidth = Math.max(p_width, this.leftpad + lbltm.width + this.rightpad);
 		
 		const hsz = 2 * height;
 
-		p_ctx.rect(...this.origin, p_width, p_numrows * hsz + 2 * hsz);
+		p_ctx.rect(...this.origin, realwidth, p_numrows * hsz + 2 * hsz);
 		this.fill(p_ctx);
 		this.stroke(p_ctx);
 
 		const headerlimy = 3 * height;
 		p_ctx.moveTo(this.origin[0], this.origin[1]+headerlimy);
-		p_ctx.lineTo(this.origin[0]+p_width, this.origin[1]+headerlimy);
+		p_ctx.lineTo(this.origin[0]+realwidth, this.origin[1]+headerlimy);
 		this.stroke(p_ctx);
 
 		p_ctx.fillStyle = this.strokeStyle;
 		p_ctx.fillText(this.layer.label, this.origin[0]+this.leftpad, this.origin[1]+1.1*hsz);
 
-		// TODO - regular larg ao tamanho da caption nome da layer
-
-		return height;
+		return [height, realwidth];
 	}
 	draw(p_ctx) {
 
@@ -154,7 +154,7 @@ export class CalloutBox {
 			}
 		}
 
-		let hg = this._drawBackground(p_ctx, this.leftpad+colsizes[0]+this.betweencols+colsizes[1]+this.rightpad, rows.length);
+		let [hg, realwidth] = this._drawBackground(p_ctx, this.leftpad+colsizes[0]+this.betweencols+colsizes[1]+this.rightpad, rows.length);
 		let rownum = 1;
 
 		for (row of rows) {
@@ -170,7 +170,6 @@ export class CalloutBox {
 			p_ctx.fillText(row[1], this.origin[0]+this.leftpad+colsizes[0]+this.betweencols, cota);
 
 			rownum++;
-
 		}
 
 		p_ctx.restore();
