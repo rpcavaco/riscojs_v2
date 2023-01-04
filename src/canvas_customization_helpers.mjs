@@ -16,14 +16,17 @@ export class CalloutBox {
 	constructor(p_mapctx, p_layer, p_featid, p_feature, p_styles, p_scrx, p_scry) {
 
 		this.origin = [20,20];
-		this.dims = [200,200];
-		this.headsize = 30
+		this.leftpad = 10;
+		this.rightpad = 10;
+		this.betweencols = 10;
 		this.layer = p_layer;
 		this.featid = p_featid;
 		this.feature = p_feature;
-		this.leaderorig = [p_scrx, p_scry];
-		this.captionfont = "bold 20px sans-serif";
-		this.font = "18px sans-serif";
+		// this.leaderorig = [p_scrx, p_scry];
+		this.layercaptionfontfamily = "sans-serif";
+		this.captionfontfamily = "sans-serif";
+		this.fontfamily = "sans-serif";
+
 
 		if (p_styles["fillStyle"] !== undefined) {
 			this.fillStyle = p_styles["fillStyle"];
@@ -40,12 +43,21 @@ export class CalloutBox {
 		} else {
 			this.lwidth = 1;
 		}	
-		if (p_styles["font"] !== undefined) {
-			this.font = p_styles["font"];
+		if (p_styles["fontfamily"] !== undefined) {
+			this.fontfamily = p_styles["fontfamily"];
 		}				
-		if (p_styles["captionfont"] !== undefined) {
-			this.captionfont = p_styles["captionfont"];
+		if (p_styles["captionfontfamily"] !== undefined) {
+			this.captionfontfamily = p_styles["captionfontfamily"];
 		}
+		if (p_styles["layercaptionfontfamily"] !== undefined) {
+			this.layercaptionfontfamily = p_styles["layercaptionfontfamily"];
+		}	
+		if (p_styles["normalszPX"] !== undefined) {
+			this.normalszPX = p_styles["normalszPX"];
+		}	
+		if (p_styles["layercaptionszPX"] !== undefined) {
+			this.layercaptionszPX = p_styles["layercaptionszPX"];
+		}			
 	}
 
 	stroke(p_ctx) {
@@ -62,7 +74,32 @@ export class CalloutBox {
 			p_ctx.fill();
 		}	
 	}	
+	_drawBackground(p_ctx, p_width, p_numrows) {
 
+		p_ctx.beginPath();
+
+		p_ctx.font = `${this.layercaptionszPX}px ${this.layercaptionfontfamily}`;
+		const lbltm = p_ctx.measureText(this.layer.label);
+		const height = lbltm.actualBoundingBoxAscent - lbltm.actualBoundingBoxDescent;
+		
+		const hsz = 2 * height;
+
+		p_ctx.rect(...this.origin, p_width, p_numrows * hsz + 2 * hsz);
+		this.fill(p_ctx);
+		this.stroke(p_ctx);
+
+		const headerlimy = 3 * height;
+		p_ctx.moveTo(this.origin[0], this.origin[1]+headerlimy);
+		p_ctx.lineTo(this.origin[0]+p_width, this.origin[1]+headerlimy);
+		this.stroke(p_ctx);
+
+		p_ctx.fillStyle = this.strokeStyle;
+		p_ctx.fillText(this.layer.label, this.origin[0]+this.leftpad, this.origin[1]+1.1*hsz);
+
+		// TODO - regular larg ao tamanho da caption nome da layer
+
+		return height;
+	}
 	draw(p_ctx) {
 
 		const ifkeys = Object.keys(this.layer.infofields);
@@ -72,31 +109,16 @@ export class CalloutBox {
 
 		const lang = (new I18n(this.layer.msgsdict)).getLang();
 
-		const leftpad = 10;
-
 		p_ctx.save();
 
-		p_ctx.beginPath();
-		p_ctx.rect(...this.origin, ...this.dims);
-		this.fill(p_ctx);
-		this.stroke(p_ctx);
-
-		p_ctx.moveTo(this.origin[0], this.origin[1]+this.headsize), 
-		p_ctx.lineTo(this.origin[0]+this.dims[0], this.origin[1]+this.headsize)
-		this.stroke(p_ctx);
-
-		const ltxt = this.layer.label;
-
-		p_ctx.font = this.captionfont;
-
-		p_ctx.fillStyle = this.strokeStyle;
-		p_ctx.fillText(ltxt, this.origin[0]+leftpad, this.origin[1]+20);
 
 		// console.log(this.feature);
 		// console.log(this.layer.msgsdict);
 
+		const rows = [];
 
-		function wrtField(p_this, pp_ctx, p_attrs, p_fld, p_msgsdict, p_rownum) {
+
+		function wrtField(p_rows, p_attrs, p_fld, p_msgsdict) {
 			let caption, cota;
 			if (Object.keys(p_msgsdict).indexOf(p_fld) >= 0) {
 				caption = I18n.capitalize(p_msgsdict[p_fld]);
@@ -104,37 +126,59 @@ export class CalloutBox {
 				caption = I18n.capitalize(p_fld);
 			}
 
-			cota = p_this.origin[1]+32+rownum*20;
-
-			pp_ctx.textAlign = "right";
-			pp_ctx.fillText(caption, p_this.origin[0]+leftpad+100, cota);
-			
-			pp_ctx.textAlign = "left";
-			pp_ctx.fillText(p_attrs[p_fld], p_this.origin[0]+leftpad+110, cota);
+			p_rows.push([caption, p_attrs[p_fld]]);
 		}
-
-		p_ctx.font = this.font;
-		let rownum = 1;
 
 		if (ifkeys.indexOf("add") >= 0) {
 			for (let fld of this.layer.infofields["add"]) {
-				wrtField(this, p_ctx, this.feature.a, fld, this.layer.msgsdict[lang], rownum);
-				rownum++;
+				wrtField(rows, this.feature.a, fld, this.layer.msgsdict[lang]);
 			}	
 		} else {
 			for (let fld in this.feature.a) {
 				if (ifkeys["remove"].indexOf(fld) < 0) {
-					wrtField(this, p_ctx, this.feature.a, fld, this.layer.msgsdict[lang], rownum);
-					rownum++;
+					wrtField(rows, this.feature.a, fld, this.layer.msgsdict[lang]);
 				}
 			} 
 		}
 
+		// Calc text dims
+		let row, cota, colsizes=[0,0];
+		for (row of rows) {
+			for (let i=0; i<2; i++) {
+				if (i==0) {
+					p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
+				} else {
+					p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
+				}
+				colsizes[i] = Math.max(p_ctx.measureText(row[i]).width, colsizes[i]);
+			}
+		}
+
+		let hg = this._drawBackground(p_ctx, this.leftpad+colsizes[0]+this.betweencols+colsizes[1]+this.rightpad, rows.length);
+		let rownum = 1;
+
+		for (row of rows) {
+
+			cota = this.origin[1]+3*hg+rownum*2*hg;
+
+			p_ctx.textAlign = "right";
+			p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
+			p_ctx.fillText(row[0], this.origin[0]+this.leftpad+colsizes[0], cota);
+
+			p_ctx.textAlign = "left";
+			p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
+			p_ctx.fillText(row[1], this.origin[0]+this.leftpad+colsizes[0]+this.betweencols, cota);
+
+			rownum++;
+
+		}
 
 		p_ctx.restore();
 	}
 
+	// TODO - desenhar na layer própria, fazer clear ao mapa inteiro
+
 	clear(p_ctx) {
-		p_ctx.clearRect(...this.origin, ...this.dims); 
+		p_ctx.clearRect(...this.origin, 200, 200); 
 	}	
 }

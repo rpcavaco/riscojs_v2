@@ -88,9 +88,12 @@ var GlobalConst = {
 	INFO_MAPTIPS_BOXSTYLE: {
 		"fillStyle": "#596363a0",
 		"strokeStyle": "white",
-		"lineWidth": 1,
-		"captionfont": "20px OpenSans-CondensedBold",	
-		"font": "16px OpenSans-CondensedRegular",			
+		"lineWidth": 1,		
+		"layercaptionszPX": 20,
+		"normalszPX": 16,
+		"layercaptionfontfamily": "OpenSans-CondensedBold",	
+		"captionfontfamily": "OpenSans-CondensedBold",	
+		"fontfamily": "OpenSans-CondensedRegular",			
 	},
 
 	DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB: { // Symbolize spatial index features selected on mouse position
