@@ -1,7 +1,7 @@
 
 import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
-import {CalloutBox} from './canvas_customization_helpers.mjs';
+import {InfoBox} from './canvas_customization_helpers.mjs';
 
 class MapPrintInRect {
 
@@ -147,7 +147,8 @@ class LoadingPrint extends LoadingMessaging {
 			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
 			const msg = `${this.i18n.msg('LDNG', false)} ${p_msg}`;
-			const tm = ctx.measureText(msg);
+			console.log(msg);
+			// const tm = ctx.measureText(msg);
 			this.boxw =  GlobalConst.MESSAGING_STYLES.LOADING_WIDTH;
 
 			this.right = this.boxw;
@@ -176,7 +177,7 @@ class Info {
 	// curr_layerkey;
 	// curr_featid;
 	callout;
-	canvaslayer = 'temporary';
+	canvaslayer = 'viz';
 	styles;
 
 	constructor(p_styles) {
@@ -188,8 +189,9 @@ class Info {
 		// this.curr_featid = p_featid;
 		//console.log("Maptip, layer:", p_layerkey, " feat:", p_featid);
 		const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
-		this.callout = new CalloutBox(p_mapctx, currlayer, p_featid, p_feature, this.styles, p_scrx, p_scry);
+		this.callout = new InfoBox(p_mapctx, currlayer, p_featid, p_feature, this.styles, p_scrx, p_scry);
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		this.callout.clear(ctx);
 		this.callout.draw(ctx);
 	}
 	pick(p_mapctx, p_layerkey, p_featid, p_feature, p_scrx, p_scry) {

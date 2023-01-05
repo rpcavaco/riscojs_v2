@@ -50,7 +50,7 @@ var RISCOJS_LAYERS_CFG = {
 		"mancha_constr": {
 			"type": "ags_qry",
 			"geomtype": "poly",
-			"url": "https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer",
+			"url": "http://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer",
 			"layerid": "9",
 			"envsplit": false,
 			"fillStyle": "#FF00007F",
@@ -75,7 +75,7 @@ var RISCOJS_LAYERS_CFG = {
 			"geomtype": "line",
 			"label": "Eixos de via",
 			"mouseinteraction": false,
-			"url": "https://geo.cm-porto.net/riscosrv_v2",
+			"url": "http://geo.cm-porto.net/riscosrv_v2",
 			"lineDash": [8,2], 
 			"lineWidth": 1,
 			"strokeStyle": "#c0c0c0",
@@ -94,7 +94,7 @@ var RISCOJS_LAYERS_CFG = {
 			"type": "riscofeats",
 			"geomtype": "poly",
 			"label": "Mancha construída",
-			"url": "https://geo.cm-porto.net/riscosrv_v2",
+			"url": "http://geo.cm-porto.net/riscosrv_v2",
 			"envsplit": false,
 			"fillStyle": "#0000FF7F",
 			"strokeStyle": "rgba(0.7,0.7,0.7)",
@@ -118,7 +118,7 @@ var RISCOJS_LAYERS_CFG = {
 		"pec_naolot": {
 			"type": "riscofeats",
 			"geomtype": "poly",
-			"url": "https://geo.cm-porto.net/riscosrv_v2bdt",
+			"url": "http://geo.cm-porto.net/riscosrv_v2bdt",
 			"mouseinteraction": true,
 			"envsplit": false,
 			"strokeStyle": "#ff5e32ff",
@@ -129,7 +129,7 @@ var RISCOJS_LAYERS_CFG = {
 		"NPOLPROJ": {
 			"type": "riscofeats",
 			"geomtype": "line",
-			"url": "https://geo.cm-porto.net/riscosrv_v2",
+			"url": "http://geo.cm-porto.net/riscosrv_v2",
 			"mouseinteraction": false,
 			"strokeStyle": "none",
 			//"lineWidth": 1,
@@ -148,7 +148,7 @@ var RISCOJS_LAYERS_CFG = {
 			"label": "Processos fiscalização",
 			"type": "riscofeats",
 			"geomtype": "point",
-			"url": "https://geo.cm-porto.net/riscosrv_v2",
+			"url": "http://geo.cm-porto.net/riscosrv_v2",
 			"mouseinteraction": true,
 			"marker": "circle",
 			"markersize": 2,
@@ -181,13 +181,16 @@ var RISCOJS_LAYERS_CFG = {
 			"msgsdict": {
 				"deflang": "pt",
 				"pt": {
-					"cnt": "núm.processos"
+					"cnt": "núm.processos",
+					"assuntos": "assunto(s)",
+					"uos": "unidade(s) orgânica(s)"
 				}
 			},
 			"infofields": {
 				"add": [
 					"cnt",
-					"assuntos"
+					"assuntos",
+					"uos"
 				]
 			}
 

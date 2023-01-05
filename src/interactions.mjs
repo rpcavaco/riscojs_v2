@@ -457,7 +457,7 @@ class InfoTool extends BaseTool {
 						interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, ic.hover.bind(ic), ic.clear.bind(ic));
 					} else {
 						console.warn(`infoclass customization unavailable, cannot hover / maptip feature`);			
-					}						
+					}
 					break;
 
 			}

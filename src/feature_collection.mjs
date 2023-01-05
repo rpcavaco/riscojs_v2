@@ -297,6 +297,8 @@ export class FeatureCollection {
 
 		}
 
+		this.mapctx.removePrint("loadingmsgprint");
+
 	}
 
 }

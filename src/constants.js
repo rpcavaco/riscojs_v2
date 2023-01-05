@@ -93,7 +93,12 @@ var GlobalConst = {
 		"normalszPX": 16,
 		"layercaptionfontfamily": "OpenSans-CondensedBold",	
 		"captionfontfamily": "OpenSans-CondensedBold",	
-		"fontfamily": "OpenSans-CondensedRegular",			
+		"fontfamily": "OpenSans-CondensedRegular",
+		
+		"leftpad": 10,
+		"rightpad": 10,
+		"betweencols": 10,
+		"minlefcolwidth": 300
 	},
 
 	DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB: { // Symbolize spatial index features selected on mouse position

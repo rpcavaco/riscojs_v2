@@ -30,7 +30,7 @@
 
 		this.canvases = {};
 
-		this.canvaskeys = ['base', 'normal', 'labels', 'temporary', 'transient', 'service'];
+		this.canvaskeys = ['base', 'normal', 'labels', 'temporary', 'transient', 'viz', 'service'];
 		for (let i=0; i<this.canvaskeys.length; i++) {
 
 			this.canvases[this.canvaskeys[i]] = document.createElement('canvas');
@@ -114,7 +114,7 @@
 	 * @param {string} opt_dims - Optional '2d' (default) or else for WebGL 
 	 * @returns {object} drawing context
 	 */
-	getDrwCtx(p_canvaskey, opt_dims) {
+	getDrwCtx(p_canvaskey, opt_dims, opt_readfrequently) {
 		if (this.canvases[p_canvaskey] === undefined) {
 			throw new Error(`Class HTML5CanvasMgr, getDrawingContext, found no canvas for ${p_canvaskey}`);
 		}
@@ -122,7 +122,11 @@
 		if (opt_dims) {
 			dims = opt_dims;
 		}
-		return this.canvases[p_canvaskey].getContext(dims);
+		if (opt_readfrequently) {
+			return this.canvases[p_canvaskey].getContext(dims, { willReadFrequently: true });
+		} else {
+			return this.canvases[p_canvaskey].getContext(dims);
+		}
 	}	
 
 	getRenderedBitmaps(out_dict) {

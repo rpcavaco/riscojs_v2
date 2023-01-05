@@ -297,6 +297,7 @@ export class TOCManager {
 		ckeys.add('labels');
 		ckeys.add('transient');
 		ckeys.add('temporary');
+		ckeys.add('viz');
 
 		this.mapctx.renderingsmgr.clearAll(ckeys);
 
