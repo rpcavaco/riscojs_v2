@@ -2,10 +2,6 @@
 import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
 
-
-
-
-
 export class InfoBox {
 
 	origin;
@@ -18,7 +14,7 @@ export class InfoBox {
 	leaderorig;
 
 	//constructor(p_origin, p_dims, p_fill, p_stroke, p_leaderorig) {
-	constructor(p_mapctx, p_layer, p_featid, p_feature, p_styles, p_scrx, p_scry) {
+	constructor(p_mapctx, p_layer, p_featid, p_feature, p_styles, p_scrx, p_scry, b_callout) {
 
 		this.origin = [20,20];
 		this.anchorpt = [20,20];
@@ -67,6 +63,7 @@ export class InfoBox {
 		p_mapctx.renderingsmgr.getCanvasDims(this.mapdims);
 
 		this.userpt = [p_scrx, p_scry];
+		this.callout = b_callout;
 	}
 
 	stroke(p_ctx, opt_lwidth) {
@@ -132,9 +129,11 @@ export class InfoBox {
 		p_ctx.fillStyle = this.strokeStyle;
 		p_ctx.fillText(this.layer.label, this.origin[0]+this.leftpad, this.origin[1]+2.2*p_lnheight);
 
-		p_ctx.moveTo(...this.userpt);
-		p_ctx.lineTo(...this.anchorpt);
-		this.stroke(p_ctx, 2);
+		if (this.callout) {
+			p_ctx.moveTo(...this.userpt);
+			p_ctx.lineTo(...this.anchorpt);
+			this.stroke(p_ctx, 2);
+		}
 	}
 	draw(p_ctx) {
 
@@ -146,7 +145,6 @@ export class InfoBox {
 		const lang = (new I18n(this.layer.msgsdict)).getLang();
 
 		p_ctx.save();
-
 
 		const rows = [];
 		const numcols = 2;

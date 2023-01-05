@@ -147,12 +147,11 @@ class LoadingPrint extends LoadingMessaging {
 			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
 			const msg = `${this.i18n.msg('LDNG', false)} ${p_msg}`;
-			console.log(msg);
 			// const tm = ctx.measureText(msg);
 			this.boxw =  GlobalConst.MESSAGING_STYLES.LOADING_WIDTH;
 
 			this.right = this.boxw;
-			this.boxh = 20;
+			this.boxh = GlobalConst.MESSAGING_STYLES.LOADING_HEIGHT;
 			this.bottom = canvas_dims[1]-this.boxh;
 
 			ctx.clearRect(this.right-this.boxw, this.bottom-this.boxh, this.boxw, this.boxh); 
@@ -189,7 +188,7 @@ class Info {
 		// this.curr_featid = p_featid;
 		//console.log("Maptip, layer:", p_layerkey, " feat:", p_featid);
 		const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
-		this.callout = new InfoBox(p_mapctx, currlayer, p_featid, p_feature, this.styles, p_scrx, p_scry);
+		this.callout = new InfoBox(p_mapctx, currlayer, p_featid, p_feature, this.styles, p_scrx, p_scry, true);
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		this.callout.clear(ctx);
 		this.callout.draw(ctx);

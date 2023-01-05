@@ -144,6 +144,7 @@ var GlobalConst = {
 	},	
 
 	MESSAGING_STYLES: {
+
 		PERMANENT_BCKGRD: "rgb(216, 216, 216)",
 		PERMANENT_COLOR: "rgb(65, 65, 65)",
 		PERMANENT_FONT: "8pt Arial",
@@ -152,6 +153,7 @@ var GlobalConst = {
 		LOADING_COLOR: "#ffffff",
 		LOADING_FONT: "8pt Arial",
 		LOADING_WIDTH: 250,
+		LOADING_HEIGHT: 20,
 		TEXT_OFFSET: 12
 	},
 
