@@ -2,7 +2,7 @@
 import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
 
-export class InfoBox {
+export class TooltipBox {
 
 	origin;
 	dims;
@@ -137,7 +137,7 @@ export class InfoBox {
 	}
 	draw(p_ctx) {
 
-		const ifkeys = Object.keys(this.layer.infofields);
+		const ifkeys = Object.keys(this.layer.tooltipfields);
 		if (ifkeys.length < 1) {
 			throw new Error(`Missing 'infokey' config for layer '${this.layer.key}`);
 		}
@@ -207,15 +207,19 @@ export class InfoBox {
 		const maxlen = Math.max(GlobalConst.INFO_MAPTIPS_BOXSTYLE["minlefcolwidth"], this.mapdims[0] / 4);
 
 		if (ifkeys.indexOf("add") >= 0) {
-			for (let fld of this.layer.infofields["add"]) {
+			for (let fld of this.layer.tooltipfields["add"]) {
 				wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], maxlen);
 			}	
-		} else {
+		} else if (ifkeys.indexOf("remove") >= 0) {
 			for (let fld in this.feature.a) {
-				if (ifkeys["remove"].indexOf(fld) < 0) {
+				if (this.layer.tooltipfields["remove"].indexOf(fld) < 0) {
 					wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], maxlen);
 				}
 			} 
+		} else {
+			for (let fld in this.feature.a) {
+				wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], maxlen);
+			}	
 		}
 
 		// Calc text dims
@@ -240,22 +244,22 @@ export class InfoBox {
 
 		// calculate height of all rows
 		let maxrowlen, lineheightfactor = 1.8;
-		cota = this.origin[1]+5*txtlnheight;
+		cota = this.origin[1]+5.5*txtlnheight;
 		for (let row, ri=0; ri<rows.length; ri++) {
 			maxrowlen=0;
 			row = rows[ri];
 			for (let colidx=0; colidx<numcols; colidx++) {
 				maxrowlen = Math.max(maxrowlen, row[colidx].length);
 			}
-			cota += maxrowlen * lineheightfactor * txtlnheight;
+			cota += maxrowlen * lineheightfactor * txtlnheight + 0.5 * txtlnheight;
 		}
-		cota = cota - 1.2 * txtlnheight;
+		cota = cota - 2 * txtlnheight;
 
 		const realwidth = Math.max(this.leftpad+colsizes[0]+this.betweencols+colsizes[1]+this.rightpad, this.leftpad+lbltm.width+this.rightpad);
 
 		this._drawBackground(p_ctx, realwidth, cota, txtlnheight);
 
-		cota = this.origin[1]+5.2*txtlnheight;
+		cota = this.origin[1]+5.5*txtlnheight;
 		for (row of rows) {
 
 			lnidx = 0;

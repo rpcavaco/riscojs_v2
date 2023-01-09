@@ -1,7 +1,8 @@
 
 import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
-import {InfoBox} from './canvas_customization_helpers.mjs';
+import {TooltipBox} from './canvas_tooltip.mjs';
+import {InfoBox} from './canvas_info.mjs';
 
 class MapPrintInRect {
 
@@ -176,6 +177,7 @@ class Info {
 	// curr_layerkey;
 	// curr_featid;
 	callout;
+	ibox;
 	canvaslayer = 'viz';
 	styles;
 
@@ -188,7 +190,7 @@ class Info {
 		// this.curr_featid = p_featid;
 		//console.log("Maptip, layer:", p_layerkey, " feat:", p_featid);
 		const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
-		this.callout = new InfoBox(p_mapctx, currlayer, p_featid, p_feature, this.styles, p_scrx, p_scry, true);
+		this.callout = new TooltipBox(p_mapctx, currlayer, p_featid, p_feature, this.styles, p_scrx, p_scry, true);
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		this.callout.clear(ctx);
 		this.callout.draw(ctx);
@@ -197,13 +199,50 @@ class Info {
 		this.clear(p_mapctx, p_layerkey, p_featid, p_scrx, p_scry)
 		// this.curr_layerkey = p_layerkey;
 		// this.curr_featid = p_featid;
-		console.log("Info, layer:", p_layerkey, " feat:", p_featid);
-		console.log(p_feature);
+
+		const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
+		if (currlayer["infocfg"] === undefined) {
+			throw new Error(`Missing 'infocfg' config for layer '${this.layer.key}, cannot 'pick' features`);
+		}
+		if (currlayer["infocfg"]["keyfield"] === undefined) {
+			throw new Error(`Missing 'infocfg.keyfield' config for layer '${this.layer.key}, cannot 'pick' features`);
+		}
+
+		let keyval;
+		const _keyval = p_feature.a[currlayer["infocfg"]["keyfield"]];
+
+		if (currlayer["infocfg"]["keyisstring"] === undefined || !currlayer["infocfg"]["keyisstring"])
+			keyval = _keyval;
+		else
+			keyval = _keyval.toString();
+
+		// InfoBox
+
+		const that = this;
+
+		fetch("https://geo.cm-porto.net/riscosrv_v2/doget", {
+			method: "POST",
+			body: JSON.stringify({"alias":"procs_fisca_info","filtervals":[keyval],"pbuffer":0,"lang":"pt"})
+		})
+		.then(response => response.json())
+		.then(
+			function(responsejson) {
+
+				const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
+				that.ibox = new InfoBox(p_mapctx, currlayer, responsejson, that.styles, p_scrx, p_scry, false);
+				const ctx = p_mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
+				that.ibox.clear(ctx);
+				that.ibox.draw(ctx);				
+			}
+		);	
 	} 
 	clear(p_mapctx, p_layerkey, p_featid, p_scrx, p_scry) {
 		//console.log("info/tip clear, prev layer:", p_layerkey, " feat:", p_featid);
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		if (this.ibox) {
+			this.ibox.clear(ctx);
+		}
 		if (this.callout) {
-			const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 			this.callout.clear(ctx);
 		}
 	} 	

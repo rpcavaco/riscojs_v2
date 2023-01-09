@@ -475,7 +475,6 @@ export class TOCManager {
 
 	signalVectorLoadFinished(p_finished_key) {
 
-
 		const li = 0;
 
 		let dlistnames = [];

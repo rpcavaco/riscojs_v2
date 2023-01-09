@@ -183,14 +183,67 @@ var RISCOJS_LAYERS_CFG = {
 				"pt": {
 					"cnt": "núm.processos",
 					"assuntos": "assunto(s)",
-					"uos": "unidade(s) orgânica(s)"
+					"uos": "unidade(s) orgânica(s)",
+					"title": "designação",
+					"created": "data de criação",
+					"subjectpartrecord_title": "assunto",
+					"oumanagerpartrecord_title": "UO gestora",
+					"classificationpartrecord_title": "classificação",
+					"created": "data de criação",
+					"closed": "data de fecho",
+					"description": "descrição",
+					"detalheassunto": "detalhe assunto",
+					"entidadenome": "entidade",
+					"entitysubtype_title": "tipo entidade",
+					"toponimia": "toponímia",
+					"toponimialocal": "local",
+					"toponimianrpolicia": "núm.polícia",
+					"numbered": "NUP"
 				}
 			},
-			"infofields": {
+			"tooltipfields": {
 				"add": [
 					"cnt",
 					"assuntos",
 					"uos"
+				]
+			},
+			"infocfg": {
+				"keyfield": "id",
+				"keyisstring": true,
+				"jsonkey": "procs_fisca_aggregs", 
+				"fields": {
+					"order": [
+						"oumanagerpartrecord_title", "subjectpartrecord_title", "classificationpartrecord_title", "numbered", 
+						"title", "created", "estado", "description", "detalheassunto", "entidadenome",
+						"entitysubtype_title", "toponimia", "toponimialocal", "toponimianrpolicia"
+					],
+					"remove": [
+						"id",
+						"arquivado",
+						"aggregationstatus",
+					],
+					"formats": {
+						"aa": "bal"
+					},
+					"transforms": [
+						{
+							"outfield": "estado",
+							"func": function(p_rec) {
+								let ret = "";
+								if (p_rec.arquivado) {
+									ret = "arquivado";
+								} else if (p_rec.aggregationstatus == "OPEN") {
+									ret = "aberto";
+								} else if (p_rec.aggregationstatus == "FECHADO") {
+									ret = "fechado";
+								}
+								return ret;
+							}}
+					]
+				},
+				"aggfields": [
+					"oumanagerpartrecord_title"
 				]
 			}
 

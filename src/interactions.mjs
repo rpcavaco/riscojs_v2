@@ -226,6 +226,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 					}
 				}				
 				p_mapctx.featureCollection.draw(p_mapctx, nearestlyk, nearestid, {'normal': 'temporary', 'labels': 'temporary' }, symb);
+				ret_dir_interact = true;
 				if (opt_actonselfeat) {
 					opt_actonselfeat(p_mapctx, nearestlyk, nearestid, p_mapctx.featureCollection.get(nearestlyk, nearestid), p_scrx, p_scry);
 				}
@@ -420,8 +421,10 @@ class MultiTool extends BaseTool {
 
 class InfoTool extends BaseTool {
 
+	pickpanel_active;
 	constructor() {
 		super(true, true); // part of general toggle group, default in toogle
+		this.pickpanel_active = false;
 	}
 
 	static mouseselMaxdist(p_mapctx) {
@@ -445,18 +448,20 @@ class InfoTool extends BaseTool {
 				case 'mouseup':
 					if (ic.pick !== undefined) {
 						mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-						interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, ic.pick.bind(ic));
+						this.pickpanel_active = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, ic.pick.bind(ic));
 					} else {
 						console.warn(`infoclass customization unavailable, cannot pick feature`);			
 					}						
 					break;
 
 				case 'mousemove':
-					if (ic.hover !== undefined) {
-						mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-						interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, ic.hover.bind(ic), ic.clear.bind(ic));
-					} else {
-						console.warn(`infoclass customization unavailable, cannot hover / maptip feature`);			
+					if (!this.pickpanel_active) {
+						if (ic.hover !== undefined) {
+							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
+							interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, ic.hover.bind(ic), ic.clear.bind(ic));
+						} else {
+							console.warn(`infoclass customization unavailable, cannot hover / maptip feature`);			
+						}	
 					}
 					break;
 
