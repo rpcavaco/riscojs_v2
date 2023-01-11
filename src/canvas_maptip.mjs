@@ -2,7 +2,7 @@
 import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
 
-export class TooltipBox {
+export class MaptipBox {
 
 	origin;
 	dims;
@@ -89,27 +89,25 @@ export class TooltipBox {
 		const xdelta = 50;
 		const ydelta = 50;
 		
-		if (this.userpt[0] > p_width + xdelta) {
-			// left of user point
+		if (this.userpt[0] > (this.mapdims[0] / 2)) {
+			// left of map center
 			this.origin[0] = this.userpt[0] - p_width - xdelta;
 			this.anchorpt[0] = this.userpt[0] - xdelta;
 		} else {
-			// right of upt
+			// right of map center
 			this.origin[0] = this.userpt[0] + xdelta;
 			this.anchorpt[0] = this.origin[0];
 		}
 
 		if (this.userpt[1] > (this.mapdims[1] / 2)) {
-			// below of upt
-			this.origin[1] = this.userpt[1] - 3 * ydelta;
+			// below of map center
+			this.origin[1] = this.userpt[1] - p_height - ydelta;
 			this.anchorpt[1] = this.origin[1] + p_height;
 		} else {
-			// obove of upt
+			// obove of map center
 			this.origin[1] = this.userpt[1] + ydelta;
 			this.anchorpt[1] = this.origin[1];
 		}
-
-
 	}
 	_drawBackground(p_ctx, p_width, p_height, p_lnheight) {
 
@@ -137,7 +135,7 @@ export class TooltipBox {
 	}
 	draw(p_ctx) {
 
-		const ifkeys = Object.keys(this.layer.tooltipfields);
+		const ifkeys = Object.keys(this.layer.maptipfields);
 		if (ifkeys.length < 1) {
 			throw new Error(`Missing 'infokey' config for layer '${this.layer.key}`);
 		}
@@ -207,12 +205,12 @@ export class TooltipBox {
 		const maxlen = Math.max(GlobalConst.INFO_MAPTIPS_BOXSTYLE["minlefcolwidth"], this.mapdims[0] / 4);
 
 		if (ifkeys.indexOf("add") >= 0) {
-			for (let fld of this.layer.tooltipfields["add"]) {
+			for (let fld of this.layer.maptipfields["add"]) {
 				wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], maxlen);
 			}	
 		} else if (ifkeys.indexOf("remove") >= 0) {
 			for (let fld in this.feature.a) {
-				if (this.layer.tooltipfields["remove"].indexOf(fld) < 0) {
+				if (this.layer.maptipfields["remove"].indexOf(fld) < 0) {
 					wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], maxlen);
 				}
 			} 

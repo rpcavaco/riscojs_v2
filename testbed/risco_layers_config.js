@@ -201,7 +201,7 @@ var RISCOJS_LAYERS_CFG = {
 					"numbered": "NUP"
 				}
 			},
-			"tooltipfields": {
+			"maptipfields": {
 				"add": [
 					"cnt",
 					"assuntos",

@@ -1,7 +1,7 @@
 
 import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
-import {TooltipBox} from './canvas_tooltip.mjs';
+import {MaptipBox} from './canvas_maptip.mjs';
 import {InfoBox} from './canvas_info.mjs';
 
 class MapPrintInRect {
@@ -191,7 +191,7 @@ class Info {
 		// this.curr_featid = p_featid;
 		//console.log("Maptip, layer:", p_layerkey, " feat:", p_featid);
 		const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
-		this.callout = new TooltipBox(p_mapctx, currlayer, p_featid, p_feature, this.styles, p_scrx, p_scry, true);
+		this.callout = new MaptipBox(p_mapctx, currlayer, p_featid, p_feature, this.styles, p_scrx, p_scry, true);
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		this.callout.clear(ctx);
 		this.callout.draw(ctx);

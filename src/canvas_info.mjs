@@ -92,27 +92,25 @@ export class InfoBox {
 		const xdelta = 50;
 		const ydelta = 50;
 		
-		if (this.userpt[0] > p_width + xdelta) {
-			// left of user point
+		if (this.userpt[0] > (this.mapdims[0] / 2)) {
+			// left of map center
 			this.origin[0] = this.userpt[0] - p_width - xdelta;
 			this.anchorpt[0] = this.userpt[0] - xdelta;
 		} else {
-			// right of upt
+			// right of map center
 			this.origin[0] = this.userpt[0] + xdelta;
 			this.anchorpt[0] = this.origin[0];
 		}
 
 		if (this.userpt[1] > (this.mapdims[1] / 2)) {
-			// below of upt
-			this.origin[1] = this.userpt[1] - 3 * ydelta;
+			// below of map center
+			this.origin[1] = this.userpt[1] - p_height - ydelta;
 			this.anchorpt[1] = this.origin[1] + p_height;
 		} else {
-			// obove of upt
+			// obove of map center
 			this.origin[1] = this.userpt[1] + ydelta;
 			this.anchorpt[1] = this.origin[1];
 		}
-
-
 	}
 	_drawBackground(p_ctx, p_width, p_height, p_lnheight) {
 

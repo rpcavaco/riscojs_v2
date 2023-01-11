@@ -150,7 +150,7 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 	fillflag = false;
 	strokeflag = false;
 	msgsdict = {};
-	tooltipfields = {}; // 'add' and 'remove'
+	maptipfields = {}; // 'add' and 'remove'
 	infocfg = {};
 	_gfctx;  // current graphics context to be always updated at each refreshing / drawing
 	_currentsymb;
