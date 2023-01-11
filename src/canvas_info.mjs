@@ -12,6 +12,7 @@ export class InfoBox {
 	fillStyle;
 	strokeStyle;
 	leaderorig;
+	box;
 
 	//constructor(p_origin, p_dims, p_fill, p_stroke, p_leaderorig) {
 	constructor(p_mapctx, p_layer, p_data, p_styles, p_scrx, p_scry, b_callout) {
@@ -26,6 +27,7 @@ export class InfoBox {
 		this.layercaptionfontfamily = "sans-serif";
 		this.captionfontfamily = "sans-serif";
 		this.fontfamily = "sans-serif";
+		this.box = null;
 
 		if (p_styles["fillStyle"] !== undefined) {
 			this.fillStyle = p_styles["fillStyle"];
@@ -117,6 +119,8 @@ export class InfoBox {
 		p_ctx.beginPath();
 
 		this._setorigin(p_width, p_height);
+
+		this.box = [...this.origin, p_width, p_height];
 
 		p_ctx.rect(...this.origin, p_width, p_height);
 		this.fill(p_ctx);

@@ -447,8 +447,18 @@ class InfoTool extends BaseTool {
 
 				case 'mouseup':
 					if (ic.pick !== undefined) {
-						mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-						this.pickpanel_active = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, ic.pick.bind(ic));
+						if (this.pickpanel_active) {
+							if (p_evt.clientX >= ic.ibox.box[0] && p_evt.clientX <= ic.ibox.box[0] + ic.ibox.box[2] && 
+								p_evt.clientY >= ic.ibox.box[1] && p_evt.clientY <= ic.ibox.box[1] + ic.ibox.box[3]) {
+									ic.interact(p_evt);
+							} else {
+								this.pickpanel_active = false;
+							}
+						}
+						if (!this.pickpanel_active) {
+							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
+							this.pickpanel_active = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, ic.pick.bind(ic));
+						}
 					} else {
 						console.warn(`infoclass customization unavailable, cannot pick feature`);			
 					}						

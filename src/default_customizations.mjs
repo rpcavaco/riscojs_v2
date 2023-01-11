@@ -184,6 +184,7 @@ class Info {
 	constructor(p_styles) {
 		this.styles = p_styles;
 		this.callout = null;
+		this.ibox = null;
 	}
 	hover(p_mapctx, p_layerkey, p_featid, p_feature, p_scrx, p_scry) {
 		// this.curr_layerkey = p_layerkey;
@@ -216,7 +217,6 @@ class Info {
 		else
 			keyval = _keyval.toString();
 
-		// InfoBox
 
 		const that = this;
 
@@ -245,7 +245,10 @@ class Info {
 		if (this.callout) {
 			this.callout.clear(ctx);
 		}
-	} 	
+	}
+	interact(p_evt) {
+
+	}
 }
 
 export class MapCustomizations {
