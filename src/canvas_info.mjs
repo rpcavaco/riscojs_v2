@@ -8,6 +8,7 @@ export class InfoBox extends PopupBox {
 	data;
 	box;
 	recordidx;
+	navFillStyle;
 
 	constructor(p_mapctx, p_layer, p_data, p_styles, p_scrx, p_scry, b_callout) {
 
@@ -15,9 +16,76 @@ export class InfoBox extends PopupBox {
 
 		this.data = p_data;
 		this.recordidx = -1;
+		
+		if (p_styles["navFillStyle"] !== undefined) {
+			this.navFillStyle = p_styles["navFillStyle"];
+		} else {
+			this.navFillStyle = "grey";
+		}		
+
+		this.clickboxes = {};
 	}
 
 	drawnavitems(p_ctx) {
+
+		p_ctx.save();
+		p_ctx.fillStyle = this.navFillStyle;
+		p_ctx.strokeStyle = this.navFillStyle;
+		p_ctx.lineWidth = 2;
+
+		const pad = 10;
+		const width = 12;
+		const sep = 8;
+		const smallsep = 2;
+		const height = 12;
+
+		const top = this.box[1] + pad;
+		const middle = top + height/2;
+		const bottom = top + height;
+
+		// jump end
+		let right = this.box[0] + this.box[2] - pad; 
+		let left = right - width;
+
+		p_ctx.beginPath();
+		p_ctx.moveTo(left, bottom);
+		p_ctx.lineTo(right, middle);
+		p_ctx.lineTo(left, top);
+		p_ctx.closePath();
+
+		p_ctx.fill();
+
+		p_ctx.beginPath();
+		p_ctx.moveTo(right, bottom);
+		p_ctx.lineTo(right, top);
+		p_ctx.stroke();
+
+		// shift right
+		right = left - smallsep; 
+		left = right - width;
+
+		p_ctx.beginPath();
+		p_ctx.moveTo(left, bottom);
+		p_ctx.lineTo(right, middle);
+		p_ctx.lineTo(left, top);
+		p_ctx.closePath();
+
+		p_ctx.fill();
+
+		// shift left
+
+		right = left - sep; 
+		left = right - width;
+
+		p_ctx.beginPath();
+		p_ctx.moveTo(right, bottom);
+		p_ctx.lineTo(right, top);
+		p_ctx.lineTo(left, middle);
+		p_ctx.closePath();
+
+		p_ctx.fill();
+
+		p_ctx.restore();
 
 	}
 
@@ -260,6 +328,8 @@ export class InfoBox extends PopupBox {
 
 			cota = cota + 0.5 *txtlnheight;
 		}
+
+		this.drawnavitems(p_ctx);
 
 		p_ctx.restore();
 	}

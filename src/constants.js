@@ -91,6 +91,7 @@ var GlobalConst = {
 		"innerStrokeStyle": "none",
 		"headerFillStyle": "grey",
 		"fillTextStyle": "white",
+		"navFillStyle": "white",
 		"lineWidth": 1,		
 		"layercaptionszPX": 20,
 		"normalszPX": 16,

@@ -14,6 +14,8 @@ export class PopupBox {
 	betweencols;
 	fillStyle;
 	strokeStyle;
+	headerFillStyle;
+	fillTextStyle;
 	leaderorig;
 	layercaptionfontfamily;
 	captionfontfamily;
@@ -56,7 +58,6 @@ export class PopupBox {
 		} else {
 			this.headerFillStyle = "none";
 		}
-
 		if (p_styles["fillTextStyle"] !== undefined) {
 			this.fillTextStyle = p_styles["fillTextStyle"];
 		} else {
