@@ -1,143 +1,22 @@
 
 import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
+import {PopupBox} from './canvas_maptip.mjs';
 
-export class InfoBox {
+export class InfoBox extends PopupBox {
 
-	origin;
-	dims;
-	layerkey;
-	featid;
-	feature;
-	fillStyle;
-	strokeStyle;
-	leaderorig;
+	data;
 	box;
+	recordidx;
 
-	//constructor(p_origin, p_dims, p_fill, p_stroke, p_leaderorig) {
 	constructor(p_mapctx, p_layer, p_data, p_styles, p_scrx, p_scry, b_callout) {
 
-		this.origin = [20,20];
-		this.anchorpt = [20,20];
-		this.leftpad = GlobalConst.INFO_MAPTIPS_BOXSTYLE["leftpad"];
-		this.rightpad = GlobalConst.INFO_MAPTIPS_BOXSTYLE["rightpad"];
-		this.betweencols = GlobalConst.INFO_MAPTIPS_BOXSTYLE["betweencols"];
-		this.layer = p_layer;
+		super(p_mapctx, p_layer, p_styles, p_scrx, p_scry, b_callout);
+
 		this.data = p_data;
-		this.layercaptionfontfamily = "sans-serif";
-		this.captionfontfamily = "sans-serif";
-		this.fontfamily = "sans-serif";
-		this.box = null;
-
-		if (p_styles["fillStyle"] !== undefined) {
-			this.fillStyle = p_styles["fillStyle"];
-		} else {
-			this.fillStyle = "none";
-		}
-		if (p_styles["strokeStyle"] !== undefined) {
-			this.strokeStyle = p_styles["strokeStyle"];
-		} else {
-			this.strokeStyle = "none";
-		}
-		if (p_styles["lineWidth"] !== undefined) {
-			this.lwidth = p_styles["lineWidth"];
-		} else {
-			this.lwidth = 1;
-		}	
-		if (p_styles["fontfamily"] !== undefined) {
-			this.fontfamily = p_styles["fontfamily"];
-		}				
-		if (p_styles["captionfontfamily"] !== undefined) {
-			this.captionfontfamily = p_styles["captionfontfamily"];
-		}
-		if (p_styles["layercaptionfontfamily"] !== undefined) {
-			this.layercaptionfontfamily = p_styles["layercaptionfontfamily"];
-		}	
-		if (p_styles["normalszPX"] !== undefined) {
-			this.normalszPX = p_styles["normalszPX"];
-		}	
-		if (p_styles["layercaptionszPX"] !== undefined) {
-			this.layercaptionszPX = p_styles["layercaptionszPX"];
-		}	
-		
-		this.mapdims = [];
-		p_mapctx.renderingsmgr.getCanvasDims(this.mapdims);
-
-		this.userpt = [p_scrx, p_scry];
-		this.callout = b_callout;
-
 		this.recordidx = -1;
 	}
 
-	stroke(p_ctx, opt_lwidth) {
-		if (!this.strokeStyle.toLowerCase() != "none") {
-			p_ctx.strokeStyle = this.strokeStyle;
-			if (opt_lwidth) {
-				p_ctx.lineWidth = opt_lwidth;
-			} else {
-				p_ctx.lineWidth = this.lwidth;
-			}
-			p_ctx.stroke();
-		}		
-	}
-
-	fill(p_ctx) {
-		if (!this.fillStyle.toLowerCase() != "none") {
-			p_ctx.fillStyle = this.fillStyle;
-			p_ctx.fill();
-		}	
-	}	
-	_setorigin(p_width, p_height) {
-
-		const xdelta = 50;
-		const ydelta = 50;
-		
-		if (this.userpt[0] > (this.mapdims[0] / 2)) {
-			// left of map center
-			this.origin[0] = this.userpt[0] - p_width - xdelta;
-			this.anchorpt[0] = this.userpt[0] - xdelta;
-		} else {
-			// right of map center
-			this.origin[0] = this.userpt[0] + xdelta;
-			this.anchorpt[0] = this.origin[0];
-		}
-
-		if (this.userpt[1] > (this.mapdims[1] / 2)) {
-			// below of map center
-			this.origin[1] = this.userpt[1] - p_height - ydelta;
-			this.anchorpt[1] = this.origin[1] + p_height;
-		} else {
-			// obove of map center
-			this.origin[1] = this.userpt[1] + ydelta;
-			this.anchorpt[1] = this.origin[1];
-		}
-	}
-	_drawBackground(p_ctx, p_width, p_height, p_lnheight) {
-
-		p_ctx.beginPath();
-
-		this._setorigin(p_width, p_height);
-
-		this.box = [...this.origin, p_width, p_height];
-
-		p_ctx.rect(...this.origin, p_width, p_height);
-		this.fill(p_ctx);
-		this.stroke(p_ctx);
-
-		const headerlimy = 3 * p_lnheight;
-		p_ctx.moveTo(this.origin[0], this.origin[1]+headerlimy);
-		p_ctx.lineTo(this.origin[0]+p_width, this.origin[1]+headerlimy);
-		this.stroke(p_ctx);
-
-		p_ctx.fillStyle = this.strokeStyle;
-		p_ctx.fillText(this.layer.label, this.origin[0]+this.leftpad, this.origin[1]+2.2*p_lnheight);
-
-		if (this.callout) {
-			p_ctx.moveTo(...this.userpt);
-			p_ctx.lineTo(...this.anchorpt);
-			this.stroke(p_ctx, 2);
-		}
-	}
 	draw(p_ctx) {
 
 		const ifcfg = Object.keys(this.layer.infocfg);

@@ -88,6 +88,9 @@ var GlobalConst = {
 	INFO_MAPTIPS_BOXSTYLE: {
 		"fillStyle": "#0b1f11e0",
 		"strokeStyle": "white",
+		"innerStrokeStyle": "none",
+		"headerFillStyle": "grey",
+		"fillTextStyle": "white",
 		"lineWidth": 1,		
 		"layercaptionszPX": 20,
 		"normalszPX": 16,

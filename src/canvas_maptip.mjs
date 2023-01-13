@@ -2,28 +2,32 @@
 import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
 
-export class MaptipBox {
+export class PopupBox {
 
 	origin;
 	dims;
-	layerkey;
-	featid;
-	feature;
+	anchorpt;
+	leftpad;
+	rigthpad;
+	betweencols;
 	fillStyle;
 	strokeStyle;
 	leaderorig;
+	layercaptionfontfamily;
+	captionfontfamily;
+	fontfamily;
+	mapdims;
+	userpt;
+	callout;	
 
-	//constructor(p_origin, p_dims, p_fill, p_stroke, p_leaderorig) {
-	constructor(p_mapctx, p_layer, p_featid, p_feature, p_styles, p_scrx, p_scry, b_callout) {
+	constructor(p_mapctx, p_layer, p_styles, p_scrx, p_scry, b_callout) {
 
 		this.origin = [20,20];
 		this.anchorpt = [20,20];
+		this.layer = p_layer;
 		this.leftpad = GlobalConst.INFO_MAPTIPS_BOXSTYLE["leftpad"];
 		this.rightpad = GlobalConst.INFO_MAPTIPS_BOXSTYLE["rightpad"];
 		this.betweencols = GlobalConst.INFO_MAPTIPS_BOXSTYLE["betweencols"];
-		this.layer = p_layer;
-		this.featid = p_featid;
-		this.feature = p_feature;
 		this.layercaptionfontfamily = "sans-serif";
 		this.captionfontfamily = "sans-serif";
 		this.fontfamily = "sans-serif";
@@ -38,6 +42,25 @@ export class MaptipBox {
 		} else {
 			this.strokeStyle = "none";
 		}
+
+		if (p_styles["innerStrokeStyle"] !== undefined) {
+			this.innerStrokeStyle = p_styles["innerStrokeStyle"];
+		} else {
+			this.innerStrokeStyle = "none";
+		}
+
+		if (p_styles["headerFillStyle"] !== undefined) {
+			this.headerFillStyle = p_styles["headerFillStyle"];
+		} else {
+			this.headerFillStyle = "none";
+		}
+
+		if (p_styles["fillTextStyle"] !== undefined) {
+			this.fillTextStyle = p_styles["fillTextStyle"];
+		} else {
+			this.fillTextStyle = "none";
+		}
+
 		if (p_styles["lineWidth"] !== undefined) {
 			this.lwidth = p_styles["lineWidth"];
 		} else {
@@ -66,7 +89,7 @@ export class MaptipBox {
 		this.callout = b_callout;
 	}
 
-	stroke(p_ctx, opt_lwidth) {
+	defaultstroke(p_ctx, opt_lwidth) {
 		if (!this.strokeStyle.toLowerCase() != "none") {
 			p_ctx.strokeStyle = this.strokeStyle;
 			if (opt_lwidth) {
@@ -78,12 +101,6 @@ export class MaptipBox {
 		}		
 	}
 
-	fill(p_ctx) {
-		if (!this.fillStyle.toLowerCase() != "none") {
-			p_ctx.fillStyle = this.fillStyle;
-			p_ctx.fill();
-		}	
-	}	
 	_setorigin(p_width, p_height) {
 
 		const xdelta = 50;
@@ -109,30 +126,70 @@ export class MaptipBox {
 			this.anchorpt[1] = this.origin[1];
 		}
 	}
+	
 	_drawBackground(p_ctx, p_width, p_height, p_lnheight) {
 
-		p_ctx.beginPath();
-
 		this._setorigin(p_width, p_height);
-
-		p_ctx.rect(...this.origin, p_width, p_height);
-		this.fill(p_ctx);
-		this.stroke(p_ctx);
+		this.box = [...this.origin, p_width, p_height];
 
 		const headerlimy = 3 * p_lnheight;
-		p_ctx.moveTo(this.origin[0], this.origin[1]+headerlimy);
-		p_ctx.lineTo(this.origin[0]+p_width, this.origin[1]+headerlimy);
-		this.stroke(p_ctx);
+
+		p_ctx.beginPath();
+		p_ctx.rect(...this.origin, p_width, p_height);
+
+		if (!this.fillStyle.toLowerCase() != "none") {
+			p_ctx.fillStyle = this.fillStyle;
+			p_ctx.fill();
+		}	
+
+		if (this.headerFillStyle != "none") {
+			p_ctx.save();
+			p_ctx.beginPath();
+			p_ctx.fillStyle = this.headerFillStyle;
+			p_ctx.rect(...this.origin, p_width, headerlimy);
+			p_ctx.fill();
+			p_ctx.restore();
+		}
+
+		p_ctx.beginPath();
+		p_ctx.rect(...this.origin, p_width, p_height);
+		this.defaultstroke(p_ctx);
+
+		if (this.innerStrokeStyle != "none") {
+			p_ctx.save();
+			p_ctx.strokeStyle = this.innerStrokeStyle;
+			p_ctx.beginPath();
+			p_ctx.moveTo(this.origin[0], this.origin[1]+headerlimy);
+			p_ctx.lineTo(this.origin[0]+p_width, this.origin[1]+headerlimy);
+			p_ctx.stroke();
+			p_ctx.restore();
+		}
 
 		p_ctx.fillStyle = this.strokeStyle;
 		p_ctx.fillText(this.layer.label, this.origin[0]+this.leftpad, this.origin[1]+2.2*p_lnheight);
 
 		if (this.callout) {
+			p_ctx.beginPath();
 			p_ctx.moveTo(...this.userpt);
 			p_ctx.lineTo(...this.anchorpt);
-			this.stroke(p_ctx, 2);
+			this.defaultstroke(p_ctx, 2);
 		}
+	}	
+}
+
+export class MaptipBox extends PopupBox {
+
+	featid;
+	feature;
+
+	constructor(p_mapctx, p_layer, p_featid, p_feature, p_styles, p_scrx, p_scry, b_callout) {
+
+		super(p_mapctx, p_layer, p_styles, p_scrx, p_scry, b_callout);
+
+		this.featid = p_featid;
+		this.feature = p_feature;
 	}
+
 	draw(p_ctx) {
 
 		const ifkeys = Object.keys(this.layer.maptipfields);
