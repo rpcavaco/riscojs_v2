@@ -17,6 +17,10 @@ export class InfoBox extends PopupBox {
 		this.recordidx = -1;
 	}
 
+	drawnavitems(p_ctx) {
+
+	}
+
 	draw(p_ctx) {
 
 		const ifcfg = Object.keys(this.layer.infocfg);
@@ -214,6 +218,8 @@ export class InfoBox extends PopupBox {
 		const realwidth = Math.max(this.leftpad+colsizes[0]+this.betweencols+colsizes[1]+this.rightpad, this.leftpad+lbltm.width+this.rightpad);
 
 		this._drawBackground(p_ctx, realwidth, cota, txtlnheight);
+
+		p_ctx.fillStyle = this.fillTextStyle;
 
 		cota = this.origin[1]+6*txtlnheight;
 		for (row of rows) {

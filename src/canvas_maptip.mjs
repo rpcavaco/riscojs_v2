@@ -138,6 +138,8 @@ export class PopupBox {
 
 		this.headerbox = [...this.origin, p_width, headerlimy];
 
+		p_ctx.save();
+
 		p_ctx.beginPath();
 		p_ctx.rect(...this.origin, p_width, p_height);
 
@@ -169,7 +171,7 @@ export class PopupBox {
 			p_ctx.restore();
 		}
 
-		p_ctx.fillStyle = this.strokeStyle;
+		p_ctx.fillStyle = this.fillTextStyle;
 		p_ctx.fillText(this.layer.label, this.origin[0]+this.leftpad, this.origin[1]+2.2*p_lnheight);
 
 		if (this.callout) {
@@ -178,6 +180,9 @@ export class PopupBox {
 			p_ctx.lineTo(...this.anchorpt);
 			this.defaultstroke(p_ctx, 2);
 		}
+
+		p_ctx.restore();
+
 	}	
 }
 
@@ -350,6 +355,8 @@ export class MaptipBox extends PopupBox {
 		const realwidth = Math.max(this.leftpad+colsizes[0]+this.betweencols+colsizes[1]+this.rightpad, this.leftpad+lbltm.width+this.rightpad);
 
 		this._drawBackground(p_ctx, realwidth, cota, txtlnheight);
+
+		p_ctx.fillStyle = this.fillTextStyle;
 
 		cota = this.origin[1]+5.5*txtlnheight;
 		for (row of rows) {
