@@ -256,11 +256,10 @@ var RISCOJS_LAYERS_CFG = {
 					"assuntos": "assunto(s)",
 					"uos": "unidade(s) orgânica(s)",
 					"title": "designação",
-					"created": "data de criação",
+					"created": "criado em",
 					"subjectpartrecord_title": "assunto",
 					"oumanagerpartrecord_title": "UO gestora",
 					"classificationpartrecord_title": "classificação",
-					"created": "data de criação",
 					"closed": "data de fecho",
 					"description": "descrição",
 					"detalheassunto": "detalhe assunto",
@@ -295,7 +294,9 @@ var RISCOJS_LAYERS_CFG = {
 						"aggregationstatus",
 					],
 					"formats": {
-						"aa": "bal"
+						"created": {
+							"type": "datetime"
+						}
 					},
 					"transforms": [
 						{

@@ -68,14 +68,42 @@ export class InfoBox extends PopupBox {
 				caption = I18n.capitalize(p_fld);
 			}
 
-			let captionlines=[], valuelines = [];
+			let pretext, tmp, captionlines=[], valuelines = [];
 
-			if (opt_max_valuewidth !== null && typeof p_attrs[p_fld] != 'number') {
+			if (p_this.layer.infocfg.fields["formats"] !== undefined && p_this.layer.infocfg.fields["formats"][p_fld] !== undefined) {
+				if (p_this.layer.infocfg.fields["formats"][p_fld]["type"] !== undefined) {
+					switch(p_this.layer.infocfg.fields["formats"][p_fld]["type"]) {
+
+						case "date":
+							tmp = new Date(p_attrs[p_fld]);
+							pretext = tmp.toLocaleDateString(lang);
+							break;
+
+						case "time":
+							tmp = new Date(p_attrs[p_fld]);
+							pretext = tmp.toLocaleTimeString(lang);
+							break;
+	
+						case "datetime":
+						case "timeanddate":
+						case "dateandtime":
+							tmp = new Date(p_attrs[p_fld]);
+							pretext = tmp.toLocaleString(lang);
+							break;
+
+					}
+				}
+			} else {
+				pretext = p_attrs[p_fld];
+			}
+
+
+			if (opt_max_valuewidth !== null && typeof pretext != 'number') {
 				let words;
 				try {
-					words = p_attrs[p_fld].split(/\s+/);
+					words = pretext.split(/\s+/);
 				} catch(e) {
-					console.error(p_fld, typeof p_attrs[p_fld]);
+					console.error(p_fld, typeof pretext);
 					throw e;
 				}
 				if (words) {
@@ -85,7 +113,7 @@ export class InfoBox extends PopupBox {
 					valuelines.push('');
 				}
 			} else {
-				valuelines = [p_attrs[p_fld].toString()];
+				valuelines = [pretext.toString()];
 			}
 
 			const words = caption.split(/\s+/);
