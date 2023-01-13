@@ -97,7 +97,6 @@ export class InfoBox extends PopupBox {
 				pretext = p_attrs[p_fld];
 			}
 
-
 			if (opt_max_valuewidth !== null && typeof pretext != 'number') {
 				let words;
 				try {
@@ -262,4 +261,13 @@ export class InfoBox extends PopupBox {
 	clear(p_ctx) {
 		p_ctx.clearRect(0, 0, ...this.mapdims); 
 	}	
+
+	interact(p_evt) {
+
+		// in header
+		if (p_evt.clientX >= this.headerbox[0] && p_evt.clientX <= this.headerbox[0] + this.headerbox[2] && 
+			p_evt.clientY >= this.headerbox[1] && p_evt.clientY <= this.headerbox[1] + this.headerbox[3]) {
+				console.log(">> 269 HEADER >>", p_evt, this);
+			} 
+	}
 }

@@ -6,6 +6,8 @@ export class PopupBox {
 
 	origin;
 	dims;
+	box;
+	headerbox;
 	anchorpt;
 	leftpad;
 	rigthpad;
@@ -133,6 +135,8 @@ export class PopupBox {
 		this.box = [...this.origin, p_width, p_height];
 
 		const headerlimy = 3 * p_lnheight;
+
+		this.headerbox = [...this.origin, p_width, headerlimy];
 
 		p_ctx.beginPath();
 		p_ctx.rect(...this.origin, p_width, p_height);

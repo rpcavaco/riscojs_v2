@@ -247,6 +247,9 @@ class Info {
 		}
 	}
 	interact(p_evt) {
+		if (this.ibox) {
+			this.ibox.interact(p_evt);
+		}
 
 	}
 }
