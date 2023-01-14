@@ -28,6 +28,16 @@ export class InfoBox extends PopupBox {
 
 	drawnavitems(p_ctx) {
 
+		function rightarrow(pp_ctx, p_dims) {
+			pp_ctx.beginPath();
+			pp_ctx.moveTo(p_dims[0], p_dims[2]);
+			pp_ctx.lineTo(p_dims[1], p_dims[3]);
+			pp_ctx.lineTo(p_dims[0], p_dims[4]);
+			pp_ctx.closePath();
+	
+			pp_ctx.fill();
+		}
+
 		p_ctx.save();
 		p_ctx.fillStyle = this.navFillStyle;
 		p_ctx.strokeStyle = this.navFillStyle;
@@ -47,13 +57,7 @@ export class InfoBox extends PopupBox {
 		let right = this.box[0] + this.box[2] - pad; 
 		let left = right - width;
 
-		p_ctx.beginPath();
-		p_ctx.moveTo(left, bottom);
-		p_ctx.lineTo(right, middle);
-		p_ctx.lineTo(left, top);
-		p_ctx.closePath();
-
-		p_ctx.fill();
+		rightarrow(p_ctx, [left, right, bottom, middle, top]);
 
 		p_ctx.beginPath();
 		p_ctx.moveTo(right, bottom);
@@ -64,13 +68,7 @@ export class InfoBox extends PopupBox {
 		right = left - smallsep; 
 		left = right - width;
 
-		p_ctx.beginPath();
-		p_ctx.moveTo(left, bottom);
-		p_ctx.lineTo(right, middle);
-		p_ctx.lineTo(left, top);
-		p_ctx.closePath();
-
-		p_ctx.fill();
+		rightarrow(p_ctx, [left, right, bottom, middle, top]);
 
 		// shift left
 
@@ -329,7 +327,11 @@ export class InfoBox extends PopupBox {
 			cota = cota + 0.5 *txtlnheight;
 		}
 
-		this.drawnavitems(p_ctx);
+		console.log(">>>W", this.data[this.layer.infocfg.jsonkey].length);
+
+		if (this.data[this.layer.infocfg.jsonkey].length > 1) {
+			this.drawnavitems(p_ctx);
+		}
 
 		p_ctx.restore();
 	}

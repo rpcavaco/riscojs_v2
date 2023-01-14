@@ -108,6 +108,7 @@ export class PopupBox {
 
 		const xdelta = 50;
 		const ydelta = 50;
+		let tmp;
 		
 		if (this.userpt[0] > (this.mapdims[0] / 2)) {
 			// left of map center
@@ -125,7 +126,12 @@ export class PopupBox {
 			this.anchorpt[1] = this.origin[1] + p_height;
 		} else {
 			// obove of map center
-			this.origin[1] = this.userpt[1] + ydelta;
+			tmp = this.userpt[1] + ydelta;
+			if (tmp + p_height >  this.mapdims[1]) {
+				this.origin[1] = this.mapdims[1] - p_height - 20;
+			} else {
+				this.origin[1] = this.userpt[1] + ydelta;
+			}
 			this.anchorpt[1] = this.origin[1];
 		}
 	}
