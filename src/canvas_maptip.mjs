@@ -121,7 +121,7 @@ export class PopupBox {
 
 		if (this.userpt[1] > (this.mapdims[1] / 2)) {
 			// below of map center
-			this.origin[1] = this.userpt[1] - p_height - ydelta;
+			this.origin[1] = Math.max(this.userpt[1] - p_height - ydelta, 20);
 			this.anchorpt[1] = this.origin[1] + p_height;
 		} else {
 			// obove of map center
