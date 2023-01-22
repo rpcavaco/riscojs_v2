@@ -460,7 +460,9 @@ class InfoTool extends BaseTool {
 
 				case 'mousedown':
 					if (insideactivepanel)
-						ret = false; // prevent mousedown being processed in subsequent onevent methods in remaining tools
+						ret = false; 
+						// Prevent mousedown being processed in subsequent onevent methods in remaining tools
+						// This prevents unwanted map interaction (e.g.: panning) through infobox background
 					
 						break;
 

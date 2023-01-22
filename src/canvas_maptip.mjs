@@ -104,18 +104,18 @@ export class PopupBox {
 		}		
 	}
 
-	_setorigin(p_width, p_height) {
+	_setorigin(p_width, p_height, p_maxboxwidth) {
 
 		const xdelta = 50;
 		const ydelta = 50;
 		let tmp;
 		
 		if (this.userpt[0] > (this.mapdims[0] / 2)) {
-			// left of map center
+			// userpt right of map center
 			this.origin[0] = this.userpt[0] - p_width - xdelta;
 			this.anchorpt[0] = this.userpt[0] - xdelta;
 		} else {
-			// right of map center
+			// userpt left of map center
 			this.origin[0] = this.userpt[0] + xdelta;
 			this.anchorpt[0] = this.origin[0];
 		}
@@ -205,6 +205,7 @@ export class MaptipBox extends PopupBox {
 
 		this.featid = p_featid;
 		this.feature = p_feature;
+
 	}
 
 	draw(p_ctx) {
@@ -309,21 +310,21 @@ export class MaptipBox extends PopupBox {
 			p_rows.push([captionlines, valuelines]);
 		}
 
-		const maxlen = Math.max(GlobalConst.INFO_MAPTIPS_BOXSTYLE["minlefcolwidth"], this.mapdims[0] / 4);
+		const maxboxwidth = Math.max(GlobalConst.INFO_MAPTIPS_BOXSTYLE["minpopupwidth"], this.mapdims[0] / 4);
 
 		if (ifkeys.indexOf("add") >= 0) {
 			for (let fld of this.layer.maptipfields["add"]) {
-				wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], maxlen);
+				wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], maxboxwidth);
 			}	
 		} else if (ifkeys.indexOf("remove") >= 0) {
 			for (let fld in this.feature.a) {
 				if (this.layer.maptipfields["remove"].indexOf(fld) < 0) {
-					wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], maxlen);
+					wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], maxboxwidth);
 				}
 			} 
 		} else {
 			for (let fld in this.feature.a) {
-				wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], maxlen);
+				wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], maxboxwidth);
 			}	
 		}
 

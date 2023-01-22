@@ -30,7 +30,6 @@ export class InfoBox extends PopupBox {
 			this.navFillStyle = "grey";
 		}		
 
-
 		this.clickboxes = {};
 	}
 
@@ -220,7 +219,7 @@ export class InfoBox extends PopupBox {
 			this.recordidx = 0;
 		}
 
-		const maxlen = Math.max(GlobalConst.INFO_MAPTIPS_BOXSTYLE["minlefcolwidth"], this.mapdims[0] / 4);
+		const maxboxwidth = Math.max(GlobalConst.INFO_MAPTIPS_BOXSTYLE["minpopupwidth"], this.mapdims[0] / 2.5);
 		const recdata = this.data[this.layer.infocfg.jsonkey][this.recordidx];
 
 		if (this.layer.infocfg.fields["transforms"] !== undefined) {
@@ -265,7 +264,7 @@ export class InfoBox extends PopupBox {
 			}
 		}
 		for (let fld of fldnames) {
-			wrtField(this, p_ctx, rows, recdata, fld, this.layer.msgsdict[lang], maxlen);
+			wrtField(this, p_ctx, rows, recdata, fld, this.layer.msgsdict[lang], 3 * maxboxwidth / 5);
 		}	
 		
 		// Calc text dims
@@ -304,9 +303,7 @@ export class InfoBox extends PopupBox {
 		}
 		height = height + textlinescnt * lineheightfactor * txtlnheight; // - 2 * txtlnheight;
 
-		const realwidth = Math.max(this.leftpad+colsizes[0]+this.betweencols+colsizes[1]+this.rightpad, this.leftpad+lbltm.width+this.rightpad);
-
-		this._drawBackground(p_ctx, realwidth, height, txtlnheight);
+		this._drawBackground(p_ctx, maxboxwidth, height, txtlnheight);
 
 		p_ctx.fillStyle = this.fillTextStyle;
 
