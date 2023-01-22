@@ -9,6 +9,7 @@ export class InfoBox extends PopupBox {
 	box;
 	recordidx;
 	navFillStyle;
+	clickboxes;
 
 	constructor(p_mapctx, p_layer, p_data, p_styles, p_scrx, p_scry, b_callout) {
 
@@ -16,6 +17,12 @@ export class InfoBox extends PopupBox {
 
 		this.data = p_data;
 		this.recordidx = -1;
+
+		if (this.layer.infocfg["jsonkey"] === undefined) {
+			throw new Error(`Missing mandatory 'infocfg.jsonkey' config for layer '${this.layer.key}`);
+		}
+
+		this.recordcnt = this.data[this.layer.infocfg.jsonkey].length;
 		
 		if (p_styles["navFillStyle"] !== undefined) {
 			this.navFillStyle = p_styles["navFillStyle"];
@@ -23,10 +30,11 @@ export class InfoBox extends PopupBox {
 			this.navFillStyle = "grey";
 		}		
 
+
 		this.clickboxes = {};
 	}
 
-	drawnavitems(p_ctx) {
+	drawnavitems(p_ctx, p_recnum, p_totalrecs) {
 
 		function rightarrow(pp_ctx, p_dims) {
 			pp_ctx.beginPath();
@@ -57,16 +65,23 @@ export class InfoBox extends PopupBox {
 		let right = this.box[0] + this.box[2] - pad; 
 		let left = right - width;
 
-		rightarrow(p_ctx, [left, right, bottom, middle, top]);
+		if (this.recordcnt > 2) {
 
-		p_ctx.beginPath();
-		p_ctx.moveTo(right, bottom);
-		p_ctx.lineTo(right, top);
-		p_ctx.stroke();
+			this.clickboxes["toend"] = [left, bottom, right, top];
 
-		// shift right
-		right = left - smallsep; 
-		left = right - width;
+			rightarrow(p_ctx, [left, right, bottom, middle, top]);
+
+			p_ctx.beginPath();
+			p_ctx.moveTo(right, bottom);
+			p_ctx.lineTo(right, top);
+			p_ctx.stroke();
+
+			// shift right
+			right = left - smallsep; 
+			left = right - width;
+		}
+
+		this.clickboxes["next"] = [left, bottom, right, top];
 
 		rightarrow(p_ctx, [left, right, bottom, middle, top]);
 
@@ -75,6 +90,8 @@ export class InfoBox extends PopupBox {
 		right = left - sep; 
 		left = right - width;
 
+		this.clickboxes["prev"] = [left, bottom, right, top];
+
 		p_ctx.beginPath();
 		p_ctx.moveTo(right, bottom);
 		p_ctx.lineTo(right, top);
@@ -82,6 +99,9 @@ export class InfoBox extends PopupBox {
 		p_ctx.closePath();
 
 		p_ctx.fill();
+
+		p_ctx.textAlign = 'right';
+		p_ctx.fillText(`${p_recnum}/${p_totalrecs}`, left-sep, bottom);
 
 		p_ctx.restore();
 
@@ -269,21 +289,24 @@ export class InfoBox extends PopupBox {
 		const txtlnheight = lbltm.actualBoundingBoxAscent - lbltm.actualBoundingBoxDescent;
 
 		// calculate height of all rows
-		let maxrowlen, lineheightfactor = 1.8;
-		cota = this.origin[1]+6*txtlnheight;
+		let maxrowlen, height, textlinescnt=0, lineheightfactor = 1.8;
+		height = 6*txtlnheight;
 		for (let row, ri=0; ri<rows.length; ri++) {
 			maxrowlen=0;
 			row = rows[ri];
 			for (let colidx=0; colidx<numcols; colidx++) {
 				maxrowlen = Math.max(maxrowlen, row[colidx].length);
 			}
-			cota += maxrowlen * lineheightfactor * txtlnheight + 0.5 * txtlnheight;
+			textlinescnt += maxrowlen;
+			//cota += maxrowlen * lineheightfactor * txtlnheight + 0.5 * txtlnheight;
+
+			height += 0.5 * txtlnheight;
 		}
-		cota = cota - 2 * txtlnheight;
+		height = height + textlinescnt * lineheightfactor * txtlnheight; // - 2 * txtlnheight;
 
 		const realwidth = Math.max(this.leftpad+colsizes[0]+this.betweencols+colsizes[1]+this.rightpad, this.leftpad+lbltm.width+this.rightpad);
 
-		this._drawBackground(p_ctx, realwidth, cota, txtlnheight);
+		this._drawBackground(p_ctx, realwidth, height, txtlnheight);
 
 		p_ctx.fillStyle = this.fillTextStyle;
 
@@ -327,10 +350,8 @@ export class InfoBox extends PopupBox {
 			cota = cota + 0.5 *txtlnheight;
 		}
 
-		console.log(">>>W", this.data[this.layer.infocfg.jsonkey].length);
-
-		if (this.data[this.layer.infocfg.jsonkey].length > 1) {
-			this.drawnavitems(p_ctx);
+		if (this.recordcnt > 1) {
+			this.drawnavitems(p_ctx, this.recordidx+1, this.data[this.layer.infocfg.jsonkey].length);
 		}
 
 		p_ctx.restore();
@@ -340,12 +361,48 @@ export class InfoBox extends PopupBox {
 		p_ctx.clearRect(0, 0, ...this.mapdims); 
 	}	
 
-	interact(p_evt) {
+	interact(p_evt, p_ctx) {
 
 		// in header
 		if (p_evt.clientX >= this.headerbox[0] && p_evt.clientX <= this.headerbox[0] + this.headerbox[2] && 
 			p_evt.clientY >= this.headerbox[1] && p_evt.clientY <= this.headerbox[1] + this.headerbox[3]) {
-				console.log(">> 269 HEADER >>", p_evt, this);
+				let cb;
+				for (let k in this.clickboxes) {
+					cb = this.clickboxes[k];
+					// console.log(k, cb, p_evt.clientX, p_evt.clientY);
+					if (p_evt.clientX >= cb[0] && p_evt.clientX <= cb[2] && 
+						p_evt.clientY <= cb[1] && p_evt.clientY >= cb[3]) {
+							switch(k) {
+
+								case "next":
+									if (this.recordidx == this.recordcnt-1) {
+										this.recordidx = 0;
+									} else {
+										this.recordidx++;
+									}
+									this.clear(p_ctx);
+									this.draw(p_ctx);
+									break;
+
+								case "prev":
+									if (this.recordidx == 0) {
+										this.recordidx = this.recordcnt-1;
+									} else {
+										this.recordidx--;
+									}
+									this.clear(p_ctx);
+									this.draw(p_ctx);
+									break;		
+									
+								case "toend":
+									this.recordidx = this.recordcnt-1;
+									this.clear(p_ctx);
+									this.draw(p_ctx);
+									break;									
+										
+							}
+					}
+				}
 			} 
 	}
 }

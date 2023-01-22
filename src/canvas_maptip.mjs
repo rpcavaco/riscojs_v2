@@ -138,7 +138,8 @@ export class PopupBox {
 	
 	_drawBackground(p_ctx, p_width, p_height, p_lnheight) {
 
-		this._setorigin(p_width, p_height);
+		this._setorigin(p_width, p_height);  
+
 		this.box = [...this.origin, p_width, p_height];
 
 		const headerlimy = 3 * p_lnheight;
@@ -327,7 +328,7 @@ export class MaptipBox extends PopupBox {
 		}
 
 		// Calc text dims
-		let row, cota, lnidx, celltxt, changed_found, colsizes=[0,0];
+		let row, height, cota, lnidx, celltxt, changed_found, colsizes=[0,0];
 		for (row of rows) {
 			for (let i=0; i<numcols; i++) {
 				if (i==0) {
@@ -347,21 +348,23 @@ export class MaptipBox extends PopupBox {
 		const txtlnheight = lbltm.actualBoundingBoxAscent - lbltm.actualBoundingBoxDescent;
 
 		// calculate height of all rows
-		let maxrowlen, lineheightfactor = 1.8;
-		cota = this.origin[1]+5.5*txtlnheight;
+		let maxrowlen, textlinescnt=0, lineheightfactor = 1.8;
+		height = 5.5*txtlnheight;
 		for (let row, ri=0; ri<rows.length; ri++) {
 			maxrowlen=0;
 			row = rows[ri];
 			for (let colidx=0; colidx<numcols; colidx++) {
 				maxrowlen = Math.max(maxrowlen, row[colidx].length);
 			}
-			cota += maxrowlen * lineheightfactor * txtlnheight + 0.5 * txtlnheight;
+			textlinescnt += maxrowlen;
+			height += maxrowlen * lineheightfactor * txtlnheight + 0.5 * txtlnheight;
 		}
-		cota = cota - 2 * txtlnheight;
+		//height = height - 2 * txtlnheight;
+		//console.log("textlinescnt:", textlinescnt);
 
 		const realwidth = Math.max(this.leftpad+colsizes[0]+this.betweencols+colsizes[1]+this.rightpad, this.leftpad+lbltm.width+this.rightpad);
 
-		this._drawBackground(p_ctx, realwidth, cota, txtlnheight);
+		this._drawBackground(p_ctx, realwidth, height, txtlnheight);
 
 		p_ctx.fillStyle = this.fillTextStyle;
 

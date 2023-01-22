@@ -376,6 +376,7 @@ class MultiTool extends BaseTool {
 			switch(p_evt.type) {
 
 				case 'mousedown':
+					console.log("mdown multitool");
 					// console.log(p_evt, "start:", this.start_screen, (p_evt.buttons & 1) == 1);
 					if (this.start_screen == null) {
 						if ((p_evt.buttons & 1) == 1) {						
@@ -434,7 +435,7 @@ class InfoTool extends BaseTool {
 
 	onEvent(p_mapctx, p_evt) {
 
-		let mxdist;
+		let mxdist, ret = true; // let other tool events be processed
 		const ci = p_mapctx.getCustomizationInstance();
 		if (ci == null) {
 			throw new Error("InfoTool, customization instance is missing")
@@ -443,14 +444,31 @@ class InfoTool extends BaseTool {
 		const ic = ci.instances["infoclass"];
 
 		try {
+
+			let insideactivepanel = false;
+
+			if (ic.pick !== undefined) {
+				if (this.pickpanel_active) {
+					if (p_evt.clientX >= ic.ibox.box[0] && p_evt.clientX <= ic.ibox.box[0] + ic.ibox.box[2] && 
+						p_evt.clientY >= ic.ibox.box[1] && p_evt.clientY <= ic.ibox.box[1] + ic.ibox.box[3]) {
+							insideactivepanel = true;
+					}
+				}
+			}
+							
 			switch(p_evt.type) {
+
+				case 'mousedown':
+					if (insideactivepanel)
+						ret = false; // prevent mousedown being processed in subsequent onevent methods in remaining tools
+					
+						break;
 
 				case 'mouseup':
 					if (ic.pick !== undefined) {
 						if (this.pickpanel_active) {
-							if (p_evt.clientX >= ic.ibox.box[0] && p_evt.clientX <= ic.ibox.box[0] + ic.ibox.box[2] && 
-								p_evt.clientY >= ic.ibox.box[1] && p_evt.clientY <= ic.ibox.box[1] + ic.ibox.box[3]) {
-									ic.interact(p_evt);
+							if (insideactivepanel) {
+								ic.interact(p_mapctx, p_evt);
 							} else {
 								this.pickpanel_active = false;
 							}
@@ -479,6 +497,8 @@ class InfoTool extends BaseTool {
 		} catch(e) {
 			console.error(e);
 		}  
+
+		return ret;
 		
 	}	
 }
@@ -657,19 +677,16 @@ export class ToolManager {
 
 	onEvent(p_mapctx, p_evt) {
 
-		let _ret, ret = true;
+		let _ret;
 
-		for (let i=0; i<this.maptools.length; i++) {
+		for (let i=this.maptools.length-1; i>=0; i--) {
 			if (this.maptools[i].enabled) {
 				_ret = this.maptools[i].onEvent(p_mapctx, p_evt);
-				if (this.maptools[i].joinstogglegroup) {
-					ret = _ret;
+				if (!_ret && this.maptools[i].joinstogglegroup) {
+					break;
 				}
 			}
 		}
-
-		// stopPropagation - only tools from toggle group is checked for return value 
-		return ret;
 	}
 	
 

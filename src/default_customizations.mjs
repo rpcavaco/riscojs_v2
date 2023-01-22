@@ -246,9 +246,10 @@ class Info {
 			this.callout.clear(ctx);
 		}
 	}
-	interact(p_evt) {
+	interact(p_mapctx, p_evt) {
 		if (this.ibox) {
-			this.ibox.interact(p_evt);
+			const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+			this.ibox.interact(p_evt, ctx);
 		}
 
 	}
