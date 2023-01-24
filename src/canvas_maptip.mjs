@@ -242,7 +242,7 @@ export class MaptipBox extends PopupBox {
 			}
 		}
 
-		function wrtField(p_this, pp_ctx, p_rows, p_attrs, p_fld, p_msgsdict, opt_max_valuewidth) {
+		function wrtField(p_this, pp_ctx, p_rows, p_attrs, p_fld, p_msgsdict, max_captwidth, max_valuewidth) {
 			
 			let caption;
 
@@ -281,7 +281,7 @@ export class MaptipBox extends PopupBox {
 				pretext = p_attrs[p_fld];
 			}
 
-			if (opt_max_valuewidth !== null && typeof pretext != 'number') {
+			if (typeof pretext != 'number') {
 				let words;
 				try {
 					words = pretext.split(/\s+/);
@@ -291,7 +291,7 @@ export class MaptipBox extends PopupBox {
 				}
 				if (words) {
 					pp_ctx.font = `${p_this.normalszPX}px ${p_this.fontfamily}`;
-					collectLines(pp_ctx, words, opt_max_valuewidth, valuelines);
+					collectLines(pp_ctx, words, max_valuewidth, valuelines);
 				} else {
 					valuelines.push('');
 				}
@@ -302,7 +302,7 @@ export class MaptipBox extends PopupBox {
 			const words = caption.split(/\s+/);
 			if (words) {
 				pp_ctx.font = `${p_this.normalszPX}px ${p_this.captionfontfamily}`;
-				collectLines(pp_ctx, words, 120, captionlines);
+				collectLines(pp_ctx, words, max_captwidth, captionlines);
 			} else {
 				captionlines.push('');
 			}
@@ -310,21 +310,24 @@ export class MaptipBox extends PopupBox {
 			p_rows.push([captionlines, valuelines]);
 		}
 
-		const maxboxwidth = Math.max(GlobalConst.INFO_MAPTIPS_BOXSTYLE["minpopupwidth"], this.mapdims[0] / 4);
+		const maxboxwidth = Math.max(GlobalConst.INFO_MAPTIPS_BOXSTYLE["minpopupwidth"], this.mapdims[0] / 2.5);
+
+		const capttextwidth = GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"] * maxboxwidth;
+		const valuetextwidth = (1 - GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"]) * maxboxwidth;
 
 		if (ifkeys.indexOf("add") >= 0) {
 			for (let fld of this.layer.maptipfields["add"]) {
-				wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], maxboxwidth);
+				wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth);
 			}	
 		} else if (ifkeys.indexOf("remove") >= 0) {
 			for (let fld in this.feature.a) {
 				if (this.layer.maptipfields["remove"].indexOf(fld) < 0) {
-					wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], maxboxwidth);
+					wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth);
 				}
 			} 
 		} else {
 			for (let fld in this.feature.a) {
-				wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], maxboxwidth);
+				wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth);
 			}	
 		}
 
@@ -363,9 +366,9 @@ export class MaptipBox extends PopupBox {
 		//height = height - 2 * txtlnheight;
 		//console.log("textlinescnt:", textlinescnt);
 
-		const realwidth = Math.max(this.leftpad+colsizes[0]+this.betweencols+colsizes[1]+this.rightpad, this.leftpad+lbltm.width+this.rightpad);
+		//const realwidth = Math.max(this.leftpad+colsizes[0]+this.betweencols+colsizes[1]+this.rightpad, this.leftpad+lbltm.width+this.rightpad);
 
-		this._drawBackground(p_ctx, realwidth, height, txtlnheight);
+		this._drawBackground(p_ctx, maxboxwidth, height, txtlnheight);
 
 		p_ctx.fillStyle = this.fillTextStyle;
 

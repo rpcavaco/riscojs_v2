@@ -147,7 +147,7 @@ export class InfoBox extends PopupBox {
 			}
 		}
 
-		function wrtField(p_this, pp_ctx, p_rows, p_attrs, p_fld, p_msgsdict, opt_max_valuewidth) {
+		function wrtField(p_this, pp_ctx, p_rows, p_attrs, p_fld, p_msgsdict, max_captwidth, max_valuewidth) {
 			
 			let caption;
 
@@ -186,7 +186,7 @@ export class InfoBox extends PopupBox {
 				pretext = p_attrs[p_fld];
 			}
 
-			if (opt_max_valuewidth !== null && typeof pretext != 'number') {
+			if (typeof pretext != 'number') {
 				let words;
 				try {
 					words = pretext.split(/\s+/);
@@ -196,7 +196,7 @@ export class InfoBox extends PopupBox {
 				}
 				if (words) {
 					pp_ctx.font = `${p_this.normalszPX}px ${p_this.fontfamily}`;
-					collectLines(pp_ctx, words, opt_max_valuewidth, valuelines);
+					collectLines(pp_ctx, words, max_valuewidth, valuelines);
 				} else {
 					valuelines.push('');
 				}
@@ -207,7 +207,7 @@ export class InfoBox extends PopupBox {
 			const words = caption.split(/\s+/);
 			if (words) {
 				pp_ctx.font = `${p_this.normalszPX}px ${p_this.captionfontfamily}`;
-				collectLines(pp_ctx, words, 120, captionlines);
+				collectLines(pp_ctx, words, max_captwidth, captionlines);
 			} else {
 				captionlines.push('');
 			}
@@ -220,6 +220,10 @@ export class InfoBox extends PopupBox {
 		}
 
 		const maxboxwidth = Math.max(GlobalConst.INFO_MAPTIPS_BOXSTYLE["minpopupwidth"], this.mapdims[0] / 2.5);
+
+		const capttextwidth = GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"] * maxboxwidth;
+		const valuetextwidth = (1 - GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"]) * maxboxwidth;
+
 		const recdata = this.data[this.layer.infocfg.jsonkey][this.recordidx];
 
 		if (this.layer.infocfg.fields["transforms"] !== undefined) {
@@ -264,7 +268,7 @@ export class InfoBox extends PopupBox {
 			}
 		}
 		for (let fld of fldnames) {
-			wrtField(this, p_ctx, rows, recdata, fld, this.layer.msgsdict[lang], 3 * maxboxwidth / 5);
+			wrtField(this, p_ctx, rows, recdata, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth);
 		}	
 		
 		// Calc text dims
