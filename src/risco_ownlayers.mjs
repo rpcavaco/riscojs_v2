@@ -296,18 +296,27 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 		const that = this;
 
 		fetch(url)
-			.then(response => response.json())
-			.then(
+			.then(response => {
+				if (response.ok) {
+					return response.json();
+				} else {
+					// TODO - passar ao seguinte
+					this.doCancel();
+					return null;
+				}
+			}).then(
 				function(responsejson) {
-					if (responsejson.stats == null) {
-						console.warn(`[WARN] null stats on '${that.key}' get stats request`);
-						p_mapctx.tocmgr.signalVectorLoadFinished(that.key);
-					} else {
-						that.refresh(p_mapctx, {
-							"reqid": responsejson.reqid,
-							"nchunks": responsejson.stats[that.key]['nchunks'],
-							"nvert": responsejson.stats[that.key]['nvert']
-						});
+					if (responsejson) {
+						if (responsejson.stats == null) {
+							console.warn(`[WARN] null stats on '${that.key}' get stats request`);
+							p_mapctx.tocmgr.signalVectorLoadFinished(that.key);
+						} else {
+							that.refresh(p_mapctx, {
+								"reqid": responsejson.reqid,
+								"nchunks": responsejson.stats[that.key]['nchunks'],
+								"nvert": responsejson.stats[that.key]['nvert']
+							});
+						}
 					}
 
 
