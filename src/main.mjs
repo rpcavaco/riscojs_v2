@@ -1,6 +1,7 @@
 import {HTML5CanvasMgr} from './html5canvas.mjs';
 import {Transform2DMgr} from './transformations.mjs';
 import {ToolManager} from './interactions.mjs';
+import {EditsManager} from './editing.mjs';
 import {TOCManager} from './toc.mjs';
 import {FeatureCollection} from './feature_collection.mjs';
 import {I18n} from './i18n.mjs';
@@ -144,6 +145,7 @@ export class RiscoMapCtx {
 		this.featureCollection = new FeatureCollection(this);
 		this.transformmgr = new Transform2DMgr(this, p_config_var["basic"]);	
 		this.toolmgr = new ToolManager(p_config_var["basic"]);
+		this.editmgr = new EditsManager();		
 		this.tocmgr = new TOCManager(this, p_mode);
 		this.i18n = new I18n(p_config_var["text"]);
 	

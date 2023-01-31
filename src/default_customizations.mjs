@@ -220,6 +220,7 @@ class Info {
 
 		const that = this;
 
+		// TODO - [MissingFeat 0002] - Obter este URL de configs
 		fetch("https://geo.cm-porto.net/riscosrv_v2/doget", {
 			method: "POST",
 			body: JSON.stringify({"alias":"procs_fisca_info","filtervals":[keyval],"pbuffer":0,"lang":"pt"})

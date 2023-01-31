@@ -19,44 +19,40 @@
 - OK - config highlight nas constantes
 - OK - labeling 
 - OK - centroide de poligonos para ponto de etiquetagem
-- > - simbologia pontos (para completar 'Fisca')
-- > - simbologia setas
-- > - labeling tipo 'leader'
-
-- dependências de escala
-	- visibilidade
-	- simbologia
-
-- OK - features AGS - primeira visão com polígonos
-	- faltam linhas e pontos
-
-- >> - fomatos risco - features (para garantir material de teste vetorial)
-	- OK - poly / line 
-	- >>  >>>> points
-
-
-- ? subconfigs 
-- relações
-	- represemtar individuos ou agregar: lugar para as funções de agregação
-
-- layer de indice espacial
+- OK layer de indice espacial
   - OK - grid layer com separação proporcional à escala
   - OK - passar layer a fixa no código
   - relação entre 'area grid' e
 	- OK - polígonos
-	- >> - pontos
+	- OK - pontos
+- OK - simbologia pontos (para completar 'Fisca')
+- > - simbologia setas
+- OK - labeling tipo 'leader'
+- OK - features AGS - primeira visão com polígonos
+	> - faltam linhas e pontos
+- OK - fomatos risco - features (para garantir material de teste vetorial)
+	- OK - poly / line 
+	- OK - points
+
+- >> - Edição
+
+- ? - dependências de escala
+	- visibilidade
+	- simbologia
+
+- relações
+	- represemtar individuos ou agregar: lugar para as funções de agregação
+
+
 
 - validar main configs
 
 - > - info na multi tool (no mouse up sem drag) e ficha de feat no mouse move
 
-
-
 - risco server -- pedido de stats comum a várias layers
 	- getStatsURL opt_filter
 
 - WFS xml
-
 
 - layered symbs
 
@@ -86,11 +82,16 @@ Integração geral
 - novos riscowidgets e risco web client (onde se junta tudo)
 
 
-ISSUES
+---------------------------------- ISSUES -------------------------------------
 
 - Bug 0001 - SOLVED,VERIFYING - Algumas features em redesenho, quando há muita intensidade de refresh
 - Bug 0002 - SOLVED,VERIFYING - Erro em signalVectorLoadFinished, "TypeError: this.layers[this.drawlist[li]] is undefined"
-- Bug 0003 - Seleção interativa troços Alameda 25 de Abril , será por serem horizontais ?
+- Bug 0003 - PENDING - Seleção interativa troços Alameda 25 de Abril , será por serem horizontais ?
+
+	(A carecer de atenção urgente)
+
+- MissingFeat 0001 - PENDING - Reação à falta de disponibilidade em cada layer
+- MissingFeat 0002 - PENDING - Obter URL para Info
 
 
 
