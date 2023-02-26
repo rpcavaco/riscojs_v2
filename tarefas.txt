@@ -90,8 +90,8 @@ Integração geral
 
 	(A carecer de atenção urgente)
 
-- MissingFeat 0001 - PENDING - Reação à falta de disponibilidade em cada layer
-- MissingFeat 0002 - PENDING - Obter URL para Info
+- PARTIAL - MissingFeat 0001 - PENDING - Reação à falta de disponibilidade em cada layer
+- OK - MissingFeat 0002 - PENDING - Obter URL para Info
 
 
 

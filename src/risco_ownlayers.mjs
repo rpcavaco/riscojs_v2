@@ -300,9 +300,9 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 				if (response.ok) {
 					return response.json();
 				} else {
-					// TODO - passar ao seguinte [MissingFeat 0001]
-					this.doCancel();
-					return null;
+					// PARTIAL MissingFeat 0001
+					console.error(`Impossible to fetch '${that.key}', response error`);
+					p_mapctx.tocmgr.signalVectorLoadFinished(that.key);
 				}
 			}).then(
 				function(responsejson) {
@@ -318,10 +318,14 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 							});
 						}
 					}
-
-
 				}
-			);	
+			).catch((error) => {
+				// PARTIAL MissingFeat 0001
+				console.error(`Impossible to fetch '${that.key}'`, error);
+				p_mapctx.tocmgr.signalVectorLoadFinished(that.key);
+				//this.doCancel();
+
+			});	
 	}
 
 	* itemchunks(p_mapctxt, p_prep_data) {
