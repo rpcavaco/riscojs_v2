@@ -2,6 +2,7 @@
 import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
 import {PopupBox} from './canvas_maptip.mjs';
+import {canvasWrtField} from './utils.mjs';
 
 export class InfoBox extends PopupBox {
 
@@ -127,7 +128,7 @@ export class InfoBox extends PopupBox {
 		const rows = [];
 		const numcols = 2;
 
-		function collectLines(ppp_ctx, p_words, p_maxlen, out_lines) {
+		/* function collectLines(ppp_ctx, p_words, p_maxlen, out_lines) {
 
 			let test, tm, currline = '';
 			out_lines.length = 0;
@@ -145,9 +146,9 @@ export class InfoBox extends PopupBox {
 			if (currline.length > 0) {
 				out_lines.push((' ' + currline).slice(1).trim());
 			}
-		}
+		} */
 
-		function wrtField(p_this, pp_ctx, p_rows, p_attrs, p_fld, p_msgsdict, max_captwidth, max_valuewidth) {
+		/* function wrtField(p_this, pp_ctx, p_rows, p_attrs, p_fld, p_msgsdict, max_captwidth, max_valuewidth) {
 			
 			let caption;
 
@@ -213,7 +214,7 @@ export class InfoBox extends PopupBox {
 			}
 
 			p_rows.push([captionlines, valuelines]);
-		}
+		} */
 
 		if (this.recordidx < 0) {
 			this.recordidx = 0;
@@ -268,7 +269,7 @@ export class InfoBox extends PopupBox {
 			}
 		}
 		for (let fld of fldnames) {
-			wrtField(this, p_ctx, rows, recdata, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth);
+			canvasWrtField(this, p_ctx, rows, recdata, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth);
 		}	
 		
 		// Calc text dims

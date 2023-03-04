@@ -1,6 +1,7 @@
 
 import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
+import {canvasWrtField} from './utils.mjs';
 
 export class PopupBox {
 
@@ -222,26 +223,6 @@ export class MaptipBox extends PopupBox {
 		const rows = [];
 		const numcols = 2;
 
-		function collectLines(ppp_ctx, p_words, p_maxlen, out_lines) {
-
-			let test, tm, currline = '';
-			out_lines.length = 0;
-
-			for (let word of p_words) {
-				test = currline + ' ' + word;
-				tm = ppp_ctx.measureText(test);
-				if (tm.width <= p_maxlen) {
-					currline = currline + ' ' + word;
-				} else {
-					out_lines.push((' ' + currline).slice(1).trim());
-					currline = word;
-				}
-			}
-			if (currline.length > 0) {
-				out_lines.push((' ' + currline).slice(1).trim());
-			}
-		}
-
 		function wrtField(p_this, pp_ctx, p_rows, p_attrs, p_fld, p_msgsdict, max_captwidth, max_valuewidth) {
 			
 			let caption;
@@ -280,54 +261,55 @@ export class MaptipBox extends PopupBox {
 			} else {
 				pretext = p_attrs[p_fld];
 			}
+		
+			if (caption.length > 0) {
+				pp_ctx.font = `${p_this.normalszPX}px ${p_this.captionfontfamily}`;
+				collectTextLines(pp_ctx, caption, max_captwidth, true, captionlines);
+			} else {
+				captionlines.push('');
+			}
 
 			if (typeof pretext != 'number') {
-				let words;
-				try {
-					words = pretext.split(/\s+/);
-				} catch(e) {
-					console.error(p_fld, typeof pretext);
-					throw e;
-				}
-				if (words) {
+				if (pretext.length > 0) {
 					pp_ctx.font = `${p_this.normalszPX}px ${p_this.fontfamily}`;
-					collectLines(pp_ctx, words, max_valuewidth, valuelines);
+					collectTextLines(pp_ctx, pretext, max_valuewidth, false, valuelines);
 				} else {
 					valuelines.push('');
 				}
 			} else {
-				valuelines = [pretext.toString()];
-			}
-
-			const words = caption.split(/\s+/);
-			if (words) {
-				pp_ctx.font = `${p_this.normalszPX}px ${p_this.captionfontfamily}`;
-				collectLines(pp_ctx, words, max_captwidth, captionlines);
-			} else {
-				captionlines.push('');
+				if (captionlines.length == 1) {
+					valuelines = [pretext.toString()];
+				} else {
+					valuelines = [];
+					for (let i=0; i<(captionlines.length-1); i++) {
+						valuelines.push('');
+					}
+					valuelines.push(pretext.toString());
+				}
 			}
 
 			p_rows.push([captionlines, valuelines]);
 		}
 
-		const maxboxwidth = Math.max(GlobalConst.INFO_MAPTIPS_BOXSTYLE["minpopupwidth"], this.mapdims[0] / 2.5);
+		const tipsboxfrac = GlobalConst.INFO_MAPTIPS_BOXSTYLE["tipsbox2map_widthfraction"];
+		const maxboxwidth = Math.max(GlobalConst.INFO_MAPTIPS_BOXSTYLE["minpopupwidth"], this.mapdims[0] / tipsboxfrac);
 
 		const capttextwidth = GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"] * maxboxwidth;
 		const valuetextwidth = (1 - GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"]) * maxboxwidth;
 
 		if (ifkeys.indexOf("add") >= 0) {
 			for (let fld of this.layer.maptipfields["add"]) {
-				wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth);
+				canvasWrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth);
 			}	
 		} else if (ifkeys.indexOf("remove") >= 0) {
 			for (let fld in this.feature.a) {
 				if (this.layer.maptipfields["remove"].indexOf(fld) < 0) {
-					wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth);
+					canvasWrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth);
 				}
 			} 
 		} else {
 			for (let fld in this.feature.a) {
-				wrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth);
+				canvasWrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth);
 			}	
 		}
 
@@ -376,7 +358,6 @@ export class MaptipBox extends PopupBox {
 		for (row of rows) {
 
 			lnidx = 0;
-
 			do {
 				changed_found = false;
 
@@ -385,8 +366,6 @@ export class MaptipBox extends PopupBox {
 					if (row[colidx].length > lnidx) {
 						
 						celltxt = row[colidx][lnidx];
-						//console.log(row, colidx, lnidx, celltxt);
-
 						if (colidx == 0) {
 							p_ctx.textAlign = "right";
 							p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
@@ -396,7 +375,6 @@ export class MaptipBox extends PopupBox {
 							p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
 							p_ctx.fillText(celltxt, this.origin[0]+this.leftpad+colsizes[colidx-1]+colidx*this.betweencols, cota);		
 						}
-
 						changed_found = true;
 					}
 	

@@ -104,7 +104,9 @@ var GlobalConst = {
 		"betweencols": 10,
 		"minpopupwidth": 280,
 
-		"caption2value_widthfraction": 0.31
+		"caption2value_widthfraction": 0.31,
+		"tipsbox2map_widthfraction": 2.4,
+		"infotipsbox_slack": 10
 	},
 
 	DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB: { // Symbolize spatial index features selected on mouse position
