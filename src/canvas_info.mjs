@@ -128,100 +128,11 @@ export class InfoBox extends PopupBox {
 		const rows = [];
 		const numcols = 2;
 
-		/* function collectLines(ppp_ctx, p_words, p_maxlen, out_lines) {
-
-			let test, tm, currline = '';
-			out_lines.length = 0;
-
-			for (let word of p_words) {
-				test = currline + ' ' + word;
-				tm = ppp_ctx.measureText(test);
-				if (tm.width <= p_maxlen) {
-					currline = currline + ' ' + word;
-				} else {
-					out_lines.push((' ' + currline).slice(1).trim());
-					currline = word;
-				}
-			}
-			if (currline.length > 0) {
-				out_lines.push((' ' + currline).slice(1).trim());
-			}
-		} */
-
-		/* function wrtField(p_this, pp_ctx, p_rows, p_attrs, p_fld, p_msgsdict, max_captwidth, max_valuewidth) {
-			
-			let caption;
-
-			if (Object.keys(p_msgsdict).indexOf(p_fld) >= 0) {
-				caption = I18n.capitalize(p_msgsdict[p_fld]);
-			} else {
-				caption = I18n.capitalize(p_fld);
-			}
-
-			let pretext, tmp, captionlines=[], valuelines = [];
-
-			if (p_this.layer.infocfg.fields["formats"] !== undefined && p_this.layer.infocfg.fields["formats"][p_fld] !== undefined) {
-				if (p_this.layer.infocfg.fields["formats"][p_fld]["type"] !== undefined) {
-					switch(p_this.layer.infocfg.fields["formats"][p_fld]["type"]) {
-
-						case "date":
-							tmp = new Date(p_attrs[p_fld]);
-							pretext = tmp.toLocaleDateString(lang);
-							break;
-
-						case "time":
-							tmp = new Date(p_attrs[p_fld]);
-							pretext = tmp.toLocaleTimeString(lang);
-							break;
-	
-						case "datetime":
-						case "timeanddate":
-						case "dateandtime":
-							tmp = new Date(p_attrs[p_fld]);
-							pretext = tmp.toLocaleString(lang);
-							break;
-
-					}
-				}
-			} else {
-				pretext = p_attrs[p_fld];
-			}
-
-			if (typeof pretext != 'number') {
-				let words;
-				try {
-					words = pretext.split(/\s+/);
-				} catch(e) {
-					console.error(p_fld, typeof pretext);
-					throw e;
-				}
-				if (words) {
-					pp_ctx.font = `${p_this.normalszPX}px ${p_this.fontfamily}`;
-					collectLines(pp_ctx, words, max_valuewidth, valuelines);
-				} else {
-					valuelines.push('');
-				}
-			} else {
-				valuelines = [pretext.toString()];
-			}
-
-			const words = caption.split(/\s+/);
-			if (words) {
-				pp_ctx.font = `${p_this.normalszPX}px ${p_this.captionfontfamily}`;
-				collectLines(pp_ctx, words, max_captwidth, captionlines);
-			} else {
-				captionlines.push('');
-			}
-
-			p_rows.push([captionlines, valuelines]);
-		} */
-
 		if (this.recordidx < 0) {
 			this.recordidx = 0;
 		}
 
 		const maxboxwidth = Math.max(GlobalConst.INFO_MAPTIPS_BOXSTYLE["minpopupwidth"], this.mapdims[0] / 2.5);
-
 		const capttextwidth = GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"] * maxboxwidth;
 		const valuetextwidth = (1 - GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"]) * maxboxwidth;
 
