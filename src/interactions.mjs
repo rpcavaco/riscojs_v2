@@ -8,6 +8,7 @@ export class BaseTool {
 
 	enabled = true;
 	start_time = null;
+	edits_manager;
 	constructor(p_joinstogglegroup, opt_defaultintoggle) {
 		this.joinstogglegroup = p_joinstogglegroup;
 		if (this.joinstogglegroup) {
@@ -23,6 +24,10 @@ export class BaseTool {
 
 	onEvent(p_mapctx, p_evt) {
 		// Abstract
+	}
+
+	setEditsManager(p_edits_manager) {
+		this.edits_manager = p_edits_manager;
 	}
 
 }
@@ -563,11 +568,15 @@ class MeasureTool extends BaseTool {
 
 export class ToolManager {
 
-	constructor(p_mapctx_config_var) {
+	edits_manager;
+
+	constructor(p_mapctx_config_var, p_edits_manager) {
 
 		if (p_mapctx_config_var == null) {
 			throw new Error("Class ToolManager, null mapctx_config_var");
 		}
+
+		this.edits_manager = p_edits_manager;
 
 		this.editmgr = new EditManager(this);
 		this.maptools = [new DefaultTool(), new MultiTool()];
@@ -594,7 +603,9 @@ export class ToolManager {
 		const existing_classnames = [], classname = p_toolinstance.constructor.name;
 		if (!(p_toolinstance instanceof BaseTool)) {
 			throw new Error(`Class ToolManager, addTool, tool is not a BaseTool instance: ${classname}`);
-		}		
+		}	
+		
+		p_toolinstance.setEditsManager(this.editmgr);
 
 		for (let i=0; i<this.maptools.length; i++) {
 			if (existing_classnames.indexOf(this.maptools[i].constructor.name) >= 0) {

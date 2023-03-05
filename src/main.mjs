@@ -144,8 +144,8 @@ export class RiscoMapCtx {
 		}
 		this.featureCollection = new FeatureCollection(this);
 		this.transformmgr = new Transform2DMgr(this, p_config_var["basic"]);	
-		this.toolmgr = new ToolManager(p_config_var["basic"]);
 		this.editmgr = new EditsManager();		
+		this.toolmgr = new ToolManager(p_config_var["basic"], this.editmgr);
 		this.tocmgr = new TOCManager(this, p_mode);
 		this.i18n = new I18n(p_config_var["text"]);
 	
@@ -178,6 +178,10 @@ export class RiscoMapCtx {
 		}
 
 		console.info(`[init RISCO] ==  End of map context init for '${this.panelwidget.id}'  ==`);
+	}
+
+	setCurrentUser(p_username) {
+		this.editmgr.setCurrentUser(p_username);
 	}
 
 	/**

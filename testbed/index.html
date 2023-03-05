@@ -92,6 +92,9 @@
 
 		mapctx.setCustomizationObj(new MapCustomizations());
 
+		const currentHeaders = new Headers();
+		mapctx.setCurrentUser(currentHeaders.get('REMOTE_USER'));
+
 		checkPoints(mapctx);
 
 	
