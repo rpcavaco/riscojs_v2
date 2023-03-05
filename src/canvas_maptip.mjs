@@ -24,6 +24,7 @@ export class PopupBox {
 	mapdims;
 	userpt;
 	callout;	
+	drawcount;
 
 	constructor(p_mapctx, p_layer, p_styles, p_scrx, p_scry, b_callout) {
 
@@ -36,6 +37,7 @@ export class PopupBox {
 		this.layercaptionfontfamily = "sans-serif";
 		this.captionfontfamily = "sans-serif";
 		this.fontfamily = "sans-serif";
+		this.drawcount = 0;
 
 		if (p_styles["fillStyle"] !== undefined) {
 			this.fillStyle = p_styles["fillStyle"];
@@ -105,12 +107,12 @@ export class PopupBox {
 		}		
 	}
 
-	_setorigin(p_width, p_height, p_maxboxwidth) {
+	_setorigin(p_width, p_height) {
 
 		const xdelta = 50;
 		const ydelta = 50;
 		let tmp;
-		
+
 		if (this.userpt[0] > (this.mapdims[0] / 2)) {
 			// userpt right of map center
 			this.origin[0] = this.userpt[0] - p_width - xdelta;
@@ -123,7 +125,7 @@ export class PopupBox {
 
 		if (this.userpt[1] > (this.mapdims[1] / 2)) {
 			// below of map center
-			this.origin[1] = Math.max(this.userpt[1] - p_height - ydelta, 20);
+			this.origin[1] = Math.max((this.userpt[1] - p_height - ydelta), 20);
 			this.anchorpt[1] = this.origin[1] + p_height;
 		} else {
 			// obove of map center
@@ -139,7 +141,9 @@ export class PopupBox {
 	
 	_drawBackground(p_ctx, p_width, p_height, p_lnheight) {
 
-		this._setorigin(p_width, p_height);  
+		if (this.drawcount == 0) {
+			this._setorigin(p_width, p_height);  
+		}
 
 		this.box = [...this.origin, p_width, p_height];
 

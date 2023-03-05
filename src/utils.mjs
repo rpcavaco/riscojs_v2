@@ -36,7 +36,7 @@ export function setCookie(p_name, p_value) {
 	document.cookie = `${p_name}=${p_value};  SameSite=None; Secure`;
 }
 
-function collectTextLines(ppp_ctx, p_intext, p_maxlen, out_lines) {
+function canvasCollectTextLines(ppp_ctx, p_intext, p_maxlen, out_lines) {
 
 	let test, tm, currline = '', slack;
 	out_lines.length = 0;
@@ -101,6 +101,7 @@ function collectTextLines(ppp_ctx, p_intext, p_maxlen, out_lines) {
 	}*/
 }
 
+// writes in data structure in p_rows, not in graphics canvas, but uses canvas functions to measure text dimensions
 export function canvasWrtField(p_this, pp_ctx, p_rows, p_attrs, p_fld, p_msgsdict, max_captwidth, max_valuewidth) {
 			
 	let caption;
@@ -143,7 +144,7 @@ export function canvasWrtField(p_this, pp_ctx, p_rows, p_attrs, p_fld, p_msgsdic
 
 	if (caption.length > 0) {
 		pp_ctx.font = `${p_this.normalszPX}px ${p_this.captionfontfamily}`;
-		collectTextLines(pp_ctx, caption, max_captwidth, captionlines);
+		canvasCollectTextLines(pp_ctx, caption, max_captwidth, captionlines);
 	} else {
 		captionlines.push('');
 	}
@@ -151,7 +152,7 @@ export function canvasWrtField(p_this, pp_ctx, p_rows, p_attrs, p_fld, p_msgsdic
 	if (typeof pretext != 'number') {
 		if (pretext.length > 0) {
 			pp_ctx.font = `${p_this.normalszPX}px ${p_this.fontfamily}`;
-			collectTextLines(pp_ctx, pretext, max_valuewidth, valuelines);
+			canvasCollectTextLines(pp_ctx, pretext, max_valuewidth, valuelines);
 		} else {
 			valuelines.push('');
 		}

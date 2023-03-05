@@ -268,6 +268,10 @@ export class InfoBox extends PopupBox {
 		}
 
 		p_ctx.restore();
+
+		this.drawcount++;
+
+		
 	}
 
 	clear(p_ctx) {
