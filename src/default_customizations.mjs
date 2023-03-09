@@ -219,24 +219,37 @@ class Info {
 
 
 		const that = this;
+		const lyr = p_mapctx.tocmgr.getLayer(p_layerkey);
 
 		// done - [MissingFeat 0002] - Obter este URL de configs
 		fetch(currlayer.url + "/doget", {
 			method: "POST",
-			body: JSON.stringify({"alias":"procs_fisca_info","filtervals":[keyval],"pbuffer":0,"lang":"pt"})
+			body: JSON.stringify({"alias":lyr.infocfg.qrykey,"filtervals":[keyval],"pbuffer":0,"lang":"pt"})
 		})
 		.then(response => response.json())
 		.then(
 			function(responsejson) {
 
 				const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
-				that.ibox = new InfoBox(p_mapctx, currlayer, responsejson, that.styles, p_scrx, p_scry, false);
+				that.ibox = new InfoBox(p_mapctx, currlayer, responsejson, that.styles, p_scrx, p_scry, that.infobox_pick, false);
 				const ctx = p_mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
 				that.ibox.clear(ctx);
 				that.ibox.draw(ctx);				
 			}
-		);	
+		).catch((error) => {
+			console.error(`Impossible to fetch attributes on '${p_layerkey}'`, error);
+		});	
 	} 
+	// mouse pick inside info box and over any of its items
+	infobox_pick(p_info_box, p_data_rec, p_fldname, p_column_idx) {
+		
+		//console.log(p_info_box, p_data_rec, p_fldname, p_column_idx);
+
+		// open a new tab with URL, if it exists
+		if (p_column_idx == 1 && p_info_box.urls[p_fldname] !== undefined) {
+			window.open(p_info_box.urls[p_fldname], "_blank");
+		}
+	}
 	clear(p_mapctx, p_layerkey, p_featid, p_scrx, p_scry) {
 		//console.log("info/tip clear, prev layer:", p_layerkey, " feat:", p_featid);
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');

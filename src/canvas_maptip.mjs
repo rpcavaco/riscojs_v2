@@ -17,6 +17,7 @@ export class PopupBox {
 	strokeStyle;
 	headerFillStyle;
 	fillTextStyle;
+	URLStyle;
 	leaderorig;
 	layercaptionfontfamily;
 	captionfontfamily;
@@ -25,6 +26,7 @@ export class PopupBox {
 	userpt;
 	callout;	
 	drawcount;
+	rows;
 
 	constructor(p_mapctx, p_layer, p_styles, p_scrx, p_scry, b_callout) {
 
@@ -38,6 +40,7 @@ export class PopupBox {
 		this.captionfontfamily = "sans-serif";
 		this.fontfamily = "sans-serif";
 		this.drawcount = 0;
+		this.rows = [];
 
 		if (p_styles["fillStyle"] !== undefined) {
 			this.fillStyle = p_styles["fillStyle"];
@@ -65,6 +68,11 @@ export class PopupBox {
 			this.fillTextStyle = p_styles["fillTextStyle"];
 		} else {
 			this.fillTextStyle = "none";
+		}
+		if (p_styles["URLStyle"] !== undefined) {
+			this.URLStyle = p_styles["URLStyle"];
+		} else {
+			this.URLStyle = "none";
 		}
 
 		if (p_styles["lineWidth"] !== undefined) {
@@ -217,14 +225,13 @@ export class MaptipBox extends PopupBox {
 
 		const ifkeys = Object.keys(this.layer.maptipfields);
 		if (ifkeys.length < 1) {
-			throw new Error(`Missing 'infokey' config for layer '${this.layer.key}`);
+			throw new Error(`Missing 'maptipfields' config for layer '${this.layer.key}`);
 		}
 
 		const lang = (new I18n(this.layer.msgsdict)).getLang();
 
 		p_ctx.save();
-
-		const rows = [];
+		this.rows.length = 0;
 		const numcols = 2;
 
 		const tipsboxfrac = GlobalConst.INFO_MAPTIPS_BOXSTYLE["tipsbox2map_widthfraction"];
@@ -235,23 +242,23 @@ export class MaptipBox extends PopupBox {
 
 		if (ifkeys.indexOf("add") >= 0) {
 			for (let fld of this.layer.maptipfields["add"]) {
-				canvasWrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth);
+				canvasWrtField(this, p_ctx, this.feature.a, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth, this.rows);
 			}	
 		} else if (ifkeys.indexOf("remove") >= 0) {
 			for (let fld in this.feature.a) {
 				if (this.layer.maptipfields["remove"].indexOf(fld) < 0) {
-					canvasWrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth);
+					canvasWrtField(this, p_ctx, this.feature.a, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth, this.rows);
 				}
 			} 
 		} else {
 			for (let fld in this.feature.a) {
-				canvasWrtField(this, p_ctx, rows, this.feature.a, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth);
+				canvasWrtField(this, p_ctx, this.feature.a, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth, this.rows);
 			}	
 		}
 
 		// Calc text dims
 		let row, height, cota, lnidx, celltxt, changed_found, colsizes=[0,0];
-		for (row of rows) {
+		for (row of this.rows) {
 			for (let i=0; i<numcols; i++) {
 				if (i==0) {
 					p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
@@ -272,9 +279,9 @@ export class MaptipBox extends PopupBox {
 		// calculate height of all rows
 		let maxrowlen, textlinescnt=0, lineheightfactor = 1.8;
 		height = 5.5*txtlnheight;
-		for (let row, ri=0; ri<rows.length; ri++) {
+		for (let row, ri=0; ri<this.rows.length; ri++) {
 			maxrowlen=0;
-			row = rows[ri];
+			row = this.rows[ri];
 			for (let colidx=0; colidx<numcols; colidx++) {
 				maxrowlen = Math.max(maxrowlen, row[colidx].length);
 			}
@@ -291,7 +298,7 @@ export class MaptipBox extends PopupBox {
 		p_ctx.fillStyle = this.fillTextStyle;
 
 		cota = this.origin[1]+5.5*txtlnheight;
-		for (row of rows) {
+		for (row of this.rows) {
 
 			lnidx = 0;
 			do {

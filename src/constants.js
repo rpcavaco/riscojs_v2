@@ -92,6 +92,7 @@ var GlobalConst = {
 		"innerStrokeStyle": "none",
 		"headerFillStyle": "grey",
 		"fillTextStyle": "white",
+		"URLStyle": "cyan",
 		"navFillStyle": "white",
 		"lineWidth": 1,		
 		"layercaptionszPX": 20,
@@ -104,7 +105,7 @@ var GlobalConst = {
 		"rightpad": 10,
 		"betweencols": 10,
 		"minpopupwidth": 280,
-
+		"lineheightfactor": 1.8,
 		"caption2value_widthfraction": 0.31,
 		"tipsbox2map_widthfraction": 2.4,
 		"infotipsbox_slack": 10

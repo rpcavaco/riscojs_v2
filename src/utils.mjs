@@ -102,9 +102,9 @@ function canvasCollectTextLines(ppp_ctx, p_intext, p_maxlen, out_lines) {
 }
 
 // writes in data structure in p_rows, not in graphics canvas, but uses canvas functions to measure text dimensions
-export function canvasWrtField(p_this, pp_ctx, p_rows, p_attrs, p_fld, p_msgsdict, max_captwidth, max_valuewidth) {
+export function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_msgsdict, max_captwidth, max_valuewidth, o_rows, o_urls) {
 			
-	let caption;
+	let caption, ret = 0;
 
 	if (Object.keys(p_msgsdict).indexOf(p_fld) >= 0) {
 		caption = I18n.capitalize(p_msgsdict[p_fld]);
@@ -135,6 +135,15 @@ export function canvasWrtField(p_this, pp_ctx, p_rows, p_attrs, p_fld, p_msgsdic
 					tmp = new Date(p_attrs[p_fld]);
 					pretext = tmp.toLocaleString(lang);
 					break;
+
+				case "URL":
+					pretext = p_attrs[p_fld];
+					if (o_urls != null) {
+						const formatfunc = p_this.layer.infocfg.fields["formats"][p_fld]["format"];
+						o_urls[p_fld] = formatfunc(pretext);
+					}
+					break;
+
 
 			}
 		}
@@ -168,6 +177,9 @@ export function canvasWrtField(p_this, pp_ctx, p_rows, p_attrs, p_fld, p_msgsdic
 		}
 	}
 
-	p_rows.push([captionlines, valuelines]);
+	o_rows.push([captionlines, valuelines]);
+	ret = Math.max(captionlines.length, valuelines.length);
+
+	return ret;
 }
 

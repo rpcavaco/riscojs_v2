@@ -11,18 +11,37 @@ export class InfoBox extends PopupBox {
 	recordidx;
 	navFillStyle;
 	clickboxes;
+	urls;
+	field_row_count;
+	ordered_fldnames;
+	txtlnheight;
+	topcota;
+	colsizes;
+	columncount;
 
-	constructor(p_mapctx, p_layer, p_data, p_styles, p_scrx, p_scry, b_callout) {
+	constructor(p_mapctx, p_layer, p_data, p_styles, p_scrx, p_scry, p_infobox_pick_method, b_callout) {
 
 		super(p_mapctx, p_layer, p_styles, p_scrx, p_scry, b_callout);
 
 		this.data = p_data;
 		this.recordidx = -1;
+		this.urls = {};
+		this.field_row_count = {};
+		this.ordered_fldnames = [];
+		this.txtlnheight = 0;
+		this.topcota = 0;
+		this.colsizes = [0,0];
+		this.columncount = 2;
+		this.infobox_static_pick_method = p_infobox_pick_method;
 
-		if (this.layer.infocfg["jsonkey"] === undefined) {
-			throw new Error(`Missing mandatory 'infocfg.jsonkey' config for layer '${this.layer.key}`);
+		if (this.layer.infocfg["qrykey"] === undefined) {
+			throw new Error(`Missing mandatory 'infocfg.qrykey' config (info query 'falias' in 'risco_find') for layer '${this.layer.key}`);
 		}
 
+		if (this.layer.infocfg["jsonkey"] === undefined) {
+			throw new Error(`Missing mandatory 'infocfg.jsonkey' config (info query 'alias' in 'risco_find') for layer '${this.layer.key}`);
+		}
+		
 		this.recordcnt = this.data[this.layer.infocfg.jsonkey].length;
 		
 		if (p_styles["navFillStyle"] !== undefined) {
@@ -124,9 +143,12 @@ export class InfoBox extends PopupBox {
 		const lang = (new I18n(this.layer.msgsdict)).getLang();
 
 		p_ctx.save();
-
-		const rows = [];
-		const numcols = 2;
+		this.rows.length = 0;
+		for (const p in this.urls) {
+			if (this.urls.hasOwnProperty(p)) {
+				delete this.urls[p];
+			}
+		}
 
 		if (this.recordidx < 0) {
 			this.recordidx = 0;
@@ -135,6 +157,7 @@ export class InfoBox extends PopupBox {
 		const maxboxwidth = Math.max(GlobalConst.INFO_MAPTIPS_BOXSTYLE["minpopupwidth"], this.mapdims[0] / 2.5);
 		const capttextwidth = GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"] * maxboxwidth;
 		const valuetextwidth = (1 - GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"]) * maxboxwidth;
+		const lineheightfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["lineheightfactor"];
 
 		const recdata = this.data[this.layer.infocfg.jsonkey][this.recordidx];
 
@@ -146,7 +169,7 @@ export class InfoBox extends PopupBox {
 		}
 
 		// collect all field names to publish
-		let fldnames=[];
+		this.ordered_fldnames.length = 0;
 		const unordered_fldnames = [];
 		if (ifkeys.indexOf("add") >= 0) {
 			for (let fld of this.layer.infocfg.fields["add"]) {
@@ -168,32 +191,33 @@ export class InfoBox extends PopupBox {
 		if (this.layer.infocfg.fields["order"] !== undefined) {
 			for (let fld of this.layer.infocfg.fields.order) {
 				if (unordered_fldnames.indexOf(fld) >= 0) {
-					fldnames.push(fld);
+					this.ordered_fldnames.push(fld);
 				}
 			}
 		}
 
 		// complete with fields eventually out of ordered field list
 		for (let fld of unordered_fldnames) {
-			if (fldnames.indexOf(fld) < 0) {
-				fldnames.push(fld);
+			if (this.ordered_fldnames.indexOf(fld) < 0) {
+				this.ordered_fldnames.push(fld);
 			}
 		}
-		for (let fld of fldnames) {
-			canvasWrtField(this, p_ctx, rows, recdata, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth);
+		for (let fld of this.ordered_fldnames) {
+			this.field_row_count[fld] = canvasWrtField(this, p_ctx, recdata, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth, this.rows, this.urls);
 		}	
 		
 		// Calc text dims
-		let row, cota, lnidx, celltxt, changed_found, colsizes=[0,0];
-		for (row of rows) {
-			for (let i=0; i<numcols; i++) {
+		let row, cota, lnidx, celltxt, changed_found;
+		this.colsizes=[0,0];
+		for (row of this.rows) {
+			for (let i=0; i<this.columncount; i++) {
 				if (i==0) {
 					p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
 				} else {
 					p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
 				}
 				for (let rowln of row[i]) {
-					colsizes[i] = Math.max(p_ctx.measureText(rowln).width, colsizes[i]);
+					this.colsizes[i] = Math.max(p_ctx.measureText(rowln).width, this.colsizes[i]);
 				}
 			}
 		}
@@ -201,37 +225,42 @@ export class InfoBox extends PopupBox {
 		// calculate global height of text line - from layer caption font - e
 		p_ctx.font = `${this.layercaptionszPX}px ${this.layercaptionfontfamily}`;
 		const lbltm = p_ctx.measureText(this.layer.label);
-		const txtlnheight = lbltm.actualBoundingBoxAscent - lbltm.actualBoundingBoxDescent;
+		this.txtlnheight = lbltm.actualBoundingBoxAscent - lbltm.actualBoundingBoxDescent;
 
 		// calculate height of all rows
-		let maxrowlen, height, textlinescnt=0, lineheightfactor = 1.8;
-		height = 6*txtlnheight;
-		for (let row, ri=0; ri<rows.length; ri++) {
+		let maxrowlen, height, textlinescnt=0;
+		height = 6*this.txtlnheight;
+		for (let row, ri=0; ri<this.rows.length; ri++) {
 			maxrowlen=0;
-			row = rows[ri];
-			for (let colidx=0; colidx<numcols; colidx++) {
+			row = this.rows[ri];
+			for (let colidx=0; colidx<this.columncount; colidx++) {
 				maxrowlen = Math.max(maxrowlen, row[colidx].length);
 			}
 			textlinescnt += maxrowlen;
 			//cota += maxrowlen * lineheightfactor * txtlnheight + 0.5 * txtlnheight;
 
-			height += 0.5 * txtlnheight;
+			height += 0.5 * this.txtlnheight;
 		}
-		height = height + textlinescnt * lineheightfactor * txtlnheight; // - 2 * txtlnheight;
+		height = height + textlinescnt * lineheightfactor * this.txtlnheight; // - 2 * txtlnheight;
 
-		this._drawBackground(p_ctx, maxboxwidth, height, txtlnheight);
+		this._drawBackground(p_ctx, maxboxwidth, height, this.txtlnheight);
 
 		p_ctx.fillStyle = this.fillTextStyle;
+		p_ctx.strokeStyle = this.URLStyle;
 
-		cota = this.origin[1]+6*txtlnheight;
-		for (row of rows) {
+		cota = this.origin[1]+6*this.txtlnheight;
+		this.topcota = cota - lineheightfactor*this.txtlnheight;
 
+		for (let row, crrfld, ri=0; ri<this.rows.length; ri++) {
+
+			row = this.rows[ri];
 			lnidx = 0;
+			crrfld = this.ordered_fldnames[ri];
 
 			do {
 				changed_found = false;
 
-				for (let colidx=0; colidx<2; colidx++) {
+				for (let colidx=0; colidx<this.columncount; colidx++) {
 
 					if (row[colidx].length > lnidx) {
 						
@@ -241,12 +270,33 @@ export class InfoBox extends PopupBox {
 						if (colidx == 0) {
 							p_ctx.textAlign = "right";
 							p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
-							p_ctx.fillText(celltxt, this.origin[0]+this.leftpad+colsizes[0], cota);		
+							p_ctx.fillText(celltxt, this.origin[0]+this.leftpad+this.colsizes[0], cota);		
 						} else { 
+
+							const textleft = this.origin[0]+this.leftpad+this.colsizes[colidx-1]+colidx*this.betweencols;
+
 							p_ctx.textAlign = "left";
 							p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
-							p_ctx.fillText(celltxt, this.origin[0]+this.leftpad+colsizes[colidx-1]+colidx*this.betweencols, cota);		
+
+							if (this.urls[crrfld] !== undefined) {
+								p_ctx.save();
+								p_ctx.fillStyle = this.URLStyle;
+							}
+
+							p_ctx.fillText(celltxt, textleft, cota);	
+
+							if (this.urls[crrfld] !== undefined) {
+								// underline
+								p_ctx.beginPath();
+								p_ctx.moveTo(textleft, cota+3)
+								p_ctx.lineTo(textleft+p_ctx.measureText(celltxt).width, cota+3);
+								p_ctx.closePath();
+								p_ctx.stroke();
+
+								p_ctx.restore();
+							}
 						}
+
 
 						changed_found = true;
 					}
@@ -254,13 +304,13 @@ export class InfoBox extends PopupBox {
 				}
 
 				if (changed_found) {
-					cota += lineheightfactor * txtlnheight;
+					cota += lineheightfactor * this.txtlnheight;
 					lnidx++;
 				}
 
 			} while (changed_found);
 
-			cota = cota + 0.5 *txtlnheight;
+			cota = cota + 0.5 *this.txtlnheight;
 		}
 
 		if (this.recordcnt > 1) {
@@ -279,6 +329,8 @@ export class InfoBox extends PopupBox {
 	}	
 
 	interact(p_evt, p_ctx) {
+
+		const lineheightfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["lineheightfactor"];
 
 		// in header
 		if (p_evt.clientX >= this.headerbox[0] && p_evt.clientX <= this.headerbox[0] + this.headerbox[2] && 
@@ -320,6 +372,45 @@ export class InfoBox extends PopupBox {
 							}
 					}
 				}
-			} 
+		} else {
+			
+			// checking fldname linked to the area clicked by user
+			let p, prev, next, left, right, first=true, fldname=null, clickedcolidx=-1;
+
+			for (let fld of this.ordered_fldnames) {
+				if (first) {
+					prev = this.topcota;
+				} else {
+					prev = next;
+				}
+				first = false;
+				next = prev + (this.field_row_count[fld] * lineheightfactor * this.txtlnheight) + 0.5 * this.txtlnheight;
+				p = prev + 0.5 * this.txtlnheight;
+				//console.log('   --', fldname, p, next, 'lh:', this.txtlnheight, p_evt.clientY);
+				if (p_evt.clientY >= p && p_evt.clientY < next) {
+					//console.log('*', fld, p, next, p_evt.clientY);
+					fldname = fld;
+					break;
+				}
+			}
+
+			if (fldname && this.columncount > 0) {
+				let foundcolidx = -1;
+				for (let colidx=0; colidx<this.columncount; colidx++) {
+					if (colidx == 0) {
+						left = this.origin[0]+this.leftpad;
+					} else {
+						left = right+this.betweencols;
+					}
+					right = left + this.colsizes[colidx];		
+					if (p_evt.clientX >= left && p_evt.clientX <= right) {
+						foundcolidx = colidx;
+						break;
+					}
+				}
+				this.infobox_static_pick_method(this, this.data[this.layer.infocfg.jsonkey][this.recordidx], fldname, foundcolidx);
+			}
+		} 
 	}
+
 }

@@ -281,6 +281,7 @@ var RISCOJS_LAYERS_CFG = {
 			"infocfg": {
 				"keyfield": "id",
 				"keyisstring": true,
+				"qrykey": "procs_fisca_info",
 				"jsonkey": "procs_fisca_aggregs", 
 				"fields": {
 					"order": [
@@ -296,6 +297,10 @@ var RISCOJS_LAYERS_CFG = {
 					"formats": {
 						"created": {
 							"type": "datetime"
+						},
+						"numbered": {
+							"type": "URL",
+							"format": (value) => `http://portodoc.cm-porto.net/Gfidoc?nup=${value}`
 						}
 					},
 					"transforms": [
