@@ -154,7 +154,8 @@ export class InfoBox extends PopupBox {
 			this.recordidx = 0;
 		}
 
-		const maxboxwidth = Math.max(GlobalConst.INFO_MAPTIPS_BOXSTYLE["minpopupwidth"], this.mapdims[0] / 2.5);
+		const tipsboxfrac = GlobalConst.INFO_MAPTIPS_BOXSTYLE["tipsbox2map_widthfraction"];
+		const maxboxwidth = Math.min(Math.max(GlobalConst.INFO_MAPTIPS_BOXSTYLE["minpopupwidth"], this.mapdims[0] / tipsboxfrac), GlobalConst.INFO_MAPTIPS_BOXSTYLE["maxpopupwidth"]);
 		const capttextwidth = GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"] * maxboxwidth;
 		const valuetextwidth = (1 - GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"]) * maxboxwidth;
 		const lineheightfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["lineheightfactor"];
@@ -268,9 +269,11 @@ export class InfoBox extends PopupBox {
 						//console.log(row, colidx, lnidx, celltxt);
 
 						if (colidx == 0) {
+
 							p_ctx.textAlign = "right";
 							p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
-							p_ctx.fillText(celltxt, this.origin[0]+this.leftpad+this.colsizes[0], cota);		
+							p_ctx.fillText(celltxt, this.origin[0]+this.leftpad+this.colsizes[0], cota);	
+								
 						} else { 
 
 							const textleft = this.origin[0]+this.leftpad+this.colsizes[colidx-1]+colidx*this.betweencols;

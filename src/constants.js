@@ -105,6 +105,7 @@ var GlobalConst = {
 		"rightpad": 10,
 		"betweencols": 10,
 		"minpopupwidth": 280,
+		"maxpopupwidth": 480,
 		"lineheightfactor": 1.8,
 		"caption2value_widthfraction": 0.31,
 		"tipsbox2map_widthfraction": 2.4,
