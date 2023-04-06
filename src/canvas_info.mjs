@@ -12,6 +12,7 @@ export class InfoBox extends PopupBox {
 	navFillStyle;
 	clickboxes;
 	urls;
+	formats;
 	field_row_count;
 	ordered_fldnames;
 	txtlnheight;
@@ -26,6 +27,7 @@ export class InfoBox extends PopupBox {
 		this.data = p_data;
 		this.recordidx = -1;
 		this.urls = {};
+		this.formats = {};
 		this.field_row_count = {};
 		this.ordered_fldnames = [];
 		this.txtlnheight = 0;
@@ -56,6 +58,7 @@ export class InfoBox extends PopupBox {
 	drawnavitems(p_ctx, p_recnum, p_totalrecs) {
 
 		function rightarrow(pp_ctx, p_dims) {
+
 			pp_ctx.beginPath();
 			pp_ctx.moveTo(p_dims[0], p_dims[2]);
 			pp_ctx.lineTo(p_dims[1], p_dims[3]);
@@ -165,7 +168,9 @@ export class InfoBox extends PopupBox {
 		if (this.layer.infocfg.fields["transforms"] !== undefined) {
 			const trfcfgs = this.layer.infocfg.fields.transforms;
 			for (const trcfg of trfcfgs) {
-				recdata[trcfg.outfield] = trcfg.func(recdata);
+				const [data, format] = trcfg.func(recdata);
+				recdata[trcfg.outfield] = data;
+				this.formats[trcfg.outfield] = format;
 			}
 		}
 
@@ -273,7 +278,7 @@ export class InfoBox extends PopupBox {
 							p_ctx.textAlign = "right";
 							p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
 							p_ctx.fillText(celltxt, this.origin[0]+this.leftpad+this.colsizes[0], cota);	
-								
+
 						} else { 
 
 							const textleft = this.origin[0]+this.leftpad+this.colsizes[colidx-1]+colidx*this.betweencols;

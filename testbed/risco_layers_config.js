@@ -307,15 +307,18 @@ var RISCOJS_LAYERS_CFG = {
 						{
 							"outfield": "estado",
 							"func": function(p_rec) {
-								let ret = "";
+								let data = "", format=null;
 								if (p_rec.arquivado) {
-									ret = "arquivado";
+									data = "arquivado";
+									format = { "backgroundColor": "purple" };
 								} else if (p_rec.aggregationstatus == "OPEN") {
-									ret = "aberto";
+									data = "aberto";
+									format = { "backgroundColor": "green" };
 								} else if (p_rec.aggregationstatus == "FECHADO") {
-									ret = "fechado";
+									data = "fechado";
+									format = { "backgroundColor": "red" };
 								}
-								return ret;
+								return [data, format];
 							}}
 					]
 				},
