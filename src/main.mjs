@@ -148,6 +148,8 @@ export class RiscoMapCtx {
 		this.toolmgr = new ToolManager(p_config_var["basic"], this.editmgr);
 		this.tocmgr = new TOCManager(this, p_mode);
 		this.i18n = new I18n(p_config_var["text"]);
+
+		this._refreshing = false;
 	
 
 		this.#customization_instance = null;
@@ -246,13 +248,25 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		return this.transformmgr.getPixSize();
 	}
 
-	maprefresh() {
+	_maprefresh() {
 		//console.info(">>>>>           draw            <<<<<");
 		const sv = this.transformmgr.getReadableCartoScale();
 		this.printScale(sv);
 		this.featureCollection.invalidate();
 		this.tocmgr.tocrefresh(sv);
 	}
+
+	// throttled
+	maprefresh() {
+		if (!this._refreshing) {
+			this._refreshing = true;
+			this._maprefresh();
+			const that = this;
+			setTimeout(function() {
+				that._refreshing = false;
+			}, 500);
+		}
+	}	
 
 	transformsChanged(b_dodraw) {
 		// console.info(">>>>>     transformsChanged     <<<<<");
