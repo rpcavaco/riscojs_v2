@@ -319,7 +319,14 @@ var RISCOJS_LAYERS_CFG = {
 									format = { "backgroundColor": "red" };
 								}
 								return [data, format];
-							}}
+							}
+						}
+						/*{
+							"outfield": "subjectpartrecord_title",
+							"func": function(p_rec) {
+								return [p_rec.subjectpartrecord_title, { "backgroundColor": "red" }];
+							}
+						}		*/				
 					]
 				},
 				"aggfields": [

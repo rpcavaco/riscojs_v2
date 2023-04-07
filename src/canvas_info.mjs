@@ -213,7 +213,7 @@ export class InfoBox extends PopupBox {
 		}	
 		
 		// Calc text dims
-		let row, cota, lnidx, celltxt, changed_found;
+		let row, cota, lnidx, lineincell_txt, txtdims, changed_found;
 		this.colsizes=[0,0];
 		for (row of this.rows) {
 			for (let i=0; i<this.columncount; i++) {
@@ -232,6 +232,8 @@ export class InfoBox extends PopupBox {
 		p_ctx.font = `${this.layercaptionszPX}px ${this.layercaptionfontfamily}`;
 		const lbltm = p_ctx.measureText(this.layer.label);
 		this.txtlnheight = lbltm.actualBoundingBoxAscent - lbltm.actualBoundingBoxDescent;
+
+		// ROWS: are not data rows, are rows of printing, each row corresponds to an atrribute or data field
 
 		// calculate height of all rows
 		let maxrowlen, height, textlinescnt=0;
@@ -257,47 +259,90 @@ export class InfoBox extends PopupBox {
 		cota = this.origin[1]+6*this.txtlnheight;
 		this.topcota = cota - lineheightfactor*this.txtlnheight;
 
-		for (let row, crrfld, ri=0; ri<this.rows.length; ri++) {
+		// loop through printing rows
+
+		let crrfld, fmt, bgwidth, textorig_x;
+
+		for (let ri=0; ri<this.rows.length; ri++) {
 
 			row = this.rows[ri];
 			lnidx = 0;
 			crrfld = this.ordered_fldnames[ri];
+			fmt = this.formats[crrfld];
+
+			// ---- Draw row backgrounds ----
+
+			// loop layout columns
+			for (let hunit, colidx=0; colidx<this.columncount; colidx++) {
+
+				// for now, draw backgrounds only on value cells
+				if (colidx % 2 == 1 && fmt != null && fmt !== undefined && fmt["backgroundColor"] !== undefined) {
+					
+					bgwidth = 0;
+					// loop lines of text to get max textwidth
+					for (lineincell_txt of row[colidx]) {
+						txtdims = p_ctx.measureText(lineincell_txt);
+						if (txtdims.width > bgwidth) {
+							bgwidth = txtdims.width;
+						}
+					}
+					bgwidth += 6;
+					textorig_x = this.origin[0]+this.leftpad+this.colsizes[colidx-1]+colidx*this.betweencols;
+					hunit = lineheightfactor * this.txtlnheight;
+
+					p_ctx.save();
+					p_ctx.fillStyle = fmt["backgroundColor"];
+					p_ctx.fillRect(textorig_x-3, cota - hunit, bgwidth, row[colidx].length * hunit + 0.5 * this.txtlnheight);
+					p_ctx.restore();
+
+				}
+			}
+
+			// --- Draw row's text ----
+
+			// loop text lines per each row
 
 			do {
 				changed_found = false;
+
+				// loop layout columns
 
 				for (let colidx=0; colidx<this.columncount; colidx++) {
 
 					if (row[colidx].length > lnidx) {
 						
-						celltxt = row[colidx][lnidx];
+						lineincell_txt = row[colidx][lnidx];
 						//console.log(row, colidx, lnidx, celltxt);
 
-						if (colidx == 0) {
+						if (colidx % 2 == 0) { //  EVEN COLUNNS 
 
 							p_ctx.textAlign = "right";
 							p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
-							p_ctx.fillText(celltxt, this.origin[0]+this.leftpad+this.colsizes[0], cota);	
+							p_ctx.fillText(lineincell_txt, this.origin[0]+this.leftpad+this.colsizes[0], cota);	
 
-						} else { 
+						} else {  //  odd COLUNNS 
 
-							const textleft = this.origin[0]+this.leftpad+this.colsizes[colidx-1]+colidx*this.betweencols;
+							textorig_x = this.origin[0]+this.leftpad+this.colsizes[colidx-1]+colidx*this.betweencols;
+
+							// Drawing values text
+							// console.log(">>", lineincell_txt, fmt);
 
 							p_ctx.textAlign = "left";
 							p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
+							txtdims = p_ctx.measureText(lineincell_txt);
 
 							if (this.urls[crrfld] !== undefined) {
 								p_ctx.save();
 								p_ctx.fillStyle = this.URLStyle;
 							}
 
-							p_ctx.fillText(celltxt, textleft, cota);	
+							p_ctx.fillText(lineincell_txt, textorig_x, cota);	
 
 							if (this.urls[crrfld] !== undefined) {
 								// underline
 								p_ctx.beginPath();
-								p_ctx.moveTo(textleft, cota+3)
-								p_ctx.lineTo(textleft+p_ctx.measureText(celltxt).width, cota+3);
+								p_ctx.moveTo(textorig_x, cota+3)
+								p_ctx.lineTo(textorig_x+txtdims.width, cota+3);
 								p_ctx.closePath();
 								p_ctx.stroke();
 
@@ -317,6 +362,8 @@ export class InfoBox extends PopupBox {
 				}
 
 			} while (changed_found);
+
+			// end of text lines loop
 
 			cota = cota + 0.5 *this.txtlnheight;
 		}
