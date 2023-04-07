@@ -451,8 +451,8 @@ export class TOCManager {
 							console.log("[DBG:VECTLOAD] nextdraw, after getStats", li, this.layers[li].key, "loading:", this.layers[li].isLoading());
 						}
 					}
-				} finally {
-					this._prefrefresh = false;
+				} catch(e) {
+					this.layers[li].doCancel();
 				}
 				//this.mapctx.removePrint("loadingmsgprint");
 			} else {
@@ -474,6 +474,13 @@ export class TOCManager {
 	}
 
 	signalVectorLoadFinished(p_finished_key) {
+
+		//Clear all prerefreshed flags found true
+		for (let l of this.layers) {
+			if (l._prerefreshed !== undefined && l._prerefreshed) {
+				l._prerefreshed = false;
+			}
+		}
 
 		const li = 0;
 

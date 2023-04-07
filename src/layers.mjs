@@ -165,7 +165,7 @@ export class Layer {
 	}
 
 	isCanceled() {
-		// console.info(`[***] Checking layer ${this.key} is canceled: ${this._drawingcanceled}`);
+		//console.info(`[***] Checking layer ${this.key} is canceled: ${this._drawingcanceled}`);
 		let ret =  this._drawingcanceled;
 		return ret;
 	}
@@ -175,8 +175,11 @@ export class Layer {
 		this._drawingcanceled = false;
 	}
 
+
 	doCancel() {
+
 		console.info(`[INFO] Layer ${this.key} was canceled`);
+		console.trace();
 		this._drawingcanceled = true;
 	}
 
@@ -321,10 +324,11 @@ export class VectorLayer extends featureLayersMixin(vectorLayersMixin(Layer)) {
 export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Layer)) {
 
 	featchunksloading = {};
-	_prefreshed = false;
+	_prerefreshed = false;
 
 	isLoading() {
-		return this._prefreshed || (Object.keys(this.featchunksloading) > 0);
+		// console.info(`[***] Checking layer ${this.key} is loading, preref: ${this._prerefreshed} OR featchkld:${Object.keys(this.featchunksloading).length}>0`);
+		return this._prerefreshed || (Object.keys(this.featchunksloading).length > 0);
 	}
 
 	constructor() {
@@ -332,7 +336,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 	}
 
 	doCancel() {
-		this._prefreshed = false;
+		this._prerefreshed = false;
 		super.doCancel();
 	}
 
@@ -365,7 +369,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 			console.log(`[WARN:LAYERS] Remote vector layer '${this.key}' is not inited`);
 			return false;
 		}
-		this._prefreshed = true;
+		this._prerefreshed = true;
 
 
 		return true;
@@ -381,7 +385,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 	// main diff: layeritems should not be a generator
 	refresh(p_mapctx, p_prep_data) {
 
-		this._prefreshed = false;
+		this._prerefreshed = false;
 
 		if (this.isCanceled()) {		
 			return true;
