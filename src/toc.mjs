@@ -35,11 +35,25 @@ export class TOCManager {
 		this.mapctx = p_mapctx;
 		this.initLayersFromConfig();
 		this.drawlist = [];
+		this._refreshing = false;
 	}
+
 	static readLayerConfigItem(p_lyrob, p_configvar, p_layerkey, p_itemname) {
 		if (p_configvar.lorder[p_layerkey][p_itemname] !== undefined) {	
 			p_lyrob[p_itemname]	= p_configvar.lorder[p_layerkey][p_itemname];
 		}
+	}
+
+	isRefreshing() {
+		return this._refreshing;
+	}
+
+	startedRefreshing() {
+		this._refreshing = true;
+	}	
+
+	finishedRefreshing() {
+		this._refreshing = false;
 	}
 
 	getLayer(p_layerkey) {
@@ -287,9 +301,11 @@ export class TOCManager {
 
 	tocrefresh(p_scaleval) {
 
-		console.info(`[INFO] attempting to refresh ${this.layers.length} layers at scale 1:${p_scaleval}`);
+		console.warn(`[INFO] attempting to refresh ${this.layers.length} layers at scale 1:${p_scaleval}`);
 		//this.mapctx.printLoadingMsg(`${this.layers.length} layers`);
-		
+
+		this.startedRefreshing();
+
 		const ckeys = new Set();
 		for (let li=0; li < this.layers.length; li++) {
 			ckeys.add(this.layers[li].canvasKey);
@@ -321,6 +337,8 @@ export class TOCManager {
 		if (the_raster_layer_i >= 0) {
 			canceled = this.layers[the_raster_layer_i].refresh(this.mapctx);
 		}
+
+		//console.error(`[!!!] Canceled flag: ${canceled}, after raster base`);
 
 		if (canceled) {
 			console.error(`[WARN] Drawing canceled after raster base`);
@@ -365,28 +383,6 @@ export class TOCManager {
 			return ret;
 		}
 
-		/*
-		*   In case filldrawlist would bre relaunched after failing.
-		* 
-		* 	Not needed, failing occurs in the middle a cascade of succesive refreshes, 
-		*    another following request should achieve a correct filldrawlist execution.
-		*   Relaunching fillings creates real havoc, worst than a rare eventual catastrophic failure of
-		*    this refresh process.
-
-		let cnt = 6;
-		(function loop(p_this, p_cnt) {
-			p_cnt--;
-			if (!fillDrawlist(p_this) && p_cnt >= 0) {
-				setTimeout(function() {
-					if (GlobalConst.getDebug("VECTLOAD")) {
-						console.log("[DBG:VECTLOAD] prev fillDrawlist failed, new attempt ...");
-					}
-					loop(p_this, p_cnt);
-				}, 20);
-			}
-
-		})(this, cnt); */
-
 		fillDrawlist(this);
 
 		// this.mapctx.removePrint("loadingmsgprint");
@@ -407,6 +403,8 @@ export class TOCManager {
 
 		// Finish drawing layers from drawlist
 		if (this.drawlist.length < 1) {
+
+			this.finishedRefreshing();
 
 			this.mapctx.removePrint("loadingmsgprint");
 

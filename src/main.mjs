@@ -149,7 +149,7 @@ export class RiscoMapCtx {
 		this.tocmgr = new TOCManager(this, p_mode);
 		this.i18n = new I18n(p_config_var["text"]);
 
-		this._refreshing = false;
+		this._refresh_timeout_id = null;
 	
 
 		this.#customization_instance = null;
@@ -248,25 +248,30 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		return this.transformmgr.getPixSize();
 	}
 
-	_maprefresh() {
-		//console.info(">>>>>           draw            <<<<<");
-		const sv = this.transformmgr.getReadableCartoScale();
-		this.printScale(sv);
-		this.featureCollection.invalidate();
-		this.tocmgr.tocrefresh(sv);
-	}
-
-	// throttled
 	maprefresh() {
-		if (!this._refreshing) {
-			this._refreshing = true;
-			this._maprefresh();
-			const that = this;
-			setTimeout(function() {
-				that._refreshing = false;
-			}, 700);
+
+		if (this.tocmgr.isRefreshing()) {
+
+			// Prevent effective re-refreshing calls while refresh process is still in progress
+			// A single refresh call is delayed to happen after previous refresh process is finished
+			
+			if (this._refresh_timeout_id) {
+				clearTimeout(this._refresh_timeout_id);
+			}
+
+			(function(p_this, p_delay_msecs) {
+				p_this._refresh_timeout_id = setTimeout(function() {
+					p_this.maprefresh();
+				}, p_delay_msecs);
+			})(this, 700);
+
+		} else {
+			const sv = this.transformmgr.getReadableCartoScale();
+			this.printScale(sv);
+			this.featureCollection.invalidate();
+			this.tocmgr.tocrefresh(sv);
 		}
-	}	
+	}
 
 	transformsChanged(b_dodraw) {
 		// console.info(">>>>>     transformsChanged     <<<<<");
