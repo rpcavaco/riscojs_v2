@@ -356,7 +356,7 @@ export class TOCManager {
 					}
 
 					if (GlobalConst.getDebug("VECTLOAD")) {
-						console.log("[DBG:VECTLOAD] fillDrawlist, added to dlist:", pp_this.layers[li].key, "loading:", isloading, "canceled:", pp_this.layers[li].isCanceled(), pp_this.layers[li]._drawingcanceled);
+						console.log("[DBG:VECTLOAD] fillDrawlist, added to dlist:", pp_this.layers[li].key, "loading:", isloading, "canceled:", pp_this.layers[li].isCanceled(), pp_this.layers[li].isCanceled());
 					}
 					pp_this.drawlist.push(li);
 				}

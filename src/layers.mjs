@@ -229,7 +229,7 @@ const vectorLayersMixin = (Base) => class extends Base {
 			// console.log("-- 297 --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);
 			// console.log("-- 239 --", gfctx.strokeStyle, gfctx.lineWidth);
 
-			if (this._drawingcanceled) {
+			if (this.isCanceled()) {
 				cancel = true;		
 			} else  {
 
@@ -247,7 +247,7 @@ const vectorLayersMixin = (Base) => class extends Base {
 							break;
 						}
 
-						if (this._drawingcanceled) {
+						if (this.isCanceled()) {
 							cancel = true;
 							break;
 						}				
@@ -399,7 +399,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 			// console.log("-- env --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);
 			//console.log("-- 338 --", gfctx.strokeStyle, gfctx.lineWidth);
 
-			if (this._drawingcanceled) {
+			if (this.isCanceled()) {
 				cancel = true;
 			
 			} else  {
@@ -425,7 +425,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 						break;						
 					}
 
-					if (this._drawingcanceled) {
+					if (this.isCanceled()) {
 						cancel = true;
 						break;
 					}
@@ -513,7 +513,7 @@ export class RasterLayer extends Layer {
 
 		try {
 
-			if (!this._drawingcanceled) {
+			if (!this.isCanceled()) {
 
 				if (GlobalConst.getDebug("LAYERS")) {
 					console.log(`[DBG:LAYERS] Layer '${this.key}' drawing, gettings envs`);
@@ -532,7 +532,7 @@ export class RasterLayer extends Layer {
 					//console.log("-- 220 env --", terrain_env, " canceled:", this._drawingcanceled);
 					//console.log("-- 221 screnv,dims,envk --", scr_env, dims, envkey);
 
-					if (this._drawingcanceled) {
+					if (this.isCanceled()) {
 						cancel = true;
 						break;
 					}
@@ -547,7 +547,7 @@ export class RasterLayer extends Layer {
 							cancel = true;
 							break;
 						}
-						if (this._drawingcanceled) {
+						if (this.isCanceled()) {
 							cancel = true;
 							break;
 						}				
