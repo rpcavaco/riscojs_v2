@@ -727,7 +727,7 @@ export class AGSQryLayer extends RemoteVectorLayer {
 								delete that.featchunksloading[tmpchkid];
 							}
 						}
-						that._drawingcanceled = false;
+						that.resetCanceled();
 						return;
 					}
 										
@@ -766,7 +766,9 @@ export class AGSQryLayer extends RemoteVectorLayer {
 						}
 
 					} catch(e) {
+
 						console.error(e);
+						
 					} finally {
 
 						if (that.featchunksloading[chunk_id] !== undefined) {

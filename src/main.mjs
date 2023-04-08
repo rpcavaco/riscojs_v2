@@ -264,7 +264,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			const that = this;
 			setTimeout(function() {
 				that._refreshing = false;
-			}, 500);
+			}, 700);
 		}
 	}	
 

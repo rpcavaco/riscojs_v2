@@ -377,7 +377,7 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 								delete that.featchunksloading[tmpchkid];
 							}
 						}
-						that._drawingcanceled = false;
+						that.resetCanceled();
 						return;
 					}
 
@@ -443,7 +443,7 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 								if (GlobalConst.getDebug("VECTLOAD")) {
 									console.log(`[DBG:VECTLOAD] Finished loading'${that.key}'`);
 								}
-								that._drawingcanceled = false; 
+								that.resetCanceled(); 
 								p_mapctxt.tocmgr.signalVectorLoadFinished(that.key);
 							}
 			
