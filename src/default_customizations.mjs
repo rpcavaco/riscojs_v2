@@ -3,6 +3,7 @@ import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
 import {MaptipBox} from './canvas_maptip.mjs';
 import {InfoBox} from './canvas_info.mjs';
+// import {Toolfaces} from './canvas_toolfaces.mjs';
 
 class MapPrintInRect {
 
@@ -24,7 +25,7 @@ class MapPrintInRect {
 
 	remove(p_mapctx) {
 		const canvas_dims = [];
-		const gfctx = p_mapctx.renderingsmgr.getDrwCtx('service', '2d');
+		const gfctx = p_mapctx.renderingsmgr.getDrwCtx('service_canvas', '2d');
 		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
 		gfctx.clearRect(this.right-this.boxw, this.bottom-this.boxh, this.boxw, this.boxh); 
@@ -52,7 +53,7 @@ class MousecoordsPrint extends PermanentMessaging {
 		const terr_pt = [], canvas_dims = [];
 		p_mapctx.transformmgr.getTerrainPt([p_x, py], terr_pt);
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx('service', '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx('service_canvas', '2d');
 		ctx.save();
 
 		try {
@@ -93,7 +94,7 @@ class MapScalePrint extends PermanentMessaging {
 	print(p_mapctx, p_scaleval) {
 
 		const canvas_dims = [];
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx('service', '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx('service_canvas', '2d');
 		ctx.save();
 
 		try {
@@ -141,7 +142,7 @@ class LoadingPrint extends LoadingMessaging {
 	print(p_mapctx, p_msg) {
 
 		const canvas_dims = [];
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx('service', '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx('service_canvas', '2d');
 		ctx.save();
 
 		try {
@@ -178,7 +179,7 @@ class Info {
 	// curr_featid;
 	callout;
 	ibox;
-	canvaslayer = 'viz';
+	canvaslayer = 'interactive_viz';
 	styles;
 
 	constructor(p_styles) {
@@ -269,10 +270,26 @@ class Info {
 	}
 }
 
+/*
+class BasicCtrlBox {
+	canvaslayer = 'service_canvas';
+	constructor() {
+		this.toolfacesbox = new Toolfaces();
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
+		that.ibox.clear(ctx);
+		that.ibox.draw(ctx);				
+
+	}
+
+	
+}
+*/
+
 export class MapCustomizations {
 
 	constructor() {
 		this.instances = {
+			//"basiccontrolsbox": new BasicCtrlBox(),
 			"mousecoordsprint": new MousecoordsPrint(),
 			"mapscaleprint": new MapScalePrint(),
 			"loadingmsgprint": new LoadingPrint(),

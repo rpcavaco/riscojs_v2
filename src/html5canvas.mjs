@@ -8,7 +8,9 @@
  *  b) 'normal' vector drawing
  *  c) 'temporary' vector, like highlights
  *  d) 'transient' vectors, e.g.: mouse interaction or viewport manipulation artifacts
- *  e) 'service' for servicing warnings and messages
+ *  e) 'calculated_viz' dataviz or charting
+ *  f) 'interactive_viz' popups 
+ *  g) 'service_canvas' for servicing warnings, messages, toolwdigets
  * 
  * @param {object} p_paneldiv - Non-null reference to panel's DIV DOM object
  * @param {integer} opt_base_zindex - Optional z-index for bottom canvas
@@ -30,7 +32,7 @@
 
 		this.canvases = {};
 
-		this.canvaskeys = ['base', 'normal', 'labels', 'temporary', 'transient', 'viz', 'service'];
+		this.canvaskeys = ['base', 'normal', 'labels', 'temporary', 'transient', 'calculated_viz', 'interactive_viz',  'service_canvas'];
 		for (let i=0; i<this.canvaskeys.length; i++) {
 
 			this.canvases[this.canvaskeys[i]] = document.createElement('canvas');

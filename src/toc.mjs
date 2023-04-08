@@ -301,7 +301,7 @@ export class TOCManager {
 
 	tocrefresh(p_scaleval) {
 
-		console.warn(`[INFO] attempting to refresh ${this.layers.length} layers at scale 1:${p_scaleval}`);
+		console.info(`[INFO TOCREFRESH] attempt refresh ${this.layers.length} layers at scale 1:${p_scaleval}`);
 		//this.mapctx.printLoadingMsg(`${this.layers.length} layers`);
 
 		this.startedRefreshing();
@@ -313,7 +313,8 @@ export class TOCManager {
 		ckeys.add('labels');
 		ckeys.add('transient');
 		ckeys.add('temporary');
-		ckeys.add('viz');
+		ckeys.add('interactive_viz');
+		ckeys.add('calculated_viz');
 
 		this.mapctx.renderingsmgr.clearAll(ckeys);
 

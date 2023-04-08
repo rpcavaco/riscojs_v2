@@ -1,4 +1,6 @@
 
+-------------------------------- Features -------------------------------
+
 - OK - 3 níveis drawing: obter envs, gerar itens (features ou outros), desenhar
 - DESNECessario - mouse wheel throttle - passar para classe acima na hierarquia
 - OK - parar load de imagem desnecessário
@@ -33,11 +35,11 @@
 - OK - fomatos risco - features (para garantir material de teste vetorial)
 	- OK - poly / line 
 	- OK - points
+- OK - info na multi tool (no mouse up sem drag) e ficha de feat no mouse move
 
 - Edição
 
-- Legenda
-- >> TOC
+
 
 - ? - dependências de escala
 	- visibilidade
@@ -50,26 +52,26 @@
 
 - validar main configs
 
-- OK - info na multi tool (no mouse up sem drag) e ficha de feat no mouse move
-
-- risco server -- pedido de stats comum a várias layers
-	- getStatsURL opt_filter
-
 - WFS xml
 
 - layered symbs
 
 - flatgeobuf
 
-- zoom janela e ferramenta base de desenho de janela
+
+
+--------------------------------- UI/Widgets  -------------------------------
+
+>> - Controles mínimos zooming
+- Legenda
+- TOC
+
+----------------------------------- Tools  ----------------------------------
+
 - PARCIAL - measuring tool
-- controle de erros em todos os fetches, copiar das feats de AGSQuery
-- cancelamento de uma layer não cancela a casta de layers seguintes durante refresh
+- zoom janela e ferramenta base de desenho de janela
 
-
-
-
-Nice to Have
+-------------------------------- Nice to Have -------------------------------
 
 - HDR
 - rotação
@@ -80,11 +82,6 @@ Nice to Have
 - ?? - formatos risco - imagem
 
 
-Integração geral
-
-- novos riscowidgets e risco web client (onde se junta tudo)
-
-
 ---------------------------------- ISSUES -------------------------------------
 
 - Bug 0001 - SOLVED,VERIFYING - Algumas features em redesenho, quando há muita intensidade de refresh
@@ -93,8 +90,28 @@ Integração geral
 
 	(A carecer de atenção urgente)
 
-- PARTIAL - MissingFeat 0001 - PENDING - Reação à falta de disponibilidade em cada layer
+- OK - MissingFeat 0001 - PENDING - Reação à falta de disponibilidade em cada layer
 - OK - MissingFeat 0002 - PENDING - Obter URL para Info
 
+
+
+------------------------------ RISCO SERVER -----------------------------------
+
+
+-- pedido de stats comum a várias layers
+-- getStatsURL opt_filter
+
+
+
+-------------------------------------------------------------------------------
+ANTIGO - Notas sobre 'Integração geral' riscojs + riscomaps / riscowidgets
+-------------------------------------------------------------------------------
+
+- novos riscowidgets e risco web client (onde se junta tudo) -
+
+	Desde Jan 2023
+
+	OS WIDGETS foram absorvidos por este projeto, passaram a ser desenhados em Canvas.
+	Localizador tb. integrado, apesar de ser HTML
 
 
