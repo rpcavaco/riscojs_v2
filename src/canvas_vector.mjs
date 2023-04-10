@@ -841,98 +841,9 @@ export class CanvasAreaGridLayer extends canvasVectorMethodsMixin(AreaGridLayer)
 
 export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
 
-	/*
-	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
-
-		let ret = true;
-
-		if (this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, opt_symbs)) {
-
-			try {
-
-				ret = this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
-
-			} catch(e) {
-				throw e;
-			} finally {
-				this.releaseGf2DCtx();
-			}	
-			
-		}
-
-		return ret;
-
-	}
-	*/
 }
 
 export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLayer) {
-
-	/*
-	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
-
-		let ret = true;
-		let pathoptsymbs = null;
-		let lbloptsymbs = null;
-		let lblcontent = null;
-		let labelfield = null;
-
-		if (this['labelfield'] !== undefined && this['labelfield'] != "none") {
-			labelfield = this['labelfield'];
-		}
-
-		if (opt_symbs) {
-			if (opt_symbs['path'] !== undefined)
-				pathoptsymbs = opt_symbs['path'];
-			if (opt_symbs['label'] !== undefined)
-				lbloptsymbs = opt_symbs['label'];
-		}
-
-		if (this.grabGf2DCtx(p_mapctxt, opt_alt_canvaskey, pathoptsymbs)) {
-			try {
-				ret = this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
-			} catch(e) {
-				console.log(p_coords, p_path_levels);
-				throw e;
-			} finally {
-				this.releaseGf2DCtx();
-			}				
-		}
-
-		if (ret && labelfield != null) {
-		
-			lblcontent = null;
-			if (p_attrs[labelfield] !== undefined) {
-				lblcontent = p_attrs[labelfield];
-			} else if (opt_feat_id != null && GlobalConst.TYPICAL_OIDFLDNAMES.indexOf(labelfield.toLowerCase()) >= 0) {
-				lblcontent = opt_feat_id.toString();
-			}
-
-			if (lblcontent !== null) {
-
-				// if (p_attrs["cod_topo"] != "JMOLI0") {
-				//	return;
-				//}
-
-				if (this.grabLabelGf2DCtx(p_mapctxt, opt_alt_canvaskey, lbloptsymbs)) {
-					try {
-						ret = this.drawLabel(p_mapctxt, p_coords, p_path_levels, lblcontent, opt_terrain_env);
-					} catch(e) {
-						console.log(p_coords, labelfield, lblcontent);
-						throw e;
-					} finally {
-						this.releaseGf2DCtx();
-					}				
-				}
-			}
-
-		}
-
-		return ret;
-
-	}
-	*/
-
 
 }
 
