@@ -58,13 +58,14 @@
 
 - flatgeobuf
 
-
+>> - necessário separar o que é customização do que são classes - base em default_customizations.mjs
 
 --------------------------------- UI/Widgets  -------------------------------
 
 >> - Controles mínimos zooming
 - Legenda
 - TOC
+- hovering events over control surfaces of widgets
 
 ----------------------------------- Tools  ----------------------------------
 

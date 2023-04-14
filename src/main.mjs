@@ -1,7 +1,6 @@
 import {HTML5CanvasMgr} from './html5canvas.mjs';
 import {Transform2DMgr} from './transformations.mjs';
 import {ToolManager} from './interactions.mjs';
-import {EditsManager} from './editing.mjs';
 import {TOCManager} from './toc.mjs';
 import {FeatureCollection} from './feature_collection.mjs';
 import {I18n} from './i18n.mjs';
@@ -144,8 +143,7 @@ export class RiscoMapCtx {
 		}
 		this.featureCollection = new FeatureCollection(this);
 		this.transformmgr = new Transform2DMgr(this, p_config_var["basic"]);	
-		this.editmgr = new EditsManager();		
-		this.toolmgr = new ToolManager(p_config_var["basic"], this.editmgr);
+		this.toolmgr = new ToolManager(p_config_var["basic"]);
 		this.tocmgr = new TOCManager(this, p_mode);
 		this.i18n = new I18n(p_config_var["text"]);
 
@@ -159,7 +157,7 @@ export class RiscoMapCtx {
 			const evttypes = ["mouseup", "mousedown", "mousemove", "mouseover", "mouseout", "mouseleave", "wheel"];
 			for (let i=0; i<evttypes.length; i++) {
 				p_mapctx.panelwidget.addEventListener(evttypes[i], function(e) { 
-					p_mapctx.onEvent(e);
+					p_mapctx.mxOnEvent(e);
 				}); 
 			}
 		})(this);	
@@ -183,18 +181,25 @@ export class RiscoMapCtx {
 	}
 
 	setCurrentUser(p_username) {
-		this.editmgr.setCurrentUser(p_username);
+		this.toolmgr.setCurrentUser(p_username);
 	}
 
 	/**
 	 * @param {any} p_cclass
 	 */
 	setCustomizationObj(p_instance) {
+
 		this.#customization_instance = p_instance;
+
+		if (this.#customization_instance.instances["basiccontrolsbox"] !== undefined) {
+			this.toolmgr.addControlsMgr("basiccontrolsbox", this.#customization_instance.instances["basiccontrolsbox"]);
+		}		
+
 		if (this.wait_for_customization_avail) {
 			this.maprefresh();
 		}		
 	}
+
 	getCustomizationInstance() {
 		return this.#customization_instance;
 	}
@@ -221,8 +226,8 @@ export class RiscoMapCtx {
 	 * @param {object} p_mapctx - Map context for which interactions managing is needed
 s 	 * @param {object} p_evt - Event (user event expected)
 	 */
-	onEvent(p_evt) {
-		this.toolmgr.onEvent(this, p_evt);
+	mxOnEvent(p_evt) {
+		this.toolmgr.tmOnEvent(this, p_evt);
 		p_evt.stopPropagation();
 	}	
 
@@ -248,6 +253,16 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		return this.transformmgr.getPixSize();
 	}
 
+	drawBasicControls() {
+		const ci = this.getCustomizationInstance();
+		if (ci && ci.instances["basiccontrolsbox"] !== undefined) {
+			const bcb = ci.instances["basiccontrolsbox"];
+			if (bcb.print !== undefined) {
+				bcb.print(this);
+			}
+		}		
+	}
+
 	maprefresh() {
 
 		if (this.tocmgr.isRefreshing()) {
@@ -266,10 +281,18 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			})(this, 700);
 
 		} else {
+
+			this.drawBasicControls();
+
 			const sv = this.transformmgr.getReadableCartoScale();
+			// print decorated map scale widget 
 			this.printScale(sv);
+
 			this.featureCollection.invalidate();
+			// maplayers refresh
 			this.tocmgr.tocrefresh(sv);
+
+
 		}
 	}
 

@@ -183,6 +183,30 @@ class TransformsQueue {
 		console.info("[init RISCO]  2D transform env prepared");
 
 	}
+
+	static _step(p_auxscale, p_step) {
+
+		let step = 0;
+
+		if (p_auxscale < 600) {
+			step = p_step;
+		} else if (p_auxscale < 1500) {
+			step = p_step * 1.5;
+		} else if (p_auxscale < 2000) {
+			step = p_step * 3;
+		} else if (p_auxscale < 3000) {
+			step = p_step * 5;
+		} else if (p_auxscale < 5000) {
+			step = p_step * 8;
+		} else if (p_auxscale < 7000) {
+			step = p_step * 10;
+		} else {
+			step = p_step * 14;
+		}
+
+		return step;
+	}
+
 	/**
 	 * Method init 
 	 * Initiate transforms manager with config values or reset it to those initial values
@@ -351,7 +375,13 @@ class TransformsQueue {
 		return ctrans.getPixSize();
 	}	
 
-	setScaleCenteredAtPoint(p_scaleval, p_screen_pt, do_store) {
+	setScaleCenteredAtPoint(p_scaleval, p_terrain_pt, do_store) {
+
+		this.setScaleFromReadableCartoScale(p_scaleval, false);
+		this.setCenter(p_terrain_pt[0], p_terrain_pt[1], do_store);		
+	}
+
+	setScaleCenteredAtScrPoint(p_scaleval, p_screen_pt, do_store) {
 
 		const cen= [], terr_pt_from = [], terr_pt_to = [], newpt = [];
 
@@ -367,6 +397,43 @@ class TransformsQueue {
 		newpt[1] = cen[1] + terr_pt_from[1] - terr_pt_to[1];	
 
 		this.setCenter(newpt[0], newpt[1], do_store);		
+	}
+
+	setScaleCenteredAtScreenCenter(p_scaleval, do_store) {
+
+		const cdims = [], cen= [], terr_pt_from = [], terr_pt_to = [], newpt = [];
+
+		this.mapctx.renderingsmgr.getCanvasDims(cdims);
+		this.getTerrainPt([cdims[0] / 2, cdims[1] / 2], terr_pt_from);
+
+		this.setScaleFromReadableCartoScale(p_scaleval, false);
+
+		this.getTerrainPt([cdims[0] / 2, cdims[1] / 2], terr_pt_to);
+		this.getCenter(cen);
+
+		newpt.length = 2;
+		newpt[0] = cen[0] + terr_pt_from[0] - terr_pt_to[0];
+		newpt[1] = cen[1] + terr_pt_from[1] - terr_pt_to[1];	
+
+		this.setCenter(newpt[0], newpt[1], do_store);		
+	}
+
+	zoomOut(p_maxscale, p_step, do_store) {
+
+		const auxscale = this.getReadableCartoScale();
+
+		const scl = Math.min(auxscale + this.constructor._step(auxscale, p_step), p_maxscale);
+		this.setScaleCenteredAtScreenCenter(scl, do_store);
+	}
+
+
+
+	zoomIn(p_minscale, p_step, do_store) {
+
+		const auxscale = this.getReadableCartoScale();
+
+		const scl = Math.max(auxscale - this.constructor._step(auxscale, p_step), p_minscale);
+		this.setScaleCenteredAtScreenCenter(scl, do_store);
 	}
 
 	/**

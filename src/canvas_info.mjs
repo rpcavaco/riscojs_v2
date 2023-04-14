@@ -383,7 +383,7 @@ export class InfoBox extends PopupBox {
 		p_ctx.clearRect(0, 0, ...this.mapdims); 
 	}	
 
-	interact(p_evt, p_ctx) {
+	interact(p_ctx, p_evt) {
 
 		const lineheightfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["lineheightfactor"];
 

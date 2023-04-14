@@ -1,46 +1,10 @@
 
-import {I18n} from './i18n.mjs';
+
 import {GlobalConst} from './constants.js';
 import {MaptipBox} from './canvas_maptip.mjs';
 import {InfoBox} from './canvas_info.mjs';
-// import {Toolfaces} from './canvas_toolfaces.mjs';
 
-class MapPrintInRect {
-
-	right;
-	boxh;
-	boxw;
-	bottom;
-	fillStyleBack; 
-	fillStyleFront; 
-	font;
-
-	constructor() {
-		this.i18n = new I18n();
-	}
-
-	print(p_mapctx, p_x, py) {
-		// To be implemented
-	}
-
-	remove(p_mapctx) {
-		const canvas_dims = [];
-		const gfctx = p_mapctx.renderingsmgr.getDrwCtx('service_canvas', '2d');
-		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
-
-		gfctx.clearRect(this.right-this.boxw, this.bottom-this.boxh, this.boxw, this.boxh); 
-	}	
-	
-}
-
-class PermanentMessaging extends MapPrintInRect {
-	constructor() {
-		super();
-		this.fillStyleBack = GlobalConst.MESSAGING_STYLES.PERMANENT_BCKGRD; 
-		this.fillStyleFront = GlobalConst.MESSAGING_STYLES.PERMANENT_COLOR;
-		this.font = GlobalConst.MESSAGING_STYLES.PERMANENT_FONT;
-	}	
-}
+import {PermanentMessaging, LoadingMessaging, ControlsBox} from './customization_canvas_baseclasses.mjs';
 
 class MousecoordsPrint extends PermanentMessaging {
 
@@ -53,26 +17,28 @@ class MousecoordsPrint extends PermanentMessaging {
 		const terr_pt = [], canvas_dims = [];
 		p_mapctx.transformmgr.getTerrainPt([p_x, py], terr_pt);
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx('service_canvas', '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		ctx.save();
 
 		try {
 			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
-			this.right = canvas_dims[0];
-			this.boxh = 20;
 			this.boxw = 130;
-			this.bottom = canvas_dims[1]-(2*this.boxh)-2;
+			this.boxh = 20;
+			this.left = canvas_dims[0]-this.boxw;
+			this.top = canvas_dims[1]-(3*this.boxh)-2;
 
-			ctx.clearRect(this.right-this.boxw, this.bottom-this.boxh, this.boxw, this.boxh); 
+			ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
 			ctx.fillStyle = this.fillStyleBack;
-			ctx.fillRect(this.right-this.boxw, this.bottom-this.boxh, this.boxw, this.boxh);
+			ctx.fillRect(this.left, this.top, this.boxw, this.boxh);
 
 			ctx.fillStyle = this.fillStyleFront;
 			ctx.font = this.font;
 
-			ctx.fillText(terr_pt[0].toLocaleString(undefined, { maximumFractionDigits: 2 }), this.right-this.boxw+8, this.bottom-6);		
-			ctx.fillText(terr_pt[1].toLocaleString(undefined, { maximumFractionDigits: 2 }), this.right-this.boxw+66, this.bottom-6);	
+			const bottom = this.top + this.boxh;
+
+			ctx.fillText(terr_pt[0].toLocaleString(undefined, { maximumFractionDigits: 2 }), this.left+8, bottom-6);		
+			ctx.fillText(terr_pt[1].toLocaleString(undefined, { maximumFractionDigits: 2 }), this.left+66, bottom-6);	
 			
 		} catch(e) {
 			throw e;
@@ -94,42 +60,33 @@ class MapScalePrint extends PermanentMessaging {
 	print(p_mapctx, p_scaleval) {
 
 		const canvas_dims = [];
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx('service_canvas', '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		ctx.save();
 
 		try {
 			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
-			this.right = canvas_dims[0];
 			this.boxh = 20;
 			this.boxw = 130;
-			this.bottom = canvas_dims[1]-this.boxh;
+			this.left = canvas_dims[0]-this.boxw;
+			this.top = canvas_dims[1]-(2*this.boxh);
 
-			ctx.clearRect(this.right-this.boxw, this.bottom-this.boxh, this.boxw, this.boxh); 
+			ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
 			ctx.fillStyle = this.fillStyleBack;
-			ctx.fillRect(this.right-this.boxw, this.bottom-this.boxh, this.boxw, this.boxh);
-
-			//console.log('>> MapScalePrint print scale', [this.right-this.boxw, this.bottom-this.boxh, this.boxw, this.boxh]);
+			ctx.fillRect(this.left, this.top, this.boxw, this.boxh);
 
 			ctx.fillStyle = this.fillStyleFront;
 			ctx.font = this.font;
 
-			ctx.fillText(this.i18n.msg('ESCL', true) + " 1:"+p_scaleval, this.right-this.boxw+GlobalConst.MESSAGING_STYLES.TEXT_OFFSET, this.bottom-6);		
+			const bottom = this.top + this.boxh;
+
+			ctx.fillText(this.i18n.msg('ESCL', true) + " 1:"+p_scaleval, this.left+GlobalConst.MESSAGING_STYLES.TEXT_OFFSET, bottom-6);		
 
 		} catch(e) {
 			throw e;
 		} finally {
 			ctx.restore();
 		}
-	}	
-}
-
-class LoadingMessaging extends MapPrintInRect {
-	constructor() {
-		super();
-		this.fillStyleBack = GlobalConst.MESSAGING_STYLES.LOADING_BCKGRD; 
-		this.fillStyleFront = GlobalConst.MESSAGING_STYLES.LOADING_COLOR;
-		this.font = GlobalConst.MESSAGING_STYLES.LOADING_FONT;
 	}	
 }
 
@@ -142,7 +99,7 @@ class LoadingPrint extends LoadingMessaging {
 	print(p_mapctx, p_msg) {
 
 		const canvas_dims = [];
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx('service_canvas', '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		ctx.save();
 
 		try {
@@ -152,19 +109,21 @@ class LoadingPrint extends LoadingMessaging {
 			// const tm = ctx.measureText(msg);
 			this.boxw =  GlobalConst.MESSAGING_STYLES.LOADING_WIDTH;
 
-			this.right = this.boxw;
+			this.left = 0;
 			this.boxh = GlobalConst.MESSAGING_STYLES.LOADING_HEIGHT;
-			this.bottom = canvas_dims[1]-this.boxh;
+			this.top = canvas_dims[1]-(2*this.boxh);
 
-			ctx.clearRect(this.right-this.boxw, this.bottom-this.boxh, this.boxw, this.boxh); 
+			ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
 			ctx.fillStyle = this.fillStyleBack;
-			ctx.fillRect(this.right-this.boxw, this.bottom-this.boxh, this.boxw, this.boxh);
+			ctx.fillRect(this.left, this.top, this.boxw, this.boxh);
 
 			ctx.fillStyle = this.fillStyleFront;
 			ctx.font = this.font;
 			ctx.textAlign = "center";
 
-			ctx.fillText(msg, this.boxw/2, this.bottom-6, this.boxw - 2 * GlobalConst.MESSAGING_STYLES.TEXT_OFFSET);		
+			const bottom = this.top + this.boxh;
+
+			ctx.fillText(msg, this.boxw/2, bottom-6, this.boxw - 2 * GlobalConst.MESSAGING_STYLES.TEXT_OFFSET);		
 
 		} catch(e) {
 			throw e;
@@ -264,32 +223,119 @@ class Info {
 	interact(p_mapctx, p_evt) {
 		if (this.ibox) {
 			const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
-			this.ibox.interact(p_evt, ctx);
+			this.ibox.interact(ctx, p_evt);
 		}
 
 	}
 }
 
-/*
-class BasicCtrlBox {
-	canvaslayer = 'service_canvas';
+
+class BasicCtrlBox extends ControlsBox {
+
 	constructor() {
-		this.toolfacesbox = new Toolfaces();
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
-		that.ibox.clear(ctx);
-		that.ibox.draw(ctx);				
+		super();
+
+		this.orientation = "VERTICAL";
+		this.controls_keys = [
+			"zoomout",
+			"home",
+			"zoomin"
+		];
+
+		this.img = new Image();
+		this.img.decoding = "sync";
+		this.img.src = GlobalConst.CONTROLS_STYLES.HOMESYMB;
 
 	}
 
-	
+	drawControlFace(p_ctx, p_control_key, p_left, p_top, p_width, p_height) {
+
+		switch(p_control_key) {
+
+			case "zoomout":
+				p_ctx.beginPath();
+				p_ctx.moveTo(p_left+p_width*0.2, p_top+p_height*0.5);
+				p_ctx.lineTo(p_left+p_width*0.8, p_top+p_height*0.5);
+				p_ctx.stroke();
+				break;
+
+			case "zoomin":
+				p_ctx.beginPath();
+				p_ctx.moveTo(p_left+p_width*0.2, p_top+p_height*0.5);
+				p_ctx.lineTo(p_left+p_width*0.8, p_top+p_height*0.5);
+				p_ctx.moveTo(p_left+p_width*0.5, p_top+p_height*0.2);
+				p_ctx.lineTo(p_left+p_width*0.5, p_top+p_height*0.8);
+				p_ctx.stroke();
+				break;
+
+			default:
+
+				// homing zoom button decorated from SVG image data URL configured in Globals	
+				this.img.decode()
+							.then(() => {
+								p_ctx.drawImage(this.img, p_left + ((GlobalConst.CONTROLS_STYLES.SIZE - GlobalConst.CONTROLS_STYLES.HOMESYMBWID) / 2), p_top);
+							});
+		}
+	}
+
+	interact(p_mapctx, p_evt) {
+
+		let basic_config, ret = false;
+		const ctrl_key = super.interact(p_mapctx, p_evt);
+
+		const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+
+		if (ctrl_key) {
+			//console.trace("285:", ctrl_key, p_evt);
+			basic_config = this.tool_manager.basic_config;
+			switch(p_evt.type) {
+
+				case 'mouseup':
+
+					switch(ctrl_key) {
+
+						case "home":
+							p_mapctx.transformmgr.setScaleCenteredAtPoint(basic_config.scale, [basic_config.terrain_center[0], basic_config.terrain_center[1]], true);
+							break;
+
+						case "zoomout":
+							p_mapctx.transformmgr.zoomOut(basic_config.maxscaleview.scale, GlobalConst.SCALEINOUT_STEP, true);
+							break;
+
+						case "zoomin":
+							p_mapctx.transformmgr.zoomIn(GlobalConst.MINSCALE, GlobalConst.SCALEINOUT_STEP, true);
+							break;
+
+							
+
+					}
+					topcnv.style.cursor = "default";
+					break;
+
+				case "mousemove":
+
+					//console.log(">>>", ctrl_key)
+					topcnv.style.cursor = "pointer";
+					break;
+
+			}
+
+			ret = true;
+				
+		} else {
+			topcnv.style.cursor = "default";				
+		}
+
+		return ret;
+	}
+
 }
-*/
 
 export class MapCustomizations {
 
 	constructor() {
 		this.instances = {
-			//"basiccontrolsbox": new BasicCtrlBox(),
+			"basiccontrolsbox": new BasicCtrlBox(),
 			"mousecoordsprint": new MousecoordsPrint(),
 			"mapscaleprint": new MapScalePrint(),
 			"loadingmsgprint": new LoadingPrint(),

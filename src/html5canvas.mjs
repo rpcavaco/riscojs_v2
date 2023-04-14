@@ -52,6 +52,10 @@
 		console.info("[init RISCO] canvases created");
 	}
 
+	getTopCanvas() {
+		return this.canvases[this.canvaskeys[this.canvaskeys.length-1]]
+	}
+
 	/**
 	 * Method init
 	 * Initialization of  Canvas(es) manager or reset

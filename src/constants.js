@@ -25,21 +25,40 @@ var sel_drawsymb_func = function(p_mapctxt, p_layer, p_coords, opt_feat_id) {
 
 var GlobalConst = {
 
+	// ------------------------------------------------------------------------
+	// GENERIC CONSTANTS
+	//
+	// User-serviceable, change with caution
+	// ------------------------------------------------------------------------
 	DEBUG: "none",    // ALL, GEOM, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, VECTLOAD, RISCOFEATS, FEATMOUSESEL, none
 	FEATMOUSESEL_MAXDIST_1K: 2, // Max distance of graphic selection with mouse, meters at 1:1000 scale
-	MMPD: 25.4 / 96.0,
 	MARKERSIZE_SCALEFACTOR: 10.0,
 	IMGRELOAD_TIMEOUT_MSEC: 2000,  // Image loading time after which original request is discarded and a new image load is attempted 
-	/*ACCPTBLE_LYRREDRAW_DELAY_MSEC: 10,
-	MAPCHANGE_TIMEOUT_MSEC: 8000,
-	SPINDEX_STEP: 10,*/
 	MINSCALE: 100,
+	SCALEINOUT_STEP: 150,
 	MAXSCALE: 1000000,
 	MINSCALEDIFF: 1,
+
+	// Specialized debugging - canvas path opening and closing
+	DEBUG_CANVASVECTOR_PATHCLOSING: null,
+	DEBUG_CANVASVECTOR_PATHCLOSING_FEATID: 387,
+
+	// Specialized debugging - canvas path opening and closing
+	DEBUG_FEATURE_DISTANCETO: false,
+	DEBUG_FEATURE_DISTANCETO_FEATID: 7455,
+	// ------------------------------------------------------------------------
+	// END of generic constants 
+	// ------------------------------------------------------------------------
+
+	// ------------------------------------------------------------------------
+	// INTERNAL CONSTANTS - not user-serviceable
+	//
+	// Changing can severely affect map execution - values to be changed by developers
+	// ------------------------------------------------------------------------
+	MMPD: 25.4 / 96.0, // Screen resolution millimeters per inch (millimiters / dots-per-inch)
 	MAXFEATCHUNKSIZE: 500,
 	GEOMPRECISION_DECIMALS: 3,	
 	TOLERANCEDIST_RINGCLOSED: 0.1, // Max dist between line endpoints for it to be considered closed ring
-	//MAXLAYERCOUNT: 100,
 	MOUSEWHEEL_THROTTLE: 500,  // millisecs, minimum interval between firing effective map change during a fast succession of mouse wheel events
 	ENVSPLIT_CFG_DEFAULT: {  // envelope division in chunking requests -- each entry:  display scales up to key value are split at [n,p]: n-times horizontally and p-times vertically
 		1000: [1, 1],
@@ -49,18 +68,17 @@ var GlobalConst = {
 		9999999999999: [3, 3]
 	},
 	TYPICAL_OIDFLDNAMES: ["objectid", "oid", "oidfld"],
-
 	LBL_QUANTIZE_SIZE: 4,
 	LBL_VERTICALITY_TEST: 2,
 	LBL_MAX_ALONGPATH_OCCUPATION: 0.98,
+	// ------------------------------------------------------------------------
+	// END of internal constants 
+	// ------------------------------------------------------------------------
 
-	// Specialized debugging - canvas path opening and closing
-	DEBUG_CANVASVECTOR_PATHCLOSING: null,
-	DEBUG_CANVASVECTOR_PATHCLOSING_FEATID: 387,
 
-	// Specialized debugging - canvas path opening and closing
-	DEBUG_FEATURE_DISTANCETO: false,
-	DEBUG_FEATURE_DISTANCETO_FEATID: 7455,
+	// ------------------------------------------------------------------------
+	// Style and presentation constants - user-serviceable with caution
+	// ------------------------------------------------------------------------
 
 	FONTS: {
 		"OpenSans-CondensedBold": "fonts/OpenSans-CondensedBold.ttf",
@@ -167,6 +185,26 @@ var GlobalConst = {
 		LOADING_HEIGHT: 20,
 		TEXT_OFFSET: 12
 	},
+
+	CONTROLS_STYLES: {
+
+		BCKGRD: "rgb(216, 216, 216)",
+		COLOR: "black",
+		OFFSET: 10,
+		SIZE: 30,
+		STROKEWIDTH: 1,
+
+		HOMESYMBWID: 24,
+		HOMESYMB: "data:image/svg+xml;charset=utf-8,%3Csvg width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E %3Cpath fill=%22none%22 stroke=%22black%22 stroke-width=%221%22 stroke-linejoin=%22round%22 d=%22M 4,14 L 12,8 L 20,14 h -3 v 8 h -3 v -4 h -4 v 4 h -3 v -8 z %22 /%3E%3C/svg%3E"
+
+
+	},
+
+	// ------------------------------------------------------------------------
+	// End of style and presentation constants 
+	// ------------------------------------------------------------------------
+
+
 
 	getDebug: function(dbgkey) {
 		let ret = false, all = false;

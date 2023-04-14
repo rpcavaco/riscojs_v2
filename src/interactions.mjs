@@ -8,7 +8,7 @@ export class BaseTool {
 
 	enabled = true;
 	start_time = null;
-	edits_manager;
+	editmanager = null;
 	constructor(p_joinstogglegroup, opt_defaultintoggle) {
 		this.joinstogglegroup = p_joinstogglegroup;
 		if (this.joinstogglegroup) {
@@ -26,8 +26,8 @@ export class BaseTool {
 		// Abstract
 	}
 
-	setEditsManager(p_edits_manager) {
-		this.edits_manager = p_edits_manager;
+	setEditManager(p_edit_manager) {
+		this.editmanager = p_edit_manager;
 	}
 
 }
@@ -250,7 +250,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 class wheelEventCtrller {
 
 	constructor(p_sclval) {
-		this.wheelevtTmoutID = null; // for deffered setScaleCenteredAtPoint after wheel event
+		this.wheelevtTmoutID = null; // for deffered setScaleCenteredAtScrPoint after wheel event
 		this.wheelevtTmoutFunc = null;
 		this.wheelscale = -1;
 		this.imgscale = 1.0;
@@ -278,13 +278,15 @@ class wheelEventCtrller {
 			auxscale = this.wheelscale;
 		}
 
-		if (auxscale < 1500) {
+		if (auxscale < 600) {
+			scale = auxscale + (p_evt.deltaY * 1.1);
+		} else if (auxscale < 1500) {
 			scale = auxscale + (p_evt.deltaY * 1.2);
 		} else if (auxscale < 2000) {
 			scale = auxscale + (p_evt.deltaY * 2.4);
 		} else if (auxscale < 3000) {
 			scale = auxscale + (p_evt.deltaY * 3);
-		} else if (auxscale < 3000) {
+		} else if (auxscale < 5000) {
 			scale = auxscale + (p_evt.deltaY * 4);
 		} else {
 			scale = auxscale + (p_evt.deltaY * 10);
@@ -331,7 +333,7 @@ class wheelEventCtrller {
 				if (GlobalConst.getDebug("DISENG_WHEEL")) {
 					console.log("[DBG:DISENG_WHEEL] would be firing at scale:", p_this.wheelscale);
 				} else {
-					pp_mapctx.transformmgr.setScaleCenteredAtPoint(p_this.wheelscale, [pp_evt.clientX, pp_evt.clientY], true);
+					pp_mapctx.transformmgr.setScaleCenteredAtScrPoint(p_this.wheelscale, [pp_evt.clientX, pp_evt.clientY], true);
 				}
 				p_this.wheelscale = -1;		
 				this.wheelevtTmoutID = null;
@@ -381,7 +383,8 @@ class MultiTool extends BaseTool {
 			switch(p_evt.type) {
 
 				case 'mousedown':
-					console.log("mdown multitool");
+					//console.log("mdown multitool");
+					//console.trace();
 					// console.log(p_evt, "start:", this.start_screen, (p_evt.buttons & 1) == 1);
 					if (this.start_screen == null) {
 						if ((p_evt.buttons & 1) == 1) {						
@@ -393,6 +396,8 @@ class MultiTool extends BaseTool {
 					break;
 
 				case 'mouseup':
+					console.log("mup multitool");
+					console.trace();
 				case 'mouseout':
 				case 'mouseleave':
 					if (this.start_screen != null) {
@@ -568,18 +573,21 @@ class MeasureTool extends BaseTool {
 
 export class ToolManager {
 
-	edits_manager;
+	editmgr;
+	maptools;
+	mapcontrolmgrs;
 
-	constructor(p_mapctx_config_var, p_edits_manager) {
+	constructor(p_mapctx_config_var) {
 
 		if (p_mapctx_config_var == null) {
 			throw new Error("Class ToolManager, null mapctx_config_var");
 		}
 
-		this.edits_manager = p_edits_manager;
+		this.basic_config = p_mapctx_config_var;
 
 		this.editmgr = new EditManager(this);
 		this.maptools = [new DefaultTool(), new MultiTool()];
+		this.mapcontrolmgrs = [];
 		
 		if (p_mapctx_config_var["togglable_tools"] !== undefined) {
 			for (let i=0; i<p_mapctx_config_var["togglable_tools"].length; i++) {
@@ -605,7 +613,7 @@ export class ToolManager {
 			throw new Error(`Class ToolManager, addTool, tool is not a BaseTool instance: ${classname}`);
 		}	
 		
-		p_toolinstance.setEditsManager(this.editmgr);
+		p_toolinstance.setEditManager(this.editmgr);
 
 		for (let i=0; i<this.maptools.length; i++) {
 			if (existing_classnames.indexOf(this.maptools[i].constructor.name) >= 0) {
@@ -688,18 +696,42 @@ export class ToolManager {
 		}
 	}
 
-	onEvent(p_mapctx, p_evt) {
+	tmOnEvent(p_mapctx, p_evt) {
 
 		let _ret;
 
-		for (let i=this.maptools.length-1; i>=0; i--) {
-			if (this.maptools[i].enabled) {
-				_ret = this.maptools[i].onEvent(p_mapctx, p_evt);
-				if (!_ret && this.maptools[i].joinstogglegroup) {
-					break;
-				}
+		for (let mapctrl_key in this.mapcontrolmgrs) {
+			_ret = this.mapcontrolmgrs[mapctrl_key].interact(p_mapctx, p_evt);
+			if (_ret) {
+				break;
 			}
 		}
+
+		// if event interacted with any map controls (_ret is true) 
+		//  we prevent its dispatchment to the active tools
+
+		if (!_ret) {
+			for (let i=this.maptools.length-1; i>=0; i--) {
+				if (this.maptools[i].enabled) {
+					_ret = this.maptools[i].onEvent(p_mapctx, p_evt);
+					if (!_ret && this.maptools[i].joinstogglegroup) {
+						break;
+					}
+				}
+			}	
+		}
+
+
+
+	}
+
+	addControlsMgr(p_key, p_mapctrlmgr) {
+		this.mapcontrolmgrs[p_key] = p_mapctrlmgr;
+		this.mapcontrolmgrs[p_key].setToolmgr(this);
+	}
+
+	setCurrentUser(p_username) {
+		this.editmgr.setCurrentUser(p_username)
 	}
 	
 
