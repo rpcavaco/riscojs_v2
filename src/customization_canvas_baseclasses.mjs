@@ -61,7 +61,42 @@ export class ControlsBox extends MapPrintInRect {
 		this.strokeWidth = GlobalConst.CONTROLS_STYLES.STROKEWIDTH;
 		this.sz = GlobalConst.CONTROLS_STYLES.SIZE;
 		this.margin_offset = GlobalConst.CONTROLS_STYLES.OFFSET;
+
+		this.dimensioning();
 	}
+
+	getOrientation() {
+		return this.orientation;
+	}
+
+	dimensioning() {
+
+		this.left = this.margin_offset;
+		this.top = this.margin_offset;
+		this.boxh = this.sz;
+		this.boxw = this.sz;
+	
+	}
+
+	getWidth() {
+		let w = 0;
+		if (this.orientation == "HORIZONTAL") {
+			w = this.controls_keys.length * this.boxw;
+		} else {
+			w = this.boxw;
+		}
+		return w;
+	}
+
+	getHeight() {
+		let h = 0;
+		if (this.orientation == "HORIZONTAL") {
+			h = this.controls_keys.length * this.boxh;
+		} else {
+			h = this.boxh;
+		}
+		return h;
+	}	
 
 	print(p_mapctx) {
 
@@ -71,11 +106,6 @@ export class ControlsBox extends MapPrintInRect {
 
 		try {
 			// p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
-
-			this.left = this.margin_offset;
-			this.top = this.margin_offset;
-			this.boxh = this.sz;
-			this.boxw = this.sz;
 
 			let left, top;
 

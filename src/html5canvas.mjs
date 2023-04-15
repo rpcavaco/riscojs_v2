@@ -18,6 +18,8 @@
  */
  export class HTML5CanvasMgr {
 
+	max_zindex;
+
 	constructor(p_mapctx, opt_base_zindex) {
 
 		if (p_mapctx == null) {
@@ -25,12 +27,18 @@
 		}
 		this.paneldiv = p_mapctx.panelwidget;
 
+		let base_zindex = 1;
+		if (opt_base_zindex != null && !isNaN(opt_base_zindex)) {
+			base_zindex = parseInt(opt_base_zindex);
+		}
+
 		// Cleanup DIV contents
 		while (this.paneldiv.firstChild) {
 			this.paneldiv.removeChild(this.paneldiv.firstChild);
 		}
 
 		this.canvases = {};
+		this.max_zindex = 0;
 
 		this.canvaskeys = ['base', 'normal', 'labels', 'temporary', 'transient', 'calculated_viz', 'interactive_viz',  'service_canvas'];
 		for (let i=0; i<this.canvaskeys.length; i++) {
@@ -40,9 +48,9 @@
 			this.canvases[this.canvaskeys[i]].style.top = 0;
 			this.canvases[this.canvaskeys[i]].style.left = 0;
 
-			if (opt_base_zindex != null && !isNaN(opt_base_zindex)) {
-				this.canvases[this.canvaskeys[i]].style.zIndex = parseInt(opt_base_zindex)+i;
-			}
+			this.canvases[this.canvaskeys[i]].style.zIndex = base_zindex+i;
+			this.max_zindex = Math.max(this.max_zindex, base_zindex+i);
+
 			// this.canvases[keys[i]].setAttribute('id', keys[i]);
 			this.paneldiv.appendChild(this.canvases[this.canvaskeys[i]]);
 		}
@@ -54,6 +62,10 @@
 
 	getTopCanvas() {
 		return this.canvases[this.canvaskeys[this.canvaskeys.length-1]]
+	}
+
+	getMaxZIndex() {
+		return this.max_zindex;
 	}
 
 	/**

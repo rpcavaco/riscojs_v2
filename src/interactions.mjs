@@ -396,8 +396,8 @@ class MultiTool extends BaseTool {
 					break;
 
 				case 'mouseup':
-					console.log("mup multitool");
-					console.trace();
+					// console.log("mup multitool");
+					// console.trace();
 				case 'mouseout':
 				case 'mouseleave':
 					if (this.start_screen != null) {

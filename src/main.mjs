@@ -102,6 +102,8 @@ export class RiscoMapCtx {
 
 	#customization_instance;
 
+	query_box;
+
 	// p_mode -- just 'canvas' for now
 	constructor(p_config_var, p_paneldiv, p_mode, b_wait_for_customization_avail) {
 
@@ -147,8 +149,9 @@ export class RiscoMapCtx {
 		this.tocmgr = new TOCManager(this, p_mode);
 		this.i18n = new I18n(p_config_var["text"]);
 
+		this.query_box = new I18n(p_config_var["text"]);
+
 		this._refresh_timeout_id = null;
-	
 
 		this.#customization_instance = null;
 
@@ -191,9 +194,77 @@ export class RiscoMapCtx {
 
 		this.#customization_instance = p_instance;
 
+		this.#customization_instance.setMapCtx(this);
+
+		let bcb = null,  qryb=null;
+
 		if (this.#customization_instance.instances["basiccontrolsbox"] !== undefined) {
-			this.toolmgr.addControlsMgr("basiccontrolsbox", this.#customization_instance.instances["basiccontrolsbox"]);
-		}		
+			bcb = this.#customization_instance.instances["basiccontrolsbox"];
+			this.toolmgr.addControlsMgr("basiccontrolsbox", bcb);
+		}	
+		
+		if (this.cfgvar["basic"]["querybox"]["show"] && this.#customization_instance.instances["querying"] !== undefined) {
+
+			qryb = this.#customization_instance.instances["querying"];
+			
+			this.query_box = document.createElement('input');
+			this.query_box.setAttribute("type", "text");
+			this.query_box.style.position = "absolute";
+			this.query_box.style.zIndex = this.renderingsmgr.getMaxZIndex()+1;
+
+			if (bcb) {
+				this.query_box.style.top = bcb.top + "px";
+				this.query_box.style.left = (2 * bcb.left + bcb.getWidth()) + "px";	
+			} else {
+				this.query_box.style.top = GlobalConst.CONTROLS_STYLES.OFFSET + "px";
+				this.query_box.style.left = GlobalConst.CONTROLS_STYLES.OFFSET + "px";	
+			}
+
+			this.query_box.style.width = this.cfgvar["basic"]["querybox"]["size"] + "px";	
+			
+			this.panelwidget.appendChild(this.query_box);
+
+			this.query_clrbtn = document.createElement('button');
+
+			this.query_clrbtn.innerText = this.i18n.msg('clr', true);
+			this.query_clrbtn.style.position = "absolute";
+
+			if (bcb) {
+				this.query_clrbtn.style.top = bcb.top + "px";
+				this.query_clrbtn.style.left = (3 * bcb.left + bcb.getWidth()) + this.cfgvar["basic"]["querybox"]["size"] + "px";	
+			} else {
+				this.query_clrbtn.style.top = GlobalConst.CONTROLS_STYLES.OFFSET + "px";
+				this.query_clrbtn.style.left = GlobalConst.CONTROLS_STYLES.OFFSET + this.cfgvar["basic"]["querybox"]["size"] + "px";	
+			}
+
+			this.query_clrbtn.style.width =  this.cfgvar["basic"]["querybox"]["clrbtn_size"] + "px";
+			this.query_clrbtn.style.zIndex = this.renderingsmgr.getMaxZIndex()+1;
+			
+			this.panelwidget.appendChild(this.query_clrbtn);
+
+			(function(p_btn, p_query_box) {
+				
+				let lastinput = "";
+
+				// Query clear button
+				p_btn.addEventListener("click", function(e) { 
+					p_query_box.value = "";
+				}); 
+
+				// Query box input event
+				p_query_box.addEventListener("input", function(e) { 
+					let clntxt = p_query_box.value.trim();
+					if (clntxt.length > 2) {
+						if (clntxt.length > lastinput.length) {
+							lastinput = clntxt;
+							qryb.query(lastinput);
+						}
+					}
+				}); 
+
+			})(this.query_clrbtn, this.query_box);	
+
+		}				
 
 		if (this.wait_for_customization_avail) {
 			this.maprefresh();

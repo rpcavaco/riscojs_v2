@@ -331,17 +331,74 @@ class BasicCtrlBox extends ControlsBox {
 
 }
 
+export class LocQuery {
+
+	mapctx;
+	url;
+	crs;
+	msgs_ctrlr;
+
+	constructor(p_mapctx, p_msgs_ctrlr, p_url, p_crs) {
+		this.mapctx = p_mapctx;
+		this.msgs_ctrlr = p_msgs_ctrlr;
+		this.url = p_url;
+		this.crs = p_crs;
+
+		console.log("msgs_ctrlr>", this.msgs_ctrlr);
+	}
+
+	query(b_qrystr) {
+
+		const msgs_ctrlr  = this.msgs_ctrlr;
+
+		fetch(this.url, {
+			method: "POST",
+			body: JSON.stringify({ "currstr": b_qrystr, "outsrid": this.crs })
+		})
+		.then(response => response.json())
+		.then(
+			function(responsejson) {
+
+				if (responsejson['error'] !== undefined) {
+					msgs_ctrlr.warn(responsejson['error']);
+				}
+
+				console.log(responsejson);	
+
+				//const out = 
+
+			}
+		).catch((error) => {
+			console.error("Sem resposta do serviço Localizador", error);
+		});			
+
+	}
+}
+
 export class MapCustomizations {
 
-	constructor() {
+	mapctx;
+	messaging_ctrlr; // object with info, warn and error methods
+
+	constructor(p_messaging_ctrlr) {
+
+		this.messaging_ctrlr = p_messaging_ctrlr;
 		this.instances = {
 			"basiccontrolsbox": new BasicCtrlBox(),
 			"mousecoordsprint": new MousecoordsPrint(),
 			"mapscaleprint": new MapScalePrint(),
 			"loadingmsgprint": new LoadingPrint(),
-			"infoclass": new Info(GlobalConst.INFO_MAPTIPS_BOXSTYLE)						
+			"infoclass": new Info(GlobalConst.INFO_MAPTIPS_BOXSTYLE)
 		}
-		
+	}
+
+	setMapCtx(p_mapctx) {
+		const basic_config = p_mapctx.toolmgr.basic_config;
+		// SUBSTITUIR: LocQuery passa para custcmização da CMP, aqui fica algo de mais básico
+		this.instances["querying"] = new LocQuery(p_mapctx, this.messaging_ctrlr, basic_config["locqueryurl"], basic_config["crs"])
+		console.info("[init RISCO] MapCustomizations, query box adapter launched");
 	}
 
 }
+
+

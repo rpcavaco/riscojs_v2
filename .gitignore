@@ -1,6 +1,8 @@
 _sphinxcrap/
 lixo/
-testbed/js/
+testbed/js/riscojs_v2
+testbed/js/_*
+testbed/media/
 dist/
 src/_*.*js
 docs/build/
@@ -10,3 +12,4 @@ venv38/
 passos_*
 *.qgz
 quick-lint-js.config
+_scraps/

@@ -16,11 +16,13 @@ export class I18n {
 				"deflang": "pt",
 				"pt": {
 					"ESCL": "escala",
-					"LDNG": "a carregar"
+					"LDNG": "a carregar",
+					"CLR": "limpar"
 				}, 
 				"en": {
 					"ESCL": "scale",
-					"LDNG": "loading"
+					"LDNG": "loading",
+					"CLR": "clear"
 				}
 			};					
 		}

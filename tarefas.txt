@@ -60,6 +60,8 @@
 
 >> - necessário separar o que é customização do que são classes - base em default_customizations.mjs
 
+>> - separar default_customizations.mjs "base" de customizations_cmp.mjs
+
 --------------------------------- UI/Widgets  -------------------------------
 
 >> - Controles mínimos zooming
