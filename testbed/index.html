@@ -23,7 +23,7 @@
 		}
 
 		#msgsdiv {
-			font-family: monospace;
+			font-family: sans-serif;
 			position: absolute;
 			top: 80px;
 			left: 20%;
@@ -45,6 +45,24 @@
 			float: left;
 			padding-right: 20px;
 		}
+
+		#query_results {
+			font-family: sans-serif;
+			font-size: 12px;
+		}
+
+		#query_results p {
+			margin: 0;
+
+		}		
+
+		#query_results p.hoverme:hover {
+			font-weight: bold;
+			background-color: rgb(126, 126, 126);
+			color: white;
+		}
+		
+		
 	</style>
 	
     <!-- 
@@ -119,7 +137,6 @@
 		};
 
 		MessagesController.check();
-		console.log("mess. CHECK");
 
 		mapctx.setCustomizationObj(new MapCustomizations(MessagesController));
 

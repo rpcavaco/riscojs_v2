@@ -337,30 +337,193 @@ export class LocQuery {
 	url;
 	crs;
 	msgs_ctrlr;
+	querybox;
+	result_area;
+	found;
 
 	constructor(p_mapctx, p_msgs_ctrlr, p_url, p_crs) {
 		this.mapctx = p_mapctx;
 		this.msgs_ctrlr = p_msgs_ctrlr;
 		this.url = p_url;
 		this.crs = p_crs;
+		this.found = null;
+	}
 
-		console.log("msgs_ctrlr>", this.msgs_ctrlr);
+	cleanResultArea() {
+		this.result_area.style.display = 'none';	
+		while (this.result_area.firstChild) {
+			this.result_area.removeChild(this.result_area.firstChild);
+		}
+	}
+
+	clear(p_full) {
+
+		console.log("-- LocQuery clear --, full:", p_full);
+
+		if (p_full) {
+			this.found = null;
+		}
+		this.cleanResultArea();	
+		this.querybox.value = '';	
+	}
+
+	setTopo(p_cod_topo, p_toponimo) {
+
+		let ret = false;
+
+		if (this.found == null || this.found["codigo_topo"] != p_cod_topo) {
+			this.found = {
+				"codigo_topo": p_cod_topo,
+				"toponimo": p_toponimo
+			}
+			ret = true;
+		}
+
+		return ret;
+	}
+
+	setNpol(p_npol, p_cod_topo, p_toponimo) {
+
+		let ret = false;
+
+		if (this.found == null || this.found["codigo_topo"] != p_cod_topo) {
+			this.found = {
+				"codigo_topo": p_cod_topo,
+				"toponimo": p_toponimo,
+				"npol": p_npol
+			}
+			ret = true;
+		} else {
+			if (this.found["npol"] === undefined || this.found["npol"] != p_npol) {
+				this.found["npol"] = p_npol;
+				ret = true;
+			}
+		}
+
+		return ret;
 	}
 
 	query(b_qrystr) {
 
 		const msgs_ctrlr  = this.msgs_ctrlr;
+		const that = this;
 
 		fetch(this.url, {
 			method: "POST",
-			body: JSON.stringify({ "currstr": b_qrystr, "outsrid": this.crs })
+			body: JSON.stringify({ "curstr": b_qrystr, "outsrid": this.crs })
 		})
 		.then(response => response.json())
 		.then(
 			function(responsejson) {
 
+				let p, r, hei;
+
 				if (responsejson['error'] !== undefined) {
 					msgs_ctrlr.warn(responsejson['error']);
+				} else {
+					if (responsejson['out']['tiporesp'] == 'partial') {
+
+						that.found = null;
+
+						if (that.result_area == null) {
+							return;
+						}
+
+						that.cleanResultArea();					
+						if (responsejson['toponyms'] === undefined) {
+							return;
+						}
+
+						hei = 0;
+						that.result_area.style.display = '';		
+						for(const top of responsejson['toponyms']['list']) {
+							p = that.result_area.appendChild(document.createElement('p'));
+							((p_elem, p_this, p_cod_topo, p_toponimo) => {
+								p_elem.innerText = p_toponimo;
+								p_elem.classList.add("hoverme");
+								p_elem.addEventListener(
+									'click', (e) => { 
+										p_this.setTopo(p_cod_topo, p_toponimo);
+										p_this.querybox.value = p_toponimo;
+										p_this.result_area.style.display = 'none';
+									}
+								);	
+							})(p, that, top['cod_topo'], top['toponimo']);
+							r = p.getBoundingClientRect();
+							hei += r.height;
+						}
+						if (hei == 0) {								
+							that.cleanResultArea();	
+						} else {
+							that.result_area.style.height = hei + "px";
+						}
+
+					} else if (responsejson['out']['tiporesp'] == 'topo') { 
+
+						if (that.setTopo(responsejson['out']['cod_topo'], responsejson['out']['toponym'])) {
+							that.querybox.value = responsejson['out']['toponym'];
+						}
+
+						that.cleanResultArea();
+						
+						if (responsejson['out']['errornp'] !== undefined) {
+
+							if (that.result_area == null) {
+								return;
+							}
+								
+							that.result_area.style.display = '';		
+							for (let ln of [
+								`Número '${responsejson['out']['errornp']}': não encontrado.`
+							]) {
+								p = that.result_area.appendChild(document.createElement('p'));
+								p.innerText = ln;
+								p.style.fontWeight = "bold";
+								r = p.getBoundingClientRect();
+								hei = r.height;	
+							}
+
+							if (responsejson['numbers'] !== undefined) {
+
+								for (let ln of [
+									"Alguns números de polícia existentes:"
+								]) {
+									p = that.result_area.appendChild(document.createElement('p'));
+									p.innerText = ln;
+									p.style.fontWeight = "bold";
+									r = p.getBoundingClientRect();
+									hei += r.height;	
+								}
+
+								for(const np of responsejson['numbers']) {
+									p = that.result_area.appendChild(document.createElement('p'));
+									((p_elem, p_this, p_npol, p_cod_topo, p_toponimo, p_pt) => {
+										p_elem.innerText = ` ${p_toponimo} ${p_npol}`;
+										p_elem.classList.add("hoverme");
+										p_elem.addEventListener(
+											'click', (e) => { 
+												p_this.setNpol(p_npol, p_cod_topo, p_toponimo);
+												p_this.querybox.value = `${p_toponimo} ${p_npol}`;
+												p_this.result_area.style.display = 'none';
+												that.mapctx.transformmgr.setScaleCenteredAtPoint(1000, [p_pt[0], p_pt[1]], true);
+											}
+										);	
+									})(p, that, np['npol'], responsejson['out']['cod_topo'], responsejson['out']['toponym'], np['pt']);
+									r = p.getBoundingClientRect();
+									hei += r.height;
+								}
+							}
+
+							that.result_area.style.height = hei + "px";
+						}
+					} else if (responsejson['out']['tiporesp'] == 'npol') {
+
+						if (that.setNpol(responsejson['out']['npol'], responsejson['out']['cod_topo'], responsejson['out']['toponym'])) {
+							that.querybox.value = `${responsejson['out']['toponym']} ${responsejson['out']['npol']}`;
+							that.mapctx.transformmgr.setScaleCenteredAtPoint(1000, [responsejson['out']['loc'][0], responsejson['out']['loc'][1]], true);
+						}
+						that.cleanResultArea();
+					}
 				}
 
 				console.log(responsejson);	
@@ -369,9 +532,15 @@ export class LocQuery {
 
 			}
 		).catch((error) => {
-			console.error("Sem resposta do serviço Localizador", error);
+			console.error("Erro em tentativa de acesso ao serviço Localizador " + error);
 		});			
 
+	}
+
+	setFeedbackAreas(p_querybox, p_result_area) {
+		console.log("p_querybox:", p_querybox);
+		this.querybox = p_querybox;
+		this.result_area = p_result_area;
 	}
 }
 

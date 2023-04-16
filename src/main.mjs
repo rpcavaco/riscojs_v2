@@ -103,6 +103,7 @@ export class RiscoMapCtx {
 	#customization_instance;
 
 	query_box;
+	query_results;
 
 	// p_mode -- just 'canvas' for now
 	constructor(p_config_var, p_paneldiv, p_mode, b_wait_for_customization_avail) {
@@ -196,7 +197,7 @@ export class RiscoMapCtx {
 
 		this.#customization_instance.setMapCtx(this);
 
-		let bcb = null,  qryb=null;
+		let r, bcb = null,  qryb=null, qryboxheight = 22;
 
 		if (this.#customization_instance.instances["basiccontrolsbox"] !== undefined) {
 			bcb = this.#customization_instance.instances["basiccontrolsbox"];
@@ -212,17 +213,38 @@ export class RiscoMapCtx {
 			this.query_box.style.position = "absolute";
 			this.query_box.style.zIndex = this.renderingsmgr.getMaxZIndex()+1;
 
+			this.query_results = document.createElement('div');
+			this.query_results.id = "query_results";
+			//this.query_results.setAttribute("type", "text");
+			this.query_results.style.position = "absolute";
+			this.query_results.style.zIndex = this.renderingsmgr.getMaxZIndex()+1;
+			this.query_results.style.backgroundColor = "white";
+			this.query_results.style.padding = "2px";
+			this.query_results.style.margin = "0";
+
+
+
 			if (bcb) {
 				this.query_box.style.top = bcb.top + "px";
 				this.query_box.style.left = (2 * bcb.left + bcb.getWidth()) + "px";	
+
+				this.query_results.style.top = bcb.top + qryboxheight + "px";
+				this.query_results.style.left = this.query_box.style.left;	
 			} else {
 				this.query_box.style.top = GlobalConst.CONTROLS_STYLES.OFFSET + "px";
 				this.query_box.style.left = GlobalConst.CONTROLS_STYLES.OFFSET + "px";	
+
+				this.query_results.style.top = GlobalConst.CONTROLS_STYLES.OFFSET + qryboxheight + "px";
+				this.query_results.style.left = this.query_box.style.left + "px";	
 			}
 
 			this.query_box.style.width = this.cfgvar["basic"]["querybox"]["size"] + "px";	
+			this.query_results.style.width = this.cfgvar["basic"]["querybox"]["size"] + "px";	
+			this.query_results.style.height = "6px";
+			this.query_results.style.display = 'none';
 			
 			this.panelwidget.appendChild(this.query_box);
+			this.panelwidget.appendChild(this.query_results);
 
 			this.query_clrbtn = document.createElement('button');
 
@@ -242,27 +264,30 @@ export class RiscoMapCtx {
 			
 			this.panelwidget.appendChild(this.query_clrbtn);
 
-			(function(p_btn, p_query_box) {
+			qryb.setFeedbackAreas(this.query_box, this.query_results);
+
+			(function(p_btn, p_query_box, p_qryb_obj) {
 				
 				let lastinput = "";
 
 				// Query clear button
 				p_btn.addEventListener("click", function(e) { 
-					p_query_box.value = "";
+					p_qryb_obj.clear(true);
 				}); 
 
 				// Query box input event
 				p_query_box.addEventListener("input", function(e) { 
 					let clntxt = p_query_box.value.trim();
+					// console.log("::282:: INPUT EVENT", clntxt, p_query_box.value);
 					if (clntxt.length > 2) {
-						if (clntxt.length > lastinput.length) {
+						if (clntxt.length != lastinput.length) {
 							lastinput = clntxt;
 							qryb.query(lastinput);
 						}
 					}
 				}); 
 
-			})(this.query_clrbtn, this.query_box);	
+			})(this.query_clrbtn, this.query_box, qryb);	
 
 		}				
 
@@ -298,8 +323,10 @@ export class RiscoMapCtx {
 s 	 * @param {object} p_evt - Event (user event expected)
 	 */
 	mxOnEvent(p_evt) {
-		this.toolmgr.tmOnEvent(this, p_evt);
-		p_evt.stopPropagation();
+		if (p_evt.target.tagName.toLowerCase() == "canvas") {
+			this.toolmgr.tmOnEvent(this, p_evt);
+			p_evt.stopPropagation();
+		}
 	}	
 
 	getCanvasDims(out_env) {

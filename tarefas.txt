@@ -48,7 +48,7 @@
 - relações
 	- represemtar individuos ou agregar: lugar para as funções de agregação
 
-
+>>>>> customRisize -> onresise ou after (ou pre) resize
 
 - validar main configs
 
