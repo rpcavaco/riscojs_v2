@@ -544,5 +544,21 @@ class TransformsQueue {
 		out_env[3] = Math.max(terrainPtLR[1], terrainPtUL[1]);		
 	}	
 
+	zoomToRect(p_min_terrain_x, p_min_terrain_y, p_max_terrain_x, p_max_terrain_y) {
+		
+		const cdims = [];
+		const dw = p_max_terrain_x - p_min_terrain_x, dh = p_max_terrain_y - p_min_terrain_y;
+		const cx = p_min_terrain_x + (dw / 2.0), cy = p_min_terrain_y + (dh / 2.0);
+		let readableScale;
 
+		this.mapctx.renderingsmgr.getCanvasDims(cdims);
+
+		if (dw > dh) {
+			readableScale = Math.round(1000.0 / (cdims[0] * GlobalConst.ZOOM2RECT_PERC / dw * GlobalConst.MMPD));
+		} else {
+			readableScale = Math.round(1000.0 / (cdims[1] * GlobalConst.ZOOM2RECT_PERC / dh * GlobalConst.MMPD));
+		}
+
+		this.setScaleCenteredAtPoint(readableScale, [cx, cy], true);
+	}
 }

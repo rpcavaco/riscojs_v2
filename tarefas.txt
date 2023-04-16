@@ -48,8 +48,6 @@
 - relações
 	- represemtar individuos ou agregar: lugar para as funções de agregação
 
->>>>> customRisize -> onresise ou after (ou pre) resize
-
 - validar main configs
 
 - WFS xml
@@ -64,7 +62,8 @@
 
 --------------------------------- UI/Widgets  -------------------------------
 
->> - Controles mínimos zooming
+OK - Controles mínimos zooming
+>> -querybox e Localizador
 - Legenda
 - TOC
 - hovering events over control surfaces of widgets

@@ -462,6 +462,7 @@ export class LocQuery {
 
 						if (that.setTopo(responsejson['out']['cod_topo'], responsejson['out']['toponym'])) {
 							that.querybox.value = responsejson['out']['toponym'];
+							that.mapctx.transformmgr.zoomToRect(responsejson['out']['ext'][0], responsejson['out']['ext'][1], responsejson['out']['ext'][2], responsejson['out']['ext'][3])
 						}
 
 						that.cleanResultArea();
