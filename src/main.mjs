@@ -305,14 +305,14 @@ export class RiscoMapCtx {
 	resize() {
 		this.renderingsmgr.init();
 		this.maprefresh();
-		this.customResize(this);
+		this.onAfterResize(this);
 	}
 
 	/**
-	 * Method customResize - Abstract, must be implemented to execute customized tasks on fired on window resize
+	 * Method onAfterResize - Abstract, must be implemented to execute customized tasks on fired on window resize
  	 * @param {object} p_this_mapctx - This map context
  	 */	
-	customResize(p_this_mapctx) {
+	onAfterResize(p_this_mapctx) {
 		// To be implemented 
 	}
 

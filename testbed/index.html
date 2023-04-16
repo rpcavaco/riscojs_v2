@@ -132,7 +132,7 @@
 		let RiscoOVInst = new RiscoMapOverlay("PanelDiv");
 		let mapctx = RiscoOVInst.newMapCtx(RISCO_MAP_CFG, "single", "canvas", true);
 
-		mapctx.customResize = function(p_mapctx) {
+		mapctx.onAfterResize = function(p_mapctx) {
 			checkPoints(p_mapctx);
 		};
 
