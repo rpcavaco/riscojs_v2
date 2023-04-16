@@ -339,15 +339,29 @@ export class LocQuery {
 	msgs_ctrlr;
 	querybox;
 	result_area;
+	zoomto;
+	npolfeats;
+	centerlinefeats;
 	found;
+	#lastinput;
 
 	constructor(p_mapctx, p_msgs_ctrlr, p_cfg, p_crs) {
 		this.mapctx = p_mapctx;
 		this.msgs_ctrlr = p_msgs_ctrlr;
 		this.url = p_cfg["url"];
 		this.zoomto = p_cfg["zoomto"];
+		this.npolfeats = p_cfg["npolfeats"];
+		this.centerlinefeats = p_cfg["centerlinefeats"];
 		this.crs = p_crs;
 		this.found = null;
+	}
+
+	set lastinput(p_li) {
+		this.#lastinput = p_li;
+	}
+
+	get lastinput() {
+		return this.#lastinput;
 	}
 
 	cleanResultArea() {
@@ -357,15 +371,18 @@ export class LocQuery {
 		}
 	}
 
+
+
 	clear(p_full) {
 
-		console.log("-- LocQuery clear --, full:", p_full);
+		// console.trace("-- LocQuery clear --, full:", p_full);
 
 		if (p_full) {
 			this.found = null;
 		}
 		this.cleanResultArea();	
 		this.querybox.value = '';	
+		this.#lastinput = '';
 	}
 
 	setTopo(p_cod_topo, p_toponimo) {
@@ -417,7 +434,7 @@ export class LocQuery {
 		.then(
 			function(responsejson) {
 
-				let p, r, hei;
+				let p, r, hei, filter_dict, foundlist = [];
 
 				if (responsejson['error'] !== undefined) {
 					msgs_ctrlr.warn(responsejson['error']);
@@ -439,7 +456,7 @@ export class LocQuery {
 						that.result_area.style.display = '';		
 						for(const top of responsejson['toponyms']['list']) {
 							p = that.result_area.appendChild(document.createElement('p'));
-							((p_elem, p_this, p_cod_topo, p_toponimo) => {
+							((p_elem, p_this, p_cod_topo, p_toponimo, p_env) => {
 								p_elem.innerText = p_toponimo;
 								p_elem.classList.add("hoverme");
 								p_elem.addEventListener(
@@ -447,9 +464,23 @@ export class LocQuery {
 										p_this.setTopo(p_cod_topo, p_toponimo);
 										p_this.querybox.value = p_toponimo;
 										p_this.result_area.style.display = 'none';
+
+										that.mapctx.tocmgr.addAfterRefreshProcedure(() => {
+
+											filter_dict = {}
+											filter_dict[that.centerlinefeats["fieldname_topo"]] = p_cod_topo;
+											that.mapctx.featureCollection.find(that.centerlinefeats["layerkey"], 'EQ', filter_dict, foundlist);
+											for (let foundid of foundlist) {
+												that.mapctx.featureCollection.draw(that.mapctx, that.centerlinefeats["layerkey"], 
+												foundid, {'normal': 'temporary', 'labels': 'temporary' }, 
+												{ "path": that.centerlinefeats["symb"] } );
+											}
+			
+										});
+										that.mapctx.transformmgr.zoomToRect(p_env[0], p_env[1], p_env[2], p_env[3]);										
 									}
 								);	
-							})(p, that, top['cod_topo'], top['toponimo']);
+							})(p, that, top['cod_topo'], top['toponimo'], top['env']);
 							r = p.getBoundingClientRect();
 							hei += r.height;
 						}
@@ -463,7 +494,22 @@ export class LocQuery {
 
 						if (that.setTopo(responsejson['out']['cod_topo'], responsejson['out']['toponym'])) {
 							that.querybox.value = responsejson['out']['toponym'];
-							that.mapctx.transformmgr.zoomToRect(responsejson['out']['ext'][0], responsejson['out']['ext'][1], responsejson['out']['ext'][2], responsejson['out']['ext'][3])
+
+							that.mapctx.tocmgr.addAfterRefreshProcedure(() => {
+
+								filter_dict = {}
+								filter_dict[that.centerlinefeats["fieldname_topo"]] = responsejson['out']['cod_topo'];
+								that.mapctx.featureCollection.find(that.centerlinefeats["layerkey"], 'EQ', filter_dict, foundlist);
+								//console.warn("feat id:", featid, "feat:", feat, "symb:", GlobalConst.FEATMOUSESEL_HIGHLIGHT[feat.gt])
+								for (let foundid of foundlist) {
+									that.mapctx.featureCollection.draw(that.mapctx, that.centerlinefeats["layerkey"], 
+									foundid, {'normal': 'temporary', 'labels': 'temporary' }, 
+									{ "path": that.centerlinefeats["symb"] } );
+								}
+
+							});
+
+							that.mapctx.transformmgr.zoomToRect(responsejson['out']['ext'][0], responsejson['out']['ext'][1], responsejson['out']['ext'][2], responsejson['out']['ext'][3]);
 						}
 
 						that.cleanResultArea();
@@ -522,15 +568,42 @@ export class LocQuery {
 
 						if (that.setNpol(responsejson['out']['npol'], responsejson['out']['cod_topo'], responsejson['out']['toponym'])) {
 							that.querybox.value = `${responsejson['out']['toponym']} ${responsejson['out']['npol']}`;
+
+							that.mapctx.tocmgr.addAfterRefreshProcedure(() => {
+
+								filter_dict = {}
+								filter_dict[that.centerlinefeats["fieldname_topo"]] = responsejson['out']['cod_topo'];
+								that.mapctx.featureCollection.find(that.centerlinefeats["layerkey"], 'EQ', filter_dict, foundlist);
+								//console.warn("feat id:", featid, "feat:", feat, "symb:", GlobalConst.FEATMOUSESEL_HIGHLIGHT[feat.gt])
+								for (let foundid of foundlist) {
+									that.mapctx.featureCollection.draw(that.mapctx, that.centerlinefeats["layerkey"], 
+									foundid, {'normal': 'temporary', 'labels': 'temporary' }, 
+									{ "path": that.centerlinefeats["symb"] } );
+								}
+
+								filter_dict = {}
+								filter_dict[that.npolfeats["fieldname_topo"]] = responsejson['out']['cod_topo'];
+								filter_dict[that.npolfeats["fieldname_npol"]] = responsejson['out']['npol'];
+								that.mapctx.featureCollection.find(that.npolfeats["layerkey"], 'EQ', filter_dict, foundlist);
+								//console.warn("feat id:", featid, "feat:", feat, "symb:", GlobalConst.FEATMOUSESEL_HIGHLIGHT[feat.gt])
+								for (let foundid of foundlist) {
+									that.mapctx.featureCollection.draw(that.mapctx, that.npolfeats["layerkey"], 
+									foundid, {'normal': 'temporary', 'labels': 'temporary' }, 
+									{ "path": that.npolfeats["symb"] } );
+								}
+
+							});
+
 							that.mapctx.transformmgr.setScaleCenteredAtPoint(that.zoomto, [responsejson['out']['loc'][0], responsejson['out']['loc'][1]], true);
 						}
 						that.cleanResultArea();
 					}
 				}
 
-				console.log(responsejson);	
-
-				//const out = 
+				if (GlobalConst.getDebug("TEXTQUERY")) {
+					console.log("[DBG:TEXTQUERY] ------------------------");
+					console.log(responsejson);
+				}
 
 			}
 		).catch((error) => {

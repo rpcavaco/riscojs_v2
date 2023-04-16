@@ -129,6 +129,37 @@ export class FeatureCollection {
 		return id;
 	}
 
+	// TODO p_op: 'EQ', 'LT', 'GT', 'LE', 'GE' -- To complete implementation of all ops
+	find(p_layerkey, p_op, p_name_value_dict, out_id_list) {
+		out_id_list.length = 0;
+		let feat, found, retid = null, retfeat = null;
+		if (this.featList[p_layerkey] !== undefined) {
+			for (let id in this.featList[p_layerkey]) {
+				feat = this.featList[p_layerkey][id];
+				switch(p_op) {
+					case 'EQ':
+						found = true;
+						for (let fname in p_name_value_dict) {
+							if (feat.a[fname] != p_name_value_dict[fname]) {
+								found = false;
+								break;
+							};	
+						}
+						if (found) {
+							out_id_list.push(id);
+						};
+						break;
+
+					default:
+						throw new Error(`FeatureCollection.find: unsupported logical operation '${p_op}'`);
+				}
+			}
+		} else {
+			console.warn(`FeatureColllection.find: no '${p_layerkey}' layer exists`);
+		}
+		return (out_id_list.length > 0);
+	}
+
 	remove(p_layerkey, p_id) {
 		if (this.featList[p_layerkey] !== undefined) {
 			if (this.featList[p_layerkey][p_id] !== undefined) {

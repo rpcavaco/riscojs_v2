@@ -28,6 +28,8 @@ class DynamicSymbol {
 }
 
 export class TOCManager {
+
+	after_refresh_procedure_list;
 	
 	constructor(p_mapctx, p_mode) {
 		this.layers = [];
@@ -36,6 +38,7 @@ export class TOCManager {
 		this.initLayersFromConfig();
 		this.drawlist = [];
 		this._refreshing = false;
+		this.after_refresh_procedure_list = [];
 	}
 
 	static readLayerConfigItem(p_lyrob, p_configvar, p_layerkey, p_itemname) {
@@ -52,8 +55,17 @@ export class TOCManager {
 		this._refreshing = true;
 	}	
 
+	addAfterRefreshProcedure(p_paramless_func) {
+		this.after_refresh_procedure_list.push(p_paramless_func);
+	}
+
 	finishedRefreshing() {
 		this._refreshing = false;
+		const l = this.after_refresh_procedure_list.length;
+		for (let p, i=0; i<l; i++) {
+			p = this.after_refresh_procedure_list.pop();
+			p();
+		}
 	}
 
 	getLayer(p_layerkey) {

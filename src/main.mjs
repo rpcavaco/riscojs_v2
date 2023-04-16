@@ -268,7 +268,7 @@ export class RiscoMapCtx {
 
 			(function(p_btn, p_query_box, p_qryb_obj) {
 				
-				let lastinput = "";
+				p_qryb_obj.lastinput = "";
 
 				// Query clear button
 				p_btn.addEventListener("click", function(e) { 
@@ -276,16 +276,25 @@ export class RiscoMapCtx {
 				}); 
 
 				// Query box input event
-				p_query_box.addEventListener("input", function(e) { 
-					let clntxt = p_query_box.value.trim();
-					// console.log("::282:: INPUT EVENT", clntxt, p_query_box.value);
-					if (clntxt.length > 2) {
-						if (clntxt.length != lastinput.length) {
-							lastinput = clntxt;
-							qryb.query(lastinput);
-						}
+				(function(pp_query_box) {
+					const evttypes = ["input", "paste"];
+					for (let i=0; i<evttypes.length; i++) {
+						pp_query_box.addEventListener(evttypes[i], function(e) { 
+							let clntxt = pp_query_box.value.trim();
+							//console.log("::284:: qryb EVENT", e.type, clntxt, pp_query_box.value, "len", clntxt.length, "!=", p_qryb_obj.lastinput.length);
+							if (clntxt.length > 2) {
+								if (clntxt != p_qryb_obj.lastinput) {
+									p_qryb_obj.lastinput = clntxt;
+									p_qryb_obj.query(p_qryb_obj.lastinput);
+								}
+							} else if (clntxt.length == 0) {
+								if (p_qryb_obj.lastinput.length > 0) {
+									p_qryb_obj.clear(true);
+								}
+							}
+						}); 
 					}
-				}); 
+				})(p_query_box);	
 
 			})(this.query_clrbtn, this.query_box, qryb);	
 

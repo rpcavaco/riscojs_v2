@@ -688,6 +688,10 @@ const canvasVectorMethodsMixin = (Base) => class extends Base {
 				lbloptsymbs = opt_symbs['label'];
 		}
 
+		/*if (opt_feat_id == 34517 ) {
+			console.log(":: canvas_vector 703 :: refreshitem:", pathoptsymbs, lbloptsymbs);
+		} */
+
 		// console.log(">>", this.key, this.default_symbol);
 
 		if (this.grabGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, pathoptsymbs)) {

@@ -60,6 +60,8 @@
 
 >> - separar default_customizations.mjs "base" de customizations_cmp.mjs
 
+- Completar operações lógicas no find de feature collection (tem TODO)
+
 --------------------------------- UI/Widgets  -------------------------------
 
 OK - Controles mínimos zooming

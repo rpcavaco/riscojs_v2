@@ -16,6 +16,23 @@ var RISCOJS_BASIC_CFG = {
 	},
 	"locquery": {
 		"url": "https://loc.cm-porto.net/loc/c/lq",
-		"zoomto": 700
+		"zoomto": 500,
+		"centerlinefeats": {
+			"layerkey": "EV",
+			"fieldname_topo": "cod_topo",
+			"symb": { 
+				"strokeStyle": "#d2133f7f",
+				"lineWidth": 10
+			}
+		},
+		"npolfeats": {
+			"layerkey": "NPOLPROJ",
+			"fieldname_topo": "cod_topo",
+			"fieldname_npol": "n_policia",
+			"symb": { 
+				"strokeStyle": "#fc164c",
+				"lineWidth": 4
+			}
+		}		
 	}
 }
