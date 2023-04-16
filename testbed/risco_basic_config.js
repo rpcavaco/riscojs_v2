@@ -14,5 +14,8 @@ var RISCOJS_BASIC_CFG = {
 		"size": 320,
 		"clrbtn_size": 80
 	},
-	"locqueryurl": "https://loc.cm-porto.net/loc/c/lq"
+	"locquery": {
+		"url": "https://loc.cm-porto.net/loc/c/lq",
+		"zoomto": 700
+	}
 }

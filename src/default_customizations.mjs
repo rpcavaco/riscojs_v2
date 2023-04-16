@@ -341,10 +341,11 @@ export class LocQuery {
 	result_area;
 	found;
 
-	constructor(p_mapctx, p_msgs_ctrlr, p_url, p_crs) {
+	constructor(p_mapctx, p_msgs_ctrlr, p_cfg, p_crs) {
 		this.mapctx = p_mapctx;
 		this.msgs_ctrlr = p_msgs_ctrlr;
-		this.url = p_url;
+		this.url = p_cfg["url"];
+		this.zoomto = p_cfg["zoomto"];
 		this.crs = p_crs;
 		this.found = null;
 	}
@@ -506,7 +507,7 @@ export class LocQuery {
 												p_this.setNpol(p_npol, p_cod_topo, p_toponimo);
 												p_this.querybox.value = `${p_toponimo} ${p_npol}`;
 												p_this.result_area.style.display = 'none';
-												that.mapctx.transformmgr.setScaleCenteredAtPoint(1000, [p_pt[0], p_pt[1]], true);
+												that.mapctx.transformmgr.setScaleCenteredAtPoint(that.zoomto, [p_pt[0], p_pt[1]], true);
 											}
 										);	
 									})(p, that, np['npol'], responsejson['out']['cod_topo'], responsejson['out']['toponym'], np['pt']);
@@ -521,7 +522,7 @@ export class LocQuery {
 
 						if (that.setNpol(responsejson['out']['npol'], responsejson['out']['cod_topo'], responsejson['out']['toponym'])) {
 							that.querybox.value = `${responsejson['out']['toponym']} ${responsejson['out']['npol']}`;
-							that.mapctx.transformmgr.setScaleCenteredAtPoint(1000, [responsejson['out']['loc'][0], responsejson['out']['loc'][1]], true);
+							that.mapctx.transformmgr.setScaleCenteredAtPoint(that.zoomto, [responsejson['out']['loc'][0], responsejson['out']['loc'][1]], true);
 						}
 						that.cleanResultArea();
 					}
@@ -565,7 +566,7 @@ export class MapCustomizations {
 	setMapCtx(p_mapctx) {
 		const basic_config = p_mapctx.toolmgr.basic_config;
 		// SUBSTITUIR: LocQuery passa para custcmização da CMP, aqui fica algo de mais básico
-		this.instances["querying"] = new LocQuery(p_mapctx, this.messaging_ctrlr, basic_config["locqueryurl"], basic_config["crs"])
+		this.instances["querying"] = new LocQuery(p_mapctx, this.messaging_ctrlr, basic_config["locquery"], basic_config["crs"])
 		console.info("[init RISCO] MapCustomizations, query box adapter launched");
 	}
 
