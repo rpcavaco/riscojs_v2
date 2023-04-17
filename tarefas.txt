@@ -91,6 +91,12 @@ OK - Controles mínimos zooming
 - Bug 0001 - SOLVED,VERIFYING - Algumas features em redesenho, quando há muita intensidade de refresh
 - Bug 0002 - SOLVED,VERIFYING - Erro em signalVectorLoadFinished, "TypeError: this.layers[this.drawlist[li]] is undefined"
 - Bug 0003 - PENDING - Seleção interativa troços Alameda 25 de Abril , será por serem horizontais ?
+- Bug 0004 - PENDING - "infocfg": {
+				.....
+				"keyisstring": true,
+
+				keyisstring: false dá erro de marshalling Go, servidor requer string
+
 
 	(A carecer de atenção urgente)
 

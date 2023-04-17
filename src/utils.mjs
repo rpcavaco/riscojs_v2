@@ -106,6 +106,10 @@ export function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_msgsdict, max_c
 			
 	let caption, ret = 0;
 
+	if (p_attrs[p_fld] === undefined) {
+		return ret;
+	}
+
 	if (Object.keys(p_msgsdict).indexOf(p_fld) >= 0) {
 		caption = I18n.capitalize(p_msgsdict[p_fld]);
 	} else {

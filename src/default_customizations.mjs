@@ -169,6 +169,11 @@ class Info {
 			throw new Error(`Missing 'infocfg.keyfield' config for layer '${this.layer.key}, cannot 'pick' features`);
 		}
 
+		if (p_feature.a[currlayer["infocfg"]["keyfield"]] === undefined) {
+			console.warn(`[WARN] layer '${p_layerkey}' has no attribute corresponding to INFO key field '${currlayer["infocfg"]["keyfield"]}'`);
+			return;
+		}
+
 		let keyval;
 		const _keyval = p_feature.a[currlayer["infocfg"]["keyfield"]];
 
@@ -189,7 +194,6 @@ class Info {
 		.then(response => response.json())
 		.then(
 			function(responsejson) {
-
 				const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
 				that.ibox = new InfoBox(p_mapctx, currlayer, responsejson, that.styles, p_scrx, p_scry, that.infobox_pick, false);
 				const ctx = p_mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');

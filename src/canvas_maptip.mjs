@@ -225,7 +225,8 @@ export class MaptipBox extends PopupBox {
 
 		const ifkeys = Object.keys(this.layer.maptipfields);
 		if (ifkeys.length < 1) {
-			throw new Error(`Missing 'maptipfields' config for layer '${this.layer.key}`);
+			console.warn(`[WARN] Missing 'maptipfields' config for layer '${this.layer.key}`);
+			return;
 		}
 
 		const lang = (new I18n(this.layer.msgsdict)).getLang();

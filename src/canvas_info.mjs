@@ -43,6 +43,10 @@ export class InfoBox extends PopupBox {
 		if (this.layer.infocfg["jsonkey"] === undefined) {
 			throw new Error(`Missing mandatory 'infocfg.jsonkey' config (info query 'alias' in 'risco_find') for layer '${this.layer.key}`);
 		}
+
+		if (this.data[this.layer.infocfg.jsonkey] === undefined) {
+			throw new Error(`Missing 'infocfg.jsonkey' in data row (found keys:${Object.keys(this.data)}) for layer '${this.layer.key}`);
+		}
 		
 		this.recordcnt = this.data[this.layer.infocfg.jsonkey].length;
 		
