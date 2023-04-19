@@ -40,6 +40,11 @@ class DefaultTool extends BaseTool {
 	}
 
 	onEvent(p_mapctx, p_evt) {
+
+		if (GlobalConst.getDebug("INTERACTION")) {
+			console.log("[DBG:INTERACTION] DEFTOOL, evt.type:", p_evt.type);
+		}
+
 		if (p_evt.type == 'mousemove') {
 			p_mapctx.printMouseCoords(p_evt.clientX, p_evt.clientY);
 		}
@@ -356,38 +361,96 @@ class MultiTool extends BaseTool {
 	constructor() {
 		super(false, false); // not part of general toggle group, surely not default in toogle
 		this.start_screen = null;
+		this.pending_pinch = null;
 		this.imgs_dict={};		
 		this.wheelevtctrlr = new wheelEventCtrller();
-
+		//this.touchevtctrlr = new TouchController();
+		this._isworking_timeout = null;
 	}
 
 	finishPan(p_transfmgr, p_x, p_y, opt_origin) {
-		
-		let dx=0, dy=0;
-		let deltascrx =  Math.abs(this.start_screen[0] - p_x);
-		let deltascry =  Math.abs(this.start_screen[1] - p_y);
 
-		if (opt_origin == 'touch') {
-			dx = 6;
-			dy = 6;
-		}
+		if (this._isworking_timeout) {
+			
+			clearTimeout(this._isworking_timeout);
 
-		if (deltascrx > dx || deltascry > dy) {		
-			p_transfmgr.doPan(this.start_screen, [p_x, p_y], true);
+			(function(p_this, pp_transfmgr, pp_x, pp_y, oopt_origin, p_delay_msecs) {
+				p_this._isworking_timeout = setTimeout(function() {
+					p_this.finishPan(pp_transfmgr, pp_x, pp_y, oopt_origin);
+				}, p_delay_msecs);
+			})(this, p_transfmgr, p_transfmgr, p_x, p_y, opt_origin, 700);
+
+		} else {
+
+			let dx=1, dy=1;
+			let deltascrx =  Math.abs(this.start_screen[0] - p_x);
+			let deltascry =  Math.abs(this.start_screen[1] - p_y);
+
+			this.imgs_dict={};
+
+			if (opt_origin == 'touch') {
+				dx = 6;
+				dy = 6;
+			}
+
+			if (deltascrx > dx || deltascry > dy) {		
+				p_transfmgr.doPan(this.start_screen, [p_x, p_y], true);
+			}
+
 		}
 	}
 
+	finishZoomTo(p_transfmgr, p_x, p_y, p_scalingf) {
+
+		if (this._isworking_timeout) {
+			
+			clearTimeout(this._isworking_timeout);
+
+			(function(p_this, pp_transfmgr, pp_x, pp_y, pp_scalingf, p_delay_msecs) {
+				p_this._isworking_timeout = setTimeout(function() {
+					p_this.finishZoomTo(pp_transfmgr, pp_x, pp_y, pp_scalingf);
+				}, p_delay_msecs);
+			})(this, p_transfmgr, p_x, p_y, p_scalingf, 700);
+
+		} else {
+
+			const cs = p_transfmgr.getReadableCartoScale();
+			const newscale = p_scalingf * cs;
+
+			this.imgs_dict={};
+			
+			if (GlobalConst.getDebug("INTERACTION")) {
+				console.log("[DBG:INTERACTION] finishZoomTo, scale, x, y:", newscale, [p_x, p_y]);
+			}
+		
+			p_transfmgr.setScaleCenteredAtScrPoint(newscale, [p_x, p_y], true);
+	
+		}
+
+	}
+
 	onEvent(p_mapctx, p_evt) {
+		let evt, orig, te = null;
+
+		if (GlobalConst.getDebug("INTERACTION")) {
+			console.log("[DBG:INTERACTION] MULTITOOL evt.type:", p_evt.type);
+		}
 
 		try {
+			orig = null;
 			switch(p_evt.type) {
 
+				case 'touchpinch':
+					this.pending_pinch = p_evt;
+					break;
+
+				case 'touchstart':
 				case 'mousedown':
 					//console.log("mdown multitool");
 					//console.trace();
 					// console.log(p_evt, "start:", this.start_screen, (p_evt.buttons & 1) == 1);
 					if (this.start_screen == null) {
-						if ((p_evt.buttons & 1) == 1) {						
+						if (p_evt.buttons === undefined || (p_evt.buttons & 1) == 1) {						
 							this.start_screen = [p_evt.clientX, p_evt.clientY];		
 							p_mapctx.renderingsmgr.getRenderedBitmaps(this.imgs_dict);
 						}
@@ -395,21 +458,38 @@ class MultiTool extends BaseTool {
 					this.wheelevtctrlr.clear();
 					break;
 
+				case 'touchend':
+					orig = "touch";
 				case 'mouseup':
 					// console.log("mup multitool");
 					// console.trace();
 				case 'mouseout':
 				case 'mouseleave':
-					if (this.start_screen != null) {
-						this.finishPan(p_mapctx.transformmgr, p_evt.clientX, p_evt.clientY, 'mouse');	
+					if (orig == null) {
+						orig = "mouse";
+					}
+
+					if (GlobalConst.getDebug("INTERACTION")) {
+						console.log("[DBG:INTERACTION] MULTITOOL up/end/out/leave:", this.start_screen, orig, p_evt, this.pending_pinch);
+					}
+
+					if (this.pending_pinch) {
+
+						this.finishZoomTo(p_mapctx.transformmgr, this.pending_pinch.centerx, this.pending_pinch.centery, this.pending_pinch.scale)
+						this.pending_pinch = null;
+
+					} else if (this.start_screen != null) {
+						this.finishPan(p_mapctx.transformmgr, p_evt.clientX, p_evt.clientY, orig);	
+						this.imgs_dict={};
 						this.start_screen = null;
 					}
 					this.wheelevtctrlr.clear();
 					break;
 
+				case 'touchmove':
 				case 'mousemove':
 					if (this.start_screen != null) {
-						if ((p_evt.buttons & 1) == 1) {
+						if (p_evt.buttons === undefined || (p_evt.buttons & 1) == 1) {
 							p_mapctx.renderingsmgr.putImages(this.imgs_dict, [p_evt.clientX-this.start_screen[0], p_evt.clientY-this.start_screen[1]]);
 						}
 					}
@@ -421,9 +501,12 @@ class MultiTool extends BaseTool {
 					this.wheelevtctrlr.onWheelEvent(p_mapctx, this.imgs_dict, p_evt);
 					break;
 
+
 			}
 		} catch(e) {
 			this.start_screen = null;
+			this.imgs_dict={};
+			this.pending_pinch = null;
 			console.error(e);
 		}  
 		
@@ -455,7 +538,7 @@ class InfoTool extends BaseTool {
 
 		try {
 
-			let insideactivepanel = false;
+			let evt, te = null, insideactivepanel = false;
 
 			if (ic.pick !== undefined) {
 				if (this.pickpanel_active) {
@@ -465,22 +548,29 @@ class InfoTool extends BaseTool {
 					}
 				}
 			}
-							
+	
+			if (GlobalConst.getDebug("INTERACTION")) {
+				console.log("[DBG:INTERACTION] INFOTOOL evt.type:", p_evt.type);
+			}
+		
 			switch(p_evt.type) {
 
+				case 'touchstart':
 				case 'mousedown':
-					if (insideactivepanel)
+					if (insideactivepanel) {
 						ret = false; 
+					}
 						// Prevent mousedown being processed in subsequent onevent methods in remaining tools
 						// This prevents unwanted map interaction (e.g.: panning) through infobox background
 					
-						break;
+					break;
 
+				case 'touchend':
 				case 'mouseup':
 					if (ic.pick !== undefined) {
 						if (this.pickpanel_active) {
 							if (insideactivepanel) {
-								ic.interact(p_mapctx, p_evt);
+								ic.interact(p_mapctx, evt);
 							} else {
 								this.pickpanel_active = false;
 							}
@@ -705,6 +795,10 @@ export class ToolManager {
 			if (_ret) {
 				break;
 			}
+		}
+
+		if (GlobalConst.getDebug("INTERACTION")) {
+			console.log("[DBG:INTERACTION] ToolManager, interacted with map controls:", _ret);
 		}
 
 		// if event interacted with any map controls (_ret is true) 

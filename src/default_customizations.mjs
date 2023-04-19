@@ -289,11 +289,16 @@ class BasicCtrlBox extends ControlsBox {
 
 		const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 
+		if (GlobalConst.getDebug("INTERACTION")) {
+			console.log("[DBG:INTERACTION] BASICCTRLBX, event, control key:", p_evt, ctrl_key);
+		}
+
 		if (ctrl_key) {
 			//console.trace("285:", ctrl_key, p_evt);
 			basic_config = this.tool_manager.basic_config;
 			switch(p_evt.type) {
 
+				case 'touchend':
 				case 'mouseup':
 
 					switch(ctrl_key) {
@@ -617,7 +622,6 @@ export class LocQuery {
 	}
 
 	setFeedbackAreas(p_querybox, p_result_area) {
-		console.log("p_querybox:", p_querybox);
 		this.querybox = p_querybox;
 		this.result_area = p_result_area;
 	}

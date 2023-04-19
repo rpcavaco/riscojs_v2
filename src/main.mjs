@@ -5,7 +5,7 @@ import {TOCManager} from './toc.mjs';
 import {FeatureCollection} from './feature_collection.mjs';
 import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
-
+import {TouchController} from './touchevents.mjs';
 /**
  * Class RiscoMapOverlay
  * 
@@ -149,6 +149,7 @@ export class RiscoMapCtx {
 		this.toolmgr = new ToolManager(p_config_var["basic"]);
 		this.tocmgr = new TOCManager(this, p_mode);
 		this.i18n = new I18n(p_config_var["text"]);
+		this.touchevtctrlr = new TouchController();
 
 		this.query_box = new I18n(p_config_var["text"]);
 
@@ -158,7 +159,7 @@ export class RiscoMapCtx {
 
 		// Attach event listeners to this map context panel
 		(function(p_mapctx) {
-			const evttypes = ["mouseup", "mousedown", "mousemove", "mouseover", "mouseout", "mouseleave", "wheel"];
+			const evttypes = ["mouseup", "mousedown", "mousemove", "mouseover", "mouseout", "mouseleave", "wheel", "touchstart", "touchmove", "touchend", "touchcancel"];
 			for (let i=0; i<evttypes.length; i++) {
 				p_mapctx.panelwidget.addEventListener(evttypes[i], function(e) { 
 					p_mapctx.mxOnEvent(e);
@@ -333,8 +334,19 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	 */
 	mxOnEvent(p_evt) {
 		if (p_evt.target.tagName.toLowerCase() == "canvas") {
-			this.toolmgr.tmOnEvent(this, p_evt);
-			p_evt.stopPropagation();
+			const evt = this.touchevtctrlr.adapt(p_evt);
+			if (evt) {
+
+				if (GlobalConst.getDebug("INTERACTION")) {
+					console.log("[DBG:INTERACTION] MAIN - event adapted from touch - original, adapted:", p_evt, evt);
+				}
+				this.toolmgr.tmOnEvent(this, evt);
+				p_evt.stopPropagation();
+			} else {
+				if (GlobalConst.getDebug("INTERACTION")) {
+					console.log("[DBG:INTERACTION] MAIN - event NOT adapted from touch - evt.type:", p_evt.type);
+				}
+			}
 		}
 	}	
 

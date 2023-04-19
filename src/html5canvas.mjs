@@ -55,6 +55,11 @@
 			this.paneldiv.appendChild(this.canvases[this.canvaskeys[i]]);
 		}
 
+		const readfreq_canvaskeys = ['base', 'normal', 'labels', 'temporary'];
+		for (let ctx, i=0; i<readfreq_canvaskeys.length; i++) {
+			ctx = this.canvases[readfreq_canvaskeys[i]].getContext('2d', { willReadFrequently: true });
+		}
+
 		this.init();
 
 		console.info("[init RISCO] canvases created");
