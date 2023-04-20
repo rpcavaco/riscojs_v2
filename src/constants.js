@@ -189,14 +189,19 @@ var GlobalConst = {
 
 	CONTROLS_STYLES: {
 
+		
 		BCKGRD: "rgb(216, 216, 216)",
 		COLOR: "black",
 		OFFSET: 10,
 		SIZE: 30,
 		STROKEWIDTH: 1,
+		GAP: 10,
 
 		HOMESYMBWID: 24,
-		HOMESYMB: "data:image/svg+xml;charset=utf-8,%3Csvg width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E %3Cpath fill=%22none%22 stroke=%22black%22 stroke-width=%221%22 stroke-linejoin=%22round%22 d=%22M 4,14 L 12,8 L 20,14 h -3 v 8 h -3 v -4 h -4 v 4 h -3 v -8 z %22 /%3E%3C/svg%3E"
+		HOMESYMB: "data:image/svg+xml;charset=utf-8,%3Csvg width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E %3Cpath fill=%22none%22 stroke=%22black%22 stroke-width=%221%22 stroke-linejoin=%22round%22 d=%22M 4,14 L 12,8 L 20,14 h -3 v 8 h -3 v -4 h -4 v 4 h -3 v -8 z %22 /%3E%3C/svg%3E",
+		GPSSYMBWID: 24,
+		GPSSYMB: "data:image/svg+xml;charset=utf-8,%3Csvg width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E %3Ccircle  fill=%22none%22 stroke=%22black%22 stroke-width=%221%22 cx=%2212%22 cy=%2216%22 r=%228%22/%3E %3Ccircle fill=%22black%22 stroke=%22black%22 stroke-width=%221%22 cx=%2212%22 cy=%2216%22 r=%222%22/%3E %3C/svg%3E"
+
 
 
 	},

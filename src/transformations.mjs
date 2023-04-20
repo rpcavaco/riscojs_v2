@@ -154,6 +154,10 @@ class TransformsQueue {
  */
  export class Transform2DMgr {
 
+	geoloc_timeoutid;
+	geoloc_active;
+	geoloc_lastpos;
+
 	constructor(p_mapctx, p_mapctx_config_var) {
 
 		if (p_mapctx_config_var == null) {
@@ -179,6 +183,10 @@ class TransformsQueue {
 		this.init();
 
 		geomTest();		
+
+		this.geoloc_timeoutid = null;
+		this.geoloc_active = false;
+		this.geoloc_lastpos = null;
 
 		console.info("[init RISCO]  2D transform env prepared");
 
@@ -243,6 +251,115 @@ class TransformsQueue {
 		}
 				
 		this.setCenter(...tcobj, true);
+	}
+
+	trackpos(p_gps_coords) {
+		
+		//console.log(p_gps_coords);
+		let url = null;
+
+		if (this.mapctx_config_var['geometry_service']['type'] == "ARCGIS") {
+			url = `${this.mapctx_config_var['geometry_service']['url']}&geometries=${p_gps_coords.longitude}%2C${p_gps_coords.latitude}`;
+		}
+
+		if (url) {
+
+			const that = this;
+
+			fetch(url, {
+				method: "GET"
+			})
+			.then(response => response.json())
+			.then(
+				function(responsejson) {
+
+					if (that.geoloc_lastpos==null) {
+						that.geoloc_lastpos = [];
+						that.getCenter(that.geoloc_lastpos);
+					}
+
+					if (that.mapctx_config_var['geometry_service']['type'] == "ARCGIS") {
+						if (responsejson.geometries	!== undefined) {
+							if (responsejson.geometries.length == 1) {
+								if (Math.abs(that.geoloc_lastpos[0]-responsejson.geometries[0].x) > 1.0 ||
+									Math.abs(that.geoloc_lastpos[1]-responsejson.geometries[0].y) > 1.0) {
+										that.setCenter(responsejson.geometries[0].x, responsejson.geometries[0].y, true);
+										that.geoloc_lastpos[0] = responsejson.geometries[0].x;
+										that.geoloc_lastpos[1] = responsejson.geometries[0].y;
+									}
+							} else {
+								console.error("[GEOLOC] Empty geometries from ArcGIS service");
+							}					
+						} else {
+							console.error("[GEOLOC] No geometries from ArcGIS service");
+						}
+					}
+				}
+			).catch((error) => {
+				console.error(`[GEOLOC] Impossible to transform coords`, error);
+			});	
+
+		} else {
+			throw new Error("[GEOLOC] Missing URL for geometry service point transformation");
+		}
+		
+	}
+
+	toggleGeolocWatch() {
+
+		const options = { enableHighAccuracy: true };
+
+		function getLocation(p_this) {
+
+			navigator.geolocation.getCurrentPosition((pos) => {
+				console.log(""[GEOLOC]", pos.coords);
+				p_this.trackpos(pos.coords);
+				if (p_this.geoloc_active) {
+					p_this.geoloc_timeoutid = setTimeout(getLocation(p_this), 2000);
+				} 
+			},
+			(error) => {
+				console.error("[GEOLOC] getCurrentPosition error:", error);
+				if (p_this.geoloc_timeoutid) {
+					clearTimeout(p_this.geoloc_timeoutid);
+					p_this.geoloc_timeoutid = null;
+				}	
+				p_this.geoloc_active = false;			
+			},
+			options);
+		}
+
+		if (navigator["geolocation"] !== undefined) {
+			
+			if (this.geoloc_active) {
+
+				if (this.geoloc_timeoutid) {
+					clearTimeout(this.geoloc_timeoutid);
+					this.geoloc_timeoutid = null;
+				}
+
+				this.geoloc_active = false;
+				this.mapctx.getCustomizationInstance().messaging_ctrlr.info("Geolocalização terminada");
+
+			} else {
+
+				navigator.permissions.query({ name: "geolocation" }).then((result) => {
+					if (result.state !== "granted") {
+					  console.error("[GEOLOC] Geolocation permission not granted");
+					  this.mapctx.getCustomizationInstance().messaging_ctrlr.warn("Não foi dada permissão de uso da geolocalização.")
+					  return;
+					}
+				});				  
+				  
+				this.geoloc_active = true;
+				getLocation(this);
+				this.mapctx.getCustomizationInstance().messaging_ctrlr.info("Geolocalização iniciada")
+			}		
+		} else {
+			this.mapctx.getCustomizationInstance().messaging_ctrlr.warn("Impossível ativar geolocalização");
+		}
+
+
 	}
 	/**
 	 * Method setScaleFromReadableCartoScale

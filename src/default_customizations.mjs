@@ -243,12 +243,20 @@ class BasicCtrlBox extends ControlsBox {
 		this.controls_keys = [
 			"zoomout",
 			"home",
-			"zoomin"
+			"zoomin",
+			"gps"
 		];
 
-		this.img = new Image();
-		this.img.decoding = "sync";
-		this.img.src = GlobalConst.CONTROLS_STYLES.HOMESYMB;
+		this.gap = GlobalConst.CONTROLS_STYLES.GAP;
+
+		this.imgh = new Image();
+		this.imgh.decoding = "sync";
+		this.imgh.src = GlobalConst.CONTROLS_STYLES.HOMESYMB;
+
+
+		this.imgg = new Image();
+		this.imgg.decoding = "sync";
+		this.imgg.src = GlobalConst.CONTROLS_STYLES.GPSSYMB;
 
 	}
 
@@ -272,12 +280,21 @@ class BasicCtrlBox extends ControlsBox {
 				p_ctx.stroke();
 				break;
 
+			case "gps":
+
+				// homing zoom button decorated from SVG image data URL configured in Globals	
+				this.imgg.decode()
+							.then(() => {
+								p_ctx.drawImage(this.imgg, p_left + ((GlobalConst.CONTROLS_STYLES.SIZE - GlobalConst.CONTROLS_STYLES.GPSSYMBWID) / 2), p_top);
+							});
+				break;
+
 			default:
 
 				// homing zoom button decorated from SVG image data URL configured in Globals	
-				this.img.decode()
+				this.imgh.decode()
 							.then(() => {
-								p_ctx.drawImage(this.img, p_left + ((GlobalConst.CONTROLS_STYLES.SIZE - GlobalConst.CONTROLS_STYLES.HOMESYMBWID) / 2), p_top);
+								p_ctx.drawImage(this.imgh, p_left + ((GlobalConst.CONTROLS_STYLES.SIZE - GlobalConst.CONTROLS_STYLES.HOMESYMBWID) / 2), p_top);
 							});
 		}
 	}
@@ -315,6 +332,13 @@ class BasicCtrlBox extends ControlsBox {
 							p_mapctx.transformmgr.zoomIn(GlobalConst.MINSCALE, GlobalConst.SCALEINOUT_STEP, true);
 							break;
 
+						case "gps":
+							p_mapctx.transformmgr.toggleGeolocWatch();
+							break;
+
+						default:
+							throw new Error(`BasicCtrlBox, interact, wrong key:${ctrl_key}`);
+	
 							
 
 					}

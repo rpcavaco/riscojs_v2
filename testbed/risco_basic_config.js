@@ -34,5 +34,9 @@ var RISCOJS_BASIC_CFG = {
 				"lineWidth": 4
 			}
 		}		
+	},
+	"geometry_service": {
+		"type": "ARCGIS",
+		"url": "https://servergeo.cm-porto.pt/arcgis/rest/services/Utilities/Geometry/GeometryServer/project?inSR=4326&outSR=3763&transformation=&transformForward=true&vertical=false&f=pjson"
 	}
 }
