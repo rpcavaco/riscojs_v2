@@ -281,8 +281,8 @@ class TransformsQueue {
 					if (that.mapctx_config_var['geometry_service']['type'] == "ARCGIS") {
 						if (responsejson.geometries	!== undefined) {
 							if (responsejson.geometries.length == 1) {
-								if (Math.abs(that.geoloc_lastpos[0]-responsejson.geometries[0].x) > 1.0 ||
-									Math.abs(that.geoloc_lastpos[1]-responsejson.geometries[0].y) > 1.0) {
+								if (Math.abs(that.geoloc_lastpos[0]-responsejson.geometries[0].x) > GlobalConst.GEOLOCATION_NEXTPOS_TOLERANCE ||
+									Math.abs(that.geoloc_lastpos[1]-responsejson.geometries[0].y) > GlobalConst.GEOLOCATION_NEXTPOS_TOLERANCE) {
 										that.setCenter(responsejson.geometries[0].x, responsejson.geometries[0].y, true);
 										that.geoloc_lastpos[0] = responsejson.geometries[0].x;
 										that.geoloc_lastpos[1] = responsejson.geometries[0].y;
@@ -312,10 +312,12 @@ class TransformsQueue {
 		function getLocation(p_this) {
 
 			navigator.geolocation.getCurrentPosition((pos) => {
-				console.log(""[GEOLOC]", pos.coords);
+				
+				console.log("[GEOLOC]", pos.coords);
+				
 				p_this.trackpos(pos.coords);
 				if (p_this.geoloc_active) {
-					p_this.geoloc_timeoutid = setTimeout(getLocation(p_this), 2000);
+					p_this.geoloc_timeoutid = setTimeout(getLocation(p_this), GlobalConst.GEOLOCATION_INTERVAL_MS);
 				} 
 			},
 			(error) => {

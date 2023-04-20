@@ -72,6 +72,10 @@ var GlobalConst = {
 	LBL_VERTICALITY_TEST: 2,
 	LBL_MAX_ALONGPATH_OCCUPATION: 0.98,
 	ZOOM2RECT_PERC: 0.8, // proportion of map frame fillling when zooming to rect (largest dimension of rect to respective frame dimension)
+
+	GEOLOCATION_INTERVAL_MS: 4000,
+	GEOLOCATION_NEXTPOS_TOLERANCE: 2.0,
+
 	// ------------------------------------------------------------------------
 	// END of internal constants 
 	// ------------------------------------------------------------------------
