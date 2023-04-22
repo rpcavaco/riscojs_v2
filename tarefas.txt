@@ -36,6 +36,7 @@
 	- OK - poly / line 
 	- OK - points
 - OK - info na multi tool (no mouse up sem drag) e ficha de feat no mouse move
+- OK - separar default_customizations.mjs "base" de cmp_customizations.mjs
 
 - Edição
 
@@ -58,10 +59,10 @@
 
 >> - necessário separar o que é customização do que são classes - base em default_customizations.mjs
 
->> - separar default_customizations.mjs "base" de customizations_cmp.mjs
 
-- separar geolocation para as costumizações
-- remover drawGeolocationMarkings para layer analítica, juntar ponto de Localizador e trajeto entre ambos (começar com linha reta)
+
+>> 1 - separar geolocation para as costumizações
+>> 2 - remover drawGeolocationMarkings para layer analítica, juntar ponto de Localizador e trajeto entre ambos (começar com linha reta)
 
 - Completar operações lógicas no find de feature collection (tem TODO)
 
@@ -94,7 +95,7 @@ OK - Controles mínimos zooming
 - Bug 0001 - SOLVED,VERIFYING - Algumas features em redesenho, quando há muita intensidade de refresh
 - Bug 0002 - SOLVED,VERIFYING - Erro em signalVectorLoadFinished, "TypeError: this.layers[this.drawlist[li]] is undefined"
 - Bug 0003 - LOWPRI PENDING - Seleção interativa troços Alameda 25 de Abril , será por serem horizontais ?
-- Bug 0004 - LOWPRI PENDING - "infocfg": {
+- Bug 0004 - LOWPRI PENDING - "infocfg": 
 				.....
 				"keyisstring": true,
 

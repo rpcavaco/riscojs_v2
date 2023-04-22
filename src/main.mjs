@@ -100,10 +100,7 @@ export class RiscoMapOverlay {
  */
 export class RiscoMapCtx {
 
-	#customization_instance;
-
-	query_box;
-	query_results;
+	#customization_object;
 
 	// p_mode -- just 'canvas' for now
 	constructor(p_config_var, p_paneldiv, p_mode, b_wait_for_customization_avail) {
@@ -155,8 +152,6 @@ export class RiscoMapCtx {
 
 		this._refresh_timeout_id = null;
 
-		this.#customization_instance = null;
-
 		// Attach event listeners to this map context panel
 		(function(p_mapctx) {
 			const evttypes = ["mouseup", "mousedown", "mousemove", "mouseover", "mouseout", "mouseleave", "wheel", "touchstart", "touchmove", "touchend", "touchcancel"];
@@ -192,122 +187,22 @@ export class RiscoMapCtx {
 	/**
 	 * @param {any} p_cclass
 	 */
-	setCustomizationObj(p_instance) {
+	setCustomizationObj(p_instance, p_setmapctx_func) {
 
-		this.#customization_instance = p_instance;
+		this.#customization_object = p_instance;
+		p_setmapctx_func(p_instance, this);
 
-		this.#customization_instance.setMapCtx(this);
-
-		let r, bcb = null,  qryb=null, qryboxheight = 22;
-
-		if (this.#customization_instance.instances["basiccontrolsbox"] !== undefined) {
-			bcb = this.#customization_instance.instances["basiccontrolsbox"];
-			this.toolmgr.addControlsMgr("basiccontrolsbox", bcb);
+		if (p_instance.instances["basiccontrolsbox"] !== undefined) {
+			this.toolmgr.addControlsMgr("basiccontrolsbox", p_instance.instances["basiccontrolsbox"]);
 		}	
 		
-		if (this.cfgvar["basic"]["querybox"]["show"] && this.#customization_instance.instances["querying"] !== undefined) {
-
-			qryb = this.#customization_instance.instances["querying"];
-			
-			this.query_box = document.createElement('input');
-			this.query_box.setAttribute("type", "text");
-			this.query_box.style.position = "absolute";
-			this.query_box.style.zIndex = this.renderingsmgr.getMaxZIndex()+1;
-
-			this.query_results = document.createElement('div');
-			this.query_results.id = "query_results";
-			//this.query_results.setAttribute("type", "text");
-			this.query_results.style.position = "absolute";
-			this.query_results.style.zIndex = this.renderingsmgr.getMaxZIndex()+1;
-			this.query_results.style.backgroundColor = "white";
-			this.query_results.style.padding = "2px";
-			this.query_results.style.margin = "0";
-
-
-
-			if (bcb) {
-				this.query_box.style.top = bcb.top + "px";
-				this.query_box.style.left = (2 * bcb.left + bcb.getWidth()) + "px";	
-
-				this.query_results.style.top = bcb.top + qryboxheight + "px";
-				this.query_results.style.left = this.query_box.style.left;	
-			} else {
-				this.query_box.style.top = GlobalConst.CONTROLS_STYLES.OFFSET + "px";
-				this.query_box.style.left = GlobalConst.CONTROLS_STYLES.OFFSET + "px";	
-
-				this.query_results.style.top = GlobalConst.CONTROLS_STYLES.OFFSET + qryboxheight + "px";
-				this.query_results.style.left = this.query_box.style.left + "px";	
-			}
-
-			this.query_box.style.width = this.cfgvar["basic"]["querybox"]["size"] + "px";	
-			this.query_results.style.width = this.cfgvar["basic"]["querybox"]["size"] + "px";	
-			this.query_results.style.height = "6px";
-			this.query_results.style.display = 'none';
-			
-			this.panelwidget.appendChild(this.query_box);
-			this.panelwidget.appendChild(this.query_results);
-
-			this.query_clrbtn = document.createElement('button');
-
-			this.query_clrbtn.innerText = this.i18n.msg('clr', true);
-			this.query_clrbtn.style.position = "absolute";
-
-			if (bcb) {
-				this.query_clrbtn.style.top = bcb.top + "px";
-				this.query_clrbtn.style.left = (3 * bcb.left + bcb.getWidth()) + this.cfgvar["basic"]["querybox"]["size"] + "px";	
-			} else {
-				this.query_clrbtn.style.top = GlobalConst.CONTROLS_STYLES.OFFSET + "px";
-				this.query_clrbtn.style.left = GlobalConst.CONTROLS_STYLES.OFFSET + this.cfgvar["basic"]["querybox"]["size"] + "px";	
-			}
-
-			this.query_clrbtn.style.width =  this.cfgvar["basic"]["querybox"]["clrbtn_size"] + "px";
-			this.query_clrbtn.style.zIndex = this.renderingsmgr.getMaxZIndex()+1;
-			
-			this.panelwidget.appendChild(this.query_clrbtn);
-
-			qryb.setFeedbackAreas(this.query_box, this.query_results);
-
-			(function(p_btn, p_query_box, p_qryb_obj) {
-				
-				p_qryb_obj.lastinput = "";
-
-				// Query clear button
-				p_btn.addEventListener("click", function(e) { 
-					p_qryb_obj.clear(true);
-				}); 
-
-				// Query box input event
-				(function(pp_query_box) {
-					const evttypes = ["input", "paste"];
-					for (let i=0; i<evttypes.length; i++) {
-						pp_query_box.addEventListener(evttypes[i], function(e) { 
-							let clntxt = pp_query_box.value.trim();
-							//console.log("::284:: qryb EVENT", e.type, clntxt, pp_query_box.value, "len", clntxt.length, "!=", p_qryb_obj.lastinput.length);
-							if (clntxt.length > 2) {
-								if (clntxt != p_qryb_obj.lastinput) {
-									p_qryb_obj.lastinput = clntxt;
-									p_qryb_obj.query(p_qryb_obj.lastinput);
-								}
-							} else if (clntxt.length == 0) {
-								if (p_qryb_obj.lastinput.length > 0) {
-									p_qryb_obj.clear(true);
-								}
-							}
-						}); 
-					}
-				})(p_query_box);	
-
-			})(this.query_clrbtn, this.query_box, qryb);	
-
-		}				
-
 		if (this.wait_for_customization_avail) {
 			this.maprefresh();
 		}		
 	}
 
-	getCustomizationInstance() {
-		return this.#customization_instance;
+	getCustomizationObject() {
+		return this.#customization_object;
 	}
 	/**
 	 * Method resize - to be automatically fired on window resize
@@ -373,7 +268,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	}
 
 	drawBasicControls() {
-		const ci = this.getCustomizationInstance();
+		const ci = this.getCustomizationObject();
 		if (ci && ci.instances["basiccontrolsbox"] !== undefined) {
 			const bcb = ci.instances["basiccontrolsbox"];
 			if (bcb.print !== undefined) {
@@ -426,7 +321,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	}
 
 	printMouseCoords(p_x, py) {
-		const ci = this.getCustomizationInstance();
+		const ci = this.getCustomizationObject();
 		if (ci) {
 			const mpc = ci.instances["mousecoordsprint"];
 			if (mpc.print !== undefined) {
@@ -436,7 +331,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	}
 
 	printScale(p_scaleval) {
-		const ci = this.getCustomizationInstance();
+		const ci = this.getCustomizationObject();
 		if (ci) {
 			const mpc = ci.instances["mapscaleprint"];
 			if (mpc.print !== undefined) {
@@ -451,7 +346,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	}
 
 	printLoadingMsg(p_layername) {
-		const ci = this.getCustomizationInstance();
+		const ci = this.getCustomizationObject();
 		if (ci) {
 			const mpc = ci.instances["loadingmsgprint"];
 			if (mpc.print !== undefined) {
@@ -466,7 +361,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	}
 
 	removePrint(p_type) {
-		const ci = this.getCustomizationInstance();
+		const ci = this.getCustomizationObject();
 		if (ci) {
 			const mpc = ci.instances[p_type];
 			if (mpc.remove !== undefined) {

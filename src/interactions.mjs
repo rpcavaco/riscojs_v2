@@ -529,7 +529,7 @@ class InfoTool extends BaseTool {
 	onEvent(p_mapctx, p_evt) {
 
 		let mxdist, ret = true; // let other tool events be processed
-		const ci = p_mapctx.getCustomizationInstance();
+		const ci = p_mapctx.getCustomizationObject();
 		if (ci == null) {
 			throw new Error("InfoTool, customization instance is missing")
 		}
@@ -619,7 +619,7 @@ class MeasureTool extends BaseTool {
 	onEvent(p_mapctx, p_evt) {
 
 		let d, pt;
-		// const ci = p_mapctx.getCustomizationInstance();
+		// const ci = p_mapctx.getCustomizationObject();
 		// if (ci == null) {
 		// 	throw new Error("InfoTool, customization instance is missing")
 		// }

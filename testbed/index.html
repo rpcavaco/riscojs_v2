@@ -128,6 +128,8 @@
 
 		import {RiscoMapOverlay} from './js/riscojs_v2/main.mjs';
 		import {MapCustomizations} from './js/riscojs_v2/default_customizations.mjs';
+		import {GlobalConst} from './js/riscojs_v2/constants.js';
+		import {LocQuery} from './js/cmp_customizations.mjs';
 
 		let RiscoOVInst = new RiscoMapOverlay("PanelDiv");
 		let mapctx = RiscoOVInst.newMapCtx(RISCO_MAP_CFG, "single", "canvas", true);
@@ -138,7 +140,15 @@
 
 		MessagesController.check();
 
-		mapctx.setCustomizationObj(new MapCustomizations(MessagesController));
+		
+		const mc = new MapCustomizations(MessagesController);
+
+		mapctx.setCustomizationObj(mc, function(p_this, p_mapctx) {
+			const basic_config = p_mapctx.toolmgr.basic_config;
+			p_this.instances["querying"] = new LocQuery(p_mapctx, p_this.messaging_ctrlr, basic_config["locquery"], basic_config["crs"]);
+			p_this.instances["querying"].setCustomizationUI(p_this, p_mapctx, GlobalConst, basic_config);
+			console.info("[init RISCO] MapCustomizations, query box adapter launched");
+		});
 
 		const currentHeaders = new Headers();
 		mapctx.setCurrentUser(currentHeaders.get('REMOTE_USER'));

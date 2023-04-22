@@ -442,7 +442,7 @@ class TransformsQueue {
 				this.mapctx.renderingsmgr.clearAll(['temporary']);
 
 				this.geoloc.active = false;
-				this.mapctx.getCustomizationInstance().messaging_ctrlr.info("Geolocalização terminada");
+				this.mapctx.getCustomizationObject().messaging_ctrlr.info("Geolocalização terminada");
 
 			} else {
 
@@ -450,20 +450,20 @@ class TransformsQueue {
 					if (result.state !== "granted") {
 
 						console.error("[GEOLOC] Geolocation permission not granted");
-						this.mapctx.getCustomizationInstance().messaging_ctrlr.warn("Ainda não foi dada permissão de uso da geolocalização.")
+						this.mapctx.getCustomizationObject().messaging_ctrlr.warn("Ainda não foi dada permissão de uso da geolocalização.")
 
 					} else {
 
 						this.geoloc.active = true;
 						getLocation(this);
-						this.mapctx.getCustomizationInstance().messaging_ctrlr.info("Geolocalização iniciada");
+						this.mapctx.getCustomizationObject().messaging_ctrlr.info("Geolocalização iniciada");
 		
 					}
 				});				  
 				  
 			}		
 		} else {
-			this.mapctx.getCustomizationInstance().messaging_ctrlr.warn("Impossível ativar geolocalização");
+			this.mapctx.getCustomizationObject().messaging_ctrlr.warn("Impossível ativar geolocalização");
 		}
 
 
