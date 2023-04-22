@@ -198,66 +198,88 @@ const vectorLayersMixin = (Base) => class extends Base {
 
 	refresh(p_mapctx, p_prep_data) {
 
-		if (this.isCanceled()) {
-			return true;
-		}
-
-		const [terrain_env, scr_env, dims] = genSingleEnv(p_mapctx);
-
-		if (!this.defaultvisible) {
-			if (GlobalConst.getDebug("LAYERS")) {
-				console.log(`[DBG:LAYERS] Vector layer '${this.key}' is not default visible`);
-			}
-			return false;
-		}
-		if (!this.checkScaleVisibility(p_mapctx.getScale())) {
-			if (GlobalConst.getDebug("LAYERS")) {
-				console.log(`[DBG:LAYERS] Vector layer '${this.key}' is out of scale visibility for 1:${p_mapctx.getScale()}`);
-			}
-			return false;
-		}
-		
-		if (!this.isInited()) {
-			console.log(`[WARN:LAYERS] Vector layer '${this.key}' is not inited`);
-			return false;
-		}		
-
 		let cancel = false;
 
-		try {
+		if (this.isCanceled()) {
 
-			// console.log("-- 297 --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);
-			// console.log("-- 239 --", gfctx.strokeStyle, gfctx.lineWidth);
+			cancel = true;
+		
+		} else {
 
-			if (this.isCanceled()) {
-				cancel = true;		
-			} else  {
+			const [terrain_env, scr_env, dims] = genSingleEnv(p_mapctx);
 
-				// firstrec_order is zero - based
-				let item_chunk_params;
+			if (!this.defaultvisible) {
+				
+				if (GlobalConst.getDebug("LAYERS")) {
+					console.log(`[DBG:LAYERS] Vector layer '${this.key}' is not default visible`);
+				}
 
-				for (item_chunk_params of this.itemchunks(p_mapctx, p_prep_data)) {
+			} else {
 
-					for (const [item_coords, item_attrs, item_path_levels] of this.layeritems(p_mapctx, terrain_env, scr_env, dims, item_chunk_params)) {
+				if (!this.checkScaleVisibility(p_mapctx.getScale())) {
 
-						//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
+					if (GlobalConst.getDebug("LAYERS")) {
+						console.log(`[DBG:LAYERS] Vector layer '${this.key}' is OUT of scale visibility for 1:${p_mapctx.getScale()}`);
+					}
 
-						if (!this.simplerefreshitem(p_mapctx, terrain_env, scr_env, dims, item_coords, item_attrs, item_path_levels )) {
-							cancel = true;
-							break;
+				} else {
+
+					if (GlobalConst.getDebug("LAYERS")) {
+						console.log(`[DBG:LAYERS] Vector layer '${this.key}' is IN scale visibility for 1:${p_mapctx.getScale()}`);
+					}
+				
+					if (!this.isInited()) {
+
+						console.log(`[WARN:LAYERS] Vector layer '${this.key}' is not inited`);
+
+					} else {	
+
+						if (GlobalConst.getDebug("LAYERS")) {
+							console.log(`[DBG:LAYERS] Vector layer '${this.key}' IS inited`);
 						}
+	
 
-						if (this.isCanceled()) {
-							cancel = true;
-							break;
-						}				
+						try {
+
+							// console.log("-- 297 --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);
+							// console.log("-- 239 --", gfctx.strokeStyle, gfctx.lineWidth);
+
+							if (this.isCanceled()) {
+								cancel = true;		
+							} else  {
+
+								// firstrec_order is zero - based
+								let item_chunk_params;
+
+								for (item_chunk_params of this.itemchunks(p_mapctx, p_prep_data)) {
+
+									for (const [item_coords, item_attrs, item_path_levels] of this.layeritems(p_mapctx, terrain_env, scr_env, dims, item_chunk_params)) {
+
+										//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
+
+										if (!this.simplerefreshitem(p_mapctx, terrain_env, scr_env, dims, item_coords, item_attrs, item_path_levels )) {
+											cancel = true;
+											break;
+										}
+
+										if (this.isCanceled()) {
+											cancel = true;
+											break;
+										}				
+									}
+
+								}
+							}
+
+						} catch(e) {
+							throw e;
+						}
 					}
 
 				}
+
 			}
 
-		} catch(e) {
-			throw e;
 		}
 
 		return cancel;

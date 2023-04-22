@@ -371,6 +371,10 @@ export class TOCManager {
 				if (pp_this.mapctx.getScale() >= pp_this.layers[li]["maxscale"]) {
 					console.info(`[INFO] layer '${pp_this.layers[li].key}' out of max display scale of 1:${pp_this.layers[li]["maxscale"]}`);
 					continue;
+				} else {
+					if (GlobalConst.getDebug("VECTLOAD")) {
+						console.log(`[DBG:VECTLOAD] layer '${pp_this.layers[li].key}' IN of max display scale of 1:${pp_this.layers[li]["maxscale"]}`);
+					}
 				}
 					
 				if (!(pp_this.layers[li] instanceof RasterLayer)) {

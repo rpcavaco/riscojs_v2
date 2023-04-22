@@ -224,15 +224,18 @@ var GlobalConst = {
 		if (this.DEBUG.toLowerCase() == "all" && !dbgkey.toLowerCase().startsWith('diseng')) {
 			all = true;
 			ret = true;
-		} else {
-			ret = (dbgkey.toLowerCase() == this.DEBUG.toLowerCase() ? true : false);
 		}
 		if (!all) {
 			switch(this.DEBUG.toLowerCase()) {
 				case "layers":
-					ret = (SUBKEYS["layers"].indexOf(dbgkey.toLowerCase()) >= 0 ? true : false);
+					ret = (dbgkey.toLowerCase() == this.DEBUG.toLowerCase() ? true : false);
+					if (!ret) {
+						ret = (SUBKEYS["layers"].indexOf(dbgkey.toLowerCase()) >= 0 ? true : false);
+					}
 					break;
 
+				default:	
+					ret = (dbgkey.toLowerCase() == this.DEBUG.toLowerCase() ? true : false);
 
 			}
 		}

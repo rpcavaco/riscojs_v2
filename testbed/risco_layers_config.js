@@ -11,15 +11,15 @@ var RISCOJS_LAYERS_CFG = {
 		"grat": {
 			"type": "graticule",
 			"strokeStyle": "white",
-			"lineWidth": 1,
-			"maxscale": 10000
+			"lineWidth": 1
 		},
 		"grat_crosses": {
 			"type": "ptgrid",
 			"marker": "vertcross",
 			"markersize": 2,
 			"strokeStyle": "white",
-			"lineWidth": 2
+			"lineWidth": 2,
+			"maxscale": 10000
 		},	
 		"orto2021": {
 			"type": "wms",
