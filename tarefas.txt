@@ -101,7 +101,7 @@ OK - Controles mínimos zooming
 				keyisstring: false dá erro de marshalling Go, servidor requer string
 
 - Bug 0005 - NOBUG - respeitar limites de escala de visualização nos temas 'graticule' - era erro de config, duas layer de gratículas com nomes parecidos
-- Bug 0006 - HIGHPRI PENDING - click abaixo da última tool ativa-a 
+- Bug 0006 - SOLVED - click abaixo da última tool ativa-a 
 
 	(A carecer de atenção urgente)
 

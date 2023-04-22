@@ -153,7 +153,7 @@ export class ControlsBox extends MapPrintInRect {
 		for (let _key in this.controls_boxes) {
 
 			cb = this.controls_boxes[_key];
-			if (p_evt.clientX >= cb[0] && p_evt.clientX <= cb[0]+cb[2] && p_evt.clientY >= cb[1] && p_evt.clientX <= cb[1]+cb[3]) {
+			if (p_evt.clientX >= cb[0] && p_evt.clientX <= cb[0]+cb[2] && p_evt.clientY >= cb[1] && p_evt.clientY <= cb[1]+cb[3]) {
 				key = _key;
 			}
 		}
