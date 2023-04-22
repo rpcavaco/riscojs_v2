@@ -11,7 +11,8 @@ var RISCOJS_LAYERS_CFG = {
 		"grat": {
 			"type": "graticule",
 			"strokeStyle": "white",
-			"lineWidth": 1
+			"lineWidth": 1,
+			"maxscale": 10000
 		},
 		"grat_crosses": {
 			"type": "ptgrid",

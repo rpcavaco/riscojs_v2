@@ -98,6 +98,7 @@ export class MapAffineTransformation extends MapAffineTransformationMxColl {
 		let ret = Math.round(1000.0 / (getCartoScaling(this.scaling) * p_mmpd));
 		return ret;
 	}
+
 	setScaleFromReadableCartoScale(p_scaleval, p_mmpd) {		
 		this.setScaling(1000.0 / (p_scaleval * p_mmpd));
 	}
@@ -154,10 +155,8 @@ class TransformsQueue {
  */
  export class Transform2DMgr {
 
-	geoloc_timeoutid;
-	geoloc_active;
-	geoloc_lastpos;
-
+	geoloc;
+	
 	constructor(p_mapctx, p_mapctx_config_var) {
 
 		if (p_mapctx_config_var == null) {
@@ -184,9 +183,12 @@ class TransformsQueue {
 
 		geomTest();		
 
-		this.geoloc_timeoutid = null;
-		this.geoloc_active = false;
-		this.geoloc_lastpos = null;
+		this.geoloc = {
+			timeoutid: null,
+			active: false,
+			lastpos: [],
+			last_ts: null
+		}
 
 		console.info("[init RISCO]  2D transform env prepared");
 
@@ -253,7 +255,7 @@ class TransformsQueue {
 		this.setCenter(...tcobj, true);
 	}
 
-	trackpos(p_gps_coords) {
+ 	trackpos(p_gps_coords) {
 		
 		//console.log(p_gps_coords);
 		let url = null;
@@ -273,27 +275,124 @@ class TransformsQueue {
 			.then(
 				function(responsejson) {
 
-					if (that.geoloc_lastpos==null) {
-						that.geoloc_lastpos = [];
-						that.getCenter(that.geoloc_lastpos);
+					let ts, dx=0, dy=0, dt, d, v=null, tol=0, s, testdx=null, testdy=null, curr_center=[];
+					let change=false, dims=[], sf, minsclval, vsclval, usablescale;
+
+					let recieved_pos = [];
+					if (that.mapctx_config_var['geometry_service']['type'] == "ARCGIS" && responsejson.geometries !== undefined) {
+						recieved_pos.push(responsejson.geometries[0].x);
+						recieved_pos.push(responsejson.geometries[0].y);
 					}
 
-					if (that.mapctx_config_var['geometry_service']['type'] == "ARCGIS") {
-						if (responsejson.geometries	!== undefined) {
-							if (responsejson.geometries.length == 1) {
-								if (Math.abs(that.geoloc_lastpos[0]-responsejson.geometries[0].x) > GlobalConst.GEOLOCATION_NEXTPOS_TOLERANCE ||
-									Math.abs(that.geoloc_lastpos[1]-responsejson.geometries[0].y) > GlobalConst.GEOLOCATION_NEXTPOS_TOLERANCE) {
-										that.setCenter(responsejson.geometries[0].x, responsejson.geometries[0].y, true);
-										that.geoloc_lastpos[0] = responsejson.geometries[0].x;
-										that.geoloc_lastpos[1] = responsejson.geometries[0].y;
-									}
-							} else {
-								console.error("[GEOLOC] Empty geometries from ArcGIS service");
-							}					
+					if (recieved_pos.length != 2) {
+
+						console.error("[GEOLOC] No geometries from conversion service");
+
+					} else {
+
+						s = that.getReadableCartoScale();
+						usablescale = s;
+
+						if (that.geoloc.last_ts) {
+						
+							ts = new Date();
+							dt = ts - that.geoloc.last_ts;
+							dx = that.geoloc.lastpos[0]-recieved_pos[0];
+							dy = that.geoloc.lastpos[1]-recieved_pos[1];
+
+							tol = GlobalConst.GEOLOCATION_NEXTPOS_TOLERANCE_PX * that.getPixSize();
+
+							d = Math.sqrt(dx * dx + dy * dy);
+							v = d / (dt / 1000);
+
+							that.getCenter(curr_center);
+							testdx = curr_center[0]-recieved_pos[0];
+							testdy = curr_center[1]-recieved_pos[1];
+
+							if (GlobalConst.getDebug("GEOLOC")) {
+								console.log(`[DBG:GEOLOC] Position ${JSON.stringify(recieved_pos)}, v:${v}, dt:${dt} accu:${p_gps_coords.accuracy}`);
+							}
+
 						} else {
-							console.error("[GEOLOC] No geometries from ArcGIS service");
+
+							if (GlobalConst.getDebug("GEOLOC")) {
+								console.info(`[DBG:GEOLOC] INITIAL Position ${JSON.stringify(recieved_pos)}, accu:${p_gps_coords.accuracy}`);
+							}
 						}
+
+						that.mapctx.getCanvasDims(dims);
+
+						sf = Math.min(...dims) / (2.4 * p_gps_coords.accuracy);
+						minsclval = that.convertScalingFactorToReadableScale(sf);
+
+						if (GlobalConst.getDebug("GEOLOC")) {
+							console.info("[DBG:GEOLOC] minsclval:", minsclval, "scl.factor:", sf, "min.scr.dim:", Math.min(...dims), "accur:", p_gps_coords.accuracy);
+						}
+
+						if (s < minsclval) {
+							usablescale = minsclval;
+							that.setScaleFromReadableCartoScale(minsclval, false);
+							change = true;
+						} else {
+							vsclval = 0;
+							if (v) {
+								if (v > GlobalConst.GEOLOCATION_SPEED_THRESHOLD) {
+									vsclval = GlobalConst.GEOLOCATION_HIGHSPEED_SCALE;
+								} else {
+									vsclval = GlobalConst.GEOLOCATION_LOWSPEED_SCALE;
+								}
+							}
+							if (vsclval >= minsclval && s > vsclval) {
+								usablescale = vsclval;
+								that.setScaleFromReadableCartoScale(vsclval, false);
+								change = true;
+							}
+						}
+
+						if (!change) {
+							if (that.geoloc.last_ts == null ) {
+								change = true;
+							} else {
+								if (testdx != null && testdy != null) {
+									change = Math.abs(testdx) > tol || Math.abs(testdy) > tol;
+								}
+							}
+						}
+
+						if (GlobalConst.getDebug("GEOLOC")) {
+							console.info(`[DBG:GEOLOC] Check 'change':${change} dx:${testdx}>${tol}?, dy:${testdy}>${tol}?, dtime:${dt}`);
+						}
+
+						if (change) {
+
+							that.mapctx.tocmgr.addAfterRefreshProcedure(() => {
+
+								const scr_pt = [];
+								that.getScrPt(recieved_pos, scr_pt);
+
+								const radius = Math.round(that.converReadableScaleToScalingFactor(usablescale) * p_gps_coords.accuracy);
+								if (GlobalConst.getDebug("GEOLOC")) {
+									console.log("[DBG:GEOLOC] drawGeolocationMarkings: radius, us.scale, scl.factor, accur:", radius, usablescale, that.converReadableScaleToScalingFactor(usablescale), p_gps_coords.accuracy);
+								}
+								that.mapctx.drawGeolocationMarkings(scr_pt, radius);
+
+							});
+
+							if (GlobalConst.getDebug("GEOLOC")) {
+								console.log("[DBG:GEOLOC] SET CENTER", recieved_pos);
+							}
+
+							that.setCenter(recieved_pos[0], recieved_pos[1], true);
+
+							that.geoloc.lastpos.length = 2;
+							that.geoloc.lastpos[0] = recieved_pos[0];
+							that.geoloc.lastpos[1] = recieved_pos[1];
+							that.geoloc.last_ts = new Date();
+
+						} 
+
 					}
+
 				}
 			).catch((error) => {
 				console.error(`[GEOLOC] Impossible to transform coords`, error);
@@ -315,47 +414,53 @@ class TransformsQueue {
 				
 				console.log("[GEOLOC]", pos.coords);
 				
-				p_this.trackpos(pos.coords);
-				if (p_this.geoloc_active) {
-					p_this.geoloc_timeoutid = setTimeout(getLocation(p_this), GlobalConst.GEOLOCATION_INTERVAL_MS);
+				if (p_this.geoloc.active) {
+					p_this.trackpos(pos.coords);
+					p_this.geoloc.timeoutid = setTimeout(getLocation(p_this), GlobalConst.GEOLOCATION_INTERVAL_MS);
 				} 
 			},
 			(error) => {
-				console.error("[GEOLOC] getCurrentPosition error:", error);
-				if (p_this.geoloc_timeoutid) {
-					clearTimeout(p_this.geoloc_timeoutid);
-					p_this.geoloc_timeoutid = null;
+				console.error("[GEOLOC] geolocation.getCurrentPosition error:", error);
+				if (p_this.geoloc.timeoutid) {
+					clearTimeout(p_this.geoloc.timeoutid);
+					p_this.geoloc.timeoutid = null;
 				}	
-				p_this.geoloc_active = false;			
+				p_this.geoloc.active = false;			
 			},
 			options);
 		}
 
 		if (navigator["geolocation"] !== undefined) {
 			
-			if (this.geoloc_active) {
+			if (this.geoloc.active) {
 
-				if (this.geoloc_timeoutid) {
-					clearTimeout(this.geoloc_timeoutid);
-					this.geoloc_timeoutid = null;
+				if (this.geoloc.timeoutid) {
+					clearTimeout(this.geoloc.timeoutid);
+					this.geoloc.timeoutid = null;
 				}
 
-				this.geoloc_active = false;
+				this.mapctx.renderingsmgr.clearAll(['temporary']);
+
+				this.geoloc.active = false;
 				this.mapctx.getCustomizationInstance().messaging_ctrlr.info("Geolocalização terminada");
 
 			} else {
 
 				navigator.permissions.query({ name: "geolocation" }).then((result) => {
 					if (result.state !== "granted") {
-					  console.error("[GEOLOC] Geolocation permission not granted");
-					  this.mapctx.getCustomizationInstance().messaging_ctrlr.warn("Não foi dada permissão de uso da geolocalização.")
-					  return;
+
+						console.error("[GEOLOC] Geolocation permission not granted");
+						this.mapctx.getCustomizationInstance().messaging_ctrlr.warn("Ainda não foi dada permissão de uso da geolocalização.")
+
+					} else {
+
+						this.geoloc.active = true;
+						getLocation(this);
+						this.mapctx.getCustomizationInstance().messaging_ctrlr.info("Geolocalização iniciada");
+		
 					}
 				});				  
 				  
-				this.geoloc_active = true;
-				getLocation(this);
-				this.mapctx.getCustomizationInstance().messaging_ctrlr.info("Geolocalização iniciada")
 			}		
 		} else {
 			this.mapctx.getCustomizationInstance().messaging_ctrlr.warn("Impossível ativar geolocalização");
@@ -423,6 +528,24 @@ class TransformsQueue {
 		const ctrans = this.transformsQueue.currentTransform;		
 		return ctrans.getReadableCartoScale(GlobalConst.MMPD);
 	}
+
+	getScalingFactor() {
+		const ctrans = this.transformsQueue.currentTransform;		
+		return ctrans.getScalingFactor();
+	}	
+
+	convertScalingFactorToReadableScale(p_scalingf) {
+		return Math.round(1000.0 / (p_scalingf * GlobalConst.MMPD));
+	}
+
+	converReadableScaleToScalingFactor(p_scale) {
+		return 1000.0 / (p_scale * GlobalConst.MMPD);
+	}
+
+	getPixSize() {
+		const ctrans = this.transformsQueue.currentTransform;		
+		return ctrans.getPixSize();
+	}	
 
 	/**
 	 * Method setCenter in terrain coordinates
@@ -578,6 +701,25 @@ class TransformsQueue {
 		out_pt[0] = v2[0];
 		out_pt[1] = v2[1];
 	}	
+
+	getScrPt(p_terrain_pt, out_pt) {
+		
+		if (p_terrain_pt === null || typeof p_terrain_pt != 'object' || p_terrain_pt.length != 2) {
+			throw new Error(`Class Transform2DMgr, getScrPt, invalid terrain point: ${p_terrain_pt}`);
+		}
+		
+		let v1=[], v2=[], mx1=[];
+		let ctrans = this.transformsQueue.currentTransform;
+
+		out_pt.length = 2;
+		v1 = [parseFloat(p_terrain_pt[0]), parseFloat(p_terrain_pt[1]), 1];
+		// get terrain coords from the current transformation
+		ctrans.getMatrix(mx1);
+		vectorMultiply(v1, mx1, v2);
+		
+		out_pt[0] = v2[0];
+		out_pt[1] = v2[1];
+	}		
 
 	getTerrainTranslation(p_scrpt_a, p_scrpt_b, out_diff_pt) {
 		

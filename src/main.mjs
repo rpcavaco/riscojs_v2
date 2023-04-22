@@ -350,8 +350,8 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		}
 	}	
 
-	getCanvasDims(out_env) {
-		this.renderingsmgr.getCanvasDims(out_env);
+	getCanvasDims(out_dims) {
+		this.renderingsmgr.getCanvasDims(out_dims);
 	}
 
 	getMapBounds(out_env) {
@@ -474,6 +474,45 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			}			
 		}
 	}	
+
+
+    drawGeolocationMarkings(p_scr_pt, p_radius) {
+
+		const ctx = this.renderingsmgr.getDrwCtx("temporary", '2d');
+		ctx.save();
+
+		console.log("##> drawGeolocationMarkings:", p_scr_pt, p_radius);
+	
+		try {
+
+			this.renderingsmgr.clearAll(['temporary']);
+	
+			ctx.strokeStyle = "red";
+			ctx.lineWidth = 2;
+			
+			ctx.beginPath();
+			ctx.arc(...p_scr_pt, p_radius, 0, 2 * Math.PI, false);
+			ctx.stroke();	
+
+			ctx.lineWidth = 5;
+
+			ctx.beginPath();
+			ctx.arc(...p_scr_pt, 2, 0, 2 * Math.PI, false);
+			ctx.stroke();	
+			
+		} catch(e) {
+			throw e;
+		} finally {
+			ctx.restore();
+		}
+
+    }
+
+
+
+
+
+
 
 }
 

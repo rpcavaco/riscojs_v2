@@ -60,6 +60,9 @@
 
 >> - separar default_customizations.mjs "base" de customizations_cmp.mjs
 
+- separar geolocation para as costumizações
+- remover drawGeolocationMarkings para layer analítica, juntar ponto de Localizador e trajeto entre ambos (começar com linha reta)
+
 - Completar operações lógicas no find de feature collection (tem TODO)
 
 --------------------------------- UI/Widgets  -------------------------------
@@ -90,18 +93,20 @@ OK - Controles mínimos zooming
 
 - Bug 0001 - SOLVED,VERIFYING - Algumas features em redesenho, quando há muita intensidade de refresh
 - Bug 0002 - SOLVED,VERIFYING - Erro em signalVectorLoadFinished, "TypeError: this.layers[this.drawlist[li]] is undefined"
-- Bug 0003 - PENDING - Seleção interativa troços Alameda 25 de Abril , será por serem horizontais ?
-- Bug 0004 - PENDING - "infocfg": {
+- Bug 0003 - LOWPRI PENDING - Seleção interativa troços Alameda 25 de Abril , será por serem horizontais ?
+- Bug 0004 - LOWPRI PENDING - "infocfg": {
 				.....
 				"keyisstring": true,
 
 				keyisstring: false dá erro de marshalling Go, servidor requer string
 
+- Bug 0005 - PENDING - respeitar limites de escala de visualização nos temas 'graticule'
+- Bug 0006 - HIGHPRI PENDING - click abaixo da última tool ativa-a 
 
 	(A carecer de atenção urgente)
 
-- OK - MissingFeat 0001 - PENDING - Reação à falta de disponibilidade em cada layer
-- OK - MissingFeat 0002 - PENDING - Obter URL para Info
+- OK - MissingFeat 0001 - SOLVED - Reação à falta de disponibilidade em cada layer
+- OK - MissingFeat 0002 - SOLVED - Obter URL para Info
 
 
 
