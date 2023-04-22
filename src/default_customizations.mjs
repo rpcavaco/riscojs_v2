@@ -233,6 +233,274 @@ class Info {
 	}
 }
 
+export class GeoLocationMgr {
+
+	mapctx;
+	mapctx_config_var;
+	transformmgr;
+	geoloc;
+
+	constructor(p_mapctx, p_transformmgr) {
+
+		this.mapctx = p_mapctx;
+		this.mapctx_config_var = p_mapctx.cfgvar["basic"];
+		this.transformmgr = p_transformmgr;
+	
+		this.geoloc = {
+			timeoutid: null,
+			active: false,
+			lastpos: [],
+			last_ts: null
+		}	
+	}
+
+
+	trackpos(p_gps_coords) {
+		
+		//console.log(p_gps_coords);
+		let url = null;
+
+		if (this.mapctx_config_var['geometry_service']['type'] == "ARCGIS") {
+			url = `${this.mapctx_config_var['geometry_service']['url']}&geometries=${p_gps_coords.longitude}%2C${p_gps_coords.latitude}`;
+		}
+
+		if (url) {
+
+			const that = this;
+
+			fetch(url, {
+				method: "GET"
+			})
+			.then(response => response.json())
+			.then(
+				function(responsejson) {
+
+					let ts, dx=0, dy=0, dt, d, v=null, tol=0, s, testdx=null, testdy=null, curr_center=[];
+					let change=false, dims=[], sf, minsclval, vsclval, usablescale;
+
+					let recieved_pos = [];
+					if (that.mapctx_config_var['geometry_service']['type'] == "ARCGIS" && responsejson.geometries !== undefined) {
+						recieved_pos.push(responsejson.geometries[0].x);
+						recieved_pos.push(responsejson.geometries[0].y);
+					}
+
+					if (recieved_pos.length != 2) {
+
+						console.error("[GEOLOC] No geometries from conversion service");
+
+					} else {
+
+						s = that.transformmgr.getReadableCartoScale();
+						usablescale = s;
+
+						if (that.geoloc.last_ts) {
+						
+							ts = new Date();
+							dt = ts - that.geoloc.last_ts;
+							dx = that.geoloc.lastpos[0]-recieved_pos[0];
+							dy = that.geoloc.lastpos[1]-recieved_pos[1];
+
+							tol = GlobalConst.GEOLOCATION_NEXTPOS_TOLERANCE_PX * that.transformmgr.getPixSize();
+
+							d = Math.sqrt(dx * dx + dy * dy);
+							v = d / (dt / 1000);
+
+							that.transformmgr.getCenter(curr_center);
+							testdx = curr_center[0]-recieved_pos[0];
+							testdy = curr_center[1]-recieved_pos[1];
+
+							if (GlobalConst.getDebug("GEOLOC")) {
+								console.log(`[DBG:GEOLOC] Position ${JSON.stringify(recieved_pos)}, v:${v}, dt:${dt} accu:${p_gps_coords.accuracy}`);
+							}
+
+						} else {
+
+							if (GlobalConst.getDebug("GEOLOC")) {
+								console.info(`[DBG:GEOLOC] INITIAL Position ${JSON.stringify(recieved_pos)}, accu:${p_gps_coords.accuracy}`);
+							}
+						}
+
+						that.mapctx.getCanvasDims(dims);
+
+						sf = Math.min(...dims) / (2.4 * p_gps_coords.accuracy);
+						minsclval = that.transformmgr.convertScalingFactorToReadableScale(sf);
+
+						if (GlobalConst.getDebug("GEOLOC")) {
+							console.info("[DBG:GEOLOC] minsclval:", minsclval, "scl.factor:", sf, "min.scr.dim:", Math.min(...dims), "accur:", p_gps_coords.accuracy);
+						}
+
+						if (s < minsclval) {
+							usablescale = minsclval;
+							that.transformmgr.setScaleFromReadableCartoScale(minsclval, false);
+							change = true;
+						} else {
+							vsclval = 0;
+							if (v) {
+								if (v > GlobalConst.GEOLOCATION_SPEED_THRESHOLD) {
+									vsclval = GlobalConst.GEOLOCATION_HIGHSPEED_SCALE;
+								} else {
+									vsclval = GlobalConst.GEOLOCATION_LOWSPEED_SCALE;
+								}
+							}
+							if (vsclval >= minsclval && s > vsclval) {
+								usablescale = vsclval;
+								that.transformmgr.setScaleFromReadableCartoScale(vsclval, false);
+								change = true;
+							}
+						}
+
+						if (!change) {
+							if (that.geoloc.last_ts == null ) {
+								change = true;
+							} else {
+								if (testdx != null && testdy != null) {
+									change = Math.abs(testdx) > tol || Math.abs(testdy) > tol;
+								}
+							}
+						}
+
+						if (GlobalConst.getDebug("GEOLOC")) {
+							console.info(`[DBG:GEOLOC] Check 'change':${change} dx:${testdx}>${tol}?, dy:${testdy}>${tol}?, dtime:${dt}`);
+						}
+
+						if (change) {
+
+							that.mapctx.tocmgr.addAfterRefreshProcedure(() => {
+
+								const scr_pt = [];
+								that.transformmgr.getScrPt(recieved_pos, scr_pt);
+
+								const radius = Math.round(that.transformmgr.converReadableScaleToScalingFactor(usablescale) * p_gps_coords.accuracy);
+								if (GlobalConst.getDebug("GEOLOC")) {
+									console.log("[DBG:GEOLOC] drawGeolocationMarkings: radius, us.scale, scl.factor, accur:", radius, usablescale, that.transformmgr.converReadableScaleToScalingFactor(usablescale), p_gps_coords.accuracy);
+								}
+								that.drawGeolocationMarkings(scr_pt, radius);
+
+							});
+
+							if (GlobalConst.getDebug("GEOLOC")) {
+								console.log("[DBG:GEOLOC] SET CENTER", recieved_pos);
+							}
+
+							that.transformmgr.setCenter(recieved_pos[0], recieved_pos[1], true);
+
+							that.geoloc.lastpos.length = 2;
+							that.geoloc.lastpos[0] = recieved_pos[0];
+							that.geoloc.lastpos[1] = recieved_pos[1];
+							that.geoloc.last_ts = new Date();
+
+						} 
+
+					}
+
+				}
+			).catch((error) => {
+				console.error(`[GEOLOC] Impossible to transform coords`, error);
+			});	
+
+		} else {
+			throw new Error("[GEOLOC] Missing URL for geometry service point transformation");
+		}
+		
+	}
+
+	toggleGeolocWatch() {
+
+		const options = { enableHighAccuracy: true };
+
+		function getLocation(p_this) {
+
+			navigator.geolocation.getCurrentPosition((pos) => {
+				
+				console.log("[GEOLOC]", pos.coords);
+				
+				if (p_this.geoloc.active) {
+					p_this.trackpos(pos.coords);
+					p_this.geoloc.timeoutid = setTimeout(getLocation(p_this), GlobalConst.GEOLOCATION_INTERVAL_MS);
+				} 
+			},
+			(error) => {
+				console.error("[GEOLOC] geolocation.getCurrentPosition error:", error);
+				if (p_this.geoloc.timeoutid) {
+					clearTimeout(p_this.geoloc.timeoutid);
+					p_this.geoloc.timeoutid = null;
+				}	
+				p_this.geoloc.active = false;			
+			},
+			options);
+		}
+
+		if (navigator["geolocation"] !== undefined) {
+			
+			if (this.geoloc.active) {
+
+				if (this.geoloc.timeoutid) {
+					clearTimeout(this.geoloc.timeoutid);
+					this.geoloc.timeoutid = null;
+				}
+
+				this.mapctx.renderingsmgr.clearAll(['temporary']);
+
+				this.geoloc.active = false;
+				this.mapctx.getCustomizationObject().messaging_ctrlr.info("Geolocalização terminada");
+
+			} else {
+
+				navigator.permissions.query({ name: "geolocation" }).then((result) => {
+					if (result.state !== "granted") {
+
+						console.error("[GEOLOC] Geolocation permission not granted");
+						this.mapctx.getCustomizationObject().messaging_ctrlr.warn("Ainda não foi dada permissão de uso da geolocalização.")
+
+					} else {
+
+						this.geoloc.active = true;
+						getLocation(this);
+						this.mapctx.getCustomizationObject().messaging_ctrlr.info("Geolocalização iniciada");
+		
+					}
+				});				  
+				  
+			}		
+		} else {
+			this.mapctx.getCustomizationObject().messaging_ctrlr.warn("Impossível ativar geolocalização");
+		}
+
+
+	}
+
+	drawGeolocationMarkings(p_scr_pt, p_radius) {
+
+		const ctx = this.mapctx.renderingsmgr.getDrwCtx("temporary", '2d');
+		ctx.save();
+
+		// console.log("##> drawGeolocationMarkings:", p_scr_pt, p_radius);
+	
+		try {
+
+			this.mapctx.renderingsmgr.clearAll(['temporary']);
+	
+			ctx.strokeStyle = "red";
+			ctx.lineWidth = 2;
+			
+			ctx.beginPath();
+			ctx.arc(...p_scr_pt, p_radius, 0, 2 * Math.PI, false);
+			ctx.stroke();	
+
+			ctx.lineWidth = 5;
+
+			ctx.beginPath();
+			ctx.arc(...p_scr_pt, 2, 0, 2 * Math.PI, false);
+			ctx.stroke();	
+			
+		} catch(e) {
+			throw e;
+		} finally {
+			ctx.restore();
+		}
+
+    }
+}
 
 class BasicCtrlBox extends ControlsBox {
 
@@ -243,126 +511,145 @@ class BasicCtrlBox extends ControlsBox {
 		this.controls_keys = [
 			"zoomout",
 			"home",
-			"zoomin",
-			"gps"
+			"zoomin"
+			//"gps"
 		];
 
 		this.gap = GlobalConst.CONTROLS_STYLES.GAP;
 
-		this.imgh = new Image();
-		this.imgh.decoding = "sync";
-		this.imgh.src = GlobalConst.CONTROLS_STYLES.HOMESYMB;
+		this.controls_funcs = {
+			"zoomout": {
+				"drawface": function(p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants) {
+					p_ctx.beginPath();
+					p_ctx.moveTo(p_left+p_width*0.2, p_top+p_height*0.5);
+					p_ctx.lineTo(p_left+p_width*0.8, p_top+p_height*0.5);
+					p_ctx.stroke();
+				},
+				"endevent": function(p_mapctx, p_basic_config, p_global_constants) {
+//					console.log("***", p_basic_config);
+					p_mapctx.transformmgr.zoomOut(p_basic_config.maxscaleview.scale, p_global_constants.SCALEINOUT_STEP, true);
+					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					topcnv.style.cursor = "default";
+				},
+				"mmoveevent": function(p_mapctx, p_basic_config, p_global_constants) {
+					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					topcnv.style.cursor = "pointer";
+				},
+			},
+			"zoomin": {
+				"drawface": function(p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants) {
+					p_ctx.beginPath();
+					p_ctx.moveTo(p_left+p_width*0.2, p_top+p_height*0.5);
+					p_ctx.lineTo(p_left+p_width*0.8, p_top+p_height*0.5);
+					p_ctx.moveTo(p_left+p_width*0.5, p_top+p_height*0.2);
+					p_ctx.lineTo(p_left+p_width*0.5, p_top+p_height*0.8);
+					p_ctx.stroke();
+				},
+				"endevent": function(p_mapctx, p_basic_config, p_global_constants) {
+					p_mapctx.transformmgr.zoomIn(p_global_constants.MINSCALE, p_global_constants.SCALEINOUT_STEP, true);
+					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					topcnv.style.cursor = "default";
+				},
+				"mmoveevent": function(p_mapctx, p_basic_config, p_global_constants) {
+					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					topcnv.style.cursor = "pointer";
+				},
+			},
+			"home": {
+				"drawface": function(p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants) {
 
-
-		this.imgg = new Image();
-		this.imgg.decoding = "sync";
-		this.imgg.src = GlobalConst.CONTROLS_STYLES.GPSSYMB;
+					const imgh = new Image();
+					imgh.decoding = "sync";
+					imgh.src = p_global_constants.CONTROLS_STYLES.HOMESYMB;
+			
+					imgh.decode()
+					.then(() => {
+						p_ctx.drawImage(imgh, p_left + ((p_global_constants.CONTROLS_STYLES.SIZE - p_global_constants.CONTROLS_STYLES.HOMESYMBWID) / 2), p_top);
+					});
+				},
+				"endevent": function(p_mapctx, p_basic_config, p_global_constants) {
+					p_mapctx.transformmgr.setScaleCenteredAtPoint(p_basic_config.scale, [p_basic_config.terrain_center[0], p_basic_config.terrain_center[1]], true);
+					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					topcnv.style.cursor = "default";
+				},
+				"mmoveevent": function(p_mapctx, p_basic_config, p_global_constants) {
+					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					topcnv.style.cursor = "pointer";
+				}
+			}							
+		}
 
 	}
 
-	drawControlFace(p_ctx, p_control_key, p_left, p_top, p_width, p_height) {
+	drawControlFace(p_ctx, p_control_key, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants) {
 
-		switch(p_control_key) {
+		console.log("trls funcs:", Object.keys(this.controls_funcs));
 
-			case "zoomout":
-				p_ctx.beginPath();
-				p_ctx.moveTo(p_left+p_width*0.2, p_top+p_height*0.5);
-				p_ctx.lineTo(p_left+p_width*0.8, p_top+p_height*0.5);
-				p_ctx.stroke();
-				break;
-
-			case "zoomin":
-				p_ctx.beginPath();
-				p_ctx.moveTo(p_left+p_width*0.2, p_top+p_height*0.5);
-				p_ctx.lineTo(p_left+p_width*0.8, p_top+p_height*0.5);
-				p_ctx.moveTo(p_left+p_width*0.5, p_top+p_height*0.2);
-				p_ctx.lineTo(p_left+p_width*0.5, p_top+p_height*0.8);
-				p_ctx.stroke();
-				break;
-
-			case "gps":
-
-				// homing zoom button decorated from SVG image data URL configured in Globals	
-				this.imgg.decode()
-							.then(() => {
-								p_ctx.drawImage(this.imgg, p_left + ((GlobalConst.CONTROLS_STYLES.SIZE - GlobalConst.CONTROLS_STYLES.GPSSYMBWID) / 2), p_top);
-							});
-				break;
-
-			default:
-
-				// homing zoom button decorated from SVG image data URL configured in Globals	
-				this.imgh.decode()
-							.then(() => {
-								p_ctx.drawImage(this.imgh, p_left + ((GlobalConst.CONTROLS_STYLES.SIZE - GlobalConst.CONTROLS_STYLES.HOMESYMBWID) / 2), p_top);
-							});
+		if (this.controls_funcs[p_control_key] !== undefined) {
+			if (this.controls_funcs[p_control_key]["drawface"] !== undefined) {
+				this.controls_funcs[p_control_key]["drawface"](p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants);
+			} else {
+				throw new Error(`drawControlFace, missing DRAWFACE control func block for ${p_control_key}`);
+			}
+		} else {
+			throw new Error(`drawControlFace, missing control funcs block for ${p_control_key}`);
 		}
+
 	}
 
 	interact(p_mapctx, p_evt) {
 
-		let basic_config, ret = false;
+		let ret = false;
 		const ctrl_key = super.interact(p_mapctx, p_evt);
-
-		const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 
 		if (GlobalConst.getDebug("INTERACTION")) {
 			console.log("[DBG:INTERACTION] BASICCTRLBX, event, control key:", p_evt, ctrl_key);
 		}
 
 		if (ctrl_key) {
-			//console.trace("285:", ctrl_key, p_evt);
-			basic_config = this.tool_manager.basic_config;
-			switch(p_evt.type) {
 
-				case 'touchend':
-				case 'mouseup':
+			if (this.controls_funcs[ctrl_key] !== undefined) {
 
-					switch(ctrl_key) {
+				switch(p_evt.type) {
 
-						case "home":
-							p_mapctx.transformmgr.setScaleCenteredAtPoint(basic_config.scale, [basic_config.terrain_center[0], basic_config.terrain_center[1]], true);
-							break;
+					case 'touchend':
+					case 'mouseup':
 
-						case "zoomout":
-							p_mapctx.transformmgr.zoomOut(basic_config.maxscaleview.scale, GlobalConst.SCALEINOUT_STEP, true);
-							break;
+						if (this.controls_funcs[ctrl_key]["endevent"] !== undefined) {
+							this.controls_funcs[ctrl_key]["endevent"](p_mapctx, p_mapctx.cfgvar["basic"], GlobalConst);
+						} else {
+							throw new Error("interact, missing endevent control func block for", ctrl_key);
+						}
+						break;
 
-						case "zoomin":
-							p_mapctx.transformmgr.zoomIn(GlobalConst.MINSCALE, GlobalConst.SCALEINOUT_STEP, true);
-							break;
+					case "mousemove":
 
-						case "gps":
-							p_mapctx.transformmgr.toggleGeolocWatch();
-							break;
+						if (this.controls_funcs[ctrl_key]["mmoveevent"] !== undefined) {
+							this.controls_funcs[ctrl_key]["mmoveevent"](p_mapctx, p_mapctx.cfgvar["basic"], GlobalConst);
+						} else {
+							throw new Error("interact, missing mmoveevent control func block for", ctrl_key);
+						}
 
-						default:
-							throw new Error(`BasicCtrlBox, interact, wrong key:${ctrl_key}`);
-	
-							
+				}
 
-					}
-					topcnv.style.cursor = "default";
-					break;
-
-				case "mousemove":
-
-					//console.log(">>>", ctrl_key)
-					topcnv.style.cursor = "pointer";
-					break;
-
+			} else {
+				throw new Error("interact, missing control funcs block for", ctrl_key);
 			}
 
 			ret = true;
-				
+
 		} else {
-			topcnv.style.cursor = "default";				
+
+			const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+			topcnv.style.cursor = "default";	
+
 		}
 
 		return ret;
 	}
 
 }
+
 
 export class MapCustomizations {
 
@@ -380,14 +667,6 @@ export class MapCustomizations {
 			"infoclass": new Info(GlobalConst.INFO_MAPTIPS_BOXSTYLE)
 		}
 	}
-
-	/* setMapCtx(p_mapctx) {
-		const basic_config = p_mapctx.toolmgr.basic_config;
-		// SUBSTITUIR: LocQuery passa para custcmização da CMP, aqui fica algo de mais básico
-		this.instances["querying"] = new LocQuery(p_mapctx, this.messaging_ctrlr, basic_config["locquery"], basic_config["crs"])
-		console.info("[init RISCO] MapCustomizations, query box adapter launched");
-	} */
-
 }
 
 

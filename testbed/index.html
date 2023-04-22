@@ -127,7 +127,7 @@
 		}
 
 		import {RiscoMapOverlay} from './js/riscojs_v2/main.mjs';
-		import {MapCustomizations} from './js/riscojs_v2/default_customizations.mjs';
+		import {GeoLocationMgr, MapCustomizations} from './js/riscojs_v2/default_customizations.mjs';
 		import {GlobalConst} from './js/riscojs_v2/constants.js';
 		import {LocQuery} from './js/cmp_customizations.mjs';
 
@@ -144,7 +144,41 @@
 		const mc = new MapCustomizations(MessagesController);
 
 		mapctx.setCustomizationObj(mc, function(p_this, p_mapctx) {
+			
 			const basic_config = p_mapctx.toolmgr.basic_config;
+
+			// Customizations changing controls or toolboxes go first
+			// (limiting available space for other widgets)
+
+			p_this.instances["geolocation"] = new GeoLocationMgr(p_mapctx, p_mapctx.transformmgr);
+
+			if (p_this.instances["basiccontrolsbox"] !== undefined) {
+
+				p_this.instances["basiccontrolsbox"].addControl("gps", //p_drawface_func, p_endevent_func, p_mmove_func)
+					function(p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants) {
+
+						const imgh = new Image();
+						imgh.decoding = "sync";
+						imgh.src = p_basic_config.gpscontrol.symb;
+
+						imgh.decode()
+						.then(() => {
+							p_ctx.drawImage(imgh, p_left + ((p_global_constants.CONTROLS_STYLES.SIZE - p_basic_config.gpscontrol.symbwid) / 2), p_top);
+						});
+					},
+					function(p_mapctx, p_basic_config, p_global_constants) {
+						p_this.instances["geolocation"].toggleGeolocWatch();
+						const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+						topcnv.style.cursor = "default";
+					},
+					function(p_mapctx, p_basic_config, p_global_constants) {
+						const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+						topcnv.style.cursor = "pointer";
+					}
+				);
+
+			}
+
 			p_this.instances["querying"] = new LocQuery(p_mapctx, p_this.messaging_ctrlr, basic_config["locquery"], basic_config["crs"]);
 			p_this.instances["querying"].setCustomizationUI(p_this, p_mapctx, GlobalConst, basic_config);
 			console.info("[init RISCO] MapCustomizations, query box adapter launched");

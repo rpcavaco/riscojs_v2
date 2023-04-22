@@ -187,13 +187,13 @@ export class RiscoMapCtx {
 	/**
 	 * @param {any} p_cclass
 	 */
-	setCustomizationObj(p_instance, p_setmapctx_func) {
+	setCustomizationObj(p_object, p_setmapctx_func) {
 
-		this.#customization_object = p_instance;
-		p_setmapctx_func(p_instance, this);
+		this.#customization_object = p_object;
+		p_setmapctx_func(p_object, this);
 
-		if (p_instance.instances["basiccontrolsbox"] !== undefined) {
-			this.toolmgr.addControlsMgr("basiccontrolsbox", p_instance.instances["basiccontrolsbox"]);
+		if (p_object.instances["basiccontrolsbox"] !== undefined) {
+			this.toolmgr.addControlsMgr("basiccontrolsbox", p_object.instances["basiccontrolsbox"]);
 		}	
 		
 		if (this.wait_for_customization_avail) {
@@ -371,37 +371,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	}	
 
 
-    drawGeolocationMarkings(p_scr_pt, p_radius) {
 
-		const ctx = this.renderingsmgr.getDrwCtx("temporary", '2d');
-		ctx.save();
-
-		console.log("##> drawGeolocationMarkings:", p_scr_pt, p_radius);
-	
-		try {
-
-			this.renderingsmgr.clearAll(['temporary']);
-	
-			ctx.strokeStyle = "red";
-			ctx.lineWidth = 2;
-			
-			ctx.beginPath();
-			ctx.arc(...p_scr_pt, p_radius, 0, 2 * Math.PI, false);
-			ctx.stroke();	
-
-			ctx.lineWidth = 5;
-
-			ctx.beginPath();
-			ctx.arc(...p_scr_pt, 2, 0, 2 * Math.PI, false);
-			ctx.stroke();	
-			
-		} catch(e) {
-			throw e;
-		} finally {
-			ctx.restore();
-		}
-
-    }
 
 
 

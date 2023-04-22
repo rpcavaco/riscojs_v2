@@ -307,8 +307,6 @@ export class LocQuery {
 		this.query_results.style.padding = "2px";
 		this.query_results.style.margin = "0";
 
-
-
 		if (bcb) {
 			this.query_box.style.top = bcb.top + "px";
 			this.query_box.style.left = (2 * bcb.left + bcb.getWidth()) + "px";	

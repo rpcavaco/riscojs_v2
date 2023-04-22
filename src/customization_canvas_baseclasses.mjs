@@ -51,6 +51,7 @@ export class ControlsBox extends MapPrintInRect {
 
 	orientation = "HORIZONTAL";
 	controls_keys = [];
+	controls_funcs = {};
 	tool_manager = null;
 	controls_boxes = {};
 
@@ -98,6 +99,15 @@ export class ControlsBox extends MapPrintInRect {
 		return h;
 	}	
 
+	addControl(p_key, p_drawface_func, p_endevent_func, p_mmove_func) {
+		this.controls_keys.push(p_key);
+		this.controls_funcs[p_key] = {
+			"drawface": p_drawface_func,
+			"endevent": p_endevent_func,
+			"mmoveevent": p_mmove_func
+		}
+	}
+
 	print(p_mapctx) {
 
 		// const canvas_dims = [];
@@ -129,7 +139,7 @@ export class ControlsBox extends MapPrintInRect {
 				ctx.lineWidth = this.strokeWidth;
 				ctx.strokeRect(left, top, this.boxw, this.boxh);
 
-				this.drawControlFace(ctx, this.controls_keys[ci], left, top, this.boxw, this.boxh);
+				this.drawControlFace(ctx, this.controls_keys[ci], left, top, this.boxw, this.boxh, p_mapctx.cfgvar["basic"], GlobalConst);
 
 			}
 
