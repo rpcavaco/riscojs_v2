@@ -141,7 +141,7 @@ function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coor
 
 }
 
-const canvasVectorMethodsMixin = (Base) => class extends Base {
+export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	
 	canvasKey = 'normal';
 	canvasKeyLabels = 'labels';

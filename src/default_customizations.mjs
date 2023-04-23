@@ -233,18 +233,113 @@ class Info {
 	}
 }
 
+import {canvasVectorMethodsMixin} from '../riscojs_v2/canvas_vector.mjs';
+import { VectorLayer } from '../riscojs_v2/layers.mjs';
+
+class LocLayerClass extends VectorLayer {
+
+	is_internal = true;
+	_geomtype = "line";
+	items;
+
+	constructor() {
+		super();
+		this.items = [null, null];
+		this._servmetadata_docollect = false;		
+	}
+
+	setFromPoint(p_pt, p_accuracy) {
+		this.items[0] = {
+			key: "from",
+			pt: [...p_pt],
+			accuracy: p_accuracy
+		}
+	}
+
+	setToPoint(p_pt) {
+		this.items[1] = {
+			key: "from",
+			pt: [...p_pt]
+		}
+	}
+
+
+	* itemchunks(p_mapctxt, p_prep_data) {
+		yield [];
+	}	
+
+	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
+
+		for (const item of this.items) {
+
+			if (item) {
+				if (item["accuracy"] !== undefined) {
+					yield [[item.pt], { "key": item.key, "accuracy": item.accuracy }, 1];
+				} else {
+					yield [[item.pt], { "key": item.key }, 1];
+				}
+			}
+			
+			// yield [item_coords, item_attrs, item_path_levels];
+
+		}
+
+		p_mapctxt.tocmgr.signalVectorLoadFinished(this.key);		
+	}
+
+}
+
+export class CanvasLocLayerClass extends canvasVectorMethodsMixin(LocLayerClass) {
+
+	simplerefreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels) {
+
+		const ok = this.grabGf2DCtx(p_mapctxt);
+
+		if (ok && !this.strokeflag && !this.fillflag) {
+			throw new Error(`Layer ${this.key}, no 'stroke' and no 'fill' flags, nothin to draw`);
+		}
+
+		if (ok) {
+			try {
+				this._gfctx.beginPath();
+				let cpt=[];
+
+				for (let pt of p_coords) {
+
+					p_mapctxt.transformmgr.getRenderingCoordsPt(pt, cpt);
+
+					this._gfctx.arc(cpt[0], cpt[1], 10, 0, Math.PI * 2, true);
+				}
+				if (this.strokeflag) {
+					this._gfctx.stroke();
+				};
+				if (this.fillflag) {
+					this._gfctx.fill();
+				};
+			} catch(e) {
+				throw e;
+			} finally {
+				this.releaseGf2DCtx();
+			}
+		}
+
+		return true;		
+	}
+}
+
 export class GeoLocationMgr {
 
 	mapctx;
 	mapctx_config_var;
 	transformmgr;
 	geoloc;
+	loc_layer_key;
 
-	constructor(p_mapctx, p_transformmgr) {
+	constructor(p_mapctx, p_loc_layer_key) {
 
 		this.mapctx = p_mapctx;
 		this.mapctx_config_var = p_mapctx.cfgvar["basic"];
-		this.transformmgr = p_transformmgr;
+		this.loc_layer_key = p_loc_layer_key;
 	
 		this.geoloc = {
 			timeoutid: null,
@@ -290,7 +385,7 @@ export class GeoLocationMgr {
 
 					} else {
 
-						s = that.transformmgr.getReadableCartoScale();
+						s = that.mapctx.transformmgr.getReadableCartoScale();
 						usablescale = s;
 
 						if (that.geoloc.last_ts) {
@@ -300,12 +395,12 @@ export class GeoLocationMgr {
 							dx = that.geoloc.lastpos[0]-recieved_pos[0];
 							dy = that.geoloc.lastpos[1]-recieved_pos[1];
 
-							tol = GlobalConst.GEOLOCATION_NEXTPOS_TOLERANCE_PX * that.transformmgr.getPixSize();
+							tol = GlobalConst.GEOLOCATION_NEXTPOS_TOLERANCE_PX * that.mapctx.transformmgr.getPixSize();
 
 							d = Math.sqrt(dx * dx + dy * dy);
 							v = d / (dt / 1000);
 
-							that.transformmgr.getCenter(curr_center);
+							that.mapctx.transformmgr.getCenter(curr_center);
 							testdx = curr_center[0]-recieved_pos[0];
 							testdy = curr_center[1]-recieved_pos[1];
 
@@ -323,7 +418,7 @@ export class GeoLocationMgr {
 						that.mapctx.getCanvasDims(dims);
 
 						sf = Math.min(...dims) / (2.4 * p_gps_coords.accuracy);
-						minsclval = that.transformmgr.convertScalingFactorToReadableScale(sf);
+						minsclval = that.mapctx.transformmgr.convertScalingFactorToReadableScale(sf);
 
 						if (GlobalConst.getDebug("GEOLOC")) {
 							console.info("[DBG:GEOLOC] minsclval:", minsclval, "scl.factor:", sf, "min.scr.dim:", Math.min(...dims), "accur:", p_gps_coords.accuracy);
@@ -331,7 +426,7 @@ export class GeoLocationMgr {
 
 						if (s < minsclval) {
 							usablescale = minsclval;
-							that.transformmgr.setScaleFromReadableCartoScale(minsclval, false);
+							that.mapctx.transformmgr.setScaleFromReadableCartoScale(minsclval, false);
 							change = true;
 						} else {
 							vsclval = 0;
@@ -344,7 +439,7 @@ export class GeoLocationMgr {
 							}
 							if (vsclval >= minsclval && s > vsclval) {
 								usablescale = vsclval;
-								that.transformmgr.setScaleFromReadableCartoScale(vsclval, false);
+								that.mapctx.transformmgr.setScaleFromReadableCartoScale(vsclval, false);
 								change = true;
 							}
 						}
@@ -365,24 +460,35 @@ export class GeoLocationMgr {
 
 						if (change) {
 
+							/*
 							that.mapctx.tocmgr.addAfterRefreshProcedure(() => {
 
 								const scr_pt = [];
-								that.transformmgr.getScrPt(recieved_pos, scr_pt);
+								that.mapctx.transformmgr.getScrPt(recieved_pos, scr_pt);
 
-								const radius = Math.round(that.transformmgr.converReadableScaleToScalingFactor(usablescale) * p_gps_coords.accuracy);
+								const radius = Math.round(that.mapctx.transformmgr.converReadableScaleToScalingFactor(usablescale) * p_gps_coords.accuracy);
 								if (GlobalConst.getDebug("GEOLOC")) {
-									console.log("[DBG:GEOLOC] drawGeolocationMarkings: radius, us.scale, scl.factor, accur:", radius, usablescale, that.transformmgr.converReadableScaleToScalingFactor(usablescale), p_gps_coords.accuracy);
+									console.log("[DBG:GEOLOC] drawGeolocationMarkings: radius, us.scale, scl.factor, accur:", radius, usablescale, that.mapctx.transformmgr.converReadableScaleToScalingFactor(usablescale), p_gps_coords.accuracy);
 								}
 								that.drawGeolocationMarkings(scr_pt, radius);
 
 							});
+							*/
 
 							if (GlobalConst.getDebug("GEOLOC")) {
 								console.log("[DBG:GEOLOC] SET CENTER", recieved_pos);
 							}
 
-							that.transformmgr.setCenter(recieved_pos[0], recieved_pos[1], true);
+							const lyr = that.mapctx.tocmgr.getLayer(that.loc_layer_key);
+							if (lyr == null) {
+								throw new Error(`no layer '${that.loc_layer_key}' found`);
+							}
+
+							lyr.setFromPoint(recieved_pos, p_gps_coords.accuracy);
+
+
+
+							that.mapctx.transformmgr.setCenter(recieved_pos[0], recieved_pos[1], true);
 
 							that.geoloc.lastpos.length = 2;
 							that.geoloc.lastpos[0] = recieved_pos[0];
@@ -395,7 +501,7 @@ export class GeoLocationMgr {
 
 				}
 			).catch((error) => {
-				console.error(`[GEOLOC] Impossible to transform coords`, error);
+				console.error(`[GEOLOC] Impossible to transform coords or paint geolocation`, error);
 			});	
 
 		} else {

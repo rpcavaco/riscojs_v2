@@ -1,4 +1,5 @@
 
+
 export class LocQuery {
 
 	mapctx;
@@ -6,9 +7,6 @@ export class LocQuery {
 	crs;
 	msgs_ctrlr;
 	
-	//querybox;
-	// result_area;
-
 	query_box;
 	query_results;
 
@@ -16,9 +14,10 @@ export class LocQuery {
 	npolfeats;
 	centerlinefeats;
 	found;
+	loc_layer_key;
 	#lastinput;
 
-	constructor(p_mapctx, p_msgs_ctrlr, p_cfg, p_crs) {
+	constructor(p_mapctx, p_msgs_ctrlr, p_cfg, p_crs, opt_loc_layer_key) {
 		this.mapctx = p_mapctx;
 		this.msgs_ctrlr = p_msgs_ctrlr;
 		this.url = p_cfg["url"];
@@ -27,6 +26,7 @@ export class LocQuery {
 		this.centerlinefeats = p_cfg["centerlinefeats"];
 		this.crs = p_crs;
 		this.found = null;
+		this.loc_layer_key = opt_loc_layer_key;
 	}
 
 	set lastinput(p_li) {

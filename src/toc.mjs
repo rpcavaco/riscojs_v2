@@ -78,7 +78,7 @@ export class TOCManager {
 		return ret;
 	}
 
-	addLayer(p_layerkey, p_layercfg_entry) {
+	addLayer(p_layerkey, p_layercfg_entry, opt_crafted_layerclass) {
 
 		const lidx = this.layers.push(null) - 1;
 		let currentLayer;
@@ -87,11 +87,19 @@ export class TOCManager {
 
 		try {
 
-			if (p_layercfg_entry["type"] === undefined) {
-				throw new Error(`TOCManager, layer with key '${p_layerkey}' has no type, cannot be read.`);
+			if (opt_crafted_layerclass) {
+
+				this.layers[lidx] = new opt_crafted_layerclass();
+				
+			} else {
+
+				if (p_layercfg_entry["type"] === undefined) {
+					throw new Error(`TOCManager, layer with key '${p_layerkey}' has no type, cannot be read.`);
+				}
+		
+				this.layers[lidx] = new DynamicLayer(this.mode, p_layercfg_entry["type"]);
 			}
 
-			this.layers[lidx] = new DynamicLayer(this.mode, p_layercfg_entry["type"]);
 			currentLayer = this.layers[lidx];
 
 			if (currentLayer._geomtype != null) {
@@ -136,7 +144,11 @@ export class TOCManager {
 							
 				if (currentLayer.geomtype === undefined && currentLayer.marker === undefined) { 
 					
+					/* if (opt_crafted_layerclass) {
+						console.warn(`[WARN] Crafted layer ${p_layerkey} has no 'geomtype' or 'marker' defined. Is this OK ?`);
+					} else { */
 					throw new Error(`Layer ${p_layerkey} has no 'geomtype' or 'marker' defined`);
+					//}
 
 				} else {
 
@@ -290,172 +302,6 @@ export class TOCManager {
 
 				this.addLayer(lyk, lyentry);
 
-/*				
-				if (lyentry["type"] !== undefined) {
-
-					currentLayer.length = 0;
-
-					try {
-
-						currentLayer.push(new DynamicLayer(this.mode, lyentry["type"]));
-
-						if (currentLayer.length == 0) {
-							console.error(`TOCManager, layer '${lyk}' type not known: '${lyentry["type"]}'`);
-							continue;
-						}
-
-						// 'geomtype',  'fields', 'oidfldname', 'marker' processed separatedly, they are special properties
-						
-						if (currentLayer[0]._geomtype != null) {
-							currentLayer[0].geomtype = currentLayer[0]._geomtype;
-							if (lyentry["geomtype"] !== undefined) {
-								console.error(`[WARN] layer '${lyk}' 'geomtype' property is not configurable in that layer type`);
-							}
-						} else {
-							if (lyentry["geomtype"] !== undefined) {
-								currentLayer[0].geomtype = lyentry["geomtype"];
-							}
-						}
-
-						if (lyentry["fields"] !== undefined) {
-							currentLayer[0].fields = lyentry["fields"];
-						}
-						if (lyentry["marker"] !== undefined) {
-							currentLayer[0].marker = lyentry["marker"];
-							// ATTENTION - geomtype 'point' forced at this location!
-							currentLayer[0].geomtype = "point";
-						}
-
-						if (currentLayer[0].oidfldname == null && lyentry["oidfldname"] !== undefined) {
-							currentLayer[0].oidfldname = lyentry["oidfldname"];
-						}
-
-						// if exists oidfldname, addit  to 'fields' string, in case the user hasn't already done it
-						if (currentLayer[0].oidfldname != null) {
-							if (currentLayer[0].fields == null || currentLayer[0].fields.length == 0) {
-								currentLayer[0].fields = currentLayer[0].oidfldname;
-							} else {
-								if (currentLayer[0].fields.indexOf(currentLayer[0].oidfldname) < 0) {
-									currentLayer[0].fields = currentLayer[0].oidfldname + "," + currentLayer[0].fields;
-								}
-							}
-						}					
-						const scaneables = [currentLayer[0]];
-						currentLayer[0].key = lyk;
-
-						if (!(currentLayer[0] instanceof RasterLayer)) {
-							
-							if (currentLayer[0].geomtype === undefined && currentLayer[0].marker === undefined) { 
-								
-								throw new Error(`Layer ${lyk} has no 'geomtype' or 'marker' defined`);
-
-							} else {
-
-								let classkey;
-								if (currentLayer[0].marker !== undefined && currentLayer[0].marker != "none") { 
-									classkey = currentLayer[0].marker;
-								} else {
-									classkey = currentLayer[0].geomtype;
-								}
-								currentLayer[0].default_symbol = new DynamicSymbol(this.mode, classkey);
-								scaneables.push(currentLayer[0].default_symbol);	
-								
-								if (lyentry.varstyles) {
-									for (let vi=0; vi<lyentry.varstyles.length; vi++) {										
-										currentLayer[0].varstyles_symbols[vi] = new DynamicSymbol(this.mode, classkey, vi);
-										scaneables.push(currentLayer[0].varstyles_symbols[vi]);
-									}
-								}
-							}
-						}
-
-					// console.log(currentLayer[0].default_symbol);
-					// console.log(scaneables);
-						for (let si=0; si < scaneables.length; si++) {
-
-							items = Object.keys(scaneables[si]);
-							for (let ii=0; ii < items.length; ii++) {
-
-								// class fields starting with '_' are the ones being public but not related to configurable items
-								if (items[ii].startsWith('_')) { 
-									continue;
-								}
-
-								if (scaneables[si].variablesymb_idx >= 0 && lyentry.varstyles[scaneables[si].variablesymb_idx][items[ii]] !== undefined) {
-
-									scaneables[si][items[ii]] = lyentry.varstyles[scaneables[si].variablesymb_idx][items[ii]];
-
-								} else if (lyentry[items[ii]] !== undefined) {
-
-									scaneables[si][items[ii]] = lyentry[items[ii]];
-		
-								} else {
-
-									// item is missing if has no default value
-									if (scaneables[si][items[ii]] == null) {
-										
-										switch (items[ii]) {
-
-											case "lineWidth":
-												if (scaneables[si]["strokeStyle"] != "none") {
-													currentLayer[0].missing_mandatory_configs.push(items[ii]);
-												}
-												break;
-
-											default:
-												currentLayer[0].missing_mandatory_configs.push(items[ii]);
-										}
-									}							
-								}
-							}	
-							
-							// missing items such as layernames must be handled in other place
-							if (currentLayer[0].missing_mandatory_configs.length > 0) {
-								let cnt = 0;
-								for (const mc of currentLayer[0].missing_mandatory_configs) {
-									if (missing_configs_to_letgo.indexOf(mc) < 0) {
-										cnt++;
-									}
-								}
-								if (cnt>0) {
-									throw new Error(`TOCManager, layer '${lyk}' config is missing mandatory items: '${currentLayer[0].missing_mandatory_configs}'`);
-								} else {
-									console.log(`missing mand.config on layer '${lyk}'` + currentLayer[0].missing_mandatory_configs);
-								}
-							}
-
-							//console.log(Object.keys(currentLayer[0]));
-	
-						}
-
-						// console.log("aft", lyk, scaneables);
-
-					} catch(e) {
-						console.error(e);
-						continue;
-					}
-					
-					try {
-						if (currentLayer[0].initLayer !== undefined) {
-							currentLayer[0].initLayer(this.mapctx, i);
-						}
-					} catch(e) {
-						console.error(e);
-					}
-
-					// connects feature collection to this layer, if applicable
-					// (if it implements featureLayersMixin)
-					if (currentLayer[0].setCurrFeatures !== undefined) {
-						currentLayer[0].setCurrFeatures(this.mapctx.featureCollection, lyk, currentLayer[0]);
-					}
-
-					this.layers.push(currentLayer[0]);
-					console.info(`[init RISCO] TOCManager, layer '${lyk}' (${currentLayer[0].constructor.name}) prepared`);
-
-				} else {
-					console.error(`TOCManager, layer with key '${lyk}' has no type, cannot be read.`);
-				}
-*/
 			} else {
 				console.error(`TOCManager, no layer with key '${lyk}' found in config.`);
 			}
@@ -605,7 +451,10 @@ export class TOCManager {
 				lbl = this.layers[li].label;
 			else
 				lbl = this.layers[li].key;
-			this.mapctx.printLoadingMsg(lbl);
+			
+			if (this.layers[li]['is_internal'] === undefined || !this.layers[li].is_internal) {
+				this.mapctx.printLoadingMsg(lbl);
+			}
 
 			if (this.layers[li] instanceof RemoteVectorLayer) {
 
@@ -633,9 +482,15 @@ export class TOCManager {
 					console.log("[DBG:VECTLOAD] nextdraw, refreshing", li, this.layers[li].key);
 				}
 		
-				canceled = this.layers[li].refresh(this.mapctx, null);
-				if (canceled) {
-					this.drawlist.length = 0;
+				try {
+					canceled = this.layers[li].refresh(this.mapctx, null);
+					if (canceled) {
+						this.drawlist.length = 0;
+					}
+				} catch(e) {
+					this.signalVectorLoadFinished(this.layers[li].key);
+					console.error(e);
+					return;
 				}
 			}
 

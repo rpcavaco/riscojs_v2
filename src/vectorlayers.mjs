@@ -127,6 +127,7 @@ export class AreaGridLayer extends VectorLayer {
 	scaledep_separation_1k = -1;
 	_geomtype = "poly";
 	areatype = "square";
+	is_internal = true;
 	hiddengraphics = false;
 	_columns = 0;
 

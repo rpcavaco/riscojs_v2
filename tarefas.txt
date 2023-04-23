@@ -68,6 +68,8 @@
 
 - Completar operações lógicas no find de feature collection (tem TODO)
 
+- versão de código visível / acessível
+
 --------------------------------- UI/Widgets  -------------------------------
 
 OK - Controles mínimos zooming
