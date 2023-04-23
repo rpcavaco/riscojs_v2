@@ -161,16 +161,39 @@
 
 			if (p_this.instances["basiccontrolsbox"] !== undefined) {
 
-				p_this.instances["basiccontrolsbox"].addControl("gps", //p_drawface_func, p_endevent_func, p_mmove_func)
+				p_this.instances["basiccontrolsbox"].addControl("gpspt", //p_drawface_func, p_endevent_func, p_mmove_func)
 					function(p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants) {
 
 						const imgh = new Image();
 						imgh.decoding = "sync";
-						imgh.src = p_basic_config.gpscontrol.symb;
+						imgh.src = p_basic_config.gpsposcontrol.symb;
 
 						imgh.decode()
 						.then(() => {
-							p_ctx.drawImage(imgh, p_left + ((p_global_constants.CONTROLS_STYLES.SIZE - p_basic_config.gpscontrol.symbwid) / 2), p_top);
+							p_ctx.drawImage(imgh, p_left + ((p_global_constants.CONTROLS_STYLES.SIZE - p_basic_config.gpsposcontrol.symbwid) / 2), p_top);
+						});
+					},
+					function(p_mapctx, p_basic_config, p_global_constants) {
+						p_this.instances["geolocation"].geolocPinpoint();
+						const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+						topcnv.style.cursor = "default";
+					},
+					function(p_mapctx, p_basic_config, p_global_constants) {
+						const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+						topcnv.style.cursor = "pointer";
+					}
+				);
+
+				p_this.instances["basiccontrolsbox"].addControl("gpstrack", //p_drawface_func, p_endevent_func, p_mmove_func)
+					function(p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants) {
+
+						const imgh = new Image();
+						imgh.decoding = "sync";
+						imgh.src = p_basic_config.gpstrackcontrol.symb;
+
+						imgh.decode()
+						.then(() => {
+							p_ctx.drawImage(imgh, p_left + ((p_global_constants.CONTROLS_STYLES.SIZE - p_basic_config.gpstrackcontrol.symbwid) / 2), p_top);
 						});
 					},
 					function(p_mapctx, p_basic_config, p_global_constants) {
@@ -183,8 +206,6 @@
 						topcnv.style.cursor = "pointer";
 					}
 				);
-
-
 
 			}
 

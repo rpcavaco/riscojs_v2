@@ -343,6 +343,31 @@ export class CanvasLocLayerClass extends canvasVectorMethodsMixin(LocLayerClass)
 	}
 }
 
+function getLocation(p_this, b_check_active) {
+
+	const options = { enableHighAccuracy: true };
+	navigator.geolocation.getCurrentPosition((pos) => {
+		
+		console.log("[GEOLOC]", pos.coords);
+		
+		if (!b_check_active || p_this.geoloc.active) {
+			p_this.trackpos(pos.coords);
+		} 
+		if (b_check_active || p_this.geoloc.active) {
+			p_this.geoloc.timeoutid = setTimeout(getLocation(p_this), GlobalConst.GEOLOCATION_INTERVAL_MS);
+		} 		
+	},
+	(error) => {
+		console.error("[GEOLOC] geolocation.getCurrentPosition error:", error);
+		if (p_this.geoloc.timeoutid) {
+			clearTimeout(p_this.geoloc.timeoutid);
+			p_this.geoloc.timeoutid = null;
+		}	
+		p_this.geoloc.active = false;			
+	},
+	options);
+}
+
 export class GeoLocationMgr {
 
 	mapctx;
@@ -511,30 +536,6 @@ export class GeoLocationMgr {
 
 	toggleGeolocWatch() {
 
-		const options = { enableHighAccuracy: true };
-
-		function getLocation(p_this) {
-
-			navigator.geolocation.getCurrentPosition((pos) => {
-				
-				console.log("[GEOLOC]", pos.coords);
-				
-				if (p_this.geoloc.active) {
-					p_this.trackpos(pos.coords);
-					p_this.geoloc.timeoutid = setTimeout(getLocation(p_this), GlobalConst.GEOLOCATION_INTERVAL_MS);
-				} 
-			},
-			(error) => {
-				console.error("[GEOLOC] geolocation.getCurrentPosition error:", error);
-				if (p_this.geoloc.timeoutid) {
-					clearTimeout(p_this.geoloc.timeoutid);
-					p_this.geoloc.timeoutid = null;
-				}	
-				p_this.geoloc.active = false;			
-			},
-			options);
-		}
-
 		if (navigator["geolocation"] !== undefined) {
 			
 			if (this.geoloc.active) {
@@ -560,7 +561,7 @@ export class GeoLocationMgr {
 					} else {
 
 						this.geoloc.active = true;
-						getLocation(this);
+						getLocation(this, true);
 						this.mapctx.getCustomizationObject().messaging_ctrlr.info("Geolocalização iniciada");
 		
 					}
@@ -571,7 +572,28 @@ export class GeoLocationMgr {
 			this.mapctx.getCustomizationObject().messaging_ctrlr.warn("Impossível ativar geolocalização");
 		}
 
+	}
 
+	geolocPinpoint() {
+
+		if (navigator["geolocation"] !== undefined) {
+			
+			navigator.permissions.query({ name: "geolocation" }).then((result) => {
+				if (result.state !== "granted") {
+
+					console.error("[GEOLOC] Geolocation permission not granted");
+					this.mapctx.getCustomizationObject().messaging_ctrlr.warn("Ainda não foi dada permissão de uso da geolocalização.")
+
+				} else {
+
+					getLocation(this, false);
+	
+				}
+			});				  
+				  	
+		} else {
+			this.mapctx.getCustomizationObject().messaging_ctrlr.warn("Impossível ativar geolocalização");
+		}		
 	}
 
 	drawGeolocationMarkings(p_scr_pt, p_radius) {
