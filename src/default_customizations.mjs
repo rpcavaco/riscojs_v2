@@ -314,15 +314,41 @@ export class CanvasLocLayerClass extends canvasVectorMethodsMixin(LocLayerClass)
 
 		if (ok) {
 			try {
-				let radius=0, cpt=[];
+				let radius=0, cpt=[], other=[];
 
 				for (let pt of p_coords) {
 
 					p_mapctxt.transformmgr.getRenderingCoordsPt(pt, cpt);
 
-					this._gfctx.beginPath();
-					this._gfctx.arc(cpt[0], cpt[1], 2, 0, Math.PI * 2, true);
-					strokeFill(this);
+					if (p_attrs["key"] == "from") {
+
+						this._gfctx.beginPath();
+						this._gfctx.arc(cpt[0], cpt[1], 2, 0, Math.PI * 2, true);
+						strokeFill(this);
+					
+						// linha de ligação, ponto GPS > Local
+						if (this.items[1]) {
+							p_mapctxt.transformmgr.getRenderingCoordsPt(this.items[1].pt, other);
+
+							this._gfctx.beginPath();
+							this._gfctx.moveTo(...cpt);
+							this._gfctx.lineTo(...other);
+							strokeFill(this);							
+						}
+					
+					} else {
+
+						this._gfctx.beginPath();
+						this._gfctx.arc(cpt[0], cpt[1], 2, 0, Math.PI * 2, true);
+						strokeFill(this);
+
+						this._gfctx.beginPath();
+						this._gfctx.moveTo(cpt[0]-20, cpt[1]+18);
+						this._gfctx.lineTo(cpt[0], cpt[1]-22);
+						this._gfctx.lineTo(cpt[0]+20, cpt[1]+18);
+						this._gfctx.closePath();
+						strokeFill(this);
+					}
 
 					// accuracy circle
 					if (p_attrs["key"] == "from") {
@@ -347,7 +373,7 @@ export class CanvasLocLayerClass extends canvasVectorMethodsMixin(LocLayerClass)
 	}
 }
 
-function getLocation(p_this, b_check_active) {
+function getGeoLocation(p_this, b_check_active) {
 
 	const options = { enableHighAccuracy: true };
 	navigator.geolocation.getCurrentPosition((pos) => {
@@ -358,7 +384,7 @@ function getLocation(p_this, b_check_active) {
 			p_this.trackpos(pos.coords);
 		} 
 		if (b_check_active || p_this.geoloc.active) {
-			p_this.geoloc.timeoutid = setTimeout(getLocation(p_this), GlobalConst.GEOLOCATION_INTERVAL_MS);
+			p_this.geoloc.timeoutid = setTimeout(getGeoLocation(p_this), GlobalConst.GEOLOCATION_INTERVAL_MS);
 		} 		
 	},
 	(error) => {
@@ -565,7 +591,7 @@ export class GeoLocationMgr {
 					} else {
 
 						this.geoloc.active = true;
-						getLocation(this, true);
+						getGeoLocation(this, true);
 						this.mapctx.getCustomizationObject().messaging_ctrlr.info("Geolocalização iniciada");
 		
 					}
@@ -590,7 +616,7 @@ export class GeoLocationMgr {
 
 				} else {
 
-					getLocation(this, false);
+					getGeoLocation(this, false);
 	
 				}
 			});				  

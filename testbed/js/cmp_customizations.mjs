@@ -155,6 +155,7 @@ export class LocQuery {
 											}
 			
 										});
+
 										that.mapctx.transformmgr.zoomToRect(p_env[0], p_env[1], p_env[2], p_env[3]);										
 									}
 								);	
@@ -271,6 +272,10 @@ export class LocQuery {
 								}
 
 							});
+
+							const lyr = that.mapctx.tocmgr.getLayer(that.loc_layer_key);
+							lyr.setToPoint([responsejson['out']['loc'][0], responsejson['out']['loc'][1]]);
+							
 
 							that.mapctx.transformmgr.setScaleCenteredAtPoint(that.zoomto, [responsejson['out']['loc'][0], responsejson['out']['loc'][1]], true);
 						}
