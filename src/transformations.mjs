@@ -315,7 +315,7 @@ class TransformsQueue {
 		return Math.round(1000.0 / (p_scalingf * GlobalConst.MMPD));
 	}
 
-	converReadableScaleToScalingFactor(p_scale) {
+	convertReadableScaleToScalingFactor(p_scale) {
 		return 1000.0 / (p_scale * GlobalConst.MMPD);
 	}
 

@@ -258,7 +258,7 @@ class LocLayerClass extends VectorLayer {
 
 	setToPoint(p_pt) {
 		this.items[1] = {
-			key: "from",
+			key: "to",
 			pt: [...p_pt]
 		}
 	}
@@ -295,27 +295,43 @@ export class CanvasLocLayerClass extends canvasVectorMethodsMixin(LocLayerClass)
 
 		const ok = this.grabGf2DCtx(p_mapctxt);
 
+		function strokeFill(p_this) {
+			if (p_this.strokeflag) {
+				p_this._gfctx.stroke();
+			};
+			if (p_this.fillflag) {
+				p_this._gfctx.fill();
+			};
+		}
+
 		if (ok && !this.strokeflag && !this.fillflag) {
 			throw new Error(`Layer ${this.key}, no 'stroke' and no 'fill' flags, nothin to draw`);
 		}
 
 		if (ok) {
 			try {
-				this._gfctx.beginPath();
-				let cpt=[];
+				let radius=0, cpt=[];
 
 				for (let pt of p_coords) {
 
 					p_mapctxt.transformmgr.getRenderingCoordsPt(pt, cpt);
 
-					this._gfctx.arc(cpt[0], cpt[1], 10, 0, Math.PI * 2, true);
+					this._gfctx.beginPath();
+					this._gfctx.arc(cpt[0], cpt[1], 2, 0, Math.PI * 2, true);
+					strokeFill(this);
+
+					// accuracy circle
+					if (p_attrs["key"] == "from") {
+
+						radius = Math.round(p_mapctxt.transformmgr.convertReadableScaleToScalingFactor(p_mapctxt.transformmgr.getReadableCartoScale()) * p_attrs["accuracy"]);
+
+						this._gfctx.beginPath();
+						this._gfctx.arc(cpt[0], cpt[1], radius, 0, Math.PI * 2, true);
+						strokeFill(this);
+
+					}
 				}
-				if (this.strokeflag) {
-					this._gfctx.stroke();
-				};
-				if (this.fillflag) {
-					this._gfctx.fill();
-				};
+
 			} catch(e) {
 				throw e;
 			} finally {
@@ -460,21 +476,6 @@ export class GeoLocationMgr {
 
 						if (change) {
 
-							/*
-							that.mapctx.tocmgr.addAfterRefreshProcedure(() => {
-
-								const scr_pt = [];
-								that.mapctx.transformmgr.getScrPt(recieved_pos, scr_pt);
-
-								const radius = Math.round(that.mapctx.transformmgr.converReadableScaleToScalingFactor(usablescale) * p_gps_coords.accuracy);
-								if (GlobalConst.getDebug("GEOLOC")) {
-									console.log("[DBG:GEOLOC] drawGeolocationMarkings: radius, us.scale, scl.factor, accur:", radius, usablescale, that.mapctx.transformmgr.converReadableScaleToScalingFactor(usablescale), p_gps_coords.accuracy);
-								}
-								that.drawGeolocationMarkings(scr_pt, radius);
-
-							});
-							*/
-
 							if (GlobalConst.getDebug("GEOLOC")) {
 								console.log("[DBG:GEOLOC] SET CENTER", recieved_pos);
 							}
@@ -485,8 +486,6 @@ export class GeoLocationMgr {
 							}
 
 							lyr.setFromPoint(recieved_pos, p_gps_coords.accuracy);
-
-
 
 							that.mapctx.transformmgr.setCenter(recieved_pos[0], recieved_pos[1], true);
 

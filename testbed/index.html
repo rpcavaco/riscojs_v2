@@ -152,10 +152,9 @@
 			// (limiting available space for other widgets)
 			loc_layer = "LOCATIONS_LAYER";
 			p_mapctx.tocmgr.addLayer("LOCATIONS_LAYER", {
-				"scaledep_separation_1k": 10,
-				"strokeStyle": "white",
+				"strokeStyle": "red",
 				"fillStyle": "none",
-				"lineWidth": 0.5
+				"lineWidth": 3
 			}, CanvasLocLayerClass);
 								
 			p_this.instances["geolocation"] = new GeoLocationMgr(p_mapctx, loc_layer);

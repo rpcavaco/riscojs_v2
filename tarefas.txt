@@ -43,7 +43,9 @@
 >> 2 - remover drawGeolocationMarkings para layer analítica, juntar ponto de Localizador e trajeto entre ambos (começar com linha reta)
 	OK - necessário alterar adição de layers, criando função própria addLayer
 
-- separar posicação GPS do trckinkg
+>> - verificar isInited, parece estranho ....
+
+- separar posicação GPS do tracking
 - gaps entre Controles
 - separar bcbox de outros paineis (neste momento é único)
 
