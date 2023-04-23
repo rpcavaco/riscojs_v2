@@ -6,13 +6,11 @@ import {layerClassAdapter, symbClassAdapter} from './layers_and_symbols_adapter.
 class DynamicLayer {
 	// p_mode: only 'canvas' for now
     constructor (p_mode, p_classkey, opts) {
-		try {
-			return new layerClassAdapter[p_mode][p_classkey](opts);
-		} catch (e) {
-			console.log("class key:", p_classkey);
-			console.error(e);
+		if (layerClassAdapter[p_mode][p_classkey] === undefined) {
+			throw new Error(`DynamicLayer, layer type '${p_classkey}' not recognized`);
 		}
-    }
+		return new layerClassAdapter[p_mode][p_classkey](opts);
+   }
 }
 
 class DynamicSymbol {
@@ -80,6 +78,158 @@ export class TOCManager {
 		return ret;
 	}
 
+	addLayer(p_layerkey, p_layercfg_entry) {
+
+		const lidx = this.layers.push(null) - 1;
+		let currentLayer;
+
+		const missing_configs_to_letgo = ["layernames"]; 
+
+		try {
+
+			if (p_layercfg_entry["type"] === undefined) {
+				throw new Error(`TOCManager, layer with key '${p_layerkey}' has no type, cannot be read.`);
+			}
+
+			this.layers[lidx] = new DynamicLayer(this.mode, p_layercfg_entry["type"]);
+			currentLayer = this.layers[lidx];
+
+			if (currentLayer._geomtype != null) {
+				currentLayer.geomtype = currentLayer._geomtype;
+				if (p_layercfg_entry["geomtype"] !== undefined) {
+					console.warn(`[WARN] layer '${p_layerkey}' 'geomtype' property is not configurable in that layer type`);
+				}
+			} else {
+				if (p_layercfg_entry["geomtype"] !== undefined) {
+					currentLayer.geomtype = p_layercfg_entry["geomtype"];
+				}
+			}
+
+			if (p_layercfg_entry["fields"] !== undefined) {
+				currentLayer.fields = p_layercfg_entry["fields"];
+			}
+			if (p_layercfg_entry["marker"] !== undefined) {
+				currentLayer.marker = p_layercfg_entry["marker"];
+				// ATTENTION - geomtype 'point' forced at this location!
+				currentLayer.geomtype = "point";
+			}
+
+			if (currentLayer.oidfldname == null && p_layercfg_entry["oidfldname"] !== undefined) {
+				currentLayer.oidfldname = p_layercfg_entry["oidfldname"];
+			}
+
+			// if exists oidfldname, addit  to 'fields' string, in case the user hasn't already done it
+			if (currentLayer.oidfldname != null) {
+				if (currentLayer.fields == null || currentLayer.fields.length == 0) {
+					currentLayer.fields = currentLayer.oidfldname;
+				} else {
+					if (currentLayer.fields.indexOf(currentLayer.oidfldname) < 0) {
+						currentLayer.fields = currentLayer.oidfldname + "," + currentLayer.fields;
+					}
+				}
+			}
+
+			const scaneables = [currentLayer];
+			currentLayer.key = p_layerkey;
+
+			if (!(currentLayer instanceof RasterLayer)) {
+							
+				if (currentLayer.geomtype === undefined && currentLayer.marker === undefined) { 
+					
+					throw new Error(`Layer ${p_layerkey} has no 'geomtype' or 'marker' defined`);
+
+				} else {
+
+					let classkey;
+					if (currentLayer.marker !== undefined && currentLayer.marker != "none") { 
+						classkey = currentLayer.marker;
+					} else {
+						classkey = currentLayer.geomtype;
+					}
+					currentLayer.default_symbol = new DynamicSymbol(this.mode, classkey);
+					scaneables.push(currentLayer.default_symbol);	
+					
+					if (p_layercfg_entry.varstyles) {
+						for (let vi=0; vi<p_layercfg_entry.varstyles.length; vi++) {										
+							currentLayer.varstyles_symbols[vi] = new DynamicSymbol(this.mode, classkey, vi);
+							scaneables.push(currentLayer.varstyles_symbols[vi]);
+						}
+					}
+				}
+			}
+
+			for (let si=0; si < scaneables.length; si++) {
+
+				const items = Object.keys(scaneables[si]);
+				for (let ii=0; ii < items.length; ii++) {
+
+					// class fields starting with '_' are the ones being public but not related to configurable items
+					if (items[ii].startsWith('_')) { 
+						continue;
+					}
+
+					if (scaneables[si].variablesymb_idx >= 0 && p_layercfg_entry.varstyles[scaneables[si].variablesymb_idx][items[ii]] !== undefined) {
+
+						scaneables[si][items[ii]] = p_layercfg_entry.varstyles[scaneables[si].variablesymb_idx][items[ii]];
+
+					} else if (p_layercfg_entry[items[ii]] !== undefined) {
+
+						scaneables[si][items[ii]] = p_layercfg_entry[items[ii]];
+
+					} else {
+
+						// item is missing if has no default value
+						if (scaneables[si][items[ii]] == null) {
+							
+							switch (items[ii]) {
+
+								case "lineWidth":
+									if (scaneables[si]["strokeStyle"] != "none") {
+										currentLayer.missing_mandatory_configs.push(items[ii]);
+									}
+									break;
+
+								default:
+									currentLayer.missing_mandatory_configs.push(items[ii]);
+							}
+						}							
+					}
+				}	
+				
+				// missing items such as layernames must be handled in other place
+				if (currentLayer.missing_mandatory_configs.length > 0) {
+					let cnt = 0;
+					for (const mc of currentLayer.missing_mandatory_configs) {
+						if (missing_configs_to_letgo.indexOf(mc) < 0) {
+							cnt++;
+						}
+					}
+					if (cnt>0) {
+						throw new Error(`TOCManager, layer '${p_layerkey}' config is missing mandatory items: '${currentLayer.missing_mandatory_configs}'`);
+					}
+				}
+				
+			}
+
+			if (currentLayer.initLayer !== undefined) {
+				currentLayer.initLayer(this.mapctx, lidx);
+			}
+
+			// connects feature collection to this layer, if applicable
+			// (if it implements featureLayersMixin)
+			if (currentLayer.setCurrFeatures !== undefined) {
+				currentLayer.setCurrFeatures(this.mapctx.featureCollection, p_layerkey, currentLayer);
+			}
+
+			console.info(`[init RISCO] TOCManager, layer '${p_layerkey}' (${currentLayer.constructor.name}) prepared`);
+
+
+		} catch(e) {
+			console.error(e);
+			this.layers.pop();
+		}
+	}
+
 	initLayersFromConfig() {
 
 		const selectable_feat_layer_types = [
@@ -116,12 +266,12 @@ export class TOCManager {
 			} else {
 
 				lyk = layerscfg.lorder[i];
-				lyentry = layerscfg.layers[lyk];
 
 				if (layerscfg.layers[lyk] === undefined) {
 					throw new Error(`layerscfg config has no '${lyk}' entry`);
 				}
 
+				lyentry = layerscfg.layers[lyk];
 				if (lyentry["mouseinteraction"]) {
 
 					if (selectable_feat_layer_types.indexOf(lyentry["type"]) >= 0) {
@@ -138,6 +288,9 @@ export class TOCManager {
 
 			if (lyentry !== undefined) {
 
+				this.addLayer(lyk, lyentry);
+
+/*				
 				if (lyentry["type"] !== undefined) {
 
 					currentLayer.length = 0;
@@ -302,7 +455,7 @@ export class TOCManager {
 				} else {
 					console.error(`TOCManager, layer with key '${lyk}' has no type, cannot be read.`);
 				}
-
+*/
 			} else {
 				console.error(`TOCManager, no layer with key '${lyk}' found in config.`);
 			}

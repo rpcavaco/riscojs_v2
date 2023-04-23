@@ -37,6 +37,15 @@
 	- OK - points
 - OK - info na multi tool (no mouse up sem drag) e ficha de feat no mouse move
 - OK - separar default_customizations.mjs "base" de cmp_customizations.mjs
+- OK - necessário separar o que é customização do que são classes - base em default_customizations.mjs
+- OK - separar geolocation para as costumizações
+
+>> 2 - remover drawGeolocationMarkings para layer analítica, juntar ponto de Localizador e trajeto entre ambos (começar com linha reta)
+	OK - necessário alterar adição de layers, criando função própria addLayer
+
+- separar posicação GPS do trckinkg
+- gaps entre Controles
+- separar bcbox de outros paineis (neste momento é único)
 
 - Edição
 
@@ -56,13 +65,6 @@
 - layered symbs
 
 - flatgeobuf
-
->> - necessário separar o que é customização do que são classes - base em default_customizations.mjs
-
-
-
->> 1 - separar geolocation para as costumizações
->> 2 - remover drawGeolocationMarkings para layer analítica, juntar ponto de Localizador e trajeto entre ambos (começar com linha reta)
 
 - Completar operações lógicas no find de feature collection (tem TODO)
 

@@ -583,7 +583,7 @@ class BasicCtrlBox extends ControlsBox {
 
 	drawControlFace(p_ctx, p_control_key, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants) {
 
-		console.log("trls funcs:", Object.keys(this.controls_funcs));
+		// console.log("trls funcs:", Object.keys(this.controls_funcs));
 
 		if (this.controls_funcs[p_control_key] !== undefined) {
 			if (this.controls_funcs[p_control_key]["drawface"] !== undefined) {
