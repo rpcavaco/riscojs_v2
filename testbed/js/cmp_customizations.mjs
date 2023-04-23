@@ -297,18 +297,29 @@ export class LocQuery {
 
 	setCustomizationUI(p_customization_instance, p_mapctx, p_global_constants, p_basic_config) {
 
-		let r, bcb = null,  qryb=null, qryboxheight = 22;
+		let r, bcb = null,  qryb=null, qryboxheight = 22, canvas_dims=[];
+
+		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
 		if (p_customization_instance.instances["basiccontrolsbox"] !== undefined) {
 			bcb = p_customization_instance.instances["basiccontrolsbox"];
 		}	
 
 		this.query_box = document.createElement('input');
+		p_mapctx.panelwidget.appendChild(this.query_box);
+
 		this.query_box.setAttribute("type", "text");
 		this.query_box.style.position = "absolute";
 		this.query_box.style.zIndex = p_mapctx.renderingsmgr.getMaxZIndex()+1;
+		if (navigator.userAgent.toLowerCase().includes("mobile") || navigator.userAgent.toLowerCase().includes("android")) {
+			this.query_box.style.fontSize = "14pt";
+		} else {
+			this.query_box.style.fontSize = "12pt";
+		}
 
 		this.query_results = document.createElement('div');
+		p_mapctx.panelwidget.appendChild(this.query_results);
+
 		this.query_results.id = "query_results";
 		//this.query_results.setAttribute("type", "text");
 		this.query_results.style.position = "absolute";
@@ -331,31 +342,41 @@ export class LocQuery {
 			this.query_results.style.left = this.query_box.style.left + "px";	
 		}
 
-		this.query_box.style.width = p_basic_config["querybox"]["size"] + "px";	
-		this.query_results.style.width = p_basic_config["querybox"]["size"] + "px";	
+		const boxw = Math.min(canvas_dims[0]*0.65, p_basic_config["querybox"]["size"]);
+		this.query_box.style.width = boxw + "px";	
+		this.query_results.style.width = boxw + "px";	
 		this.query_results.style.height = "6px";
 		this.query_results.style.display = 'none';
 		
-		p_mapctx.panelwidget.appendChild(this.query_box);
-		p_mapctx.panelwidget.appendChild(this.query_results);
-
 		this.query_clrbtn = document.createElement('button');
+		p_mapctx.panelwidget.appendChild(this.query_clrbtn);
 
 		this.query_clrbtn.innerText = p_mapctx.i18n.msg('clr', true);
 		this.query_clrbtn.style.position = "absolute";
 
 		if (bcb) {
+			if (((3 * bcb.left + bcb.getWidth()) + boxw + this.query_clrbtn.scrollWidth + 15) > canvas_dims[0]) {
+				this.query_clrbtn.innerText = "C";	
+				this.query_clrbtn.style.width = "40px";
+			} else {
+				this.query_clrbtn.style.width =  p_basic_config["querybox"]["clrbtn_size"] + "px";
+			}
 			this.query_clrbtn.style.top = bcb.top + "px";
-			this.query_clrbtn.style.left = (3 * bcb.left + bcb.getWidth()) + p_basic_config["querybox"]["size"] + "px";	
+			this.query_clrbtn.style.left = (3 * bcb.left + bcb.getWidth() + boxw) + "px";	
+
 		} else {
 			this.query_clrbtn.style.top = p_global_constants.CONTROLS_STYLES.OFFSET + "px";
-			this.query_clrbtn.style.left = p_global_constants.CONTROLS_STYLES.OFFSET + p_basic_config["querybox"]["size"] + "px";	
+			this.query_clrbtn.style.left = p_global_constants.CONTROLS_STYLES.OFFSET + boxw + "px";	
+			this.query_clrbtn.style.width =  p_basic_config["querybox"]["clrbtn_size"] + "px";
 		}
 
-		this.query_clrbtn.style.width =  p_basic_config["querybox"]["clrbtn_size"] + "px";
 		this.query_clrbtn.style.zIndex = p_mapctx.renderingsmgr.getMaxZIndex()+1;
+		if (navigator.userAgent.toLowerCase().includes("mobile") || navigator.userAgent.toLowerCase().includes("android")) {
+			this.query_clrbtn.style.fontSize = "14pt";
+		} else {
+			this.query_clrbtn.style.fontSize = "12pt";
+		}
 		
-		p_mapctx.panelwidget.appendChild(this.query_clrbtn);
 
 		(function(p_btn, p_query_box, p_qryb_obj) {
 			

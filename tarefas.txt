@@ -42,9 +42,9 @@
 - OK - remover drawGeolocationMarkings para layer analítica, juntar ponto de Localizador e trajeto entre ambos (começar com linha reta)
 - OK - necessário alterar adição de layers, criando função própria addLayer
 - OK - separar posicação GPS do tracking
-- OK >> - gaps entre Controles
+- OK - gaps entre Controles, em mobile ficam +  separados
 - tooltips nos controles
-- aumentar controles no mobile
+- OK - aumentar controles no mobile
 
 - separar bcbox de outros paineis (neste momento é único)
 
@@ -79,7 +79,8 @@
 OK - Controles mínimos zooming
 OK -querybox e Localizador
 	OK - marcar ponto
-	>> - largura da caixa de texto no telem
+	OK - largura da caixa de texto no telem
+	>> - throttle enrada de texto
 
 - Legenda
 - TOC

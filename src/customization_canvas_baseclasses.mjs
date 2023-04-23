@@ -73,10 +73,15 @@ export class ControlsBox extends MapPrintInRect {
 
 	dimensioning() {
 
+		let offset = 0;
+		if (navigator.userAgent.toLowerCase().includes("mobile") || navigator.userAgent.toLowerCase().includes("android")) {
+			offset = GlobalConst.CONTROLS_STYLES.MOBILE_DEFGAP;
+		}
+
 		this.left = this.margin_offset;
 		this.top = this.margin_offset;
-		this.boxh = this.sz;
-		this.boxw = this.sz;
+		this.boxh = this.sz + offset;
+		this.boxw = this.sz + offset;
 	
 	}
 
@@ -127,6 +132,11 @@ export class ControlsBox extends MapPrintInRect {
 
 				if (this.controls_prevgaps[this.controls_keys[ci]] !== undefined) {
 					accum += this.controls_prevgaps[this.controls_keys[ci]];
+				} 
+
+				console.log(navigator.userAgent.toLowerCase());
+				if (ci>0 && (navigator.userAgent.toLowerCase().includes("mobile") || navigator.userAgent.toLowerCase().includes("android"))) {
+					accum += GlobalConst.CONTROLS_STYLES.MOBILE_DEFGAP;
 				}
 
 				if (this.orientation == "HORIZONTAL") {
