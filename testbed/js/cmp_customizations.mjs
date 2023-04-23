@@ -372,7 +372,7 @@ export class LocQuery {
 				for (let i=0; i<evttypes.length; i++) {
 					pp_query_box.addEventListener(evttypes[i], function(e) { 
 						let clntxt = pp_query_box.value.trim();
-						//console.log("::284:: qryb EVENT", e.type, clntxt, pp_query_box.value, "len", clntxt.length, "!=", p_qryb_obj.lastinput.length);
+						//console.log("::375:: qryb EVENT", e.type, clntxt, pp_query_box.value, "len", clntxt.length, "!=", p_qryb_obj.lastinput.length);
 						if (clntxt.length > 2) {
 							if (clntxt != p_qryb_obj.lastinput) {
 								p_qryb_obj.lastinput = clntxt;
@@ -385,6 +385,11 @@ export class LocQuery {
 						}
 					}); 
 				}
+				pp_query_box.addEventListener('keypress', function(e) { 
+					if (e.keyCode == 13) {
+						e.target.blur();
+					}
+				}); 
 			})(p_query_box);	
 
 		})(this.query_clrbtn, this.query_box, this);	

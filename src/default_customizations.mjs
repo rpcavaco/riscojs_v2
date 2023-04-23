@@ -378,13 +378,13 @@ function getGeoLocation(p_this, b_check_active) {
 	const options = { enableHighAccuracy: true };
 	navigator.geolocation.getCurrentPosition((pos) => {
 		
-		console.log("[GEOLOC]", pos.coords);
+		console.log("[GEOLOC]", b_check_active, pos.coords);
 		
 		if (!b_check_active || p_this.geoloc.active) {
 			p_this.trackpos(pos.coords);
 		} 
-		if (b_check_active || p_this.geoloc.active) {
-			p_this.geoloc.timeoutid = setTimeout(getGeoLocation(p_this), GlobalConst.GEOLOCATION_INTERVAL_MS);
+		if (b_check_active && p_this.geoloc.active) {
+			p_this.geoloc.timeoutid = setTimeout(getGeoLocation(p_this, true), GlobalConst.GEOLOCATION_INTERVAL_MS);
 		} 		
 	},
 	(error) => {
@@ -423,7 +423,7 @@ export class GeoLocationMgr {
 
 	trackpos(p_gps_coords) {
 		
-		//console.log(p_gps_coords);
+		//console.trace(":426:", p_gps_coords);
 		let url = null;
 
 		if (this.mapctx_config_var['geometry_service']['type'] == "ARCGIS") {
@@ -566,6 +566,8 @@ export class GeoLocationMgr {
 
 	toggleGeolocWatch() {
 
+		console.info("[GEOLOC] start WATCH")
+
 		if (navigator["geolocation"] !== undefined) {
 			
 			if (this.geoloc.active) {
@@ -582,20 +584,20 @@ export class GeoLocationMgr {
 
 			} else {
 
-				navigator.permissions.query({ name: "geolocation" }).then((result) => {
+				/*navigator.permissions.query({ name: "geolocation" }).then((result) => {
 					if (result.state !== "granted") {
 
 						console.error("[GEOLOC] Geolocation permission not granted");
 						this.mapctx.getCustomizationObject().messaging_ctrlr.warn("Ainda não foi dada permissão de uso da geolocalização.")
 
-					} else {
+					} else { */
 
-						this.geoloc.active = true;
-						getGeoLocation(this, true);
-						this.mapctx.getCustomizationObject().messaging_ctrlr.info("Geolocalização iniciada");
+					this.geoloc.active = true;
+					getGeoLocation(this, true);
+					this.mapctx.getCustomizationObject().messaging_ctrlr.info("Geolocalização iniciada");
 		
-					}
-				});				  
+				/*	}
+				});				*/  
 				  
 			}		
 		} else {
@@ -608,18 +610,19 @@ export class GeoLocationMgr {
 
 		if (navigator["geolocation"] !== undefined) {
 			
-			navigator.permissions.query({ name: "geolocation" }).then((result) => {
+			/*navigator.permissions.query({ name: "geolocation" }).then((result) => {
 				if (result.state !== "granted") {
 
 					console.error("[GEOLOC] Geolocation permission not granted");
 					this.mapctx.getCustomizationObject().messaging_ctrlr.warn("Ainda não foi dada permissão de uso da geolocalização.")
 
-				} else {
+				} else { */
 
-					getGeoLocation(this, false);
+				this.mapctx.getCustomizationObject().messaging_ctrlr.info("A pedir geolocalização ...");
+				getGeoLocation(this, false);
 	
-				}
-			});				  
+			/*	}
+			});				  */
 				  	
 		} else {
 			this.mapctx.getCustomizationObject().messaging_ctrlr.warn("Impossível ativar geolocalização");

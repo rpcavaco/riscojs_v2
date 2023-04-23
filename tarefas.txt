@@ -42,8 +42,9 @@
 - OK - remover drawGeolocationMarkings para layer analítica, juntar ponto de Localizador e trajeto entre ambos (começar com linha reta)
 - OK - necessário alterar adição de layers, criando função própria addLayer
 - OK - separar posicação GPS do tracking
-- OK - gaps entre Controles
+- OK >> - gaps entre Controles
 - tooltips nos controles
+- aumentar controles no mobile
 
 - separar bcbox de outros paineis (neste momento é único)
 
@@ -76,12 +77,13 @@
 --------------------------------- UI/Widgets  -------------------------------
 
 OK - Controles mínimos zooming
->> -querybox e Localizador
-	>> - marcar ponto
+OK -querybox e Localizador
+	OK - marcar ponto
+	>> - largura da caixa de texto no telem
 
 - Legenda
 - TOC
-- hovering events over control surfaces of widgets
+- PARCIAL - hovering events over control surfaces of widgets
 
 ----------------------------------- Tools  ----------------------------------
 
