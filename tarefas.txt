@@ -39,14 +39,12 @@
 - OK - separar default_customizations.mjs "base" de cmp_customizations.mjs
 - OK - necessário separar o que é customização do que são classes - base em default_customizations.mjs
 - OK - separar geolocation para as costumizações
-
 - OK - remover drawGeolocationMarkings para layer analítica, juntar ponto de Localizador e trajeto entre ambos (começar com linha reta)
 - OK - necessário alterar adição de layers, criando função própria addLayer
-
->> - verificar isInited, parece estranho ....
-
 - OK - separar posicação GPS do tracking
 - OK - gaps entre Controles
+- tooltips nos controles
+
 - separar bcbox de outros paineis (neste momento é único)
 
 - Edição
@@ -63,6 +61,7 @@
 - validar main configs
 
 - WFS xml
+- recolha de metadados WMS e WFS (this._servmetadata_docollect || this._servmetadata_report_completed)
 
 - layered symbs
 
@@ -72,10 +71,14 @@
 
 - versão de código visível / acessível
 
+
+
 --------------------------------- UI/Widgets  -------------------------------
 
 OK - Controles mínimos zooming
 >> -querybox e Localizador
+	>> - marcar ponto
+
 - Legenda
 - TOC
 - hovering events over control surfaces of widgets

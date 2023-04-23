@@ -36,6 +36,7 @@ export class WMSLayer extends RasterLayer {
 		}
 
 		this._servmetadata = {};
+		// console.log("_servmetadata_docollect:", this._servmetadata_docollect);
 		if (this._servmetadata_docollect) {
 
 			this._metadata_or_root_url = new URL(this.url);
@@ -338,6 +339,7 @@ export class WMSLayer extends RasterLayer {
 	buildGetMapURL(p_mapctxt, p_terrain_bounds, p_dims) {
 
 		let urlstr, verstr;
+		// console.log("buildGetMapURL _servmetadata_docollect:", this._servmetadata_docollect);
 		if (this._servmetadata_docollect) {
 			if (this._servmetadata["getmapurl"] === undefined) {
 				throw new Error(`WMS layer '${this.key}', missing getmapurl, taken from metadata`);	
