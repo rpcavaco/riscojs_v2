@@ -40,13 +40,13 @@
 - OK - necessário separar o que é customização do que são classes - base em default_customizations.mjs
 - OK - separar geolocation para as costumizações
 
->> 2 - remover drawGeolocationMarkings para layer analítica, juntar ponto de Localizador e trajeto entre ambos (começar com linha reta)
-	OK - necessário alterar adição de layers, criando função própria addLayer
+- OK - remover drawGeolocationMarkings para layer analítica, juntar ponto de Localizador e trajeto entre ambos (começar com linha reta)
+- OK - necessário alterar adição de layers, criando função própria addLayer
 
 >> - verificar isInited, parece estranho ....
 
-- separar posicação GPS do tracking
-- gaps entre Controles
+- OK - separar posicação GPS do tracking
+- OK - gaps entre Controles
 - separar bcbox de outros paineis (neste momento é único)
 
 - Edição

@@ -52,6 +52,7 @@ export class ControlsBox extends MapPrintInRect {
 	orientation = "HORIZONTAL";
 	controls_keys = [];
 	controls_funcs = {};
+	controls_prevgaps = {};	
 	tool_manager = null;
 	controls_boxes = {};
 
@@ -99,12 +100,15 @@ export class ControlsBox extends MapPrintInRect {
 		return h;
 	}	
 
-	addControl(p_key, p_drawface_func, p_endevent_func, p_mmove_func) {
+	addControl(p_key, p_drawface_func, p_endevent_func, p_mmove_func, opt_gap_to_prev) {
 		this.controls_keys.push(p_key);
 		this.controls_funcs[p_key] = {
 			"drawface": p_drawface_func,
 			"endevent": p_endevent_func,
 			"mmoveevent": p_mmove_func
+		}
+		if (opt_gap_to_prev) {
+			this.controls_prevgaps[p_key] = opt_gap_to_prev;
 		}
 	}
 
@@ -117,16 +121,20 @@ export class ControlsBox extends MapPrintInRect {
 		try {
 			// p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
-			let left, top;
+			let left, top, accum=0;
 
 			for (let ci=0;  ci<this.controls_keys.length; ci++) {
 
+				if (this.controls_prevgaps[this.controls_keys[ci]] !== undefined) {
+					accum += this.controls_prevgaps[this.controls_keys[ci]];
+				}
+
 				if (this.orientation == "HORIZONTAL") {
-					left = ci * this.boxw + this.left;
+					left = accum + ci * this.boxw + this.left;
 					top = this.top;
 				} else {
 					left = this.left;
-					top = ci * this.boxh + this.top;
+					top = accum + ci * this.boxh + this.top;
 				}
 
 				ctx.clearRect(left, top, this.boxw, this.boxh); 

@@ -248,6 +248,10 @@ class LocLayerClass extends VectorLayer {
 		this._servmetadata_docollect = false;		
 	}
 
+	clear() {
+		this.items = [null, null];
+	}
+
 	setFromPoint(p_pt, p_accuracy) {
 		this.items[0] = {
 			key: "from",
@@ -596,7 +600,7 @@ export class GeoLocationMgr {
 		}		
 	}
 
-	drawGeolocationMarkings(p_scr_pt, p_radius) {
+	/*drawGeolocationMarkings(p_scr_pt, p_radius) {
 
 		const ctx = this.mapctx.renderingsmgr.getDrwCtx("temporary", '2d');
 		ctx.save();
@@ -626,7 +630,7 @@ export class GeoLocationMgr {
 			ctx.restore();
 		}
 
-    }
+    } */
 }
 
 class BasicCtrlBox extends ControlsBox {
@@ -635,14 +639,11 @@ class BasicCtrlBox extends ControlsBox {
 		super();
 
 		this.orientation = "VERTICAL";
-		this.controls_keys = [
+ 		this.controls_keys = [
 			"zoomout",
 			"home",
 			"zoomin"
-			//"gps"
 		];
-
-		this.gap = GlobalConst.CONTROLS_STYLES.GAP;
 
 		this.controls_funcs = {
 			"zoomout": {
@@ -661,7 +662,7 @@ class BasicCtrlBox extends ControlsBox {
 				"mmoveevent": function(p_mapctx, p_basic_config, p_global_constants) {
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 					topcnv.style.cursor = "pointer";
-				},
+				}
 			},
 			"zoomin": {
 				"drawface": function(p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants) {
@@ -680,7 +681,7 @@ class BasicCtrlBox extends ControlsBox {
 				"mmoveevent": function(p_mapctx, p_basic_config, p_global_constants) {
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 					topcnv.style.cursor = "pointer";
-				},
+				}
 			},
 			"home": {
 				"drawface": function(p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants) {

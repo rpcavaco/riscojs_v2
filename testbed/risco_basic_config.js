@@ -41,13 +41,14 @@ var RISCOJS_BASIC_CFG = {
 	},
 
 	"gpsposcontrol": {
+		"separation": true,
 		"symbwid": 24,
 		"symb": "data:image/svg+xml;charset=utf-8,%3Csvg width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E %3Ccircle  fill=%22none%22 stroke=%22black%22 stroke-width=%221%22 cx=%2212%22 cy=%2216%22 r=%228%22/%3E %3Ccircle fill=%22black%22 stroke=%22black%22 stroke-width=%221%22 cx=%2212%22 cy=%2216%22 r=%222%22/%3E %3C/svg%3E"
 	},
 
 	"gpstrackcontrol": {
 		"symbwid": 24,
-		"symb": "data:image/svg+xml;charset=utf-8,%3Csvg width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E %3Ccircle  fill=%22none%22 stroke=%22black%22 stroke-width=%221%22 cx=%2212%22 cy=%2216%22 r=%228%22/%3E %3Ccircle fill=%22black%22 stroke=%22black%22 stroke-width=%221%22 cx=%2212%22 cy=%2216%22 r=%222%22/%3E %3C/svg%3E"
+		"symb": "data:image/svg+xml;charset=utf-8,%3Csvg width=%2224%22 height=%2228%22 viewBox=%220 0 24 28%22 xmlns=%22http://www.w3.org/2000/svg%22%3E %3Cpath fill=%22none%22 stroke=%22black%22 stroke-width=%221%22 d=%22M 12 24 A 8 8 0 1 1 12 8%22 /%3E %3Ccircle fill=%22black%22 stroke=%22black%22 stroke-width=%221%22 cx=%2212%22 cy=%2216%22 r=%222%22/%3E %3Cpath fill=%22none%22 stroke=%22black%22 stroke-width=%221%22 stroke-linecap=%22round%22 d=%22M 23 15 L 23 19%22 /%3E %3Ccircle fill=%22none%22 stroke=%22black%22 stroke-width=%221%22 cx=%2220%22 cy=%2212%22 r=%223%22/%3E %3Ccircle fill=%22none%22 stroke=%22black%22 stroke-width=%221%22 cx=%2220%22 cy=%2222%22 r=%223%22/%3E %3C/svg%3E"
 	}	
 
 }

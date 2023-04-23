@@ -45,13 +45,18 @@ export class LocQuery {
 	}
 
 
-
 	clear(p_full) {
 
 		// console.trace("-- LocQuery clear --, full:", p_full);
 
+		const lyr = this.mapctx.tocmgr.getLayer(this.loc_layer_key);
+	
 		if (p_full) {
 			this.found = null;
+			if (lyr != null) {
+				lyr.clear();
+				this.mapctx.maprefresh();
+			}	
 		}
 		this.cleanResultArea();	
 		this.query_box.value = '';	
