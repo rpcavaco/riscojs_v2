@@ -31,7 +31,7 @@ var RISCOJS_LAYERS_CFG = {
 		},
 		"ortos_2018": {
 			"type": "wms",
-			"url": "http://geo.cm-porto.net/wms/ortos_2018_dgt",
+			"url": "https://geo.cm-porto.net/wms/ortos_2018_dgt",
 			"layernames": "ortos2018",
 			"envsplit": false
 			//"filter": "grayscale"			
@@ -51,7 +51,7 @@ var RISCOJS_LAYERS_CFG = {
 		"mancha_constr": {
 			"type": "ags_qry",
 			"geomtype": "poly",
-			"url": "http://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer",
+			"url": "https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer",
 			"layerid": "9",
 			"envsplit": false,
 			"fillStyle": "#FF00007F",
@@ -76,7 +76,7 @@ var RISCOJS_LAYERS_CFG = {
 			"geomtype": "line",
 			"label": "Eixos de via",
 			"mouseinteraction": false,
-			"url": "http://geo.cm-porto.net/riscosrv_v2",
+			"url": "https://geo.cm-porto.net/riscosrv_v2",
 			"lineDash": [8,2], 
 			"lineWidth": 1,
 			"strokeStyle": "#c0c0c0",
@@ -201,7 +201,7 @@ var RISCOJS_LAYERS_CFG = {
 		"NPOLPROJ": {
 			"type": "riscofeats",
 			"geomtype": "line",
-			"url": "http://geo.cm-porto.net/riscosrv_v2",
+			"url": "https://geo.cm-porto.net/riscosrv_v2",
 			"mouseinteraction": false,
 			"strokeStyle": "none",
 			//"lineWidth": 1,
@@ -220,7 +220,7 @@ var RISCOJS_LAYERS_CFG = {
 			"label": "Processos fiscalização",
 			"type": "riscofeats",
 			"geomtype": "point",
-			"url": "http://geo.cm-porto.net/riscosrv_v2",
+			"url": "https://geo.cm-porto.net/riscosrv_v2",
 			"mouseinteraction": true,
 			"marker": "circle",
 			"markersize": 2,
@@ -301,7 +301,7 @@ var RISCOJS_LAYERS_CFG = {
 						},
 						"numbered": {
 							"type": "URL",
-							"format": (value) => `http://portodoc.cm-porto.net/Gfidoc?nup=${value}`
+							"format": (value) => `https://portodoc.cm-porto.net/Gfidoc?nup=${value}`
 						}
 					},
 					"transforms": [

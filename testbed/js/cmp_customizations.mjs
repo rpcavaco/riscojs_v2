@@ -27,6 +27,8 @@ export class LocQuery {
 		this.crs = p_crs;
 		this.found = null;
 		this.loc_layer_key = opt_loc_layer_key;
+		// this._querying = false;
+		// this._query_timeout_id = null;
 	}
 
 	set lastinput(p_li) {
@@ -36,6 +38,18 @@ export class LocQuery {
 	get lastinput() {
 		return this.#lastinput;
 	}
+
+/* 	isQuerying() {
+		return this._querying;
+	}
+
+	startedQuerying() {
+		this._querying = true;
+	}	
+
+	stoppedQuerying() {
+		this._querying = false;
+	} */
 
 	cleanResultArea() {
 		this.query_results.style.display = 'none';	
@@ -99,20 +113,51 @@ export class LocQuery {
 		return ret;
 	}
 
-	query(b_qrystr) {
+	/* query(p_qrystr) {
+
+		if (this.isQuerying()) {
+
+			// Prevent effective re-refreshing calls while refresh process is still in progress
+			// A single refresh call is delayed to happen after previous refresh process is finished
+			
+			if (this._query_timeout_id) {
+				clearTimeout(this._query_timeout_id);
+			}
+
+			(function(p_this, pp_qrystr, p_delay_msecs) {
+				p_this._query_timeout_id = setTimeout(function() {
+					p_this.query(pp_qrystr);
+				}, p_delay_msecs);
+			})(this, p_qrystr, 700);
+
+		} else {
+
+			this.startedQuerying();
+			this._query(p_qrystr);
+
+		}
+
+	} */
+
+	query(p_qrystr) {
 
 		const msgs_ctrlr  = this.msgs_ctrlr;
 		const that = this;
 
+		//this.startedQuerying();
+
 		fetch(this.url, {
 			method: "POST",
-			body: JSON.stringify({ "curstr": b_qrystr, "outsrid": this.crs })
+			body: JSON.stringify({ "curstr": p_qrystr, "outsrid": this.crs })
 		})
 		.then(response => response.json())
 		.then(
 			function(responsejson) {
 
 				let p, r, hei, filter_dict, foundlist = [];
+
+				// that.stoppedQuerying();
+				//console.log("!! TEST A !!", p_qrystr, that.lastinput, that.query_box.value);
 
 				if (responsejson['error'] !== undefined) {
 					msgs_ctrlr.warn(responsejson['error']);
@@ -172,6 +217,9 @@ export class LocQuery {
 					} else if (responsejson['out']['tiporesp'] == 'topo') { 
 
 						if (that.setTopo(responsejson['out']['cod_topo'], responsejson['out']['toponym'])) {
+
+							// console.log("!! TEST B !!", p_qrystr, that.lastinput, that.query_box.value);
+
 							that.query_box.value = responsejson['out']['toponym'];
 
 							that.mapctx.tocmgr.addAfterRefreshProcedure(() => {
@@ -290,6 +338,8 @@ export class LocQuery {
 
 			}
 		).catch((error) => {
+			// that.stoppedQuerying();
+
 			console.error("Erro em tentativa de acesso ao serviço Localizador " + error);
 		});			
 
@@ -390,20 +440,36 @@ export class LocQuery {
 			// Query box input event
 			(function(pp_query_box) {
 				const evttypes = ["input", "paste"];
+				let now, lastqtime = null;
+
 				for (let i=0; i<evttypes.length; i++) {
-					pp_query_box.addEventListener(evttypes[i], function(e) { 
-						let clntxt = pp_query_box.value.trim();
-						//console.log("::375:: qryb EVENT", e.type, clntxt, pp_query_box.value, "len", clntxt.length, "!=", p_qryb_obj.lastinput.length);
-						if (clntxt.length > 2) {
-							if (clntxt != p_qryb_obj.lastinput) {
-								p_qryb_obj.lastinput = clntxt;
-								p_qryb_obj.query(p_qryb_obj.lastinput);
+					pp_query_box.addEventListener(evttypes[i], function(e) {
+
+						if (lastqtime) {
+							now = new Date();
+							if (now-lastqtime < 500) {
+								e.preventDefault();
+								return;
+							} else {
+								lastqtime = null;
 							}
-						} else if (clntxt.length == 0) {
-							if (p_qryb_obj.lastinput.length > 0) {
-								p_qryb_obj.clear(true);
+						} else {
+
+							let clntxt = pp_query_box.value.trim();
+							//console.log("::375:: qryb EVENT", e.type, clntxt, pp_query_box.value, "len", clntxt.length, "!=", p_qryb_obj.lastinput.length);
+							if (clntxt.length > 2) {
+								if (clntxt != p_qryb_obj.lastinput) {
+									p_qryb_obj.lastinput = clntxt;
+									lastqtime = new Date();
+									p_qryb_obj.query(p_qryb_obj.lastinput);
+								}
+							} else if (clntxt.length == 0) {
+								if (p_qryb_obj.lastinput.length > 0) {
+									p_qryb_obj.clear(true);
+								}
 							}
 						}
+
 					}); 
 				}
 				pp_query_box.addEventListener('keypress', function(e) { 

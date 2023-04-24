@@ -9,6 +9,7 @@ docs/build/
 fonts/
 venv38/
 *.zip
+*.bak
 passos_*
 *.qgz
 quick-lint-js.config
