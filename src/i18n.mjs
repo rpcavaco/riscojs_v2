@@ -10,8 +10,6 @@ export class I18n {
 
 	constructor(opt_msgs_source) {
 
-		console.trace("aaaa");
-
 		this.msgs = {
 			"deflang": "pt",
 			"pt": {

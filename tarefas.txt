@@ -43,7 +43,7 @@
 - OK - necessário alterar adição de layers, criando função própria addLayer
 - OK - separar posicação GPS do tracking
 - OK - gaps entre Controles, em mobile ficam +  separados
-- >> tooltips nos controles
+- OK - tooltips nos controles
 - OK - aumentar controles no mobile
 
 - separar bcbox de outros paineis (neste momento é único)

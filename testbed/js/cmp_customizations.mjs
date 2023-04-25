@@ -438,7 +438,7 @@ export class LocQuery {
 			}); 
 
 			// Query box input event
-			(function(pp_query_box) {
+			(function(pp_query_box, pp_qryb_obj) {
 				const evttypes = ["input", "paste"];
 				let now, lastqtime = null;
 
@@ -475,12 +475,12 @@ export class LocQuery {
 				pp_query_box.addEventListener('keypress', function(e) { 
 					if (e.keyCode == 13) {
 						e.target.blur();
-						pp_query_box.lastinput = pp_query_box.value.trim();
-						pp_query_box.query(pp_query_box.lastinput);
-						pp_query_box.cleanResultArea();	
+						pp_qryb_obj.lastinput = pp_query_box.value.trim();
+						pp_qryb_obj.query(pp_qryb_obj.lastinput);
+						pp_qryb_obj.cleanResultArea();	
 					}
 				}); 
-			})(p_query_box);	
+			})(p_query_box, p_qryb_obj);	
 
 		})(this.query_clrbtn, this.query_box, this);	
 
