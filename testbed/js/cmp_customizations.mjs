@@ -444,10 +444,10 @@ export class LocQuery {
 
 				for (let i=0; i<evttypes.length; i++) {
 					pp_query_box.addEventListener(evttypes[i], function(e) {
-
+						//console.log(">>", lastqtime, ">>>", e);
 						if (lastqtime) {
 							now = new Date();
-							if (now-lastqtime < 500) {
+							if ((now-lastqtime) < 200) {
 								e.preventDefault();
 								return;
 							} else {
@@ -475,6 +475,9 @@ export class LocQuery {
 				pp_query_box.addEventListener('keypress', function(e) { 
 					if (e.keyCode == 13) {
 						e.target.blur();
+						pp_query_box.lastinput = pp_query_box.value.trim();
+						pp_query_box.query(pp_query_box.lastinput);
+						pp_query_box.cleanResultArea();	
 					}
 				}); 
 			})(p_query_box);	

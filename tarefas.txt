@@ -43,7 +43,7 @@
 - OK - necessário alterar adição de layers, criando função própria addLayer
 - OK - separar posicação GPS do tracking
 - OK - gaps entre Controles, em mobile ficam +  separados
-- tooltips nos controles
+- >> tooltips nos controles
 - OK - aumentar controles no mobile
 
 - separar bcbox de outros paineis (neste momento é único)
@@ -80,10 +80,10 @@ OK - Controles mínimos zooming
 OK -querybox e Localizador
 	OK - marcar ponto
 	OK - largura da caixa de texto no telem
-	>> - throttle enrada de texto
+	OK - throttle enrada de texto
 
 - Legenda
-- TOC
+- >> TOC
 - PARCIAL - hovering events over control surfaces of widgets
 
 ----------------------------------- Tools  ----------------------------------
