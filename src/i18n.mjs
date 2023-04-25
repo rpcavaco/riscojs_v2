@@ -9,23 +9,42 @@ export class I18n {
 	}
 
 	constructor(opt_msgs_source) {
+
+		console.trace("aaaa");
+
+		this.msgs = {
+			"deflang": "pt",
+			"pt": {
+				"ESCL": "escala",
+				"LDNG": "a carregar",
+				"CLR": "limpar",
+				"ZOUT": "afastar",
+				"ZIN": "aproximar",
+				"HOME": "vista inicial"
+			}, 
+			"en": {
+				"ESCL": "scale",
+				"LDNG": "loading",
+				"CLR": "clear",
+				"ZOUT": "zoom out",					
+				"ZIN": "zoom in",
+				"HOME": "home view"
+			}
+		};	
+		
 		if (opt_msgs_source) {
-			this.msgs = opt_msgs_source;		
-		} else {
-			this.msgs = {
-				"deflang": "pt",
-				"pt": {
-					"ESCL": "escala",
-					"LDNG": "a carregar",
-					"CLR": "limpar"
-				}, 
-				"en": {
-					"ESCL": "scale",
-					"LDNG": "loading",
-					"CLR": "clear"
+			let langelem;
+			for (let langk in opt_msgs_source) {
+				if (langk == "deflang") {
+					continue;
 				}
-			};					
-		}
+				langelem = opt_msgs_source[langk];
+				for (let k in langelem) {
+					this.msgs[langk][k] = langelem[k];		
+				}
+			}
+		}		
+
 	}
 	getLang() {
 		let langstr = navigator.language || navigator.userLanguage;

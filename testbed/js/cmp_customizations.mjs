@@ -401,7 +401,7 @@ export class LocQuery {
 		this.query_clrbtn = document.createElement('button');
 		p_mapctx.panelwidget.appendChild(this.query_clrbtn);
 
-		this.query_clrbtn.innerText = p_mapctx.i18n.msg('clr', true);
+		this.query_clrbtn.innerText = p_mapctx.i18n.msg('CLR', true);
 		this.query_clrbtn.style.position = "absolute";
 
 		if (bcb) {

@@ -27,6 +27,7 @@ export class PopupBox {
 	callout;	
 	drawcount;
 	rows;
+	mapctx;
 
 	constructor(p_mapctx, p_layer, p_styles, p_scrx, p_scry, b_callout) {
 
@@ -41,6 +42,7 @@ export class PopupBox {
 		this.fontfamily = "sans-serif";
 		this.drawcount = 0;
 		this.rows = [];
+		this.mapctx = p_mapctx;
 
 		if (p_styles["fillStyle"] !== undefined) {
 			this.fillStyle = p_styles["fillStyle"];
@@ -229,7 +231,7 @@ export class MaptipBox extends PopupBox {
 			return;
 		}
 
-		const lang = (new I18n(this.layer.msgsdict)).getLang();
+		const lang = this.mapctx.i18n.getLang();
 
 		p_ctx.save();
 		this.rows.length = 0;
@@ -243,17 +245,17 @@ export class MaptipBox extends PopupBox {
 
 		if (ifkeys.indexOf("add") >= 0) {
 			for (let fld of this.layer.maptipfields["add"]) {
-				canvasWrtField(this, p_ctx, this.feature.a, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth, this.rows);
+				canvasWrtField(this, p_ctx, this.feature.a, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows);
 			}	
 		} else if (ifkeys.indexOf("remove") >= 0) {
 			for (let fld in this.feature.a) {
 				if (this.layer.maptipfields["remove"].indexOf(fld) < 0) {
-					canvasWrtField(this, p_ctx, this.feature.a, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth, this.rows);
+					canvasWrtField(this, p_ctx, this.feature.a, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows);
 				}
 			} 
 		} else {
 			for (let fld in this.feature.a) {
-				canvasWrtField(this, p_ctx, this.feature.a, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth, this.rows);
+				canvasWrtField(this, p_ctx, this.feature.a, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows);
 			}	
 		}
 

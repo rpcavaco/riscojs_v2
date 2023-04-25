@@ -127,7 +127,7 @@
 		}
 
 		import {RiscoMapOverlay} from './js/riscojs_v2/main.mjs';
-		import {CanvasLocLayerClass, GeoLocationMgr, MapCustomizations} from './js/riscojs_v2/default_customizations.mjs';
+		import { ctrToolTip, CanvasLocLayerClass, GeoLocationMgr, MapCustomizations} from './js/riscojs_v2/default_customizations.mjs';
 		import {GlobalConst} from './js/riscojs_v2/constants.js';
 		import {LocQuery} from './js/cmp_customizations.mjs';
 
@@ -172,14 +172,15 @@
 							p_ctx.drawImage(imgh, p_left + ((p_global_constants.CONTROLS_STYLES.SIZE - p_basic_config.gpsposcontrol.symbwid) / 2), p_top);
 						});
 					},
-					function(p_mapctx, p_basic_config, p_global_constants) {
+					function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
 						p_this.instances["geolocation"].geolocPinpoint();
 						const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 						topcnv.style.cursor = "default";
 					},
-					function(p_mapctx, p_basic_config, p_global_constants) {
+					function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
 						const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 						topcnv.style.cursor = "pointer";
+						ctrToolTip(p_mapctx, p_evt, p_mapctx.i18n.msg('GEOP', true));
 					},
 					GlobalConst.CONTROLS_STYLES.GAP
 				);
@@ -196,14 +197,15 @@
 							p_ctx.drawImage(imgh, p_left + ((p_global_constants.CONTROLS_STYLES.SIZE - p_basic_config.gpstrackcontrol.symbwid) / 2), p_top);
 						});
 					},
-					function(p_mapctx, p_basic_config, p_global_constants) {
+					function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
 						p_this.instances["geolocation"].toggleGeolocWatch();
 						const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 						topcnv.style.cursor = "default";
 					},
-					function(p_mapctx, p_basic_config, p_global_constants) {
+					function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
 						const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 						topcnv.style.cursor = "pointer";
+						ctrToolTip(p_mapctx, p_evt, p_mapctx.i18n.msg('GEOTRK', true));
 					}
 				);
 

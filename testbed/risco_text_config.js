@@ -1,10 +1,11 @@
 
 var RISCOJS_TEXT_CFG = {
-	"deflang": "pt",
 	"pt": {
-		"clr": "limpar"
+		"GEOP": "Localização atual",
+		"GEOTRK": "Seguir localização"
 	},
 	"en": {
-
+		"GEOP": "Current location",
+		"GEOTRK": "Tracking location"
 	}
 }

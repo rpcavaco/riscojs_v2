@@ -213,7 +213,7 @@ export class InfoBox extends PopupBox {
 			}
 		}
 		for (let fld of this.ordered_fldnames) {
-			this.field_row_count[fld] = canvasWrtField(this, p_ctx, recdata, fld, this.layer.msgsdict[lang], capttextwidth, valuetextwidth, this.rows, this.urls);
+			this.field_row_count[fld] = canvasWrtField(this, p_ctx, recdata, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows, this.urls);
 		}	
 		
 		// Calc text dims

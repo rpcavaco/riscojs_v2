@@ -30,7 +30,6 @@ class MapPrintInRect {
 export class PermanentMessaging extends MapPrintInRect {
 	constructor() {
 		super();
-		this.i18n = new I18n();
 		this.fillStyleBack = GlobalConst.MESSAGING_STYLES.PERMANENT_BCKGRD; 
 		this.fillStyleFront = GlobalConst.MESSAGING_STYLES.PERMANENT_COLOR;
 		this.font = GlobalConst.MESSAGING_STYLES.PERMANENT_FONT;
@@ -40,7 +39,6 @@ export class PermanentMessaging extends MapPrintInRect {
 export class LoadingMessaging extends MapPrintInRect {
 	constructor() {
 		super();
-		this.i18n = new I18n();
 		this.fillStyleBack = GlobalConst.MESSAGING_STYLES.LOADING_BCKGRD; 
 		this.fillStyleFront = GlobalConst.MESSAGING_STYLES.LOADING_COLOR;
 		this.font = GlobalConst.MESSAGING_STYLES.LOADING_FONT;
@@ -177,6 +175,7 @@ export class ControlsBox extends MapPrintInRect {
 	}
 
 	interact(p_mapctx, p_evt) {
+
 		let cb, key = null;
 		for (let _key in this.controls_boxes) {
 

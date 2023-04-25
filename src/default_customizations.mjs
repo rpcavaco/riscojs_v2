@@ -80,7 +80,7 @@ class MapScalePrint extends PermanentMessaging {
 
 			const bottom = this.top + this.boxh;
 
-			ctx.fillText(this.i18n.msg('ESCL', true) + " 1:"+p_scaleval, this.left+GlobalConst.MESSAGING_STYLES.TEXT_OFFSET, bottom-6);		
+			ctx.fillText(p_mapctx.i18n.msg('ESCL', true) + " 1:"+p_scaleval, this.left+GlobalConst.MESSAGING_STYLES.TEXT_OFFSET, bottom-6);		
 
 		} catch(e) {
 			throw e;
@@ -106,7 +106,7 @@ class LoadingPrint extends LoadingMessaging {
 		try {
 			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
-			const msg = `${this.i18n.msg('LDNG', false)} ${p_msg}`;
+			const msg = `${p_mapctx.i18n.msg('LDNG', false)} ${p_msg}`;
 			// const tm = ctx.measureText(msg);
 			this.boxw =  GlobalConst.MESSAGING_STYLES.LOADING_WIDTH;
 
@@ -663,7 +663,45 @@ export class GeoLocationMgr {
     } */
 }
 
+export function ctrToolTip(p_mapctx, p_evt, p_text) {
+	
+	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transient", '2d');
+	gfctx.save();
+	const slack = 6;
+
+	const canvas_dims = [];		
+	try {
+		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+		gfctx.clearRect(0, 0, ...canvas_dims); 
+
+
+		gfctx.font = "16px Helvetica";
+		gfctx.strokeStyle = "white";
+		gfctx.lineWidth = 2;
+
+		const tm = gfctx.measureText(p_text);
+
+		const x = p_evt.clientX + 50;
+		const y = p_evt.clientY + 20;
+		const h = 2*slack + tm.actualBoundingBoxAscent + tm.actualBoundingBoxDescent;
+
+		gfctx.fillStyle = "#8080807f";
+		gfctx.fillRect(x - tm.actualBoundingBoxLeft - slack, y + tm.actualBoundingBoxDescent + slack, tm.width+2*slack, -h);
+		gfctx.strokeRect(x - tm.actualBoundingBoxLeft - slack, y + tm.actualBoundingBoxDescent + slack, tm.width+2*slack, -h);
+
+		gfctx.fillStyle = "white";
+		gfctx.fillText(p_text, x, y);
+
+	} catch(e) {
+		throw e;
+	} finally {
+		gfctx.restore();
+	}	
+}
+
 class BasicCtrlBox extends ControlsBox {
+
+	prev_ctrl_key = null;
 
 	constructor() {
 		super();
@@ -683,15 +721,18 @@ class BasicCtrlBox extends ControlsBox {
 					p_ctx.lineTo(p_left+p_width*0.8, p_top+p_height*0.5);
 					p_ctx.stroke();
 				},
-				"endevent": function(p_mapctx, p_basic_config, p_global_constants) {
+				"endevent": function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
 //					console.log("***", p_basic_config);
 					p_mapctx.transformmgr.zoomOut(p_basic_config.maxscaleview.scale, p_global_constants.SCALEINOUT_STEP, true);
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 					topcnv.style.cursor = "default";
 				},
-				"mmoveevent": function(p_mapctx, p_basic_config, p_global_constants) {
+				"mmoveevent": function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
+
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 					topcnv.style.cursor = "pointer";
+
+					ctrToolTip(p_mapctx, p_evt, p_mapctx.i18n.msg('ZOUT', true));
 				}
 			},
 			"zoomin": {
@@ -703,14 +744,16 @@ class BasicCtrlBox extends ControlsBox {
 					p_ctx.lineTo(p_left+p_width*0.5, p_top+p_height*0.8);
 					p_ctx.stroke();
 				},
-				"endevent": function(p_mapctx, p_basic_config, p_global_constants) {
+				"endevent": function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
 					p_mapctx.transformmgr.zoomIn(p_global_constants.MINSCALE, p_global_constants.SCALEINOUT_STEP, true);
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 					topcnv.style.cursor = "default";
 				},
-				"mmoveevent": function(p_mapctx, p_basic_config, p_global_constants) {
+				"mmoveevent": function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 					topcnv.style.cursor = "pointer";
+
+					ctrToolTip(p_mapctx, p_evt, p_mapctx.i18n.msg('ZIN', true));
 				}
 			},
 			"home": {
@@ -725,14 +768,16 @@ class BasicCtrlBox extends ControlsBox {
 						p_ctx.drawImage(imgh, p_left + ((p_global_constants.CONTROLS_STYLES.SIZE - p_global_constants.CONTROLS_STYLES.HOMESYMBWID) / 2), p_top);
 					});
 				},
-				"endevent": function(p_mapctx, p_basic_config, p_global_constants) {
+				"endevent": function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
 					p_mapctx.transformmgr.setScaleCenteredAtPoint(p_basic_config.scale, [p_basic_config.terrain_center[0], p_basic_config.terrain_center[1]], true);
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 					topcnv.style.cursor = "default";
 				},
-				"mmoveevent": function(p_mapctx, p_basic_config, p_global_constants) {
+				"mmoveevent": function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 					topcnv.style.cursor = "pointer";
+
+					ctrToolTip(p_mapctx, p_evt, p_mapctx.i18n.msg('HOME', true));
 				}
 			}							
 		}
@@ -766,6 +811,8 @@ class BasicCtrlBox extends ControlsBox {
 
 		if (ctrl_key) {
 
+			this.prev_ctrl_key = ctrl_key;
+
 			if (this.controls_funcs[ctrl_key] !== undefined) {
 
 				switch(p_evt.type) {
@@ -774,7 +821,7 @@ class BasicCtrlBox extends ControlsBox {
 					case 'mouseup':
 
 						if (this.controls_funcs[ctrl_key]["endevent"] !== undefined) {
-							this.controls_funcs[ctrl_key]["endevent"](p_mapctx, p_mapctx.cfgvar["basic"], GlobalConst);
+							this.controls_funcs[ctrl_key]["endevent"](p_mapctx, p_evt, p_mapctx.cfgvar["basic"], GlobalConst);
 						} else {
 							throw new Error("interact, missing endevent control func block for", ctrl_key);
 						}
@@ -783,7 +830,7 @@ class BasicCtrlBox extends ControlsBox {
 					case "mousemove":
 
 						if (this.controls_funcs[ctrl_key]["mmoveevent"] !== undefined) {
-							this.controls_funcs[ctrl_key]["mmoveevent"](p_mapctx, p_mapctx.cfgvar["basic"], GlobalConst);
+							this.controls_funcs[ctrl_key]["mmoveevent"](p_mapctx, p_evt, p_mapctx.cfgvar["basic"], GlobalConst);
 						} else {
 							throw new Error("interact, missing mmoveevent control func block for", ctrl_key);
 						}
@@ -798,8 +845,25 @@ class BasicCtrlBox extends ControlsBox {
 
 		} else {
 
-			const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
-			topcnv.style.cursor = "default";	
+			if (this.prev_ctrl_key) {
+
+				// emulating mouseout
+
+				this.prev_ctrl_key = null;
+
+				const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+				topcnv.style.cursor = "default";
+
+				const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transient", '2d');		
+				const canvas_dims = [];
+				p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+				gfctx.clearRect(0, 0, ...canvas_dims); 
+				
+			}
+
+
+
+
 
 		}
 
