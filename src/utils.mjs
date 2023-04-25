@@ -110,7 +110,7 @@ export function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdic
 		return ret;
 	}
 
-	if (Object.keys(p_msgsdict).indexOf(p_fld) >= 0) {
+	if (Object.keys(p_msgsdict[p_lang]).indexOf(p_fld) >= 0) {
 		caption = I18n.capitalize(p_msgsdict[p_lang][p_fld]);
 	} else {
 		caption = I18n.capitalize(p_fld);

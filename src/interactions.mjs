@@ -430,7 +430,7 @@ class MultiTool extends BaseTool {
 	}
 
 	onEvent(p_mapctx, p_evt) {
-		let evt, orig, te = null;
+		let orig;
 
 		if (GlobalConst.getDebug("INTERACTION")) {
 			console.log("[DBG:INTERACTION] MULTITOOL evt.type:", p_evt.type);
@@ -538,7 +538,7 @@ class InfoTool extends BaseTool {
 
 		try {
 
-			let evt, te = null, insideactivepanel = false;
+			let insideactivepanel = false;
 
 			if (ic.pick !== undefined) {
 				if (this.pickpanel_active) {
@@ -570,7 +570,7 @@ class InfoTool extends BaseTool {
 					if (ic.pick !== undefined) {
 						if (this.pickpanel_active) {
 							if (insideactivepanel) {
-								ic.interact(p_mapctx, evt);
+								ic.interact(p_mapctx, p_evt);
 							} else {
 								this.pickpanel_active = false;
 							}
