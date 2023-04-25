@@ -132,7 +132,7 @@ var GlobalConst = {
 		"betweencols": 10,
 		"minpopupwidth": 280,
 		"maxpopupwidth": 480,
-		"lineheightfactor": 1.2, // 1.8
+		"lineheightfactor": 1.0, // 1.8
 		"caption2value_widthfraction": 0.31,
 		"tipsbox2map_widthfraction": 2.4,
 		"infotipsbox_slack": 10

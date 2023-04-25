@@ -97,6 +97,8 @@ export class PopupBox {
 		if (p_styles["layercaptionszPX"] !== undefined) {
 			this.layercaptionszPX = p_styles["layercaptionszPX"];
 		}	
+
+		// console.log(">>>>  this.layercaptionszPX:", this.layercaptionszPX);
 		
 		this.mapdims = [];
 		p_mapctx.renderingsmgr.getCanvasDims(this.mapdims);
@@ -157,7 +159,9 @@ export class PopupBox {
 
 		this.box = [...this.origin, p_width, p_height];
 
-		const headerlimy = 3 * p_lnheight;
+		const headerlimy = 1.5 * p_lnheight;
+
+		//console.log("<<<< 162 >>>>", headerlimy, p_lnheight);
 
 		this.headerbox = [...this.origin, p_width, headerlimy];
 
@@ -195,7 +199,7 @@ export class PopupBox {
 		}
 
 		p_ctx.fillStyle = this.fillTextStyle;
-		p_ctx.fillText(this.layer.label, this.origin[0]+this.leftpad, this.origin[1]+2.2*p_lnheight);
+		p_ctx.fillText(this.layer.label+"x", this.origin[0]+this.leftpad, this.origin[1]+1.2*p_lnheight);
 
 		if (this.callout) {
 			p_ctx.beginPath();
@@ -242,6 +246,7 @@ export class MaptipBox extends PopupBox {
 
 		const capttextwidth = GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"] * maxboxwidth;
 		const valuetextwidth = (1 - GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"]) * maxboxwidth;
+		const lineheightfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["lineheightfactor"];
 
 		if (ifkeys.indexOf("add") >= 0) {
 			for (let fld of this.layer.maptipfields["add"]) {
@@ -276,22 +281,24 @@ export class MaptipBox extends PopupBox {
 
 		// calculate global height of text line - from layer caption font - e
 		p_ctx.font = `${this.layercaptionszPX}px ${this.layercaptionfontfamily}`;
-		const lbltm = p_ctx.measureText(this.layer.label);
-		const txtlnheight = lbltm.actualBoundingBoxAscent - lbltm.actualBoundingBoxDescent;
+
+		const txtlnheight = this.layercaptionszPX;
 
 		// calculate height of all rows
-		let maxrowlen, textlinescnt=0, lineheightfactor = 1.8;
-		height = 5.5*txtlnheight;
+		let maxrowlen, textlinescnt=0;
+		height = 2.5*txtlnheight;
 		for (let row, ri=0; ri<this.rows.length; ri++) {
+
 			maxrowlen=0;
 			row = this.rows[ri];
 			for (let colidx=0; colidx<numcols; colidx++) {
 				maxrowlen = Math.max(maxrowlen, row[colidx].length);
 			}
 			textlinescnt += maxrowlen;
+			
 			height += maxrowlen * lineheightfactor * txtlnheight + 0.5 * txtlnheight;
+
 		}
-		//height = height - 2 * txtlnheight;
 		//console.log("textlinescnt:", textlinescnt);
 
 		//const realwidth = Math.max(this.leftpad+colsizes[0]+this.betweencols+colsizes[1]+this.rightpad, this.leftpad+lbltm.width+this.rightpad);
@@ -300,7 +307,7 @@ export class MaptipBox extends PopupBox {
 
 		p_ctx.fillStyle = this.fillTextStyle;
 
-		cota = this.origin[1]+5.5*txtlnheight;
+		cota = this.origin[1]+2.5*txtlnheight;
 		for (row of this.rows) {
 
 			lnidx = 0;

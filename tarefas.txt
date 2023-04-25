@@ -48,6 +48,8 @@
 
 - separar bcbox de outros paineis (neste momento é único)
 
+- max largura info nas basic configs
+
 - Edição
 
 

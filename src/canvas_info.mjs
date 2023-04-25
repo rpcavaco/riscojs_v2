@@ -234,33 +234,34 @@ export class InfoBox extends PopupBox {
 
 		// calculate global height of text line - from layer caption font - e
 		p_ctx.font = `${this.layercaptionszPX}px ${this.layercaptionfontfamily}`;
-		const lbltm = p_ctx.measureText(this.layer.label);
-		this.txtlnheight = lbltm.actualBoundingBoxAscent - lbltm.actualBoundingBoxDescent;
+		this.txtlnheight = this.layercaptionszPX
+
+		// console.log("-- px:", this.layercaptionszPX, "asc:", lbltm.actualBoundingBoxAscent, "desc:", lbltm.actualBoundingBoxDescent);
 
 		// ROWS: are not data rows, are rows of printing, each row corresponds to an atrribute or data field
 
 		// calculate height of all rows
 		let maxrowlen, height, textlinescnt=0;
-		height = 6*this.txtlnheight;
+		height = 2.5 * this.txtlnheight;
 		for (let row, ri=0; ri<this.rows.length; ri++) {
+
 			maxrowlen=0;
 			row = this.rows[ri];
 			for (let colidx=0; colidx<this.columncount; colidx++) {
 				maxrowlen = Math.max(maxrowlen, row[colidx].length);
 			}
 			textlinescnt += maxrowlen;
-			//cota += maxrowlen * lineheightfactor * txtlnheight + 0.5 * txtlnheight;
 
-			height += 0.5 * this.txtlnheight;
+			height += (maxrowlen * lineheightfactor * this.txtlnheight) + (0.15 * this.txtlnheight);
 		}
-		height = height + textlinescnt * lineheightfactor * this.txtlnheight; // - 2 * txtlnheight;
+		// height = height + textlinescnt * lineheightfactor * this.txtlnheight; // - 2 * txtlnheight;
 
 		this._drawBackground(p_ctx, maxboxwidth, height, this.txtlnheight);
 
 		p_ctx.fillStyle = this.fillTextStyle;
 		p_ctx.strokeStyle = this.URLStyle;
 
-		cota = this.origin[1]+6*this.txtlnheight;
+		cota = this.origin[1] + 2.5*this.txtlnheight;
 		this.topcota = cota - lineheightfactor*this.txtlnheight;
 
 		// loop through printing rows
@@ -296,7 +297,7 @@ export class InfoBox extends PopupBox {
 
 					p_ctx.save();
 					p_ctx.fillStyle = fmt["backgroundColor"];
-					p_ctx.fillRect(textorig_x-3, cota - hunit, bgwidth, row[colidx].length * hunit + 0.5 * this.txtlnheight);
+					p_ctx.fillRect(textorig_x-3, cota - hunit, bgwidth, row[colidx].length * hunit + 0.25 * this.txtlnheight);
 					p_ctx.restore();
 
 				}
@@ -369,7 +370,7 @@ export class InfoBox extends PopupBox {
 
 			// end of text lines loop
 
-			cota = cota + 0.5 *this.txtlnheight;
+			cota = cota + 0.15 *this.txtlnheight;
 		}
 
 		if (this.recordcnt > 1) {
