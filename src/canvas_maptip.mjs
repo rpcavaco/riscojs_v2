@@ -198,8 +198,9 @@ export class PopupBox {
 			p_ctx.restore();
 		}
 
+		// Layer label caption printing
 		p_ctx.fillStyle = this.fillTextStyle;
-		p_ctx.fillText(this.layer.label+"x", this.origin[0]+this.leftpad, this.origin[1]+1.2*p_lnheight);
+		p_ctx.fillText(this.layer.label, this.origin[0]+this.leftpad, this.origin[1]+1.2*p_lnheight);
 
 		if (this.callout) {
 			p_ctx.beginPath();

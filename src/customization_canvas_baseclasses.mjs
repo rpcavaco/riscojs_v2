@@ -191,6 +191,113 @@ export class ControlsBox extends MapPrintInRect {
 	
 }
 
+
+export class TOC  extends MapPrintInRect {
+
+	/*left;
+	boxh;
+	boxw;
+	top;
+	fillStyleBack; 
+	fillStyleFront; 
+	font;
+	canvaslayer = 'service_canvas'; */
+	tocmgr;
+
+	constructor() {
+
+		super();
+		this.fillStyleBack = GlobalConst.MESSAGING_STYLES.PERMANENT_BCKGRD; 
+		this.fillStyleFront = GlobalConst.MESSAGING_STYLES.PERMANENT_COLOR;
+		this.font = GlobalConst.MESSAGING_STYLES.PERMANENT_FONT;
+
+		this.left = 600;
+		this.top = 30;
+		this.boxh = 300;
+		this.boxw = 300;
+
+
+	}
+
+	setTOCMgr(p_tocmgr) {
+		this.tocmgr = p_tocmgr;
+	}
+
+	print(p_mapctx) {
+
+		// const canvas_dims = [];
+		console.log("::229:: this.canvaslayer", this.canvaslayer);
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		ctx.save();
+
+		try {
+			// p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+
+			// background
+			
+			ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
+			ctx.fillStyle = this.fillStyleBack;
+			ctx.fillRect(this.left, this.top, this.boxw, this.boxh);
+			
+			ctx.strokeStyle = this.strokeStyleFront;
+			ctx.lineWidth = this.strokeWidth;
+			ctx.strokeRect(this.left, this.top, this.boxw, this.boxh);
+			/*
+			for (let ci=0;  ci<this.controls_keys.length; ci++) {
+
+				if (this.controls_prevgaps[this.controls_keys[ci]] !== undefined) {
+					accum += this.controls_prevgaps[this.controls_keys[ci]];
+				} 
+
+				console.log(navigator.userAgent.toLowerCase());
+				if (ci>0 && (navigator.userAgent.toLowerCase().includes("mobile") || navigator.userAgent.toLowerCase().includes("android"))) {
+					accum += GlobalConst.CONTROLS_STYLES.MOBILE_DEFGAP;
+				}
+
+				if (this.orientation == "HORIZONTAL") {
+					left = accum + ci * this.boxw + this.left;
+					top = this.top;
+				} else {
+					left = this.left;
+					top = accum + ci * this.boxh + this.top;
+				}
+
+				ctx.clearRect(left, top, this.boxw, this.boxh); 
+				this.controls_boxes[this.controls_keys[ci]] = [left, top, this.boxw, this.boxh];
+				
+				ctx.fillStyle = this.fillStyleBack;
+				ctx.fillRect(left, top, this.boxw, this.boxh);
+				
+				ctx.strokeStyle = this.strokeStyleFront;
+				ctx.lineWidth = this.strokeWidth;
+				ctx.strokeRect(left, top, this.boxw, this.boxh);
+
+				this.drawControlFace(ctx, this.controls_keys[ci], left, top, this.boxw, this.boxh, p_mapctx.cfgvar["basic"], GlobalConst);
+
+			}
+			*/
+
+			// console.log('>> MapScalePrint print scale', ctx, [this.left, this.top, this.boxw, this.boxh]);
+
+
+		} catch(e) {
+			throw e;
+		} finally {
+			ctx.restore();
+		}
+	}	
+
+	interact(p_mapctx, p_evt) {
+
+		let ret = false;
+		if (p_evt.clientX >= this.left && p_evt.clientX <= this.left+this.boxw && p_evt.clientY >= this.top && p_evt.clientY <= this.top+this.boxh) {
+			ret = true;
+		}
+		return ret;
+	}	
+}
+
+
 export class Info {
 	// curr_layerkey;
 	// curr_featid;
@@ -290,5 +397,4 @@ export class Info {
 
 	}
 }
-
 

@@ -1,7 +1,7 @@
 
 
 import {GlobalConst} from './constants.js';
-import {PermanentMessaging, LoadingMessaging, ControlsBox, Info} from './customization_canvas_baseclasses.mjs';
+import {PermanentMessaging, LoadingMessaging, ControlsBox, Info, TOC} from './customization_canvas_baseclasses.mjs';
 
 class MousecoordsPrint extends PermanentMessaging {
 
@@ -774,18 +774,20 @@ export class MapCustomizations {
 
 	mapctx;
 	messaging_ctrlr; // object with info, warn and error methods
+	controls_keys; // custom. instances containing interactive controls
 
 	constructor(p_messaging_ctrlr) {
 
 		this.messaging_ctrlr = p_messaging_ctrlr;
 		this.instances = {
 			"basiccontrolsbox": new BasicCtrlBox(),
-			//"toc": new TOC();
+			"toc": new TOC(),
 			"infoclass": new Info(GlobalConst.INFO_MAPTIPS_BOXSTYLE),
 			"mousecoordsprint": new MousecoordsPrint(),
 			"mapscaleprint": new MapScalePrint(),
 			"loadingmsgprint": new LoadingPrint()
 		}
+		this.controls_keys = ["basiccontrolsbox", "toc"];
 	}
 }
 

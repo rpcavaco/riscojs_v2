@@ -27,7 +27,13 @@ class DynamicSymbol {
 
 export class TOCManager {
 
+	layers;
+	mode;  // 'canvas', para já
+	mapctx;
+	drawlist;
+	_refreshing;
 	after_refresh_procedure_list;
+	toccontrol;
 	
 	constructor(p_mapctx, p_mode) {
 		this.layers = [];
@@ -43,6 +49,11 @@ export class TOCManager {
 		if (p_configvar.lorder[p_layerkey][p_itemname] !== undefined) {	
 			p_lyrob[p_itemname]	= p_configvar.lorder[p_layerkey][p_itemname];
 		}
+	}
+
+	addControl(p_tocctrl_inst) {
+		this.toccontrol = p_tocctrl_inst;
+		p_tocctrl_inst.setTOCMgr(this);
 	}
 
 	isRefreshing() {
@@ -251,8 +262,7 @@ export class TOCManager {
 			"riscofeats"
 		];
 
-		let currentLayer = [], addedtospidx = [];
-		let items;
+		let addedtospidx = [];
 
 		const cfgvar = this.mapctx.cfgvar;
 		const layerscfg = cfgvar["layers"];
@@ -261,9 +271,6 @@ export class TOCManager {
 			layerscfg["relations"] = [];
 		}
 		let relcfgvar = layerscfg["relations"];
-
-		// mandatory configs whose absence must be provisionally accepted at this stage, and be properly handled further ahead in initialization 
-		const missing_configs_to_letgo = ["layernames"]; 
 
 		this.layers.length = 0;
 
@@ -314,7 +321,7 @@ export class TOCManager {
 		console.info("[init RISCO] TOCManager, layers init finished");
 	}
 
-	tocrefresh(p_scaleval) {
+	tocMgrRefresh(p_scaleval) {
 
 		console.info(`[INFO TOCREFRESH] attempt refresh ${this.layers.length} layers at scale 1:${p_scaleval}`);
 		//this.mapctx.printLoadingMsg(`${this.layers.length} layers`);
@@ -546,4 +553,41 @@ export class TOCManager {
 
 		this.nextdraw();
 	}
+
+	tocmOnEvent(p_mapctx, p_evt) {
+
+		return this.toccontrol.interact(p_mapctx, p_evt);
+		
+		/*let _ret;
+
+		for (let mapctrl_key in this.mapcontrolmgrs) {
+			_ret = this.mapcontrolmgrs[mapctrl_key].interact(p_mapctx, p_evt);
+			if (_ret) {
+				break;
+			}
+		}
+
+		if (GlobalConst.getDebug("INTERACTION")) {
+			console.log("[DBG:INTERACTION] ToolManager, interacted with map controls:", _ret);
+		}
+
+		// if event interacted with any map controls (_ret is true) 
+		//  we prevent its dispatchment to the active tools
+
+		if (!_ret) {
+			for (let i=this.maptools.length-1; i>=0; i--) {
+				if (this.maptools[i].enabled) {
+					_ret = this.maptools[i].onEvent(p_mapctx, p_evt);
+					if (!_ret && this.maptools[i].joinstogglegroup) {
+						break;
+					}
+				}
+			}	
+		}
+
+*/
+
+	}
+
+
 }

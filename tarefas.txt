@@ -46,7 +46,7 @@
 - OK - tooltips nos controles
 - OK - aumentar controles no mobile
 
-- separar bcbox de outros paineis (neste momento é único)
+- toggle controls - visual cue - user não sabe que controle é togglable
 
 - max largura info nas basic configs
 

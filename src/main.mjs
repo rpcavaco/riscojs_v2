@@ -195,7 +195,11 @@ export class RiscoMapCtx {
 		if (p_object.instances["basiccontrolsbox"] !== undefined) {
 			this.toolmgr.addControlsMgr("basiccontrolsbox", p_object.instances["basiccontrolsbox"]);
 		}	
-		
+
+		if (p_object.instances["toc"] !== undefined) {
+			this.tocmgr.addControl(p_object.instances["toc"]);
+		}	
+
 		if (this.wait_for_customization_avail) {
 			this.maprefresh();
 		}		
@@ -235,7 +239,12 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				if (GlobalConst.getDebug("INTERACTION")) {
 					console.log("[DBG:INTERACTION] MAIN - event adapted from touch - original, adapted:", p_evt, evt);
 				}
-				this.toolmgr.tmOnEvent(this, evt);
+
+				// if event interacts with TOC, it will not interact with tools and controls
+				if (!this.tocmgr.tocmOnEvent(this, evt)) {
+					this.toolmgr.tmOnEvent(this, evt);
+				}
+
 				p_evt.stopPropagation();
 			} else {
 				if (GlobalConst.getDebug("INTERACTION")) {
@@ -267,14 +276,18 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		return this.transformmgr.getPixSize();
 	}
 
-	drawBasicControls() {
+	drawControls() {
 		const ci = this.getCustomizationObject();
-		if (ci && ci.instances["basiccontrolsbox"] !== undefined) {
-			const bcb = ci.instances["basiccontrolsbox"];
-			if (bcb.print !== undefined) {
-				bcb.print(this);
-			}
-		}		
+		for (let k of ci.controls_keys) {
+			console.log("::278::", k);
+			if (ci && ci.instances[k] !== undefined) {
+				const bcb = ci.instances[k];
+				if (bcb.print !== undefined) {
+					console.log("::282::", k, "printing");
+					bcb.print(this);
+				}
+			}	
+		}	
 	}
 
 	maprefresh() {
@@ -296,7 +309,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		} else {
 
-			this.drawBasicControls();
+			this.drawControls();
 
 			const sv = this.transformmgr.getReadableCartoScale();
 			// print decorated map scale widget 
@@ -304,7 +317,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 			this.featureCollection.invalidate();
 			// maplayers refresh
-			this.tocmgr.tocrefresh(sv);
+			this.tocmgr.tocMgrRefresh(sv);
 
 
 		}
