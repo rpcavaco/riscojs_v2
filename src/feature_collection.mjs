@@ -168,6 +168,10 @@ export class FeatureCollection {
 		}
 	}
 
+	featCount(p_layerkey) {
+		return Object.keys(this.featList[p_layerkey]).length;
+	}
+
 	emptyLayer(p_layerkey) {
 		if (this.featList[p_layerkey] !== undefined) {
 			this.featList[p_layerkey] = {};

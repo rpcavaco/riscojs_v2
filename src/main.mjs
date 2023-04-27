@@ -279,11 +279,9 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	drawControls() {
 		const ci = this.getCustomizationObject();
 		for (let k of ci.controls_keys) {
-			console.log("::278::", k);
 			if (ci && ci.instances[k] !== undefined) {
 				const bcb = ci.instances[k];
 				if (bcb.print !== undefined) {
-					console.log("::282::", k, "printing");
 					bcb.print(this);
 				}
 			}	
@@ -309,7 +307,8 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		} else {
 
-			this.drawControls();
+			// Removed to TOCManager nextdraw (draws when all features finished loading)
+			//this.drawControls();
 
 			const sv = this.transformmgr.getReadableCartoScale();
 			// print decorated map scale widget 

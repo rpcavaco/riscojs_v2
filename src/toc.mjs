@@ -435,6 +435,8 @@ export class TOCManager {
 
 			this.mapctx.removePrint("loadingmsgprint");
 
+			this.mapctx.drawControls();
+
 			// apply configured relations between feature layers
 			this.mapctx.featureCollection.relateall();
 			return;

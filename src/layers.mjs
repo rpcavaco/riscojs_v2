@@ -295,6 +295,10 @@ const featureLayersMixin = (Base) => class extends Base {
 		this._currFeatures = p_curr_feats;
 		this._currFeatures.setLayer(p_layer_key, p_layerobj);
 	}
+
+	featCount() {
+		return this._currFeatures.featCount(this.key);
+	}
 }
 
 // no feature mgmt, no attributes

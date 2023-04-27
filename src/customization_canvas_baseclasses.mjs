@@ -203,19 +203,28 @@ export class TOC  extends MapPrintInRect {
 	font;
 	canvaslayer = 'service_canvas'; */
 	tocmgr;
+	leftcol_width;
+	print_attempts;
 
 	constructor() {
 
+
 		super();
-		this.fillStyleBack = GlobalConst.MESSAGING_STYLES.PERMANENT_BCKGRD; 
-		this.fillStyleFront = GlobalConst.MESSAGING_STYLES.PERMANENT_COLOR;
-		this.font = GlobalConst.MESSAGING_STYLES.PERMANENT_FONT;
+		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.TOC_BCKGRD; 
+		this.activeStyleFront = GlobalConst.CONTROLS_STYLES.TOC_ACTIVECOLOR;
+		this.inactiveStyleFront = GlobalConst.CONTROLS_STYLES.TOC_INACTIVECOLOR;
+		this.margin_offset = GlobalConst.CONTROLS_STYLES.OFFSET;
+		this.leftcol_width = GlobalConst.CONTROLS_STYLES.TOC_LEFTCOL_WIDTH;
+		this.normalszPX = GlobalConst.CONTROLS_STYLES.TOC_NORMALSZ_PX;
+		this.varstylePX = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLESZ_PX;
+		this.fontfamily = GlobalConst.CONTROLS_STYLES.TOC_FONTFAMILY;
 
 		this.left = 600;
-		this.top = 30;
+		this.top = this.margin_offset;
 		this.boxh = 300;
 		this.boxw = 300;
 
+		this.print_attempts = 0;
 
 	}
 
@@ -223,15 +232,67 @@ export class TOC  extends MapPrintInRect {
 		this.tocmgr = p_tocmgr;
 	}
 
-	print(p_mapctx) {
+	_print(p_mapctx) {
 
-		// const canvas_dims = [];
-		console.log("::229:: this.canvaslayer", this.canvaslayer);
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		ctx.save();
 
+		// cal width
+		let w, max_lbl_w = 0;
+
+		for (const lyr of this.tocmgr.layers) {
+			if (lyr["label"] !== undefined && lyr["label"] != "none") {
+				ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
+				max_lbl_w = Math.max(max_lbl_w, ctx.measureText(lyr["label"]).width);
+				for (const vs of lyr["varstyles_symbols"]) {
+					ctx.font = `${this.varstylePX}px ${this.fontfamily}`;
+					max_lbl_w = Math.max(max_lbl_w, ctx.measureText(p_mapctx.i18n.msg(vs.key)).width);
+				}
+			}
+		}
+
+		this.boxw = this.leftcol_width + max_lbl_w + 2 * this.margin_offset;
+		console.log("boxw:", this.boxw, this.leftcol_width, max_lbl_w, 2 * this.margin_offset);
+
+		let cota, count, lyr, txleft, mapdims = [];
+		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
+
+		this.left = mapdims[0] - (this.boxw + this.margin_offset);
+
+		// const canvas_dims = [];
+		console.log("::229:: this.canvaslayer, maxw:", this.canvaslayer, max_lbl_w);
+
 		try {
-			// p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+			ctx.textAlign = "left";
+			txleft = this.left + this.leftcol_width;
+
+			ctx.fillStyle = "black";
+
+			// Measure height
+			count = 0;
+			cota = 0;
+			for (let li=this.tocmgr.layers.length-1; li>=0; li--) {
+				lyr = this.tocmgr.layers[li]; 
+				if (lyr["label"] !== undefined && lyr["label"] != "none") {
+					
+					count++;
+
+					if (count == 1) {
+						cota = 2* this.margin_offset + this.normalszPX;
+					} else {
+						cota += GlobalConst.CONTROLS_STYLES.TOC_SEPARATION_FACTOR * this.normalszPX;
+					}
+
+					if (lyr["varstyles_symbols"] !== undefined) {
+						
+						ctx.font = `${this.varstylePX}px ${this.fontfamily}`;
+						for (const vs of lyr["varstyles_symbols"]) {
+							cota += GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
+						}
+					}					
+				}
+			}
+			this.boxh = cota + this.margin_offset;
 
 			// background
 			
@@ -239,9 +300,55 @@ export class TOC  extends MapPrintInRect {
 			ctx.fillStyle = this.fillStyleBack;
 			ctx.fillRect(this.left, this.top, this.boxw, this.boxh);
 			
-			ctx.strokeStyle = this.strokeStyleFront;
+			ctx.strokeStyle = this.activeStyleFront;
 			ctx.lineWidth = this.strokeWidth;
 			ctx.strokeRect(this.left, this.top, this.boxw, this.boxh);
+
+			
+			count = 0;
+			cota = 0;
+			for (let li=this.tocmgr.layers.length-1; li>=0; li--) {
+
+				lyr = this.tocmgr.layers[li]; 
+
+				if (lyr["label"] !== undefined && lyr["label"] != "none") {
+					
+					count++;
+
+					if (count == 1) {
+						cota = 2* this.margin_offset + this.normalszPX;
+					} else {
+						cota += GlobalConst.CONTROLS_STYLES.TOC_SEPARATION_FACTOR * this.normalszPX;
+					}
+
+					if (lyr.featCount() == 0) {
+						ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_INACTIVECOLOR;
+					}else {
+						ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_ACTIVECOLOR;
+					}
+					ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
+					ctx.fillText(lyr["label"], txleft, cota);	
+
+					//console.log(lyr["label"], ">> _currFeatures <<", lyr.featCount());
+
+					if (lyr["varstyles_symbols"] !== undefined) {
+						
+						ctx.font = `${this.varstylePX}px ${this.fontfamily}`;
+						for (const vs of lyr["varstyles_symbols"]) {
+
+							cota += GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
+							
+		
+							ctx.fillText(p_mapctx.i18n.msg(vs.key, true), txleft, cota);
+
+						}
+					}
+
+				}
+
+			}
+
+
 			/*
 			for (let ci=0;  ci<this.controls_keys.length; ci++) {
 
@@ -286,6 +393,20 @@ export class TOC  extends MapPrintInRect {
 			ctx.restore();
 		}
 	}	
+
+	print(p_mapctx) {
+		const that = this;
+		while (!document.fonts.check("10px "+this.fontfamily) && this.print_attempts < 10) {
+			setTimeout(() => {
+				that.print(p_mapctx);
+			}, 200);
+			that.print_attempts++;
+			return;
+		}
+		this.print_attempts = 0;
+		return this._print(p_mapctx)
+	}
+
 
 	interact(p_mapctx, p_evt) {
 

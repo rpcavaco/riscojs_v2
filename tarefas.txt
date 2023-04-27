@@ -74,6 +74,8 @@
 
 - versão de código visível / acessível
 
+- label do tema não está internacionalizada
+
 
 
 --------------------------------- UI/Widgets  -------------------------------
