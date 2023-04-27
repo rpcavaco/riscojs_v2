@@ -48,6 +48,8 @@
 
 - toggle controls - visual cue - user não sabe que controle é togglable
 
+
+
 - max largura info nas basic configs
 
 - Edição
@@ -88,6 +90,10 @@ OK -querybox e Localizador
 
 - Legenda
 - >> TOC
+	- >> simbologia linha e poligono
+	- toggle visibilidade na TOC
+	- número de elementos
+
 - PARCIAL - hovering events over control surfaces of widgets
 
 ----------------------------------- Tools  ----------------------------------

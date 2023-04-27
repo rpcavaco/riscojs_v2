@@ -191,6 +191,71 @@ export class ControlsBox extends MapPrintInRect {
 	
 }
 
+function drawTOCSymb(p_mapctx, p_lyr, p_ctx, p_symbxcenter, p_cota, opt_varstlesymb) {
+
+	p_ctx.save();
+
+	try {
+
+		let dofill = true, markersize;
+		if (opt_varstlesymb != null && opt_varstlesymb["fillStyle"] !== undefined) {
+			p_ctx.fillStyle = opt_varstlesymb["fillStyle"];
+		} else if (p_lyr["fillStyle"] !== undefined) {
+			p_ctx.fillStyle = p_lyr["fillStyle"];
+		} else {
+			dofill = false;
+		}
+
+		if (opt_varstlesymb != null && opt_varstlesymb["strokeStyle"] !== undefined) {
+			p_ctx.strokeStyle = opt_varstlesymb["strokeStyle"];
+		} else {
+			p_ctx.strokeStyle = p_lyr["strokeStyle"];
+		}
+
+		if (opt_varstlesymb != null && opt_varstlesymb["lineWidth"] !== undefined) {
+			p_ctx.lineWidth = opt_varstlesymb["lineWidth"];
+		} else {
+			p_ctx.lineWidth = p_lyr["lineWidth"];
+		}
+	
+		if (opt_varstlesymb != null && opt_varstlesymb["markersize"] !== undefined) {
+			markersize = opt_varstlesymb["markersize"];
+		} else {
+			markersize = p_lyr["markersize"];
+		}
+
+		//console.log(p_lyr);
+
+		//console.log("lyr", p_lyr.geomtype, p_lyr.marker, markersize, p_lyr.key, "ctx:", p_ctx.fillStyle, p_ctx.strokeStyle, p_ctx.lineWidth);
+
+		if (p_lyr.geomtype == "point") {
+			switch (p_lyr.marker) {
+				case "circle":
+
+					const sclval = p_mapctx.getScale();
+					const dim = markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
+			
+					p_ctx.beginPath();
+					p_ctx.arc(p_symbxcenter, p_cota, dim, 0, Math.PI * 2, true);
+			
+					if (dofill) {
+						p_ctx.fill();
+					}
+			
+					p_ctx.stroke();
+				
+
+			}
+		}
+
+	} catch(e) {
+		console.error(e);
+	} finally {
+		p_ctx.restore();
+	}
+
+
+}
 
 export class TOC  extends MapPrintInRect {
 
@@ -207,7 +272,6 @@ export class TOC  extends MapPrintInRect {
 	print_attempts;
 
 	constructor() {
-
 
 		super();
 		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.TOC_BCKGRD; 
@@ -252,21 +316,19 @@ export class TOC  extends MapPrintInRect {
 		}
 
 		this.boxw = this.leftcol_width + max_lbl_w + 2 * this.margin_offset;
-		console.log("boxw:", this.boxw, this.leftcol_width, max_lbl_w, 2 * this.margin_offset);
 
-		let cota, count, lyr, txleft, mapdims = [];
+		let grcota, cota, count, lyr, txleft, sclval, mapdims = [];
 		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
 
 		this.left = mapdims[0] - (this.boxw + this.margin_offset);
+		let symbxcenter = this.left + this.margin_offset + 0.5 * this.leftcol_width;
 
 		// const canvas_dims = [];
-		console.log("::229:: this.canvaslayer, maxw:", this.canvaslayer, max_lbl_w);
+		// console.log("::229:: this.canvaslayer, maxw:", this.canvaslayer, max_lbl_w);
 
 		try {
 			ctx.textAlign = "left";
 			txleft = this.left + this.leftcol_width;
-
-			ctx.fillStyle = "black";
 
 			// Measure height
 			count = 0;
@@ -303,7 +365,6 @@ export class TOC  extends MapPrintInRect {
 			ctx.strokeStyle = this.activeStyleFront;
 			ctx.lineWidth = this.strokeWidth;
 			ctx.strokeRect(this.left, this.top, this.boxw, this.boxh);
-
 			
 			count = 0;
 			cota = 0;
@@ -332,60 +393,24 @@ export class TOC  extends MapPrintInRect {
 					//console.log(lyr["label"], ">> _currFeatures <<", lyr.featCount());
 
 					if (lyr["varstyles_symbols"] !== undefined) {
-						
+
+						// console.log("334:", lyr["varstyles_symbols"] )
 						ctx.font = `${this.varstylePX}px ${this.fontfamily}`;
 						for (const vs of lyr["varstyles_symbols"]) {
 
+							grcota = 2 + cota + 0.5 * GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
+							drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota, vs);							
 							cota += GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
-							
-		
 							ctx.fillText(p_mapctx.i18n.msg(vs.key, true), txleft, cota);
-
 						}
+
+					} else {
+
 					}
 
 				}
 
 			}
-
-
-			/*
-			for (let ci=0;  ci<this.controls_keys.length; ci++) {
-
-				if (this.controls_prevgaps[this.controls_keys[ci]] !== undefined) {
-					accum += this.controls_prevgaps[this.controls_keys[ci]];
-				} 
-
-				console.log(navigator.userAgent.toLowerCase());
-				if (ci>0 && (navigator.userAgent.toLowerCase().includes("mobile") || navigator.userAgent.toLowerCase().includes("android"))) {
-					accum += GlobalConst.CONTROLS_STYLES.MOBILE_DEFGAP;
-				}
-
-				if (this.orientation == "HORIZONTAL") {
-					left = accum + ci * this.boxw + this.left;
-					top = this.top;
-				} else {
-					left = this.left;
-					top = accum + ci * this.boxh + this.top;
-				}
-
-				ctx.clearRect(left, top, this.boxw, this.boxh); 
-				this.controls_boxes[this.controls_keys[ci]] = [left, top, this.boxw, this.boxh];
-				
-				ctx.fillStyle = this.fillStyleBack;
-				ctx.fillRect(left, top, this.boxw, this.boxh);
-				
-				ctx.strokeStyle = this.strokeStyleFront;
-				ctx.lineWidth = this.strokeWidth;
-				ctx.strokeRect(left, top, this.boxw, this.boxh);
-
-				this.drawControlFace(ctx, this.controls_keys[ci], left, top, this.boxw, this.boxh, p_mapctx.cfgvar["basic"], GlobalConst);
-
-			}
-			*/
-
-			// console.log('>> MapScalePrint print scale', ctx, [this.left, this.top, this.boxw, this.boxh]);
-
 
 		} catch(e) {
 			throw e;
