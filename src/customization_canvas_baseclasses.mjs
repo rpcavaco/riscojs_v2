@@ -201,8 +201,8 @@ function drawTOCSymb(p_mapctx, p_lyr, p_ctx, p_symbxcenter, p_cota, opt_varstles
 		let dofill = true, markersize;
 		if (opt_varstlesymb != null && opt_varstlesymb["fillStyle"] !== undefined) {
 			p_ctx.fillStyle = opt_varstlesymb["fillStyle"];
-		} else if (p_lyr["fillStyle"] !== undefined) {
-			p_ctx.fillStyle = p_lyr["fillStyle"];
+		} else if (p_lyr["default_symbol"]["fillStyle"] !== undefined) {
+			p_ctx.fillStyle = p_lyr["default_symbol"]["fillStyle"];
 		} else {
 			dofill = false;
 		}
@@ -210,24 +210,26 @@ function drawTOCSymb(p_mapctx, p_lyr, p_ctx, p_symbxcenter, p_cota, opt_varstles
 		if (opt_varstlesymb != null && opt_varstlesymb["strokeStyle"] !== undefined) {
 			p_ctx.strokeStyle = opt_varstlesymb["strokeStyle"];
 		} else {
-			p_ctx.strokeStyle = p_lyr["strokeStyle"];
+			p_ctx.strokeStyle = p_lyr["default_symbol"]["strokeStyle"];
 		}
 
 		if (opt_varstlesymb != null && opt_varstlesymb["lineWidth"] !== undefined) {
 			p_ctx.lineWidth = opt_varstlesymb["lineWidth"];
 		} else {
-			p_ctx.lineWidth = p_lyr["lineWidth"];
+			p_ctx.lineWidth = p_lyr["default_symbol"]["lineWidth"];
 		}
 	
 		if (opt_varstlesymb != null && opt_varstlesymb["markersize"] !== undefined) {
 			markersize = opt_varstlesymb["markersize"];
 		} else {
-			markersize = p_lyr["markersize"];
+			markersize = p_lyr["default_symbol"]["markersize"];
 		}
 
-		//console.log(p_lyr);
+		if (markersize === undefined) {
+			markersize = 2;
+		}
 
-		//console.log("lyr", p_lyr.geomtype, p_lyr.marker, markersize, p_lyr.key, "ctx:", p_ctx.fillStyle, p_ctx.strokeStyle, p_ctx.lineWidth);
+		//console.log("p_lyr:", p_lyr);
 
 		if (p_lyr.geomtype == "point") {
 			switch (p_lyr.marker) {
@@ -344,6 +346,7 @@ export class TOC  extends MapPrintInRect {
 			count = 0;
 			cota = 0;
 			for (let li=this.tocmgr.layers.length-1; li>=0; li--) {
+
 				lyr = this.tocmgr.layers[li]; 
 				if (lyr["label"] !== undefined && lyr["label"] != "none") {
 					
@@ -363,6 +366,7 @@ export class TOC  extends MapPrintInRect {
 						}
 					}					
 				}
+
 			}
 			this.boxh = cota + this.margin_offset;
 
@@ -398,6 +402,12 @@ export class TOC  extends MapPrintInRect {
 						ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_ACTIVECOLOR;
 					}
 					ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
+
+					if (lyr["varstyles_symbols"] === undefined || lyr["varstyles_symbols"].length == 0) {
+						grcota = 2 + cota - 0.5 * this.varstylePX;
+						drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota);	
+					}
+
 					ctx.fillText(lyr["label"], txleft, cota);	
 
 					//console.log(lyr["label"], ">> _currFeatures <<", lyr.featCount());
@@ -419,8 +429,6 @@ export class TOC  extends MapPrintInRect {
 							cota += GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
 							ctx.fillText(varstyle_caption, txleft, cota);
 						}
-
-					} else {
 
 					}
 
