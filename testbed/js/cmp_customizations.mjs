@@ -63,7 +63,10 @@ export class LocQuery {
 
 		// console.trace("-- LocQuery clear --, full:", p_full);
 
-		const lyr = this.mapctx.tocmgr.getLayer(this.loc_layer_key);
+		let lyr = null;
+		if (this.loc_layer_key) {
+			lyr = this.mapctx.tocmgr.getLayer(this.loc_layer_key);
+		}
 	
 		if (p_full) {
 			this.found = null;
@@ -321,8 +324,10 @@ export class LocQuery {
 
 							});
 
-							const lyr = that.mapctx.tocmgr.getLayer(that.loc_layer_key);
-							lyr.setToPoint([responsejson['out']['loc'][0], responsejson['out']['loc'][1]]);
+							if (that.loc_layer_key) {
+								const lyr = that.mapctx.tocmgr.getLayer(that.loc_layer_key);
+								lyr.setToPoint([responsejson['out']['loc'][0], responsejson['out']['loc'][1]]);
+							}
 							
 
 							that.mapctx.transformmgr.setScaleCenteredAtPoint(that.zoomto, [responsejson['out']['loc'][0], responsejson['out']['loc'][1]], true);
