@@ -2,6 +2,7 @@
 import {GlobalConst} from './constants.js';
 import {MaptipBox} from './canvas_maptip.mjs';
 import {InfoBox} from './canvas_info.mjs';
+import {I18n} from './i18n.mjs';
 
 class MapPrintInRect {
 
@@ -302,13 +303,22 @@ export class TOC  extends MapPrintInRect {
 		ctx.save();
 
 		// cal width
-		let w, max_lbl_w = 0;
+		let w, varstyle_caption, lang, max_lbl_w = 0;
 
 		for (const lyr of this.tocmgr.layers) {
 			if (lyr["label"] !== undefined && lyr["label"] != "none") {
 				ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
 				max_lbl_w = Math.max(max_lbl_w, ctx.measureText(lyr["label"]).width);
+				lang = (new I18n(lyr.msgsdict)).getLang();
+
 				for (const vs of lyr["varstyles_symbols"]) {
+
+					if (Object.keys(lyr.msgsdict[lang]).indexOf(vs.key) >= 0) {
+						varstyle_caption = I18n.capitalize(lyr.msgsdict[lang][vs.key]);
+					} else {
+						varstyle_caption = I18n.capitalize(vs.key);
+					}
+
 					ctx.font = `${this.varstylePX}px ${this.fontfamily}`;
 					max_lbl_w = Math.max(max_lbl_w, ctx.measureText(p_mapctx.i18n.msg(vs.key)).width);
 				}
@@ -398,10 +408,16 @@ export class TOC  extends MapPrintInRect {
 						ctx.font = `${this.varstylePX}px ${this.fontfamily}`;
 						for (const vs of lyr["varstyles_symbols"]) {
 
+							if (Object.keys(lyr.msgsdict[lang]).indexOf(vs.key) >= 0) {
+								varstyle_caption = I18n.capitalize(lyr.msgsdict[lang][vs.key]);
+							} else {
+								varstyle_caption = I18n.capitalize(vs.key);
+							}
+		
 							grcota = 2 + cota + 0.5 * GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
 							drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota, vs);							
 							cota += GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
-							ctx.fillText(p_mapctx.i18n.msg(vs.key, true), txleft, cota);
+							ctx.fillText(varstyle_caption, txleft, cota);
 						}
 
 					} else {
@@ -474,10 +490,10 @@ export class Info {
 
 		const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
 		if (currlayer["infocfg"] === undefined) {
-			throw new Error(`Missing 'infocfg' config for layer '${this.layer.key}, cannot 'pick' features`);
+			throw new Error(`Missing 'infocfg' config for layer '${p_layerkey}, cannot 'pick' features`);
 		}
 		if (currlayer["infocfg"]["keyfield"] === undefined) {
-			throw new Error(`Missing 'infocfg.keyfield' config for layer '${this.layer.key}, cannot 'pick' features`);
+			throw new Error(`Missing 'infocfg.keyfield' config for layer '${p_layerkey}, cannot 'pick' features`);
 		}
 
 		if (p_feature.a[currlayer["infocfg"]["keyfield"]] === undefined) {
@@ -519,6 +535,11 @@ export class Info {
 	infobox_pick(p_info_box, p_data_rec, p_fldname, p_column_idx) {
 		
 		//console.log(p_info_box, p_data_rec, p_fldname, p_column_idx);
+		navigator.clipboard.writeText(p_data_rec[p_fldname]).then(function() {
+		   // console.log('infobox_pick: Copying to clipboard was successful!');
+		}, function(err) {
+		  	console.warn('[WARN] infobox_pick: Could not copy text: ', err);
+		});	
 
 		// open a new tab with URL, if it exists
 		if (p_column_idx == 1 && p_info_box.urls[p_fldname] !== undefined) {

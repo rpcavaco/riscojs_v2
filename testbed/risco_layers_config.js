@@ -301,7 +301,7 @@ var RISCOJS_LAYERS_CFG = {
 						},
 						"numbered": {
 							"type": "URL",
-							"format": (value) => `https://portodoc.cm-porto.net/Gfidoc?nup=${value}`
+							"urlbuild": (value) => `https://portodoc.cm-porto.net/Gfidoc?nup=${value}`
 						}
 					},
 					"transforms": [

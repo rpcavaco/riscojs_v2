@@ -141,10 +141,16 @@ export function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdic
 					break;
 
 				case "URL":
-					pretext = p_attrs[p_fld];
+					pretext = null;
 					if (o_urls != null) {
-						const formatfunc = p_this.layer.infocfg.fields["formats"][p_fld]["format"];
-						o_urls[p_fld] = formatfunc(pretext);
+						const urlfunc = p_this.layer.infocfg.fields["formats"][p_fld]["urlbuild"];
+						o_urls[p_fld] = urlfunc(p_attrs[p_fld]);
+						if (p_this.layer.infocfg.fields["formats"][p_fld]["format"] !== undefined) {
+							pretext = p_this.layer.infocfg.fields["formats"][p_fld]["format"](p_attrs, p_fld);
+						}
+						if (pretext == null) {
+							pretext = p_attrs[p_fld];
+						}
 					}
 					break;
 
@@ -162,26 +168,33 @@ export function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdic
 		captionlines.push('');
 	}
 
-	if (typeof pretext != 'number') {
-		if (pretext.length > 0) {
-			pp_ctx.font = `${p_this.normalszPX}px ${p_this.fontfamily}`;
-			canvasCollectTextLines(pp_ctx, pretext, max_valuewidth, valuelines);
-		} else {
-			valuelines.push('');
-		}
+	if (pretext == null) {
+
+		valuelines.push('');
+
 	} else {
-		if (captionlines.length == 1) {
-			valuelines = [pretext.toString()];
-		} else {
-			valuelines = [];
-			for (let i=0; i<(captionlines.length-1); i++) {
+
+		if (typeof pretext != 'number') {
+			if (pretext.length > 0) {
+				pp_ctx.font = `${p_this.normalszPX}px ${p_this.fontfamily}`;
+				canvasCollectTextLines(pp_ctx, pretext, max_valuewidth, valuelines);
+			} else {
 				valuelines.push('');
 			}
-			valuelines.push(pretext.toString());
+		} else {
+			if (captionlines.length == 1) {
+				valuelines = [pretext.toString()];
+			} else {
+				valuelines = [];
+				for (let i=0; i<(captionlines.length-1); i++) {
+					valuelines.push('');
+				}
+				valuelines.push(pretext.toString());
+			}
 		}
 	}
 
-	o_rows.push([captionlines, valuelines]);
+	o_rows.push({ "c": [captionlines, valuelines], "f": p_fld });
 	ret = Math.max(captionlines.length, valuelines.length);
 
 	return ret;

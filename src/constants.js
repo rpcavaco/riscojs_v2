@@ -133,6 +133,7 @@ var GlobalConst = {
 		"minpopupwidth": 280,
 		"maxpopupwidth": 480,
 		"lineheightfactor": 1.0, // 1.8
+		"rowsintervalfactor": 0.15,
 		"caption2value_widthfraction": 0.31,
 		"tipsbox2map_widthfraction": 2.4,
 		"infotipsbox_slack": 10
@@ -197,7 +198,7 @@ var GlobalConst = {
 	CONTROLS_STYLES: {
 
 		BCKGRD: "rgb(216, 216, 216)",
-		COLOR: "white",
+		COLOR: "black",
 		OFFSET: 10,
 		SIZE: 30,
 		STROKEWIDTH: 1,
@@ -211,8 +212,8 @@ var GlobalConst = {
 		TOC_NORMALSZ_PX: 16,
 		TOC_VARSTYLESZ_PX: 14,
 		TOC_FONTFAMILY: "OpenSans-CondensedRegular",
-		TOC_SEPARATION_FACTOR: 1.5,
-		TOC_VARSTYLE_SEPARATION_FACTOR: 1.05,
+		TOC_SEPARATION_FACTOR: 1.6,
+		TOC_VARSTYLE_SEPARATION_FACTOR: 1.3,
 		TOC_BCKGRD: "#0b1d1fe0",
 		TOC_ACTIVECOLOR: "white",
 		TOC_INACTIVECOLOR: "grey"

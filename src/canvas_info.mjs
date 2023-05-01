@@ -166,6 +166,7 @@ export class InfoBox extends PopupBox {
 		const capttextwidth = GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"] * maxboxwidth;
 		const valuetextwidth = (1 - GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"]) * maxboxwidth;
 		const lineheightfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["lineheightfactor"];
+		const rowsintervalfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["rowsintervalfactor"];
 
 		const recdata = this.data[this.layer.infocfg.jsonkey][this.recordidx];
 
@@ -212,6 +213,7 @@ export class InfoBox extends PopupBox {
 				this.ordered_fldnames.push(fld);
 			}
 		}
+
 		for (let fld of this.ordered_fldnames) {
 			this.field_row_count[fld] = canvasWrtField(this, p_ctx, recdata, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows, this.urls);
 		}	
@@ -226,7 +228,7 @@ export class InfoBox extends PopupBox {
 				} else {
 					p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
 				}
-				for (let rowln of row[i]) {
+				for (let rowln of row["c"][i]) {
 					this.colsizes[i] = Math.max(p_ctx.measureText(rowln).width, this.colsizes[i]);
 				}
 			}
@@ -248,11 +250,11 @@ export class InfoBox extends PopupBox {
 			maxrowlen=0;
 			row = this.rows[ri];
 			for (let colidx=0; colidx<this.columncount; colidx++) {
-				maxrowlen = Math.max(maxrowlen, row[colidx].length);
+				maxrowlen = Math.max(maxrowlen, row["c"][colidx].length);
 			}
 			textlinescnt += maxrowlen;
 
-			height += (maxrowlen * lineheightfactor * this.txtlnheight) + (0.15 * this.txtlnheight);
+			height += (maxrowlen * lineheightfactor * this.txtlnheight) + (rowsintervalfactor * this.txtlnheight);
 		}
 		// height = height + textlinescnt * lineheightfactor * this.txtlnheight; // - 2 * txtlnheight;
 
@@ -270,9 +272,9 @@ export class InfoBox extends PopupBox {
 
 		for (let ri=0; ri<this.rows.length; ri++) {
 
-			row = this.rows[ri];
+			row = this.rows[ri]["c"];
 			lnidx = 0;
-			crrfld = this.ordered_fldnames[ri];
+			crrfld = this.rows[ri]["f"];
 			fmt = this.formats[crrfld];
 
 			// ---- Draw row backgrounds ----
@@ -370,7 +372,7 @@ export class InfoBox extends PopupBox {
 
 			// end of text lines loop
 
-			cota = cota + 0.15 *this.txtlnheight;
+			cota = cota + rowsintervalfactor *this.txtlnheight;
 		}
 
 		if (this.recordcnt > 1) {
@@ -391,6 +393,9 @@ export class InfoBox extends PopupBox {
 	interact(p_ctx, p_evt) {
 
 		const lineheightfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["lineheightfactor"];
+		const rowsintervalfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["rowsintervalfactor"];
+
+		const SHOWROWS = false;
 
 		// in header
 		if (p_evt.clientX >= this.headerbox[0] && p_evt.clientX <= this.headerbox[0] + this.headerbox[2] && 
@@ -435,26 +440,48 @@ export class InfoBox extends PopupBox {
 		} else {
 			
 			// checking fldname linked to the area clicked by user
-			let p, prev, next, left, right, first=true, fldname=null, clickedcolidx=-1;
+			let prev, next, left, right, first=true, fldname=null;
 
+			if (SHOWROWS) {
+				p_ctx.save();
+				p_ctx.strokeStyle ="white";
+				p_ctx.fillStyle ="white";
+				p_ctx.lineWidth = 2;
+				p_ctx.font = "20px Arial";
+			}
+
+			let cnt = 0;
 			for (let fld of this.ordered_fldnames) {
+
+				if (this.field_row_count[fld] == 0) {
+					continue;
+				}
+				cnt++;
+
 				if (first) {
 					prev = this.topcota;
 				} else {
 					prev = next;
 				}
 				first = false;
-				next = prev + (this.field_row_count[fld] * lineheightfactor * this.txtlnheight) + 0.5 * this.txtlnheight;
-				p = prev + 0.5 * this.txtlnheight;
-				//console.log('   --', fldname, p, next, 'lh:', this.txtlnheight, p_evt.clientY);
-				if (p_evt.clientY >= p && p_evt.clientY < next) {
+				next = prev + (this.field_row_count[fld] * lineheightfactor * this.txtlnheight) + rowsintervalfactor * this.txtlnheight;
+
+				if (SHOWROWS) {
+					p_ctx.fillText(cnt.toString(),90,next);
+					p_ctx.beginPath();
+					p_ctx.moveTo(100,next);
+					p_ctx.lineTo(700,next);
+					p_ctx.stroke();
+				}
+
+				if (p_evt.clientY >= prev && p_evt.clientY < next) {
 					//console.log('*', fld, p, next, p_evt.clientY);
 					fldname = fld;
 					break;
 				}
 			}
 
-			if (fldname && this.columncount > 0) {
+			if (fldname != null && this.columncount > 0) {
 				let foundcolidx = -1;
 				for (let colidx=0; colidx<this.columncount; colidx++) {
 					if (colidx == 0) {

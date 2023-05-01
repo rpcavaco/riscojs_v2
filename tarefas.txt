@@ -47,6 +47,8 @@
 - OK - aumentar controles no mobile
 
 - toggle controls - visual cue - user não sabe que controle é togglable
+- remover necessidade de fazer new ???
+- toggle cor do raster de fundo
 
 
 

@@ -274,7 +274,7 @@ export class MaptipBox extends PopupBox {
 				} else {
 					p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
 				}
-				for (let rowln of row[i]) {
+				for (let rowln of row["c"][i]) {
 					colsizes[i] = Math.max(p_ctx.measureText(rowln).width, colsizes[i]);
 				}
 			}
@@ -293,11 +293,11 @@ export class MaptipBox extends PopupBox {
 			maxrowlen=0;
 			row = this.rows[ri];
 			for (let colidx=0; colidx<numcols; colidx++) {
-				maxrowlen = Math.max(maxrowlen, row[colidx].length);
+				maxrowlen = Math.max(maxrowlen, row["c"][colidx].length);
 			}
 			textlinescnt += maxrowlen;
 			
-			height += maxrowlen * lineheightfactor * txtlnheight + 0.5 * txtlnheight;
+			height += maxrowlen * lineheightfactor * txtlnheight + 0.25 * txtlnheight;
 
 		}
 		//console.log("textlinescnt:", textlinescnt);
@@ -317,9 +317,9 @@ export class MaptipBox extends PopupBox {
 
 				for (let colidx=0; colidx<2; colidx++) {
 
-					if (row[colidx].length > lnidx) {
+					if (row["c"][colidx].length > lnidx) {
 						
-						celltxt = row[colidx][lnidx];
+						celltxt = row["c"][colidx][lnidx];
 						if (colidx == 0) {
 							p_ctx.textAlign = "right";
 							p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
@@ -341,7 +341,7 @@ export class MaptipBox extends PopupBox {
 
 			} while (changed_found);
 
-			cota = cota + 0.5 *txtlnheight;
+			cota = cota + 0.25 *txtlnheight;
 		}
 
 		p_ctx.restore();
