@@ -68,7 +68,7 @@ export class I18n {
 
 	msg(p_msgkey, b_capitalize) {
 
-		let ret = "";		
+		let ret = p_msgkey;		
 		let reallang = this.getLang();
 
 		if (this.msgs[reallang] !== undefined && this.msgs[reallang][p_msgkey] !== undefined) {

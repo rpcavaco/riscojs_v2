@@ -297,13 +297,24 @@ export class TOC  extends MapPrintInRect {
 		ctx.save();
 
 		// cal width
-		let w, varstyle_caption, lang, max_lbl_w = 0;
+		let w, lbl, varstyle_caption, lang, max_lbl_w = 0;
 
 		for (const lyr of this.tocmgr.layers) {
 			if (lyr["label"] !== undefined && lyr["label"] != "none") {
+
+				if (lyr["label"] !== undefined && lyr["label"] != "none")
+					lbl = p_mapctx.i18n.msg(lyr["label"]);
+				else
+					lbl = "(sem etiqueta)";	
+
 				ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
-				max_lbl_w = Math.max(max_lbl_w, ctx.measureText(lyr["label"]).width);
 				lang = (new I18n(lyr.msgsdict)).getLang();
+
+				if (lyr["varstyles_symbols"] !== undefined) {
+					max_lbl_w = Math.max(max_lbl_w, ctx.measureText(lbl).width);
+				} else {
+					max_lbl_w = Math.max(max_lbl_w, this.leftcol_width + ctx.measureText(lbl).width);
+				}
 
 				for (const vs of lyr["varstyles_symbols"]) {
 
@@ -319,9 +330,10 @@ export class TOC  extends MapPrintInRect {
 			}
 		}
 
-		this.boxw = this.leftcol_width + max_lbl_w + 2 * this.margin_offset;
+		// this.leftcol_width is merged when necessary, in max_lbl_w
+		this.boxw = max_lbl_w + 2 * this.margin_offset;
 
-		let grcota, cota, count, lyr, txleft, step, mapdims = [];
+		let grcota, cota, count, lyr, txleft, indent_txleft, step, mapdims = [];
 		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
 
 		this.left = mapdims[0] - (this.boxw + this.margin_offset);
@@ -332,7 +344,8 @@ export class TOC  extends MapPrintInRect {
 
 		try {
 			ctx.textAlign = "left";
-			txleft = this.left + this.leftcol_width;
+			indent_txleft = this.left + this.margin_offset + this.leftcol_width;
+			txleft = this.left + this.margin_offset;
 
 			// Measure height
 			count = 0;
@@ -384,6 +397,11 @@ export class TOC  extends MapPrintInRect {
 					
 					count++;
 
+					if (lyr["label"] !== undefined && lyr["label"] != "none")
+						lbl = p_mapctx.i18n.msg(lyr["label"]);
+					else
+						lbl = "(sem etiqueta)";					
+
 					if (count == 1) {
 						cota = 2* this.margin_offset + this.normalszPX;
 					} else {
@@ -402,7 +420,11 @@ export class TOC  extends MapPrintInRect {
 						drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, step);	
 					}
 
-					ctx.fillText(lyr["label"], txleft, cota);	
+					if (lyr["varstyles_symbols"] !== undefined) {
+						ctx.fillText(lbl, txleft, cota);	
+					} else {
+						ctx.fillText(lbl, indent_txleft, cota);	
+					}
 
 					//console.log(lyr["label"], ">> _currFeatures <<", lyr.featCount());
 
@@ -421,7 +443,7 @@ export class TOC  extends MapPrintInRect {
 							grcota = 2 + cota + 0.5 * GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
 							drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota, step, vs);							
 							cota += GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
-							ctx.fillText(varstyle_caption, txleft, cota);
+							ctx.fillText(varstyle_caption, indent_txleft, cota);
 						}
 
 					}

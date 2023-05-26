@@ -457,7 +457,7 @@ export class TOCManager {
 			}
 
 			if (this.layers[li].label !== undefined && this.layers[li].label != "none")
-				lbl = this.layers[li].label;
+				lbl = this.mapctx.i18n.msg(this.layers[li].label);
 			else
 				lbl = this.layers[li].key;
 			

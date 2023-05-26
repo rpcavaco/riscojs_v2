@@ -208,7 +208,7 @@ var GlobalConst = {
 		HOMESYMBWID: 24,
 		HOMESYMB: "data:image/svg+xml;charset=utf-8,%3Csvg width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E %3Cpath fill=%22none%22 stroke=%22black%22 stroke-width=%221%22 stroke-linejoin=%22round%22 d=%22M 4,14 L 12,8 L 20,14 h -3 v 8 h -3 v -4 h -4 v 4 h -3 v -8 z %22 /%3E%3C/svg%3E",
 
-		TOC_LEFTCOL_WIDTH: 60,
+		TOC_LEFTCOL_WIDTH: 50,
 		TOC_NORMALSZ_PX: 16,
 		TOC_VARSTYLESZ_PX: 14,
 		TOC_FONTFAMILY: "OpenSans-CondensedRegular",
