@@ -297,23 +297,37 @@ export class TOC  extends MapPrintInRect {
 		ctx.clearRect(this.left-2, this.top-2, this.boxw+4, this.boxh+4); 
 
 		// cal width
-		let lbl, lyr_labels={}, lyr_fc = {}, varstyle_caption, lang, max_lbl_w = 0;
+		let lbl, lyr_labels={}, lyr_fc = {}, lyr_vs_captions={}, lyr_vs_fc={}, varstyle_caption, lang, max_lbl_w = 0, varstyles_fc;
+
 
 		for (const lyr of this.tocmgr.layers) {
 			if (lyr["label"] !== undefined && lyr["label"] != "none") {
 
-				if (lyr["label"] !== undefined && lyr["label"] != "none")
-					lbl = p_mapctx.i18n.msg(lyr["label"]);
-				else
-					lbl = "(sem etiqueta)";	
-
-				lyr_fc[lyr.key] = lyr.featCount();
-				lyr_labels[lyr.key] = `${lbl} [${lyr_fc[lyr.key]}]`; 
-
-				ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
 				lang = (new I18n(lyr.msgsdict)).getLang();
 
-				if (lyr["varstyles_symbols"] !== undefined) {
+				if (lyr["label"] !== undefined && lyr["label"] != "none") {
+					if (Object.keys(lyr.msgsdict[lang]).indexOf(lyr["label"]) >= 0) {
+						lbl = I18n.capitalize(lyr.msgsdict[lang][lyr["label"]]);
+					} else {
+						lbl = I18n.capitalize(lyr["label"]);
+					}	
+				} else {
+					lbl = "(sem etiqueta)";	
+				}
+
+				lyr_fc[lyr.key] = lyr.featCount();
+				if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
+					lyr_vs_captions[lyr.key] = {};
+					lyr_labels[lyr.key] = lbl; 
+					lyr_vs_fc[lyr.key] = {};
+				} else {
+					lyr_labels[lyr.key] = `${lbl} [${lyr_fc[lyr.key]}]`; 
+				}
+
+				varstyles_fc = 0;
+
+				ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
+				if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
 					max_lbl_w = Math.max(max_lbl_w, ctx.measureText(lyr_labels[lyr.key]).width);
 				} else {
 					max_lbl_w = Math.max(max_lbl_w, this.leftcol_width + ctx.measureText(lyr_labels[lyr.key]).width);
@@ -321,14 +335,22 @@ export class TOC  extends MapPrintInRect {
 
 				for (const vs of lyr["varstyles_symbols"]) {
 
+					lyr_vs_fc[lyr.key][vs.key] = lyr.filteredFeatCount(vs.func);
+					varstyles_fc += lyr_vs_fc[lyr.key][vs.key];
+
 					if (Object.keys(lyr.msgsdict[lang]).indexOf(vs.key) >= 0) {
-						varstyle_caption = I18n.capitalize(lyr.msgsdict[lang][vs.key]);
+						varstyle_caption = `${I18n.capitalize(lyr.msgsdict[lang][vs.key])} [${lyr_vs_fc[lyr.key][vs.key]}]`;
 					} else {
-						varstyle_caption = I18n.capitalize(vs.key);
+						varstyle_caption = `${I18n.capitalize(vs.key)} [${lyr_vs_fc[lyr.key][vs.key]}]`;
 					}
+					lyr_vs_captions[lyr.key][vs.key] = varstyle_caption;
 
 					ctx.font = `${this.varstylePX}px ${this.fontfamily}`;
-					max_lbl_w = Math.max(max_lbl_w, ctx.measureText(p_mapctx.i18n.msg(vs.key)).width);
+					max_lbl_w = Math.max(max_lbl_w, this.leftcol_width + ctx.measureText(varstyle_caption).width);
+				}
+
+				if (lyr_fc[lyr.key] > varstyles_fc) {
+					console.warn(`[WARN] layer ${lyr.key} varstyles dont apply to all fetures - all f.count:${lyr_fc[lyr.key]},  vstyles f.count${varstyles_fc}`);
 				}
 			}
 		}
@@ -433,11 +455,7 @@ export class TOC  extends MapPrintInRect {
 						ctx.font = `${this.varstylePX}px ${this.fontfamily}`;
 						for (const vs of lyr["varstyles_symbols"]) {
 
-							if (Object.keys(lyr.msgsdict[lang]).indexOf(vs.key) >= 0) {
-								varstyle_caption = I18n.capitalize(lyr.msgsdict[lang][vs.key]);
-							} else {
-								varstyle_caption = I18n.capitalize(vs.key);
-							}
+							varstyle_caption = lyr_vs_captions[lyr.key][vs.key]
 
 							if (lyr.filteredFeatCount(vs.func) > 0) {
 								ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_ACTIVECOLOR;
