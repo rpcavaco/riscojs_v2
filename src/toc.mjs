@@ -203,7 +203,7 @@ export class TOCManager {
 
 						// item is missing if has no default value
 						if (scaneables[si][items[ii]] == null) {
-							
+
 							switch (items[ii]) {
 
 								case "lineWidth":

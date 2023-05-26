@@ -172,6 +172,24 @@ export class FeatureCollection {
 		return Object.keys(this.featList[p_layerkey]).length;
 	}
 
+	filteredFeatCount(p_layerkey, opt_filterfunc) {
+		
+		let ret = null;
+
+		if (opt_filterfunc) {
+			ret = 0;
+			for (let fk in this.featList[p_layerkey]) {
+				if (opt_filterfunc(null, this.featList[p_layerkey][fk].a)) {
+					ret++;
+				}
+			}
+		} else {
+			ret = Object.keys(this.featList[p_layerkey]).length;
+		}
+
+		return ret;
+	}	
+
 	emptyLayer(p_layerkey) {
 		if (this.featList[p_layerkey] !== undefined) {
 			this.featList[p_layerkey] = {};

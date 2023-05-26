@@ -299,6 +299,11 @@ const featureLayersMixin = (Base) => class extends Base {
 	featCount() {
 		return this._currFeatures.featCount(this.key);
 	}
+
+	filteredFeatCount(opt_filterfunc) {
+		return this._currFeatures.filteredFeatCount(this.key, opt_filterfunc);
+	}	
+
 }
 
 // no feature mgmt, no attributes

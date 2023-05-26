@@ -198,13 +198,11 @@ function drawTOCSymb(p_mapctx, p_lyr, p_ctx, p_symbxcenter, p_cota, p_vert_step,
 
 	try {
 
-		let dofill = true, markersize;
+		let markersize;
 		if (opt_varstlesymb != null && opt_varstlesymb["fillStyle"] !== undefined) {
 			p_ctx.fillStyle = opt_varstlesymb["fillStyle"];
 		} else if (p_lyr["default_symbol"]["fillStyle"] !== undefined) {
 			p_ctx.fillStyle = p_lyr["default_symbol"]["fillStyle"];
-		} else {
-			dofill = false;
 		}
 
 		if (opt_varstlesymb != null && opt_varstlesymb["strokeStyle"] !== undefined) {
@@ -418,17 +416,14 @@ export class TOC  extends MapPrintInRect {
 					if (lyr["varstyles_symbols"] === undefined || lyr["varstyles_symbols"].length == 0) {
 						grcota = 2 + cota - 0.5 * this.varstylePX;
 						drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, step);	
-					}
-
-					if (lyr["varstyles_symbols"] !== undefined) {
-						ctx.fillText(lbl, txleft, cota);	
-					} else {
 						ctx.fillText(lbl, indent_txleft, cota);	
+					} else {
+						ctx.fillText(lbl, txleft, cota);	
 					}
 
 					//console.log(lyr["label"], ">> _currFeatures <<", lyr.featCount());
 
-					if (lyr["varstyles_symbols"] !== undefined) {
+					if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
 
 						// console.log("334:", lyr["varstyles_symbols"] )
 						ctx.font = `${this.varstylePX}px ${this.fontfamily}`;
@@ -438,6 +433,12 @@ export class TOC  extends MapPrintInRect {
 								varstyle_caption = I18n.capitalize(lyr.msgsdict[lang][vs.key]);
 							} else {
 								varstyle_caption = I18n.capitalize(vs.key);
+							}
+
+							if (lyr.filteredFeatCount(vs.func) > 0) {
+								ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_ACTIVECOLOR;
+							} else {
+								ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_INACTIVECOLOR;
 							}
 		
 							grcota = 2 + cota + 0.5 * GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
