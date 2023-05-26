@@ -294,8 +294,10 @@ export class TOC  extends MapPrintInRect {
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		ctx.save();
 
+		ctx.clearRect(this.left-2, this.top-2, this.boxw+4, this.boxh+4); 
+
 		// cal width
-		let w, lbl, varstyle_caption, lang, max_lbl_w = 0;
+		let lbl, lyr_labels={}, lyr_fc = {}, varstyle_caption, lang, max_lbl_w = 0;
 
 		for (const lyr of this.tocmgr.layers) {
 			if (lyr["label"] !== undefined && lyr["label"] != "none") {
@@ -305,13 +307,16 @@ export class TOC  extends MapPrintInRect {
 				else
 					lbl = "(sem etiqueta)";	
 
+				lyr_fc[lyr.key] = lyr.featCount();
+				lyr_labels[lyr.key] = `${lbl} [${lyr_fc[lyr.key]}]`; 
+
 				ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
 				lang = (new I18n(lyr.msgsdict)).getLang();
 
 				if (lyr["varstyles_symbols"] !== undefined) {
-					max_lbl_w = Math.max(max_lbl_w, ctx.measureText(lbl).width);
+					max_lbl_w = Math.max(max_lbl_w, ctx.measureText(lyr_labels[lyr.key]).width);
 				} else {
-					max_lbl_w = Math.max(max_lbl_w, this.leftcol_width + ctx.measureText(lbl).width);
+					max_lbl_w = Math.max(max_lbl_w, this.leftcol_width + ctx.measureText(lyr_labels[lyr.key]).width);
 				}
 
 				for (const vs of lyr["varstyles_symbols"]) {
@@ -331,7 +336,7 @@ export class TOC  extends MapPrintInRect {
 		// this.leftcol_width is merged when necessary, in max_lbl_w
 		this.boxw = max_lbl_w + 2 * this.margin_offset;
 
-		let grcota, cota, count, lyr, txleft, indent_txleft, step, mapdims = [];
+		let grcota, cota, maxcota, count, lyr, txleft, indent_txleft, step, mapdims = [];
 		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
 
 		this.left = mapdims[0] - (this.boxw + this.margin_offset);
@@ -347,6 +352,7 @@ export class TOC  extends MapPrintInRect {
 
 			// Measure height
 			count = 0;
+			maxcota = 0;
 			cota = 0;
 			for (let li=this.tocmgr.layers.length-1; li>=0; li--) {
 
@@ -371,11 +377,12 @@ export class TOC  extends MapPrintInRect {
 				}
 
 			}
-			this.boxh = cota + this.margin_offset;
+			maxcota = cota;
+			this.boxh = maxcota + this.margin_offset;
 
 			// background
 			
-			ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
+			// ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
 			ctx.fillStyle = this.fillStyleBack;
 			ctx.fillRect(this.left, this.top, this.boxw, this.boxh);
 			
@@ -395,10 +402,7 @@ export class TOC  extends MapPrintInRect {
 					
 					count++;
 
-					if (lyr["label"] !== undefined && lyr["label"] != "none")
-						lbl = p_mapctx.i18n.msg(lyr["label"]);
-					else
-						lbl = "(sem etiqueta)";					
+					lbl = lyr_labels[lyr.key];					
 
 					if (count == 1) {
 						cota = 2* this.margin_offset + this.normalszPX;
