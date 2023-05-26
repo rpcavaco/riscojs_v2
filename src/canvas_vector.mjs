@@ -147,12 +147,12 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	canvasKeyLabels = 'labels';
 	default_symbol;	
 	varstyles_symbols = [];
-	fillflag = false;
-	strokeflag = false;
 	msgsdict = {};
 	maptipfields = {}; // 'add' and 'remove'
 	infocfg = {};
+	// _gfctx, _gfctxlbl, _currentsymb has underscore to protect from automatic attribute collection from config files
 	_gfctx;  // current graphics context to be always updated at each refreshing / drawing
+	_gfctxlbl;
 	_currentsymb;
 
 	_grabGf2DCtx(p_mapctx, b_forlabel, opt_attrs, opt_alt_canvaskeys, opt_symbs) {
@@ -168,6 +168,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			canvaskeyLabels = this.canvasKeyLabels;
 		}
 
+		// _gfctx has underscore to protect from automatic attribute collection from config files
 		try {
 			this._gfctx = p_mapctx.renderingsmgr.getDrwCtx(canvaskey, '2d');
 			this._gfctx.save();
@@ -184,10 +185,9 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			// console.log("set _currentsymb A:", this.key, opt_symbs);
 		} else {
 			this._currentsymb = this.default_symbol;
-			//console.log("set _currentsymb B:", this.key, this._currentsymb);
 			if (this["varstyles_symbols"]!==undefined && opt_attrs) {
 				for (let vi=0; vi<this.varstyles_symbols.length; vi++) {										
-					if (this.varstyles_symbols[vi].func(p_mapctx.getScale(), opt_attrs)) {
+					if (this.varstyles_symbols[vi]["func"] !== undefined && this.varstyles_symbols[vi].func(p_mapctx.getScale(), opt_attrs)) {
 						this._currentsymb = this.varstyles_symbols[vi];
 						//console.log("set _currentsymb C:", this.key, this._currentsymb);
 						break;
@@ -198,11 +198,14 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		if (b_forlabel) {
 
-			this.strokeflag = false;
+
+			this._currentsymb.setLabelStyle(this._gfctx);
+
+			//this.strokeflag = false;
 	
 			if (this._currentsymb.labelFillStyle !== undefined && this._currentsymb.labelFillStyle.toLowerCase() !== "none") {
 				this._gfctxlbl.fillStyle = this._currentsymb.labelFillStyle;
-				this.fillflag = true;
+				//this.fillflag = true;
 			}	
 
 			let fontface='Helvetica', fntsz = 14;
@@ -218,9 +221,11 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	
 		} else {
 
+			this._currentsymb.setStyle(this._gfctx);
+
 			if (this._currentsymb.strokeStyle !== undefined && this._currentsymb.strokeStyle.toLowerCase() !== "none") {
 				this._gfctx.strokeStyle = this._currentsymb.strokeStyle;
-				this.strokeflag = true;
+				//this.strokeflag = true;
 			}
 	
 			if (this._currentsymb.lineWidth !== undefined) {
@@ -233,8 +238,9 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	
 			if (this._currentsymb.fillStyle !== undefined && this._currentsymb.fillStyle.toLowerCase() !== "none") {
 				this._gfctx.fillStyle = this._currentsymb.fillStyle;
-				this.fillflag = true;
+				//this.fillflag = true;
 			}
+
 		}
 	
 		//console.log(">>", strokeflag, fillflag);
@@ -285,11 +291,11 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			throw e;
 		}
 
-		if (this.strokeflag) {
+		if (this._currentsymb.toStroke) {
 			this._gfctx.stroke();
 		}
 
-		if (this.fillflag) {
+		if (this._currentsymb.toFill) {
 			this._gfctx.fill();
 		}
 
@@ -379,12 +385,12 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 			if (ret) {
 
-				if (this.strokeflag) {
+				if (this._currentsymb.toStroke) {
 					this._gfctx.stroke();
 				}
 
 				if (["poly", "point"].indexOf(this.geomtype) >= 0) {
-					if (this.fillflag) {
+					if (this._currentsymb.toFill) {
 						this._gfctx.fill();
 					}
 				}
@@ -745,7 +751,7 @@ export class CanvasGraticuleLayer extends canvasVectorMethodsMixin(GraticuleLaye
 
 		const ok = this.grabGf2DCtx(p_mapctxt);
 
-		if (ok && !this.strokeflag && !this.fillflag) {
+		if (ok && !this._currentsymb.toStroke && !this._currentsymb.toFill) {
 			throw new Error(`Layer ${this.key}, no 'dostroke' and no 'dofill' flags, nothin to draw`);
 		}
 
@@ -755,10 +761,10 @@ export class CanvasGraticuleLayer extends canvasVectorMethodsMixin(GraticuleLaye
 				this._gfctx.moveTo(p_coords[0], p_coords[1]);
 				this._gfctx.lineTo(p_coords[2], p_coords[3]);
 
-				if (this.strokeflag) {
+				if (this._currentsymb.toStroke) {
 					this._gfctx.stroke();
 				};
-				if (this.fillflag) {
+				if (this._currentsymb.toFill) {
 					this._gfctx.fill();
 				};
 
@@ -780,7 +786,7 @@ export class CanvasPointGridLayer extends canvasVectorMethodsMixin(PointGridLaye
 
 		const ok = this.grabGf2DCtx(p_mapctxt);
 
-		if (ok && !this.strokeflag && !this.fillflag) {
+		if (ok && !this._currentsymb.toStroke && !this._currentsymb.toFill) {
 			throw new Error(`Layer ${this.key}, no 'stroke' and no 'fill' flags, nothin to draw`);
 		}
 
@@ -806,7 +812,7 @@ export class CanvasAreaGridLayer extends canvasVectorMethodsMixin(AreaGridLayer)
 
 		const ok = this.grabGf2DCtx(p_mapctxt);
 
-		if (ok && !this.strokeflag && !this.fillflag) {
+		if (ok && !this._currentsymb.toStroke && !this._currentsymb.toFill) {
 			throw new Error(`Layer ${this.key}, no 'stroke' and no 'fill' flags, nothin to draw`);
 		}
 
@@ -826,10 +832,10 @@ export class CanvasAreaGridLayer extends canvasVectorMethodsMixin(AreaGridLayer)
 					}
 					cnt++;
 				}
-				if (this.strokeflag) {
+				if (this._currentsymb.toStroke) {
 					this._gfctx.stroke();
 				};
-				if (this.fillflag) {
+				if (this._currentsymb.toFill) {
 					this._gfctx.fill();
 				};
 			} catch(e) {

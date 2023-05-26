@@ -192,7 +192,7 @@ export class ControlsBox extends MapPrintInRect {
 	
 }
 
-function drawTOCSymb(p_mapctx, p_lyr, p_ctx, p_symbxcenter, p_cota, opt_varstlesymb) {
+function drawTOCSymb(p_mapctx, p_lyr, p_ctx, p_symbxcenter, p_cota, p_vert_step, opt_varstlesymb) {
 
 	p_ctx.save();
 
@@ -229,27 +229,19 @@ function drawTOCSymb(p_mapctx, p_lyr, p_ctx, p_symbxcenter, p_cota, opt_varstles
 			markersize = 2;
 		}
 
-		//console.log("p_lyr:", p_lyr);
+		const symb = (opt_varstlesymb ? opt_varstlesymb : p_lyr["default_symbol"]);
 
-		if (p_lyr.geomtype == "point") {
-			switch (p_lyr.marker) {
-				case "circle":
-
-					const sclval = p_mapctx.getScale();
-					const dim = markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
-			
-					p_ctx.beginPath();
-					p_ctx.arc(p_symbxcenter, p_cota, dim, 0, Math.PI * 2, true);
-			
-					if (dofill) {
-						p_ctx.fill();
-					}
-			
-					p_ctx.stroke();
-				
-
-			}
+		if (symb == null) {
+			throw new Error(`Missing symb for ${p_lyr.key}`);
 		}
+		if (symb['drawfreeSymb'] === undefined) {
+			console.trace(`[WARN] No 'drawfreeSymb' method in ${JSON.stringify(symb)}`);
+		} else {
+			symb.setStyle(p_ctx);
+			symb.drawfreeSymb(p_mapctx, p_ctx, [p_symbxcenter, p_cota], p_vert_step);
+		}
+
+		//console.log("p_lyr:", p_lyr);
 
 	} catch(e) {
 		console.error(e);
@@ -262,14 +254,13 @@ function drawTOCSymb(p_mapctx, p_lyr, p_ctx, p_symbxcenter, p_cota, opt_varstles
 
 export class TOC  extends MapPrintInRect {
 
-	/*left;
+	left;
 	boxh;
 	boxw;
 	top;
 	fillStyleBack; 
 	fillStyleFront; 
 	font;
-	canvaslayer = 'service_canvas'; */
 	tocmgr;
 	leftcol_width;
 	print_attempts;
@@ -285,6 +276,7 @@ export class TOC  extends MapPrintInRect {
 		this.normalszPX = GlobalConst.CONTROLS_STYLES.TOC_NORMALSZ_PX;
 		this.varstylePX = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLESZ_PX;
 		this.fontfamily = GlobalConst.CONTROLS_STYLES.TOC_FONTFAMILY;
+		this.canvaslayer = 'service_canvas'; 
 
 		this.left = 600;
 		this.top = this.margin_offset;
@@ -329,7 +321,7 @@ export class TOC  extends MapPrintInRect {
 
 		this.boxw = this.leftcol_width + max_lbl_w + 2 * this.margin_offset;
 
-		let grcota, cota, count, lyr, txleft, sclval, mapdims = [];
+		let grcota, cota, count, lyr, txleft, step, mapdims = [];
 		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
 
 		this.left = mapdims[0] - (this.boxw + this.margin_offset);
@@ -382,6 +374,8 @@ export class TOC  extends MapPrintInRect {
 			
 			count = 0;
 			cota = 0;
+			step = GlobalConst.CONTROLS_STYLES.TOC_SEPARATION_FACTOR * this.normalszPX;
+
 			for (let li=this.tocmgr.layers.length-1; li>=0; li--) {
 
 				lyr = this.tocmgr.layers[li]; 
@@ -393,7 +387,7 @@ export class TOC  extends MapPrintInRect {
 					if (count == 1) {
 						cota = 2* this.margin_offset + this.normalszPX;
 					} else {
-						cota += GlobalConst.CONTROLS_STYLES.TOC_SEPARATION_FACTOR * this.normalszPX;
+						cota += step;
 					}
 
 					if (lyr.featCount() == 0) {
@@ -405,7 +399,7 @@ export class TOC  extends MapPrintInRect {
 
 					if (lyr["varstyles_symbols"] === undefined || lyr["varstyles_symbols"].length == 0) {
 						grcota = 2 + cota - 0.5 * this.varstylePX;
-						drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota);	
+						drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, step);	
 					}
 
 					ctx.fillText(lyr["label"], txleft, cota);	
@@ -425,7 +419,7 @@ export class TOC  extends MapPrintInRect {
 							}
 		
 							grcota = 2 + cota + 0.5 * GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
-							drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota, vs);							
+							drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota, step, vs);							
 							cota += GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
 							ctx.fillText(varstyle_caption, txleft, cota);
 						}

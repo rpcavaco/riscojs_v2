@@ -46,9 +46,18 @@
 - OK - tooltips nos controles
 - OK - aumentar controles no mobile
 
+- >>> VERIFICAR colocar setStyle de Symbol em uso na simbolização das features das layers vetoriais
+		- 'caçar' strokeFlags e fillFlags - deverão ser inúteis
+
+- limitar tamanho máximo símbolo marker a p_vert_step
+
 - toggle controls - visual cue - user não sabe que controle é togglable
-- ?? remover necessidade de fazer new ??? (k nota era esta ?)
+
 - toggle cor do raster de fundo
+
+- symbolo de linha na TOC - validar
+
+- interatividade de TOC
 
 
 

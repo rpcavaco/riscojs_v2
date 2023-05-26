@@ -198,15 +198,15 @@ export class CanvasLocLayerClass extends canvasVectorMethodsMixin(LocLayerClass)
 		const ok = this.grabGf2DCtx(p_mapctxt);
 
 		function strokeFill(p_this) {
-			if (p_this.strokeflag) {
+			if (p_this._currentsymb.toStroke) {
 				p_this._gfctx.stroke();
 			};
-			if (p_this.fillflag) {
+			if (this._currentsymb.toFill) {
 				p_this._gfctx.fill();
 			};
 		}
 
-		if (ok && !this.strokeflag && !this.fillflag) {
+		if (ok && !this._currentsymb.toStroke && !this._currentsymb.toFill) {
 			throw new Error(`Layer ${this.key}, no 'stroke' and no 'fill' flags, nothin to draw`);
 		}
 

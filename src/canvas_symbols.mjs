@@ -1,34 +1,69 @@
 import {GlobalConst} from './constants.js';
 
-/*
-class LogicOperation {
-
-	constructor(p_fname, p_value, p_op, opt_prevop) {
-		this.fieldName = p_fname;
-		this.fieldValue = p_value;
-		this.prevOperator = opt_prevop;
-		this.operator = p_op;
-	}
-}
-
-class WhereClause {
-	constructor() {
-		this.ops = []; // list of LogicOperation
-	}
-	addOp(p_fname, p_value, p_op, opt_prevop) {
-		this.ops.append(new LogicOperation(p_fname, p_value, p_op, opt_prevop))
-	}
-}
-*/
 
 class Symbol {
+
 	greaterOrEqualScale = Number.MAX_SAFE_INTEGER; // limit above the current scale
 	func = "none";
 	key = "default";
+	#toStroke = false;
+	#toFill = false;
 	/* constructor() {
 		this.whereClause = new WhereClause();
 	} */
-		
+
+	get toStroke() {
+		return this.#toStroke;
+	}
+
+	get toFill() {
+		return this.#toFill;
+	}	
+
+	setStyle(p_ctx) {
+
+		if (this.strokeStyle !== undefined && this.strokeStyle.toLowerCase() !== "none") {
+			this.#toStroke = true
+			p_ctx.strokeStyle = this.strokeStyle;
+		}
+
+		if (this.lineWidth !== undefined) {
+			p_ctx.lineWidth = this.lineWidth;
+		}	
+
+		if (this.lineDash !== undefined && this.lineDash.length > 0) {
+			p_ctx.setLineDash(this.lineDash);
+		}	
+
+		if (this.fillStyle !== undefined && this.fillStyle.toLowerCase() !== "none") {
+			this.#toFill = true
+			p_ctx.fillStyle = this.fillStyle;
+		}
+	}
+
+	setLabelStyle(p_ctx) {
+
+		this.#toStroke = false;
+
+		if (this.labelFillStyle !== undefined && this.labelFillStyle.toLowerCase() !== "none") {
+			this.#toFill = true
+			p_ctx.fillStyle = this.labelFillStyle;
+		}	
+
+		let fontface='Helvetica', fntsz = 14;
+		if (this.labelFontSizePX !== undefined) {   
+			fntsz = this.labelFontSizePX;
+		}
+
+		if (this.labelFontFace !== undefined) {
+			fontface = this.labelFontFace;
+		}			
+
+		p_ctx.font = `${fntsz}px ${fontface}`;			
+	}	
+
+
+
 }
 
 const strokeSymbolMixin = (Base) => class extends Base {
@@ -59,15 +94,69 @@ const fillSymbolMixin = (Base) => class extends Base {
 }
 
 export class CanvasLineSymbol extends labelSymbolMixin(strokeSymbolMixin(Symbol)) { 
-	constructor() {
+	constructor(opt_variablesymb_idx) {
 		super();
+		if (opt_variablesymb_idx != null) {
+			this._variablesymb_idx = opt_variablesymb_idx;
+		} else {
+			this._variablesymb_idx = -1;
+		}
 	}
+	get variablesymb_idx() {
+		return this._variablesymb_idx;
+	}
+
+	drawfreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step) {
+
+		let hw = 10;
+		let x = p_symbcenter[0] - hw;
+		let w = 2 * hw;
+
+		let h = p_vert_step / 3;
+		let y = p_symbcenter[1] - (h/2);
+
+		if (this["strokeStyle"] !== undefined && this["strokeStyle"].toLowerCase() !== "none") {
+			p_ctx.beginPath();
+			p_ctx.moveTo(x, y+h);
+			p_ctx.lineTo(x+0.25*w, y);
+			p_ctx.lineTo(x+0.75*w, y+h);
+			p_ctx.lineTo(x+w, y);
+			p_ctx.stroke();
+		}
+	}	
 }
 
 export class CanvasPolygonSymbol extends labelSymbolMixin(fillSymbolMixin(strokeSymbolMixin(Symbol))) { 
-	constructor() {
+	
+	constructor(opt_variablesymb_idx) {
 		super();
+		if (opt_variablesymb_idx != null) {
+			this._variablesymb_idx = opt_variablesymb_idx;
+		} else {
+			this._variablesymb_idx = -1;
+		}
 	}
+	get variablesymb_idx() {
+		return this._variablesymb_idx;
+	}	
+
+	drawfreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step) {
+
+		let hw = 10;
+		let x = p_symbcenter[0] - hw;
+		let w = 2 * hw;
+
+		let h = p_vert_step / 3;
+		let y = p_symbcenter[1] - (h/2);
+
+		if (this["fillStyle"] !== undefined && this["fillStyle"].toLowerCase() !== "none") {
+			p_ctx.fillRect(x, y, w, h);
+		}
+		if (this["strokeStyle"] !== undefined && this["strokeStyle"].toLowerCase() !== "none") {
+			p_ctx.strokeRect(x, y, w, h);
+		}
+	}
+
 }
 
 class MarkerSymbol extends labelSymbolMixin(Symbol) {
@@ -128,6 +217,54 @@ export class CanvasCircle extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol
 
 		p_layer._gfctx.beginPath();
 		p_layer._gfctx.arc(p_coords[0], p_coords[1], dim, 0, Math.PI * 2, true);
+
+		
+		if (this["fillStyle"] !== undefined && this["fillStyle"].toLowerCase() !== "none") {
+			p_layer._gfctx.fill();
+		}
+
+		if (this["strokeStyle"] !== undefined && this["strokeStyle"].toLowerCase() !== "none") {
+			p_layer._gfctx.stroke();
+		}
+
+	}
+
+	drawfreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step) {
+
+		const sclval = p_mapctx.getScale();
+		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
+
+		// TODO -  comparar dim com p_vert_step, limitar dim máximo a p_vert_step
+
+		p_ctx.beginPath();
+		p_ctx.arc(p_symbcenter[0], p_symbcenter[1], dim, 0, Math.PI * 2, true);
+
+		if (this["fillStyle"] !== undefined && this["fillStyle"].toLowerCase() !== "none") {
+			p_ctx.fill();
+		}
+		if (this["strokeStyle"] !== undefined && this["strokeStyle"].toLowerCase() !== "none") {
+			p_ctx.stroke();
+		}
+	}
+}
+
+export class CanvasDiamond extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol)) { 
+
+	constructor(opt_variablesymb_idx) {
+		super(opt_variablesymb_idx);
+	}
+	drawsymb(p_mapctxt, p_layer, p_coords, opt_feat_id) {
+
+		const sclval = p_mapctxt.getScale();
+		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
+
+		p_layer._gfctx.beginPath();
+
+		p_layer._gfctx.moveTo(p_coords[0]-dim, p_coords[1]);
+		p_layer._gfctx.lineTo(p_coords[0], p_coords[1]+dim);
+		p_layer._gfctx.lineTo(p_coords[0]+dim, p_coords[1]);
+		p_layer._gfctx.lineTo(p_coords[0], p_coords[1]-dim);
+		p_layer._gfctx.closePath();
 
 		if (this["fillStyle"] !== undefined) {
 			p_layer._gfctx.fill();

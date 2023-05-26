@@ -2,7 +2,7 @@
 
 import {CanvasGraticuleLayer, CanvasPointGridLayer, CanvasAreaGridLayer, CanvasAGSQryLayer, CanvasRiscoFeatsLayer} from './canvas_vector.mjs';
 import {CanvasWMSLayer, CanvasAGSMapLayer} from  './canvas_raster.mjs';
-import {CanvasLineSymbol, CanvasPolygonSymbol, CanvasVertCross, CanvasCircle} from './canvas_symbols.mjs';
+import {CanvasLineSymbol, CanvasPolygonSymbol, CanvasVertCross, CanvasCircle, CanvasDiamond} from './canvas_symbols.mjs';
 
 
 export const layerClassAdapter = {
@@ -23,6 +23,7 @@ export const symbClassAdapter = {
 		"line": CanvasLineSymbol,
 		"poly": CanvasPolygonSymbol,
 		"vertcross": CanvasVertCross,
-		"circle": CanvasCircle					
+		"circle": CanvasCircle,
+		"diamond": CanvasDiamond						
 	}
 };

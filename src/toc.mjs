@@ -173,7 +173,7 @@ export class TOCManager {
 					scaneables.push(currentLayer.default_symbol);	
 					
 					if (p_layercfg_entry.varstyles) {
-						for (let vi=0; vi<p_layercfg_entry.varstyles.length; vi++) {										
+						for (let vi=0; vi<p_layercfg_entry.varstyles.length; vi++) {	
 							currentLayer.varstyles_symbols[vi] = new DynamicSymbol(this.mode, classkey, vi);
 							scaneables.push(currentLayer.varstyles_symbols[vi]);
 						}
