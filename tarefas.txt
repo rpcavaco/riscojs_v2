@@ -47,9 +47,6 @@
 - OK - aumentar controles no mobile
 - >> label do tema não está internacionalizada - falta tooltip
 
-- >>> VERIFICAR colocar setStyle de Symbol em uso na simbolização das features das layers vetoriais
-		- 'caçar' strokeFlags e fillFlags - deverão ser inúteis
-
 - limitar tamanho máximo símbolo marker a p_vert_step
 
 - toggle controls - visual cue - user não sabe que controle é togglable

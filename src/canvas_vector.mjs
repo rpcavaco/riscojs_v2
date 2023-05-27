@@ -200,8 +200,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 
 			this._currentsymb.setLabelStyle(this._gfctx);
-
-			//this.strokeflag = false;
 	
 			if (this._currentsymb.labelFillStyle !== undefined && this._currentsymb.labelFillStyle.toLowerCase() !== "none") {
 				this._gfctxlbl.fillStyle = this._currentsymb.labelFillStyle;
@@ -225,7 +223,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 			if (this._currentsymb.strokeStyle !== undefined && this._currentsymb.strokeStyle.toLowerCase() !== "none") {
 				this._gfctx.strokeStyle = this._currentsymb.strokeStyle;
-				//this.strokeflag = true;
 			}
 	
 			if (this._currentsymb.lineWidth !== undefined) {
@@ -243,7 +240,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		}
 	
-		//console.log(">>", strokeflag, fillflag);
 		return true;
 	}
 
@@ -291,12 +287,12 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			throw e;
 		}
 
-		if (this._currentsymb.toStroke) {
-			this._gfctx.stroke();
-		}
-
 		if (this._currentsymb.toFill) {
 			this._gfctx.fill();
+		}
+
+		if (this._currentsymb.toStroke) {
+			this._gfctx.stroke();
 		}
 
 		return true;	
@@ -385,15 +381,17 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 			if (ret) {
 
-				if (this._currentsymb.toStroke) {
-					this._gfctx.stroke();
-				}
-
 				if (["poly", "point"].indexOf(this.geomtype) >= 0) {
 					if (this._currentsymb.toFill) {
 						this._gfctx.fill();
 					}
 				}
+
+				if (this._currentsymb.toStroke) {
+					this._gfctx.stroke();
+				}
+
+
 			}
 
 		}
@@ -761,11 +759,11 @@ export class CanvasGraticuleLayer extends canvasVectorMethodsMixin(GraticuleLaye
 				this._gfctx.moveTo(p_coords[0], p_coords[1]);
 				this._gfctx.lineTo(p_coords[2], p_coords[3]);
 
-				if (this._currentsymb.toStroke) {
-					this._gfctx.stroke();
-				};
 				if (this._currentsymb.toFill) {
 					this._gfctx.fill();
+				};
+				if (this._currentsymb.toStroke) {
+					this._gfctx.stroke();
 				};
 
 
@@ -832,12 +830,14 @@ export class CanvasAreaGridLayer extends canvasVectorMethodsMixin(AreaGridLayer)
 					}
 					cnt++;
 				}
-				if (this._currentsymb.toStroke) {
-					this._gfctx.stroke();
-				};
+
 				if (this._currentsymb.toFill) {
 					this._gfctx.fill();
 				};
+				if (this._currentsymb.toStroke) {
+					this._gfctx.stroke();
+				};
+
 			} catch(e) {
 				throw e;
 			} finally {

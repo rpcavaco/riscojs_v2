@@ -198,35 +198,6 @@ function drawTOCSymb(p_mapctx, p_lyr, p_ctx, p_symbxcenter, p_cota, p_vert_step,
 
 	try {
 
-		let markersize;
-		if (opt_varstlesymb != null && opt_varstlesymb["fillStyle"] !== undefined) {
-			p_ctx.fillStyle = opt_varstlesymb["fillStyle"];
-		} else if (p_lyr["default_symbol"]["fillStyle"] !== undefined) {
-			p_ctx.fillStyle = p_lyr["default_symbol"]["fillStyle"];
-		}
-
-		if (opt_varstlesymb != null && opt_varstlesymb["strokeStyle"] !== undefined) {
-			p_ctx.strokeStyle = opt_varstlesymb["strokeStyle"];
-		} else {
-			p_ctx.strokeStyle = p_lyr["default_symbol"]["strokeStyle"];
-		}
-
-		if (opt_varstlesymb != null && opt_varstlesymb["lineWidth"] !== undefined) {
-			p_ctx.lineWidth = opt_varstlesymb["lineWidth"];
-		} else {
-			p_ctx.lineWidth = p_lyr["default_symbol"]["lineWidth"];
-		}
-	
-		if (opt_varstlesymb != null && opt_varstlesymb["markersize"] !== undefined) {
-			markersize = opt_varstlesymb["markersize"];
-		} else {
-			markersize = p_lyr["default_symbol"]["markersize"];
-		}
-
-		if (markersize === undefined) {
-			markersize = 2;
-		}
-
 		const symb = (opt_varstlesymb ? opt_varstlesymb : p_lyr["default_symbol"]);
 
 		if (symb == null) {
@@ -432,7 +403,7 @@ export class TOC  extends MapPrintInRect {
 						cota += step;
 					}
 
-					if (lyr.featCount() == 0) {
+					if (lyr_fc[lyr.key] == 0) {
 						ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_INACTIVECOLOR;
 					}else {
 						ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_ACTIVECOLOR;
@@ -441,7 +412,7 @@ export class TOC  extends MapPrintInRect {
 
 					if (lyr["varstyles_symbols"] === undefined || lyr["varstyles_symbols"].length == 0) {
 						grcota = 2 + cota - 0.5 * this.varstylePX;
-						drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, step);	
+						drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota);	
 						ctx.fillText(lbl, indent_txleft, cota);	
 					} else {
 						ctx.fillText(lbl, txleft, cota);	
@@ -463,7 +434,7 @@ export class TOC  extends MapPrintInRect {
 								ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_INACTIVECOLOR;
 							}
 		
-							grcota = 2 + cota + 0.5 * GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
+							grcota = 4 + cota + 0.5 * GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
 							drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota, step, vs);							
 							cota += GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
 							ctx.fillText(varstyle_caption, indent_txleft, cota);
