@@ -673,9 +673,9 @@ class BasicCtrlBox extends ControlsBox {
 					imgh.decoding = "sync";
 
 					if (p_toggle_flag) {
-						imgsrc = p_basic_config.gpstrackcontrol.symb.replace(/=%22black%22/g, `=%22${p_ctrlsbox.strokeStyleFront}%22`);
+						imgsrc = p_global_constants.CONTROLS_STYLES.HOMESYMB.replace(/=%22black%22/g, `=%22${p_ctrlsbox.strokeStyleFront}%22`);
 					} else {
-						imgsrc = p_basic_config.gpstrackcontrol.symb.replace(/=%22black%22/g, `=%22${p_ctrlsbox.strokeStyleFrontOff}%22`);
+						imgsrc = p_global_constants.CONTROLS_STYLES.HOMESYMB.replace(/=%22black%22/g, `=%22${p_ctrlsbox.strokeStyleFrontOff}%22`);
 					}
 
 					imgh.src = imgsrc;
