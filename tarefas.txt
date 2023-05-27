@@ -45,11 +45,12 @@
 - OK - gaps entre Controles, em mobile ficam +  separados
 - OK - tooltips nos controles
 - OK - aumentar controles no mobile
+- OK - toggle controls - visual cue - user não sabe que controle é togglable
 - >> label do tema não está internacionalizada - falta tooltip
 
 - limitar tamanho máximo símbolo marker a p_vert_step
 
-- toggle controls - visual cue - user não sabe que controle é togglable
+
 
 - toggle cor do raster de fundo
 

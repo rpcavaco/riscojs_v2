@@ -158,6 +158,8 @@ var GlobalConst = {
 
 		BCKGRD: "rgb(216, 216, 216)",
 		COLOR: "black",
+		BCKGRDOFF: "rgb(160, 160, 160)",
+		COLOROFF: "rgb(80, 80, 80)",
 		OFFSET: 10,
 		SIZE: 30,
 		STROKEWIDTH: 1,

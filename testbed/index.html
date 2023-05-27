@@ -161,12 +161,21 @@
 
 			if (p_this.instances["basiccontrolsbox"] !== undefined) {
 
-				p_this.instances["basiccontrolsbox"].addControl("gpspt", //p_drawface_func, p_endevent_func, p_mmove_func)
-					function(p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants) {
+				p_this.instances["basiccontrolsbox"].addControl("gpspt", //togglable, p_drawface_func, p_endevent_func, p_mmove_func)
+					false,
+					function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_toggle_flag) {
+
+						let imgsrc;
 						const imgh = new Image();
 						imgh.decoding = "sync";
-						imgh.src = p_basic_config.gpsposcontrol.symb;
 
+						if (p_toggle_flag) {
+							imgsrc = p_basic_config.gpstrackcontrol.symb.replace(/=%22black%22/g, `=%22${p_ctrlsbox.strokeStyleFront}%22`);
+						} else {
+							imgsrc = p_basic_config.gpstrackcontrol.symb.replace(/=%22black%22/g, `=%22${p_ctrlsbox.strokeStyleFrontOff}%22`);
+						}
+
+						imgh.src = imgsrc;
 						imgh.decode()
 						.then(() => {
 							p_ctx.drawImage(imgh, p_left + ((p_global_constants.CONTROLS_STYLES.SIZE - p_basic_config.gpsposcontrol.symbwid) / 2), p_top);
@@ -176,6 +185,7 @@
 						p_this.instances["geolocation"].geolocPinpoint();
 						const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 						topcnv.style.cursor = "default";
+						return true; // no toggle
 					},
 					function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
 						const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
@@ -186,21 +196,31 @@
 				);
 
 				p_this.instances["basiccontrolsbox"].addControl("gpstrack", //p_drawface_func, p_endevent_func, p_mmove_func)
-					function(p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants) {
+					true,
+					function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_toggle_flag) {
 
+						let imgsrc;
 						const imgh = new Image();
 						imgh.decoding = "sync";
-						imgh.src = p_basic_config.gpstrackcontrol.symb;
 
+						if (p_toggle_flag) {
+							imgsrc = p_basic_config.gpstrackcontrol.symb.replace(/=%22black%22/g, `=%22${p_ctrlsbox.strokeStyleFront}%22`);
+						} else {
+							imgsrc = p_basic_config.gpstrackcontrol.symb.replace(/=%22black%22/g, `=%22${p_ctrlsbox.strokeStyleFrontOff}%22`);
+						}
+
+						imgh.src = imgsrc;
 						imgh.decode()
 						.then(() => {
 							p_ctx.drawImage(imgh, p_left + ((p_global_constants.CONTROLS_STYLES.SIZE - p_basic_config.gpstrackcontrol.symbwid) / 2), p_top);
 						});
 					},
 					function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
-						p_this.instances["geolocation"].toggleGeolocWatch();
+						const ret = p_this.instances["geolocation"].toggleGeolocWatch();
 						const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 						topcnv.style.cursor = "default";
+
+						return ret;
 					},
 					function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
 						const topcnv = p_mapctx.renderingsmgr.getTopCanvas();

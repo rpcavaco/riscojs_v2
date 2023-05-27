@@ -52,6 +52,7 @@ export class ControlsBox extends MapPrintInRect {
 	orientation = "HORIZONTAL";
 	controls_keys = [];
 	controls_funcs = {};
+	controls_toggle_flags = {};
 	controls_prevgaps = {};	
 	tool_manager = null;
 	controls_boxes = {};
@@ -60,6 +61,9 @@ export class ControlsBox extends MapPrintInRect {
 		super();
 		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.BCKGRD; 
 		this.strokeStyleFront = GlobalConst.CONTROLS_STYLES.COLOR;
+		this.fillStyleBackOff = GlobalConst.CONTROLS_STYLES.BCKGRDOFF; 
+		this.strokeStyleFrontOff = GlobalConst.CONTROLS_STYLES.COLOROFF;
+
 		this.strokeWidth = GlobalConst.CONTROLS_STYLES.STROKEWIDTH;
 		this.sz = GlobalConst.CONTROLS_STYLES.SIZE;
 		this.margin_offset = GlobalConst.CONTROLS_STYLES.OFFSET;
@@ -105,7 +109,7 @@ export class ControlsBox extends MapPrintInRect {
 		return h;
 	}	
 
-	addControl(p_key, p_drawface_func, p_endevent_func, p_mmove_func, opt_gap_to_prev) {
+	addControl(p_key, p_togglable, p_drawface_func, p_endevent_func, p_mmove_func, opt_gap_to_prev) {
 		this.controls_keys.push(p_key);
 		this.controls_funcs[p_key] = {
 			"drawface": p_drawface_func,
@@ -115,6 +119,17 @@ export class ControlsBox extends MapPrintInRect {
 		if (opt_gap_to_prev) {
 			this.controls_prevgaps[p_key] = opt_gap_to_prev;
 		}
+
+		this.controls_toggle_flags[p_key] = !p_togglable;
+	}
+
+	changeToggleFlag(p_key, p_toggle_status) {
+		let has_changed = false;
+		if (this.controls_toggle_flags[p_key] != p_toggle_status) {
+			has_changed = true;
+			this.controls_toggle_flags[p_key] = p_toggle_status;
+		}
+		return has_changed;
 	}
 
 	print(p_mapctx) {
@@ -147,15 +162,8 @@ export class ControlsBox extends MapPrintInRect {
 					top = accum + ci * this.boxh + this.top;
 				}
 
-				ctx.clearRect(left, top, this.boxw, this.boxh); 
-				this.controls_boxes[this.controls_keys[ci]] = [left, top, this.boxw, this.boxh];
-				
-				ctx.fillStyle = this.fillStyleBack;
-				ctx.fillRect(left, top, this.boxw, this.boxh);
-				
-				ctx.strokeStyle = this.strokeStyleFront;
+				this.controls_boxes[this.controls_keys[ci]] = [left, top, this.boxw, this.boxh];			
 				ctx.lineWidth = this.strokeWidth;
-				ctx.strokeRect(left, top, this.boxw, this.boxh);
 
 				this.drawControlFace(ctx, this.controls_keys[ci], left, top, this.boxw, this.boxh, p_mapctx.cfgvar["basic"], GlobalConst);
 
@@ -207,7 +215,6 @@ function drawTOCSymb(p_mapctx, p_lyr, p_ctx, p_symbxcenter, p_cota, p_vert_step,
 			console.trace(`[WARN] No 'drawfreeSymb' method in ${JSON.stringify(symb)}`);
 		} else {
 			symb.setStyle(p_ctx);
-			console.log(">>>", p_ctx);
 			symb.drawfreeSymb(p_mapctx, p_ctx, [p_symbxcenter, p_cota], p_vert_step);
 		}
 

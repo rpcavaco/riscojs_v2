@@ -464,6 +464,8 @@ export class GeoLocationMgr {
 
 	toggleGeolocWatch() {
 
+		let ret = false;
+
 		console.info("[GEOLOC] start WATCH")
 
 		if (navigator["geolocation"] !== undefined) {
@@ -493,6 +495,8 @@ export class GeoLocationMgr {
 					this.geoloc.active = true;
 					getGeoLocation(this, true);
 					this.mapctx.getCustomizationObject().messaging_ctrlr.info("Geolocalização iniciada");
+
+					ret = true;
 		
 				/*	}
 				});				*/  
@@ -501,6 +505,8 @@ export class GeoLocationMgr {
 		} else {
 			this.mapctx.getCustomizationObject().messaging_ctrlr.warn("Impossível ativar geolocalização");
 		}
+
+		return ret;
 
 	}
 
@@ -612,7 +618,8 @@ class BasicCtrlBox extends ControlsBox {
 
 		this.controls_funcs = {
 			"zoomout": {
-				"drawface": function(p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants) {
+				"drawface": function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_toggle_flag) {
+
 					p_ctx.beginPath();
 					p_ctx.moveTo(p_left+p_width*0.2, p_top+p_height*0.5);
 					p_ctx.lineTo(p_left+p_width*0.8, p_top+p_height*0.5);
@@ -623,6 +630,8 @@ class BasicCtrlBox extends ControlsBox {
 					p_mapctx.transformmgr.zoomOut(p_basic_config.maxscaleview.scale, p_global_constants.SCALEINOUT_STEP, true);
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 					topcnv.style.cursor = "default";
+
+					return true;
 				},
 				"mmoveevent": function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
 
@@ -633,7 +642,8 @@ class BasicCtrlBox extends ControlsBox {
 				}
 			},
 			"zoomin": {
-				"drawface": function(p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants) {
+				"drawface": function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_toggle_flag) {
+
 					p_ctx.beginPath();
 					p_ctx.moveTo(p_left+p_width*0.2, p_top+p_height*0.5);
 					p_ctx.lineTo(p_left+p_width*0.8, p_top+p_height*0.5);
@@ -645,6 +655,8 @@ class BasicCtrlBox extends ControlsBox {
 					p_mapctx.transformmgr.zoomIn(p_global_constants.MINSCALE, p_global_constants.SCALEINOUT_STEP, true);
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 					topcnv.style.cursor = "default";
+
+					return true;
 				},
 				"mmoveevent": function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
@@ -654,12 +666,19 @@ class BasicCtrlBox extends ControlsBox {
 				}
 			},
 			"home": {
-				"drawface": function(p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants) {
+				"drawface": function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_toggle_flag) {
 
+					let imgsrc;
 					const imgh = new Image();
 					imgh.decoding = "sync";
-					imgh.src = p_global_constants.CONTROLS_STYLES.HOMESYMB;
-			
+
+					if (p_toggle_flag) {
+						imgsrc = p_basic_config.gpstrackcontrol.symb.replace(/=%22black%22/g, `=%22${p_ctrlsbox.strokeStyleFront}%22`);
+					} else {
+						imgsrc = p_basic_config.gpstrackcontrol.symb.replace(/=%22black%22/g, `=%22${p_ctrlsbox.strokeStyleFrontOff}%22`);
+					}
+
+					imgh.src = imgsrc;
 					imgh.decode()
 					.then(() => {
 						p_ctx.drawImage(imgh, p_left + ((p_global_constants.CONTROLS_STYLES.SIZE - p_global_constants.CONTROLS_STYLES.HOMESYMBWID) / 2), p_top);
@@ -669,6 +688,8 @@ class BasicCtrlBox extends ControlsBox {
 					p_mapctx.transformmgr.setScaleCenteredAtPoint(p_basic_config.scale, [p_basic_config.terrain_center[0], p_basic_config.terrain_center[1]], true);
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 					topcnv.style.cursor = "default";
+
+					return true;
 				},
 				"mmoveevent": function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
@@ -676,8 +697,35 @@ class BasicCtrlBox extends ControlsBox {
 
 					ctrToolTip(p_mapctx, p_evt, p_mapctx.i18n.msg('HOME', true));
 				}
-			}							
+			}	
 		}
+
+		this.controls_toggle_flags["zoomout"] = true;
+		this.controls_toggle_flags["zoomin"] = true;
+		this.controls_toggle_flags["home"] = true;
+
+	}
+
+
+	initialDrawingActions(p_ctx, p_control_key, p_toggle_flag) {
+
+		const [left, top, boxw, boxh] = this.controls_boxes[p_control_key];
+
+		p_ctx.clearRect(left, top, boxw, boxh); 
+		
+		if (p_toggle_flag) {
+			p_ctx.fillStyle = this.fillStyleBack;
+		} else {
+			p_ctx.fillStyle = this.fillStyleBackOff;
+		}
+		p_ctx.fillRect(left, top, boxw, boxh);
+		
+		if (p_toggle_flag) {
+			p_ctx.strokeStyle = this.strokeStyleFront;
+		} else {
+			p_ctx.strokeStyle = this.strokeStyleFrontOff;
+		}		
+		p_ctx.strokeRect(left, top, boxw, boxh);
 
 	}
 
@@ -687,12 +735,13 @@ class BasicCtrlBox extends ControlsBox {
 
 		if (this.controls_funcs[p_control_key] !== undefined) {
 			if (this.controls_funcs[p_control_key]["drawface"] !== undefined) {
-				this.controls_funcs[p_control_key]["drawface"](p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants);
+				this.initialDrawingActions(p_ctx, p_control_key, this.controls_toggle_flags[p_control_key]);
+				this.controls_funcs[p_control_key]["drawface"](this, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, this.controls_toggle_flags[p_control_key]);
 			} else {
-				throw new Error(`drawControlFace, missing DRAWFACE control func block for ${p_control_key}`);
+				console.error(`drawControlFace, missing DRAWFACE control func block for ${p_control_key}`);
 			}
 		} else {
-			throw new Error(`drawControlFace, missing control funcs block for ${p_control_key}`);
+			console.error(`drawControlFace, missing control funcs block for ${p_control_key}`);
 		}
 
 	}
@@ -718,7 +767,22 @@ class BasicCtrlBox extends ControlsBox {
 					case 'mouseup':
 
 						if (this.controls_funcs[ctrl_key]["endevent"] !== undefined) {
-							this.controls_funcs[ctrl_key]["endevent"](p_mapctx, p_evt, p_mapctx.cfgvar["basic"], GlobalConst);
+							const ret = this.controls_funcs[ctrl_key]["endevent"](p_mapctx, p_evt, p_mapctx.cfgvar["basic"], GlobalConst);
+							if (this.changeToggleFlag(ctrl_key, ret)) {
+								
+								const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+								ctx.save();
+						
+								try {
+									const [left, top, boxw, boxh] = this.controls_boxes[ctrl_key];
+									this.drawControlFace(ctx, ctrl_key, left, top, boxw, boxh, p_mapctx.cfgvar["basic"], GlobalConst);
+								} catch(e) {
+									throw e;
+								} finally {
+									ctx.restore();
+								}
+
+							}
 						} else {
 							throw new Error("interact, missing endevent control func block for", ctrl_key);
 						}
