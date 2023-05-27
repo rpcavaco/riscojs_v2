@@ -207,6 +207,7 @@ function drawTOCSymb(p_mapctx, p_lyr, p_ctx, p_symbxcenter, p_cota, p_vert_step,
 			console.trace(`[WARN] No 'drawfreeSymb' method in ${JSON.stringify(symb)}`);
 		} else {
 			symb.setStyle(p_ctx);
+			console.log(">>>", p_ctx);
 			symb.drawfreeSymb(p_mapctx, p_ctx, [p_symbxcenter, p_cota], p_vert_step);
 		}
 
@@ -237,7 +238,11 @@ export class TOC  extends MapPrintInRect {
 	constructor() {
 
 		super();
-		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.TOC_BCKGRD; 
+
+		// ** - can be overrriden in basic config, at 'style_override' group, 
+		//      creating a key with same property name in CONTROLS_STYLES, but in lower case
+
+		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.TOC_BCKGRD;  // **
 		this.activeStyleFront = GlobalConst.CONTROLS_STYLES.TOC_ACTIVECOLOR;
 		this.inactiveStyleFront = GlobalConst.CONTROLS_STYLES.TOC_INACTIVECOLOR;
 		this.margin_offset = GlobalConst.CONTROLS_STYLES.OFFSET;
@@ -320,8 +325,8 @@ export class TOC  extends MapPrintInRect {
 					max_lbl_w = Math.max(max_lbl_w, this.leftcol_width + ctx.measureText(varstyle_caption).width);
 				}
 
-				if (lyr_fc[lyr.key] > varstyles_fc) {
-					console.warn(`[WARN] layer ${lyr.key} varstyles dont apply to all fetures - all f.count:${lyr_fc[lyr.key]},  vstyles f.count${varstyles_fc}`);
+				if (varstyles_fc > 0 && lyr_fc[lyr.key] > varstyles_fc) {
+					console.warn(`[WARN] layer ${lyr.key} varstyles dont apply to all fetures - all f.count:${lyr_fc[lyr.key]},  vstyles f.count:${varstyles_fc}`);
 				}
 			}
 		}
@@ -376,7 +381,11 @@ export class TOC  extends MapPrintInRect {
 			// background
 			
 			// ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
-			ctx.fillStyle = this.fillStyleBack;
+			if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["toc_bckgrd"] !== undefined) {
+				ctx.fillStyle = p_mapctx.cfgvar["basic"]["style_override"]["toc_bckgrd"];
+			} else {
+				ctx.fillStyle = this.fillStyleBack;
+			}
 			ctx.fillRect(this.left, this.top, this.boxw, this.boxh);
 			
 			ctx.strokeStyle = this.activeStyleFront;
@@ -412,7 +421,7 @@ export class TOC  extends MapPrintInRect {
 
 					if (lyr["varstyles_symbols"] === undefined || lyr["varstyles_symbols"].length == 0) {
 						grcota = 2 + cota - 0.5 * this.varstylePX;
-						drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota);	
+						drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota, step);	
 						ctx.fillText(lbl, indent_txleft, cota);	
 					} else {
 						ctx.fillText(lbl, txleft, cota);	

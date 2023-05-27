@@ -100,7 +100,8 @@ var RISCOJS_LAYERS_CFG = {
 			"envsplit": false,
 			"fillStyle": "#0000FF7F",
 			"strokeStyle": "rgba(0.7,0.7,0.7)",
-			"lineWidth": 1
+			"lineWidth": 1,
+			"mouseinteraction": true,
 			
 
 			/*"labelfield": "objectid",

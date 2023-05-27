@@ -140,6 +140,45 @@ var GlobalConst = {
 		"infotipsbox_slack": 10
 	},
 
+	MESSAGING_STYLES: {
+
+		PERMANENT_BCKGRD: "rgb(216, 216, 216)",
+		PERMANENT_COLOR: "rgb(65, 65, 65)",
+		PERMANENT_FONT: "8pt Arial",
+
+		LOADING_BCKGRD: "#fc4040",
+		LOADING_COLOR: "#ffffff",
+		LOADING_FONT: "8pt Arial",
+		LOADING_WIDTH: 250,
+		LOADING_HEIGHT: 20,
+		TEXT_OFFSET: 12
+	},
+
+	CONTROLS_STYLES: {
+
+		BCKGRD: "rgb(216, 216, 216)",
+		COLOR: "black",
+		OFFSET: 10,
+		SIZE: 30,
+		STROKEWIDTH: 1,
+		GAP: 10,
+		MOBILE_DEFGAP: 5,
+
+		HOMESYMBWID: 24,
+		HOMESYMB: "data:image/svg+xml;charset=utf-8,%3Csvg width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E %3Cpath fill=%22none%22 stroke=%22black%22 stroke-width=%221%22 stroke-linejoin=%22round%22 d=%22M 4,14 L 12,8 L 20,14 h -3 v 8 h -3 v -4 h -4 v 4 h -3 v -8 z %22 /%3E%3C/svg%3E",
+
+		TOC_LEFTCOL_WIDTH: 50,
+		TOC_NORMALSZ_PX: 16,
+		TOC_VARSTYLESZ_PX: 14,
+		TOC_FONTFAMILY: "OpenSans-CondensedRegular",
+		TOC_SEPARATION_FACTOR: 1.8,
+		TOC_VARSTYLE_SEPARATION_FACTOR: 1.3,
+		TOC_BCKGRD: "#0b1d1fe0",
+		TOC_ACTIVECOLOR: "white",
+		TOC_INACTIVECOLOR: "grey"
+
+	},
+
 	DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB: { // Symbolize spatial index features selected on mouse position
 		"poly" : { 
 			"fillStyle": "#ffff007f"
@@ -181,45 +220,6 @@ var GlobalConst = {
 		"fillStyle": "none",
 		"lineWidth": 0.5
 	},	
-
-	MESSAGING_STYLES: {
-
-		PERMANENT_BCKGRD: "rgb(216, 216, 216)",
-		PERMANENT_COLOR: "rgb(65, 65, 65)",
-		PERMANENT_FONT: "8pt Arial",
-
-		LOADING_BCKGRD: "#fc4040",
-		LOADING_COLOR: "#ffffff",
-		LOADING_FONT: "8pt Arial",
-		LOADING_WIDTH: 250,
-		LOADING_HEIGHT: 20,
-		TEXT_OFFSET: 12
-	},
-
-	CONTROLS_STYLES: {
-
-		BCKGRD: "rgb(216, 216, 216)",
-		COLOR: "black",
-		OFFSET: 10,
-		SIZE: 30,
-		STROKEWIDTH: 1,
-		GAP: 10,
-		MOBILE_DEFGAP: 5,
-
-		HOMESYMBWID: 24,
-		HOMESYMB: "data:image/svg+xml;charset=utf-8,%3Csvg width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E %3Cpath fill=%22none%22 stroke=%22black%22 stroke-width=%221%22 stroke-linejoin=%22round%22 d=%22M 4,14 L 12,8 L 20,14 h -3 v 8 h -3 v -4 h -4 v 4 h -3 v -8 z %22 /%3E%3C/svg%3E",
-
-		TOC_LEFTCOL_WIDTH: 50,
-		TOC_NORMALSZ_PX: 16,
-		TOC_VARSTYLESZ_PX: 14,
-		TOC_FONTFAMILY: "OpenSans-CondensedRegular",
-		TOC_SEPARATION_FACTOR: 1.8,
-		TOC_VARSTYLE_SEPARATION_FACTOR: 1.3,
-		TOC_BCKGRD: "#0b1d1fe0",
-		TOC_ACTIVECOLOR: "white",
-		TOC_INACTIVECOLOR: "grey"
-
-	},
 
 	// ------------------------------------------------------------------------
 	// End of style and presentation constants 
