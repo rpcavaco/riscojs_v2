@@ -104,10 +104,10 @@ var GlobalConst = {
 			"lineWidth": 2
 		},
 		"point" : { 
-			"fillStyle": "#ffffff00",
+			"fillStyle": "white",
 			"strokeStyle": "#ffff03",
-			"lineWidth": 2,
-			"drawsymb": sel_drawsymb_func
+			"lineWidth": 2
+			//"drawsymb": sel_drawsymb_func
 		}
 	},
 

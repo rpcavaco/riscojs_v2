@@ -185,6 +185,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			// console.log("set _currentsymb A:", this.key, opt_symbs);
 		} else {
 			this._currentsymb = this.default_symbol;
+			//console.log("set _currentsymb B:", this.key, this.default_symbol);
 			if (this["varstyles_symbols"]!==undefined && opt_attrs) {
 				for (let vi=0; vi<this.varstyles_symbols.length; vi++) {										
 					if (this.varstyles_symbols[vi]["func"] !== undefined && this.varstyles_symbols[vi].func(p_mapctx.getScale(), opt_attrs)) {
@@ -219,7 +220,12 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	
 		} else {
 
-			this._currentsymb.setStyle(this._gfctx);
+			try {
+				this._currentsymb.setStyle(this._gfctx);
+			} catch(e) {
+				console.error(e);
+				console.log(this._currentsymb.symbname);
+			}
 
 			if (this._currentsymb.strokeStyle !== undefined && this._currentsymb.strokeStyle.toLowerCase() !== "none") {
 				this._gfctx.strokeStyle = this._currentsymb.strokeStyle;
@@ -673,7 +679,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskeys, opt_symbs, opt_terrain_env) {
 
 		let ret = true;
-		let pathoptsymbs = null;
+		let groptsymbs = null;
 		let lbloptsymbs = null;
 		let lblcontent = null;
 		let labelfield = null;
@@ -683,22 +689,22 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		}
 
 		if (opt_symbs) {
-			if (opt_symbs['path'] !== undefined) {
-				pathoptsymbs = opt_symbs['path'];
-			} else if (opt_symbs['point'] !== undefined) {
-				pathoptsymbs = opt_symbs['point'];
+
+			if (opt_symbs['graphic'] !== undefined) {
+				groptsymbs = opt_symbs['graphic'];
 			}
-			if (opt_symbs['label'] !== undefined)
+			if (opt_symbs['label'] !== undefined) {
 				lbloptsymbs = opt_symbs['label'];
+			}
 		}
 
 		/*if (opt_feat_id == 34517 ) {
 			console.log(":: canvas_vector 703 :: refreshitem:", pathoptsymbs, lbloptsymbs);
 		} */
 
-		// console.log(">>", this.key, this.default_symbol);
+		//console.log(">>", this.key, this.default_symbol, pathoptsymbs);
 
-		if (this.grabGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, pathoptsymbs)) {
+		if (this.grabGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, groptsymbs)) {
 			try {
 				if (this.geomtype == "point") {
 					ret = this.drawMarker( p_mapctxt, p_coords[0], opt_feat_id);

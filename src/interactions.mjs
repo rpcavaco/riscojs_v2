@@ -3,6 +3,7 @@ import {GlobalConst} from './constants.js';
 import {AreaGridLayer} from './vectorlayers.mjs';
 import {EditManager} from './edit_manager.mjs';
 import {dist2D} from './geom.mjs';
+import {GrSymbol} from './canvas_symbols.mjs';
 
 export class BaseTool {
 
@@ -162,6 +163,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 
 		let tmpd, nearestid=-1, nearestlyk=null, dist = Number.MAX_SAFE_INTEGER;
 		for (let from_lyrk in related_ids) {
+
 			for (let to_lyrk in related_ids[from_lyrk]) {
 
 				foundly = null;
@@ -225,17 +227,16 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 			}
 
 			if (p_maxdist == null || p_maxdist >=  dist) {
-				let symb;
-				if (foundly.geomtype == "point") {
-					symb = {
-						'path': GlobalConst.FEATMOUSESEL_HIGHLIGHT[foundly.geomtype]
-					}
-				} else {
-					symb = {
-						'point': null
-					}
-				}				
-				p_mapctx.featureCollection.draw(p_mapctx, nearestlyk, nearestid, {'normal': 'temporary', 'labels': 'temporary' }, symb);
+
+				let symb = new GrSymbol();
+
+				Object.assign(symb, foundly.default_symbol);
+				Object.assign(symb, GlobalConst.FEATMOUSESEL_HIGHLIGHT[foundly.geomtype]);
+				if (foundly.default_symbol['drawsymb'] !== undefined) {
+					symb.drawsymb = foundly.default_symbol.drawsymb;
+				}
+
+				p_mapctx.featureCollection.draw(p_mapctx, nearestlyk, nearestid, {'normal': 'temporary', 'labels': 'temporary' }, { "graphic": symb} );
 				ret_dir_interact = true;
 				if (opt_actonselfeat) {
 					opt_actonselfeat(p_mapctx, nearestlyk, nearestid, p_mapctx.featureCollection.get(nearestlyk, nearestid), p_scrx, p_scry);

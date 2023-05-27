@@ -226,7 +226,7 @@ var RISCOJS_LAYERS_CFG = {
 			"markersize": 2,
 			"strokeStyle": "#b1dbdb",
 			"fillStyle": "rgba(204, 204, 204, 0.5)",
-			"lineWidth": 2,
+			"lineWidth": 1,
 			"maxscale": 10000,
 			"varstyles": [
 				{

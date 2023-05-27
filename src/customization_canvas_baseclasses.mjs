@@ -277,7 +277,7 @@ export class TOC  extends MapPrintInRect {
 				lang = (new I18n(lyr.msgsdict)).getLang();
 
 				if (lyr["label"] !== undefined && lyr["label"] != "none") {
-					if (Object.keys(lyr.msgsdict[lang]).indexOf(lyr["label"]) >= 0) {
+					if (lyr['msgsdict'] !== undefined && lyr.msgsdict[lang] !== undefined && Object.keys(lyr.msgsdict[lang]).indexOf(lyr["label"]) >= 0) {
 						lbl = I18n.capitalize(lyr.msgsdict[lang][lyr["label"]]);
 					} else {
 						lbl = I18n.capitalize(lyr["label"]);

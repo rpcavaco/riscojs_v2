@@ -198,7 +198,7 @@ export class CanvasLocLayerClass extends canvasVectorMethodsMixin(LocLayerClass)
 		const ok = this.grabGf2DCtx(p_mapctxt);
 
 		function strokeFill(p_this) {
-			if (this._currentsymb.toFill) {
+			if (p_this._currentsymb.toFill) {
 				p_this._gfctx.fill();
 			};
 			if (p_this._currentsymb.toStroke) {

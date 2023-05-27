@@ -1,7 +1,7 @@
 import {GlobalConst} from './constants.js';
 
 
-class Symbol {
+export class GrSymbol {
 
 	greaterOrEqualScale = Number.MAX_SAFE_INTEGER; // limit above the current scale
 	func = "none";
@@ -62,8 +62,6 @@ class Symbol {
 		p_ctx.font = `${fntsz}px ${fontface}`;			
 	}	
 
-
-
 }
 
 const strokeSymbolMixin = (Base) => class extends Base {
@@ -93,7 +91,9 @@ const fillSymbolMixin = (Base) => class extends Base {
 	fillStyle;
 }
 
-export class CanvasLineSymbol extends labelSymbolMixin(strokeSymbolMixin(Symbol)) { 
+export class CanvasLineSymbol extends labelSymbolMixin(strokeSymbolMixin(GrSymbol)) { 
+	
+	symbname;
 	constructor(opt_variablesymb_idx) {
 		super();
 		if (opt_variablesymb_idx != null) {
@@ -101,6 +101,7 @@ export class CanvasLineSymbol extends labelSymbolMixin(strokeSymbolMixin(Symbol)
 		} else {
 			this._variablesymb_idx = -1;
 		}
+		this.symbname = "Line";
 	}
 	get variablesymb_idx() {
 		return this._variablesymb_idx;
@@ -126,8 +127,9 @@ export class CanvasLineSymbol extends labelSymbolMixin(strokeSymbolMixin(Symbol)
 	}	
 }
 
-export class CanvasPolygonSymbol extends labelSymbolMixin(fillSymbolMixin(strokeSymbolMixin(Symbol))) { 
+export class CanvasPolygonSymbol extends labelSymbolMixin(fillSymbolMixin(strokeSymbolMixin(GrSymbol))) { 
 	
+	symbname;
 	constructor(opt_variablesymb_idx) {
 		super();
 		if (opt_variablesymb_idx != null) {
@@ -135,6 +137,7 @@ export class CanvasPolygonSymbol extends labelSymbolMixin(fillSymbolMixin(stroke
 		} else {
 			this._variablesymb_idx = -1;
 		}
+		this.symbname = "Polygon";
 	}
 	get variablesymb_idx() {
 		return this._variablesymb_idx;
@@ -159,7 +162,7 @@ export class CanvasPolygonSymbol extends labelSymbolMixin(fillSymbolMixin(stroke
 
 }
 
-class MarkerSymbol extends labelSymbolMixin(Symbol) {
+class MarkerSymbol extends labelSymbolMixin(GrSymbol) {
 	markersize; 
 	_variablesymb_idx;
 	constructor(opt_variablesymb_idx) {
@@ -180,8 +183,10 @@ class MarkerSymbol extends labelSymbolMixin(Symbol) {
 
 export class CanvasVertCross extends strokeSymbolMixin(MarkerSymbol) { 
 
+	symbname;
 	constructor(opt_variablesymb_idx) {
 		super(opt_variablesymb_idx);
+		this.symbname = "VertCross";
 	}
 	drawsymb(p_mapctxt, p_layer, p_coords, opt_feat_id) {
 
@@ -207,8 +212,10 @@ export class CanvasVertCross extends strokeSymbolMixin(MarkerSymbol) {
 
 export class CanvasCircle extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol)) { 
 
+	symbname;
 	constructor(opt_variablesymb_idx) {
 		super(opt_variablesymb_idx);
+		this.symbname = "Circle";
 	}
 	drawsymb(p_mapctxt, p_layer, p_coords, opt_feat_id) {
 
@@ -250,8 +257,10 @@ export class CanvasCircle extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol
 
 export class CanvasDiamond extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol)) { 
 
+	symbname;
 	constructor(opt_variablesymb_idx) {
 		super(opt_variablesymb_idx);
+		this.symbname = "Diamond";
 	}
 	drawsymb(p_mapctxt, p_layer, p_coords, opt_feat_id) {
 
