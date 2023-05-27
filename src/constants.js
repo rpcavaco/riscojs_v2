@@ -8,6 +8,7 @@ var SUBKEYS = {
 
 // DISENG_WHEEL - "disengage wheel" desliga a mousewheel das respetivas acoes, apenas gera msgs de debug
 
+/*
 var sel_drawsymb_func = function(p_mapctxt, p_layer, p_coords, opt_feat_id) {
 
 	const sclval = p_mapctxt.getScale();
@@ -22,6 +23,7 @@ var sel_drawsymb_func = function(p_mapctxt, p_layer, p_coords, opt_feat_id) {
 
 	p_layer._gfctx.stroke();
 }
+*/
 
 var GlobalConst = {
 
@@ -107,7 +109,6 @@ var GlobalConst = {
 			"fillStyle": "white",
 			"strokeStyle": "#ffff03",
 			"lineWidth": 2
-			//"drawsymb": sel_drawsymb_func
 		}
 	},
 
@@ -150,8 +151,8 @@ var GlobalConst = {
 		"point" : { 
 			"fillStyle": "#ffff007f",
 			"strokeStyle": "#ffff00",
-			"lineWidth": 2,
-			"drawsymb": sel_drawsymb_func		
+			"lineWidth": 2
+			//"drawsymb": sel_drawsymb_func		
 		}
 	},
 
@@ -166,8 +167,8 @@ var GlobalConst = {
 		"point" : { 
 			"fillStyle": "#ff00007f",
 			"strokeStyle": "#ff0000",
-			"lineWidth": 2,
-			"drawsymb": sel_drawsymb_func
+			"lineWidth": 2
+			//"drawsymb": sel_drawsymb_func
 		}
 	},
 
