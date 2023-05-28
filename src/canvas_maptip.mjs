@@ -199,8 +199,22 @@ export class PopupBox {
 		}
 
 		// Layer label caption printing
+
+		let lbl;
+		const lang = (new I18n(this.layer.msgsdict)).getLang();
+
+		if (this.layer["label"] !== undefined && this.layer["label"] != "none") {
+			if (this.layer['msgsdict'] !== undefined && this.layer.msgsdict[lang] !== undefined && Object.keys(this.layer.msgsdict[lang]).indexOf(this.layer["label"]) >= 0) {
+				lbl = I18n.capitalize(this.layer.msgsdict[lang][this.layer["label"]]);
+			} else {
+				lbl = I18n.capitalize(this.layer["label"]);
+			}	
+		} else {
+			lbl = "(sem etiqueta)";	
+		}
+
 		p_ctx.fillStyle = this.fillTextStyle;
-		p_ctx.fillText(this.layer.label, this.origin[0]+this.leftpad, this.origin[1]+1.2*p_lnheight);
+		p_ctx.fillText(lbl, this.origin[0]+this.leftpad, this.origin[1]+1.2*p_lnheight);
 
 		if (this.callout) {
 			p_ctx.beginPath();

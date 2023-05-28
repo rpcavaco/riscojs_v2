@@ -46,7 +46,8 @@
 - OK - tooltips nos controles
 - OK - aumentar controles no mobile
 - OK - toggle controls - visual cue - user não sabe que controle é togglable
-- >> label do tema não está internacionalizada - falta tooltip
+- OK - interatividade de TOC
+- >> label do tema não está internacionalizada - verificar info
 
 - limitar tamanho máximo símbolo marker a p_vert_step
 
@@ -56,7 +57,7 @@
 
 - symbolo de linha na TOC - validar
 
-- interatividade de TOC
+
 
 - controles disabled
 

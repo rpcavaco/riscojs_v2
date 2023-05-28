@@ -132,7 +132,7 @@ export class FeatureCollection {
 	// TODO p_op: 'EQ', 'LT', 'GT', 'LE', 'GE' -- To complete implementation of all ops
 	find(p_layerkey, p_op, p_name_value_dict, out_id_list) {
 		out_id_list.length = 0;
-		let feat, found, retid = null, retfeat = null;
+		let feat, found;
 		if (this.featList[p_layerkey] !== undefined) {
 			for (let id in this.featList[p_layerkey]) {
 				feat = this.featList[p_layerkey][id];
