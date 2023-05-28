@@ -112,7 +112,7 @@ export class Layer {
 
 	minscale = GlobalConst.MINSCALE;
 	maxscale = Number.MAX_SAFE_INTEGER;
-	defaultvisible = true;
+	layervisible = true;
 	mouseinteraction = false;
 	label = "none";
 	labelfield = "none";
@@ -208,10 +208,10 @@ const vectorLayersMixin = (Base) => class extends Base {
 
 			const [terrain_env, scr_env, dims] = genSingleEnv(p_mapctx);
 
-			if (!this.defaultvisible) {
+			if (!this.layervisible) {
 				
 				if (GlobalConst.getDebug("LAYERS")) {
-					console.log(`[DBG:LAYERS] Vector layer '${this.key}' is not default visible`);
+					console.log(`[DBG:LAYERS] Vector layer '${this.key}' is not visible`);
 				}
 
 			} else {
@@ -382,7 +382,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 			return false;
 		}
 
-		if (!this.defaultvisible) {
+		if (!this.layervisible) {
 			if (GlobalConst.getDebug("LAYERS")) {
 				console.log(`[DBG:LAYERS] Remote vector layer '${this.key}' is not default visible`);
 			}
@@ -522,7 +522,7 @@ export class RasterLayer extends Layer {
 			return true;
 		}
 
-		if (!this.defaultvisible) {
+		if (!this.layervisible) {
 			if (GlobalConst.getDebug("LAYERS")) {
 				console.log(`[DBG:LAYERS] Raster layer '${this.key}' is not default visible`);
 			}

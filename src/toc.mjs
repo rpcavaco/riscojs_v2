@@ -480,6 +480,11 @@ export class TOCManager {
 						if (GlobalConst.getDebug("VECTLOAD")) {
 							console.log("[DBG:VECTLOAD] nextdraw, after getStats", li, this.layers[li].key, "loading:", this.layers[li].isLoading());
 						}
+					} else {
+						if (GlobalConst.getDebug("VECTLOAD")) {
+							console.log("[DBG:VECTLOAD] nextdraw, pre-refresh returned FALSE", li, this.layers[li].key, "loading:", this.layers[li].isLoading());
+						}
+						this.signalVectorLoadFinished(this.layers[li].key);
 					}
 				} catch(e) {
 					this.layers[li].doCancel();

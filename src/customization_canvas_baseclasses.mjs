@@ -410,8 +410,6 @@ export class TOC  extends MapPrintInRect {
 			for (let li=this.tocmgr.layers.length-1; li>=0; li--) {
 
 				lyr = this.tocmgr.layers[li]; 
-				console.log("::413::", lyr.key);
-
 				if (lyr["label"] !== undefined && lyr["label"] != "none") {
 					
 					count++;
