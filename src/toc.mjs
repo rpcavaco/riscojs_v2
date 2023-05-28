@@ -34,6 +34,7 @@ export class TOCManager {
 	_refreshing;
 	after_refresh_procedure_list;
 	toccontrol;
+	prev_tocontrol_interaction_result;
 	
 	constructor(p_mapctx, p_mode) {
 		this.layers = [];
@@ -43,6 +44,7 @@ export class TOCManager {
 		this.drawlist = [];
 		this._refreshing = false;
 		this.after_refresh_procedure_list = [];
+		this.prev_tocontrol_interaction_result = null;
 	}
 
 	static readLayerConfigItem(p_lyrob, p_configvar, p_layerkey, p_itemname) {
@@ -563,9 +565,25 @@ export class TOCManager {
 
 	tocmOnEvent(p_mapctx, p_evt) {
 
-		return this.toccontrol.interact(p_mapctx, p_evt);
-		
+		const ret =  this.toccontrol.interact(p_mapctx, p_evt);
 
+		if (this.prev_tocontrol_interaction_result !== null && this.prev_tocontrol_interaction_result != ret && !ret) {
+
+			// emulating mouseout
+
+			const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+			topcnv.style.cursor = "default";
+
+			const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transient", '2d');		
+			const canvas_dims = [];
+			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+			gfctx.clearRect(0, 0, ...canvas_dims); 		
+			
+		}
+
+		this.prev_tocontrol_interaction_result = ret;
+		
+		return ret;
 
 	}
 

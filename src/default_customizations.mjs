@@ -1,7 +1,7 @@
 
 
 import {GlobalConst} from './constants.js';
-import {PermanentMessaging, LoadingMessaging, ControlsBox, Info, TOC} from './customization_canvas_baseclasses.mjs';
+import { ctrToolTip, PermanentMessaging, LoadingMessaging, ControlsBox, Info, TOC} from './customization_canvas_baseclasses.mjs';
 
 class MousecoordsPrint extends PermanentMessaging {
 
@@ -566,6 +566,7 @@ export class GeoLocationMgr {
     } */
 }
 
+/*
 export function ctrToolTip(p_mapctx, p_evt, p_text) {
 	
 	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transient", '2d');
@@ -601,6 +602,7 @@ export function ctrToolTip(p_mapctx, p_evt, p_text) {
 		gfctx.restore();
 	}	
 }
+*/
 
 class BasicCtrlBox extends ControlsBox {
 

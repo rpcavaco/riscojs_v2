@@ -4,6 +4,62 @@ import {MaptipBox} from './canvas_maptip.mjs';
 import {InfoBox} from './canvas_info.mjs';
 import {I18n} from './i18n.mjs';
 
+export function ctrToolTip(p_mapctx, p_evt, p_text, opt_deltas) {
+	
+	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transient", '2d');
+	gfctx.save();
+	const slack = 6;
+
+	const canvas_dims = [];		
+	try {
+		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+		gfctx.clearRect(0, 0, ...canvas_dims); 
+
+		gfctx.font = "16px Helvetica";
+		gfctx.strokeStyle = "white";
+		gfctx.lineWidth = 2;
+
+		const tm = gfctx.measureText(p_text);
+
+		let dx, dy, deltax, deltay;
+
+		if (opt_deltas) {
+			deltax = opt_deltas[0];
+			deltay = opt_deltas[1];
+		} else {
+			deltax = 50;
+			deltay = 50;
+		}
+
+		if (p_evt.clientX < (canvas_dims[0]/2)) {
+			dx = deltax;
+		} else {
+			dx = -deltax;
+		}
+
+		if (p_evt.clientY < (canvas_dims[1]/2)) {
+			dy = deltay;
+		} else {
+			dy = -deltay;
+		}		
+		const x = p_evt.clientX + dx;
+		const y = p_evt.clientY + dy;
+		const h = 2*slack + tm.actualBoundingBoxAscent + tm.actualBoundingBoxDescent;
+
+		gfctx.fillStyle = "#8080807f";
+		gfctx.fillRect(x - tm.actualBoundingBoxLeft - slack, y + tm.actualBoundingBoxDescent + slack, tm.width+2*slack, -h);
+		gfctx.strokeRect(x - tm.actualBoundingBoxLeft - slack, y + tm.actualBoundingBoxDescent + slack, tm.width+2*slack, -h);
+
+		gfctx.fillStyle = "white";
+		gfctx.fillText(p_text, x, y);
+
+	} catch(e) {
+		throw e;
+	} finally {
+		gfctx.restore();
+	}	
+}
+
 class MapPrintInRect {
 
 	left;
@@ -488,7 +544,7 @@ export class TOC  extends MapPrintInRect {
 
 	interact(p_mapctx, p_evt) {
 
-		const SHOWROWS = true;
+		const SHOWROWS = false;
 
 		let ctx = null;
 		if (SHOWROWS) {
@@ -505,7 +561,7 @@ export class TOC  extends MapPrintInRect {
 		const left = this.left + this.margin_offset
 
 		let i=-1, ret = false, step;
-		let found = null;
+		let changed=false, found = null, topcnv;
 		if (p_evt.clientX >= this.left && p_evt.clientX <= this.left+this.boxw && p_evt.clientY >= this.top && p_evt.clientY <= this.top+this.boxh) {
 
 			for (let lyr, li=this.tocmgr.layers.length-1; li>=0; li--) {
@@ -559,10 +615,8 @@ export class TOC  extends MapPrintInRect {
 									"subkey": vs.key
 								};
 								break;
-							}
-				
-							prev = next;
-		
+							}				
+							prev = next;	
 						}
 
 						if (found) {
@@ -576,14 +630,59 @@ export class TOC  extends MapPrintInRect {
 		}
 
 		if (found) {
-			console.log(">>", found, p_evt);
 	
 			switch(p_evt.type) {
 
 				case 'touchend':
 				case 'mouseup':
 
-					null;
+					for (let lyr of this.tocmgr.layers) {
+						if (lyr.key == found.key) {
+							lyr.layervisible = !lyr.layervisible;
+							changed = true;
+							break;
+						}
+					};
+
+					if (changed) {
+						p_mapctx.maprefresh();
+					}
+
+					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					topcnv.style.cursor = "default";
+
+					break;
+
+				case 'mousemove':
+
+					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					topcnv.style.cursor = "pointer";
+
+					ctrToolTip(p_mapctx, p_evt, p_mapctx.i18n.msg('ALTVIZ', true), [250,30]);
+
+					break;
+
+				default:
+					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					topcnv.style.cursor = "default";
+
+
+
+			}
+
+		} else {
+
+			switch(p_evt.type) {
+
+				case 'mousemove':
+
+					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					topcnv.style.cursor = "pointer";
+					break;
+
+				default:
+					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					topcnv.style.cursor = "default";
 
 			}
 

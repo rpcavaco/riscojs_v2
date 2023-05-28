@@ -40,7 +40,7 @@
 		this.canvases = {};
 		this.max_zindex = 0;
 
-		this.canvaskeys = ['base', 'normal', 'labels', 'temporary', 'transient', 'calculated_viz', 'interactive_viz',  'service_canvas'];
+		this.canvaskeys = ['base', 'normal', 'labels', 'temporary', 'calculated_viz', 'interactive_viz',  'service_canvas', 'transient'];
 		for (let i=0; i<this.canvaskeys.length; i++) {
 
 			this.canvases[this.canvaskeys[i]] = document.createElement('canvas');
