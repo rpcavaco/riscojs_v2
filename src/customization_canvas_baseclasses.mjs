@@ -410,6 +410,7 @@ export class TOC  extends MapPrintInRect {
 			for (let li=this.tocmgr.layers.length-1; li>=0; li--) {
 
 				lyr = this.tocmgr.layers[li]; 
+				console.log("::413::", lyr.key);
 
 				if (lyr["label"] !== undefined && lyr["label"] != "none") {
 					
@@ -489,48 +490,110 @@ export class TOC  extends MapPrintInRect {
 
 	interact(p_mapctx, p_evt) {
 
-		const SHOWROWS = false;
+		const SHOWROWS = true;
 
-		/*
-						ctx.beginPath();
-						ctx.moveTo(this.left, cota);
-						ctx.lineTo(this.left+this.boxw, cota);
-						ctx.stroke();
+		let ctx = null;
+		if (SHOWROWS) {
+			ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+			ctx.save();
+			ctx.strokeStyle = "cyan";	
+		}
 
-
-		*/
-
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
-
-
-		const step = GlobalConst.CONTROLS_STYLES.TOC_SEPARATION_FACTOR * this.normalszPX;
+		const stepEntry = GlobalConst.CONTROLS_STYLES.TOC_SEPARATION_FACTOR * this.normalszPX - 2;
+		const stepSubEntry = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.normalszPX - 2;
 		let next, prev = this.top + this.margin_offset;
 
-		ctx.save();
-		ctx.strokeStyle = "cyan";
+		const width = this.boxw - 2* this.margin_offset;
+		const left = this.left + this.margin_offset
 
-		let i=0, ret = false;
+		let i=-1, ret = false, step;
+		let found = null;
 		if (p_evt.clientX >= this.left && p_evt.clientX <= this.left+this.boxw && p_evt.clientY >= this.top && p_evt.clientY <= this.top+this.boxh) {
 
-			for (const lyr of this.tocmgr.layers) {
+			for (let lyr, li=this.tocmgr.layers.length-1; li>=0; li--) {
+
+				lyr = this.tocmgr.layers[li];
+
 				if (lyr["label"] !== undefined && lyr["label"] != "none") {
+					
+					i++;
+					if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
+						step = stepSubEntry;
+					} else {
+						step = stepEntry;
+					}
 					next = prev + step;
 
-					if (i % 2 == 0) {
-						ctx.strokeRect(this.left, prev, 70, step);
-					} else {
-						ctx.strokeRect(this.left+20, prev, 70, step);
+					// use prev, next
+					if (ctx) {
+						ctx.strokeRect(left, prev, width, step);
+					}
+					if (p_evt.clientX >= left && p_evt.clientX <= this.left+width && p_evt.clientY >= prev && p_evt.clientY <= next) {
+						found = {
+							"key": lyr.key,
+							"subkey": null
+						};
+						break;
 					}
 
 					prev = next;
-					i++;
+					
+					if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
+						for (let vs, vi=0; vi<lyr["varstyles_symbols"].length; vi++) {
+
+							vs = lyr["varstyles_symbols"][vi];
+
+							i++;
+							if (vi < (lyr["varstyles_symbols"].length-1)) {
+								step = stepSubEntry;
+							} else {
+								step = stepEntry;
+							}
+							next = prev + step;
+
+							// use prev, next
+							if (ctx) {
+								ctx.strokeRect(left, prev, width, step);
+							}
+							if (p_evt.clientX >= left && p_evt.clientX <= this.left+width && p_evt.clientY >= prev && p_evt.clientY <= next) {
+								found = {
+									"key": lyr.key,
+									"subkey": vs.key
+								};
+								break;
+							}
+				
+							prev = next;
+		
+						}
+
+						if (found) {
+							break;
+						}
+					}
 				}
 			}
-	
+
 			ret = true;
 		}
 
-		ctx.restore();
+		if (found) {
+			console.log(">>", found, p_evt);
+	
+			switch(p_evt.type) {
+
+				case 'touchend':
+				case 'mouseup':
+
+					null;
+
+			}
+
+		}
+
+		if (ctx) {
+			ctx.restore();
+		}
 
 		return ret;
 	}	
