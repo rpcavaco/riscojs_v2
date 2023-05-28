@@ -128,6 +128,10 @@ export function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdic
 					pretext = tmp.toLocaleDateString(lang);
 					break;
 
+				case "tolocale":
+					pretext = p_attrs[p_fld].toLocaleString(lang);
+					break;
+
 				case "time":
 					tmp = new Date(p_attrs[p_fld]);
 					pretext = tmp.toLocaleTimeString(lang);
@@ -156,6 +160,10 @@ export function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdic
 
 
 			}
+		} else {
+			if (p_this.layer.infocfg.fields["formats"][p_fld]["format"] !== undefined) {
+				pretext = p_this.layer.infocfg.fields["formats"][p_fld]["format"](p_attrs, p_fld, lang);
+			}					
 		}
 	} else {
 		pretext = p_attrs[p_fld];
