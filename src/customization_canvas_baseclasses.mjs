@@ -265,7 +265,6 @@ export class TOC  extends MapPrintInRect {
 		this.boxw = 300;
 
 		this.print_attempts = 0;
-
 	}
 
 	setTOCMgr(p_tocmgr) {
@@ -284,6 +283,7 @@ export class TOC  extends MapPrintInRect {
 
 
 		for (const lyr of this.tocmgr.layers) {
+
 			if (lyr["label"] !== undefined && lyr["label"] != "none") {
 
 				lang = (new I18n(lyr.msgsdict)).getLang();
@@ -485,10 +485,49 @@ export class TOC  extends MapPrintInRect {
 
 	interact(p_mapctx, p_evt) {
 
-		let ret = false;
+		const SHOWROWS = false;
+
+		/*
+						ctx.beginPath();
+						ctx.moveTo(this.left, cota);
+						ctx.lineTo(this.left+this.boxw, cota);
+						ctx.stroke();
+
+
+		*/
+
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+
+
+		const step = GlobalConst.CONTROLS_STYLES.TOC_SEPARATION_FACTOR * this.normalszPX;
+		let next, prev = this.top + this.margin_offset;
+
+		ctx.save();
+		ctx.strokeStyle = "cyan";
+
+		let i=0, ret = false;
 		if (p_evt.clientX >= this.left && p_evt.clientX <= this.left+this.boxw && p_evt.clientY >= this.top && p_evt.clientY <= this.top+this.boxh) {
+
+			for (const lyr of this.tocmgr.layers) {
+				if (lyr["label"] !== undefined && lyr["label"] != "none") {
+					next = prev + step;
+
+					if (i % 2 == 0) {
+						ctx.strokeRect(this.left, prev, 70, step);
+					} else {
+						ctx.strokeRect(this.left+20, prev, 70, step);
+					}
+
+					prev = next;
+					i++;
+				}
+			}
+	
 			ret = true;
 		}
+
+		ctx.restore();
+
 		return ret;
 	}	
 }

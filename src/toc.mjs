@@ -560,34 +560,7 @@ export class TOCManager {
 
 		return this.toccontrol.interact(p_mapctx, p_evt);
 		
-		/*let _ret;
 
-		for (let mapctrl_key in this.mapcontrolmgrs) {
-			_ret = this.mapcontrolmgrs[mapctrl_key].interact(p_mapctx, p_evt);
-			if (_ret) {
-				break;
-			}
-		}
-
-		if (GlobalConst.getDebug("INTERACTION")) {
-			console.log("[DBG:INTERACTION] ToolManager, interacted with map controls:", _ret);
-		}
-
-		// if event interacted with any map controls (_ret is true) 
-		//  we prevent its dispatchment to the active tools
-
-		if (!_ret) {
-			for (let i=this.maptools.length-1; i>=0; i--) {
-				if (this.maptools[i].enabled) {
-					_ret = this.maptools[i].onEvent(p_mapctx, p_evt);
-					if (!_ret && this.maptools[i].joinstogglegroup) {
-						break;
-					}
-				}
-			}	
-		}
-
-*/
 
 	}
 
