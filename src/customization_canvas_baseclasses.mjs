@@ -491,6 +491,17 @@ export class TOC  extends MapPrintInRect {
 						ctx.fillText(lbl, indent_txleft, cota);	
 					} else {
 						ctx.fillText(lbl, txleft, cota);	
+
+						if (!lyr.layervisible) {
+							ctx.save();
+							ctx.strokeStyle = "rgba(200, 200, 200, 0.3)";
+							ctx.lineWidth = 10;
+							ctx.beginPath();
+							ctx.moveTo(txleft,cota-5);
+							ctx.lineTo(this.left + this.boxw - this.margin_offset, cota-4);
+							ctx.stroke();
+							ctx.restore();
+						}
 					}
 
 					//console.log(lyr["label"], ">> _currFeatures <<", lyr.featCount());
