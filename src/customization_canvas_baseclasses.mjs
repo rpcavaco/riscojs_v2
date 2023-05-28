@@ -52,7 +52,7 @@ export class ControlsBox extends MapPrintInRect {
 	orientation = "HORIZONTAL";
 	controls_keys = [];
 	controls_funcs = {};
-	controls_toggle_flags = {};
+	controls_status = { }; 
 	controls_prevgaps = {};	
 	tool_manager = null;
 	controls_boxes = {};
@@ -61,8 +61,8 @@ export class ControlsBox extends MapPrintInRect {
 		super();
 		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.BCKGRD; 
 		this.strokeStyleFront = GlobalConst.CONTROLS_STYLES.COLOR;
-		this.fillStyleBackOff = GlobalConst.CONTROLS_STYLES.BCKGRDOFF; 
-		this.strokeStyleFrontOff = GlobalConst.CONTROLS_STYLES.COLOROFF;
+		this.fillStyleBackOn = GlobalConst.CONTROLS_STYLES.BCKGRDON; 
+		this.strokeStyleFrontOn = GlobalConst.CONTROLS_STYLES.COLORON;
 
 		this.strokeWidth = GlobalConst.CONTROLS_STYLES.STROKEWIDTH;
 		this.sz = GlobalConst.CONTROLS_STYLES.SIZE;
@@ -120,14 +120,18 @@ export class ControlsBox extends MapPrintInRect {
 			this.controls_prevgaps[p_key] = opt_gap_to_prev;
 		}
 
-		this.controls_toggle_flags[p_key] = !p_togglable;
+		this.controls_status[p_key] = { "togglable": false, "togglestatus": false, "disabled": false };
+
+		if (p_togglable) {
+			this.controls_status[p_key].togglable = true;
+		}
 	}
 
 	changeToggleFlag(p_key, p_toggle_status) {
 		let has_changed = false;
-		if (this.controls_toggle_flags[p_key] != p_toggle_status) {
+		if (this.controls_status[p_key].togglable && !this.controls_status[p_key].disabled && this.controls_status[p_key].togglestatus != p_toggle_status) {
 			has_changed = true;
-			this.controls_toggle_flags[p_key] = p_toggle_status;
+			this.controls_status[p_key].togglestatus = p_toggle_status;
 		}
 		return has_changed;
 	}

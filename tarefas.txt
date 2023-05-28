@@ -58,9 +58,10 @@
 
 - interatividade de TOC
 
-
+- controles disabled
 
 - max largura info nas basic configs
+
 
 - Edição
 

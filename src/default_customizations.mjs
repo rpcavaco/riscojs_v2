@@ -618,7 +618,7 @@ class BasicCtrlBox extends ControlsBox {
 
 		this.controls_funcs = {
 			"zoomout": {
-				"drawface": function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_toggle_flag) {
+				"drawface": function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_control_status) {
 
 					p_ctx.beginPath();
 					p_ctx.moveTo(p_left+p_width*0.2, p_top+p_height*0.5);
@@ -642,7 +642,7 @@ class BasicCtrlBox extends ControlsBox {
 				}
 			},
 			"zoomin": {
-				"drawface": function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_toggle_flag) {
+				"drawface": function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_control_status) {
 
 					p_ctx.beginPath();
 					p_ctx.moveTo(p_left+p_width*0.2, p_top+p_height*0.5);
@@ -666,17 +666,13 @@ class BasicCtrlBox extends ControlsBox {
 				}
 			},
 			"home": {
-				"drawface": function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_toggle_flag) {
+				"drawface": function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_control_status) {
 
 					let imgsrc;
 					const imgh = new Image();
 					imgh.decoding = "sync";
 
-					if (p_toggle_flag) {
-						imgsrc = p_global_constants.CONTROLS_STYLES.HOMESYMB.replace(/=%22black%22/g, `=%22${p_ctrlsbox.strokeStyleFront}%22`);
-					} else {
-						imgsrc = p_global_constants.CONTROLS_STYLES.HOMESYMB.replace(/=%22black%22/g, `=%22${p_ctrlsbox.strokeStyleFrontOff}%22`);
-					}
+					imgsrc = p_global_constants.CONTROLS_STYLES.HOMESYMB.replace(/=%22black%22/g, `=%22${encodeURIComponent(p_ctrlsbox.strokeStyleFront)}%22`);
 
 					imgh.src = imgsrc;
 					imgh.decode()
@@ -689,7 +685,7 @@ class BasicCtrlBox extends ControlsBox {
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 					topcnv.style.cursor = "default";
 
-					return true;
+					return true; // not togglable
 				},
 				"mmoveevent": function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
@@ -700,31 +696,32 @@ class BasicCtrlBox extends ControlsBox {
 			}	
 		}
 
-		this.controls_toggle_flags["zoomout"] = true;
-		this.controls_toggle_flags["zoomin"] = true;
-		this.controls_toggle_flags["home"] = true;
+		this.controls_status["zoomout"] = { "togglable": false, "togglestatus": false, "disabled": false };
+		this.controls_status["zoomin"] = { "togglable": false, "togglestatus": false, "disabled": false };
+		this.controls_status["home"] = { "togglable": false, "togglestatus": false, "disabled": false };
+
 
 	}
 
 
-	initialDrawingActions(p_ctx, p_control_key, p_toggle_flag) {
+	initialDrawingActions(p_ctx, p_control_key, p_control_status) {
 
 		const [left, top, boxw, boxh] = this.controls_boxes[p_control_key];
 
 		p_ctx.clearRect(left, top, boxw, boxh); 
 		
-		if (p_toggle_flag) {
-			p_ctx.fillStyle = this.fillStyleBack;
+		if (!p_control_status.disabled) {
+			p_ctx.strokeStyle = this.strokeStyleFront; // box outer stroke only affected by disabled status
+			if (p_control_status.togglestatus) {
+				p_ctx.fillStyle = this.fillStyleBackOn;
+			} else {
+				p_ctx.fillStyle = this.fillStyleBack;
+			}
 		} else {
-			p_ctx.fillStyle = this.fillStyleBackOff;
+			// TODO - disabled control styles
 		}
-		p_ctx.fillRect(left, top, boxw, boxh);
-		
-		if (p_toggle_flag) {
-			p_ctx.strokeStyle = this.strokeStyleFront;
-		} else {
-			p_ctx.strokeStyle = this.strokeStyleFrontOff;
-		}		
+
+		p_ctx.fillRect(left, top, boxw, boxh);		
 		p_ctx.strokeRect(left, top, boxw, boxh);
 
 	}
@@ -735,8 +732,8 @@ class BasicCtrlBox extends ControlsBox {
 
 		if (this.controls_funcs[p_control_key] !== undefined) {
 			if (this.controls_funcs[p_control_key]["drawface"] !== undefined) {
-				this.initialDrawingActions(p_ctx, p_control_key, this.controls_toggle_flags[p_control_key]);
-				this.controls_funcs[p_control_key]["drawface"](this, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, this.controls_toggle_flags[p_control_key]);
+				this.initialDrawingActions(p_ctx, p_control_key, this.controls_status[p_control_key]);
+				this.controls_funcs[p_control_key]["drawface"](this, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, this.controls_status[p_control_key]);
 			} else {
 				console.error(`drawControlFace, missing DRAWFACE control func block for ${p_control_key}`);
 			}

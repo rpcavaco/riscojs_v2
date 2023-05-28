@@ -169,11 +169,7 @@
 						const imgh = new Image();
 						imgh.decoding = "sync";
 
-						if (p_toggle_flag) {
-							imgsrc = p_basic_config.gpsposcontrol.symb.replace(/=%22black%22/g, `=%22${p_ctrlsbox.strokeStyleFront}%22`);
-						} else {
-							imgsrc = p_basic_config.gpsposcontrol.symb.replace(/=%22black%22/g, `=%22${p_ctrlsbox.strokeStyleFrontOff}%22`);
-						}
+						imgsrc = p_basic_config.gpsposcontrol.symb.replace(/=%22black%22/g, `=%22${encodeURIComponent(p_ctrlsbox.strokeStyleFront)}%22`);
 
 						imgh.src = imgsrc;
 						imgh.decode()
@@ -197,16 +193,16 @@
 
 				p_this.instances["basiccontrolsbox"].addControl("gpstrack", //p_drawface_func, p_endevent_func, p_mmove_func)
 					true,
-					function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_toggle_flag) {
+					function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_control_status) {
 
 						let imgsrc;
 						const imgh = new Image();
 						imgh.decoding = "sync";
 
-						if (p_toggle_flag) {
-							imgsrc = p_basic_config.gpstrackcontrol.symb.replace(/=%22black%22/g, `=%22${p_ctrlsbox.strokeStyleFront}%22`);
+						if (p_control_status.togglestatus) {
+							imgsrc = p_basic_config.gpstrackcontrol.symb.replace(/=%22black%22/g, `=%22${encodeURIComponent(p_ctrlsbox.strokeStyleFrontOn)}%22`);
 						} else {
-							imgsrc = p_basic_config.gpstrackcontrol.symb.replace(/=%22black%22/g, `=%22${p_ctrlsbox.strokeStyleFrontOff}%22`);
+							imgsrc = p_basic_config.gpstrackcontrol.symb.replace(/=%22black%22/g, `=%22${encodeURIComponent(p_ctrlsbox.strokeStyleFront)}%22`);
 						}
 
 						imgh.src = imgsrc;
