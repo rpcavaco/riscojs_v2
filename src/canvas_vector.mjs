@@ -227,23 +227,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				console.log(this._currentsymb.symbname);
 			}
 
-			if (this._currentsymb.strokeStyle !== undefined && this._currentsymb.strokeStyle.toLowerCase() !== "none") {
-				this._gfctx.strokeStyle = this._currentsymb.strokeStyle;
-			}
-	
-			if (this._currentsymb.lineWidth !== undefined) {
-				this._gfctx.lineWidth = this._currentsymb.lineWidth;
-			}	
-
-			if (this._currentsymb.lineDash !== undefined && this._currentsymb.lineDash.length > 0) {
-				this._gfctx.setLineDash(this._currentsymb.lineDash);
-			}	
-	
-			if (this._currentsymb.fillStyle !== undefined && this._currentsymb.fillStyle.toLowerCase() !== "none") {
-				this._gfctx.fillStyle = this._currentsymb.fillStyle;
-				//this.fillflag = true;
-			}
-
 		}
 	
 		return true;
@@ -683,6 +666,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		let lbloptsymbs = null;
 		let lblcontent = null;
 		let labelfield = null;
+		let doit = false;
 
 		if (this['labelfield'] !== undefined && this['labelfield'] != "none") {
 			labelfield = this['labelfield'];
@@ -706,10 +690,25 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		if (this.grabGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, groptsymbs)) {
 			try {
-				if (this.geomtype == "point") {
-					ret = this.drawMarker( p_mapctxt, p_coords[0], opt_feat_id);
-				} else {
-					ret = this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
+
+				doit = true;
+				if (this["varstyles_symbols"]!==undefined) {
+					for (let vi=0; vi<this.varstyles_symbols.length; vi++) {										
+						if (this.varstyles_symbols[vi]["func"] !== undefined && this.varstyles_symbols[vi].func(p_mapctxt.getScale(), p_attrs)) {							
+							if (this.varstyles_symbols[vi]["hide"] !== undefined && this.varstyles_symbols[vi]["hide"]) {
+								doit = false;
+							}
+							break;
+						}
+					}
+				}
+
+				if (doit) {
+					if (this.geomtype == "point") {
+						ret = this.drawMarker( p_mapctxt, p_coords[0], opt_feat_id);
+					} else {
+						ret = this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
+					}
 				}
 			} catch(e) {
 				console.error(p_coords, p_path_levels, this.geomtype);

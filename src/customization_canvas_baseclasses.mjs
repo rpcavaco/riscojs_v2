@@ -495,7 +495,7 @@ export class TOC  extends MapPrintInRect {
 						if (!lyr.layervisible) {
 							ctx.save();
 							ctx.strokeStyle = "rgba(200, 200, 200, 0.3)";
-							ctx.lineWidth = 10;
+							ctx.lineWidth = 12;
 							ctx.beginPath();
 							ctx.moveTo(txleft,cota-5);
 							ctx.lineTo(this.left + this.boxw - this.margin_offset, cota-4);
@@ -524,6 +524,18 @@ export class TOC  extends MapPrintInRect {
 							drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota, step, vs);							
 							cota += GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
 							ctx.fillText(varstyle_caption, indent_txleft, cota);
+
+							if (vs['hide'] !== undefined && vs['hide']) {
+								ctx.save();
+								ctx.strokeStyle = "rgba(200, 200, 200, 0.5)";
+								ctx.lineWidth = 8;
+								ctx.beginPath();
+								ctx.moveTo(txleft,cota-4);
+								ctx.lineTo(this.left + this.boxw - this.margin_offset, cota-4);
+								ctx.stroke();
+								ctx.restore();
+							}
+	
 						}
 
 					}
@@ -649,8 +661,25 @@ export class TOC  extends MapPrintInRect {
 
 					for (let lyr of this.tocmgr.layers) {
 						if (lyr.key == found.key) {
-							lyr.layervisible = !lyr.layervisible;
-							changed = true;
+							if (found.subkey === null) {
+								lyr.layervisible = !lyr.layervisible;
+								changed = true;
+							} else {
+								if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
+
+									for (const vs of lyr["varstyles_symbols"]) {			
+										if (vs.key == found.subkey) {
+											if (vs['hide'] !== undefined) {
+												vs.hide = !vs.hide;
+											} else {
+												vs['hide'] = true;
+											}
+											changed = true;
+											break;
+										}
+									}
+								}
+							}
 							break;
 						}
 					};
