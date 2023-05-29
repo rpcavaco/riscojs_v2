@@ -161,10 +161,17 @@ export class InfoBox extends PopupBox {
 			this.recordidx = 0;
 		}
 
+		let caption2value_widthfraction;
+		if (this.layer.infocfg['caption2value_widthfraction'] !== undefined) {
+			caption2value_widthfraction = this.layer.infocfg['caption2value_widthfraction'];
+		} else {
+			caption2value_widthfraction = GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"];
+		}
+
 		const tipsboxfrac = GlobalConst.INFO_MAPTIPS_BOXSTYLE["tipsbox2map_widthfraction"];
 		const maxboxwidth = Math.min(Math.max(GlobalConst.INFO_MAPTIPS_BOXSTYLE["minpopupwidth"], this.mapdims[0] / tipsboxfrac), GlobalConst.INFO_MAPTIPS_BOXSTYLE["maxpopupwidth"]);
-		const capttextwidth = GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"] * maxboxwidth;
-		const valuetextwidth = (1 - GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"]) * maxboxwidth;
+		const capttextwidth = caption2value_widthfraction * maxboxwidth;
+		const valuetextwidth = (1 - caption2value_widthfraction) * maxboxwidth;
 		const lineheightfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["lineheightfactor"];
 		const rowsintervalfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["rowsintervalfactor"];
 
@@ -258,7 +265,18 @@ export class InfoBox extends PopupBox {
 		}
 		// height = height + textlinescnt * lineheightfactor * this.txtlnheight; // - 2 * txtlnheight;
 
-		this._drawBackground(p_ctx, maxboxwidth, height, this.txtlnheight);
+		let lbl;
+		if (this.layer["label"] !== undefined && this.layer["label"] != "none") {
+			if (this.layer['msgsdict'] !== undefined && this.layer.msgsdict[lang] !== undefined && Object.keys(this.layer.msgsdict[lang]).indexOf(this.layer["label"]) >= 0) {
+				lbl = I18n.capitalize(this.layer.msgsdict[lang][this.layer["label"]]);
+			} else {
+				lbl = I18n.capitalize(this.layer["label"]);
+			}	
+		} else {
+			lbl = "(sem etiqueta)";	
+		}	
+
+		this._drawBackground(p_ctx, maxboxwidth, height, this.txtlnheight, lbl);
 
 		p_ctx.fillStyle = this.fillTextStyle;
 		p_ctx.strokeStyle = this.URLStyle;

@@ -151,7 +151,7 @@ export class PopupBox {
 		}
 	}
 	
-	_drawBackground(p_ctx, p_width, p_height, p_lnheight) {
+	_drawBackground(p_ctx, p_width, p_height, p_lnheight, p_label) {
 
 		if (this.drawcount == 0) {
 			this._setorigin(p_width, p_height);  
@@ -198,23 +198,8 @@ export class PopupBox {
 			p_ctx.restore();
 		}
 
-		// Layer label caption printing
-
-		let lbl;
-		const lang = (new I18n(this.layer.msgsdict)).getLang();
-
-		if (this.layer["label"] !== undefined && this.layer["label"] != "none") {
-			if (this.layer['msgsdict'] !== undefined && this.layer.msgsdict[lang] !== undefined && Object.keys(this.layer.msgsdict[lang]).indexOf(this.layer["label"]) >= 0) {
-				lbl = I18n.capitalize(this.layer.msgsdict[lang][this.layer["label"]]);
-			} else {
-				lbl = I18n.capitalize(this.layer["label"]);
-			}	
-		} else {
-			lbl = "(sem etiqueta)";	
-		}
-
 		p_ctx.fillStyle = this.fillTextStyle;
-		p_ctx.fillText(lbl, this.origin[0]+this.leftpad, this.origin[1]+1.2*p_lnheight);
+		p_ctx.fillText(p_label, this.origin[0]+this.leftpad, this.origin[1]+1.2*p_lnheight);
 
 		if (this.callout) {
 			p_ctx.beginPath();
@@ -250,7 +235,8 @@ export class MaptipBox extends PopupBox {
 			return;
 		}
 
-		const lang = this.mapctx.i18n.getLang();
+
+		const lang = (new I18n(this.layer.msgsdict)).getLang();
 
 		p_ctx.save();
 		this.rows.length = 0;
@@ -314,11 +300,23 @@ export class MaptipBox extends PopupBox {
 			height += maxrowlen * lineheightfactor * txtlnheight + 0.25 * txtlnheight;
 
 		}
-		//console.log("textlinescnt:", textlinescnt);
 
-		//const realwidth = Math.max(this.leftpad+colsizes[0]+this.betweencols+colsizes[1]+this.rightpad, this.leftpad+lbltm.width+this.rightpad);
+		// Layer label caption printing
 
-		this._drawBackground(p_ctx, maxboxwidth, height, txtlnheight);
+		let lbl;
+		if (this.layer["label"] !== undefined && this.layer["label"] != "none") {
+			if (this.layer['msgsdict'] !== undefined && this.layer.msgsdict[lang] !== undefined && Object.keys(this.layer.msgsdict[lang]).indexOf(this.layer["label"]) >= 0) {
+				lbl = I18n.capitalize(this.layer.msgsdict[lang][this.layer["label"]]);
+			} else {
+				lbl = I18n.capitalize(this.layer["label"]);
+			}	
+		} else {
+			lbl = "(sem etiqueta)";	
+		}	
+		
+		const realwidth = Math.max(this.leftpad+p_ctx.measureText(lbl).width+this.rightpad, this.leftpad+colsizes[0]+this.betweencols+colsizes[1]+this.rightpad);
+
+		this._drawBackground(p_ctx, realwidth, height, txtlnheight, lbl);
 
 		p_ctx.fillStyle = this.fillTextStyle;
 
