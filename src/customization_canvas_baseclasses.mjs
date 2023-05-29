@@ -301,6 +301,7 @@ export class TOC  extends MapPrintInRect {
 	tocmgr;
 	leftcol_width;
 	print_attempts;
+	had_prev_interaction;
 
 	constructor() {
 
@@ -325,6 +326,7 @@ export class TOC  extends MapPrintInRect {
 		this.boxw = 300;
 
 		this.print_attempts = 0;
+		this.had_prev_interaction = false;
 	}
 
 	setTOCMgr(p_tocmgr) {
@@ -650,83 +652,101 @@ export class TOC  extends MapPrintInRect {
 			}
 
 			ret = true;
+			this.had_prev_interaction = true;
 		}
 
-		if (found) {
+		// is over TOC box area
+		if (ret) {
+
+			if (found) {
 	
-			switch(p_evt.type) {
-
-				case 'touchend':
-				case 'mouseup':
-
-					for (let lyr of this.tocmgr.layers) {
-						if (lyr.key == found.key) {
-							if (found.subkey === null) {
-								lyr.layervisible = !lyr.layervisible;
-								changed = true;
-							} else {
-								if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
-
-									for (const vs of lyr["varstyles_symbols"]) {			
-										if (vs.key == found.subkey) {
-											if (vs['hide'] !== undefined) {
-												vs.hide = !vs.hide;
-											} else {
-												vs['hide'] = true;
+				switch(p_evt.type) {
+	
+					case 'touchend':
+					case 'mouseup':
+	
+						for (let lyr of this.tocmgr.layers) {
+							if (lyr.key == found.key) {
+								if (found.subkey === null) {
+									lyr.layervisible = !lyr.layervisible;
+									changed = true;
+								} else {
+									if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
+	
+										for (const vs of lyr["varstyles_symbols"]) {			
+											if (vs.key == found.subkey) {
+												if (vs['hide'] !== undefined) {
+													vs.hide = !vs.hide;
+												} else {
+													vs['hide'] = true;
+												}
+												changed = true;
+												break;
 											}
-											changed = true;
-											break;
 										}
 									}
 								}
+								break;
 							}
-							break;
+						};
+	
+						if (changed) {
+							p_mapctx.maprefresh();
 						}
-					};
+	
+						topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+						topcnv.style.cursor = "default";
+	
+						break;
+	
+					case 'mousemove':
+	
+						topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+						topcnv.style.cursor = "pointer";
+	
+						ctrToolTip(p_mapctx, p_evt, p_mapctx.i18n.msg('ALTVIZ', true), [250,30]);
+	
+						break;
+	
+					default:
+						topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+						topcnv.style.cursor = "default";
+	
+	
+	
+				}
+	
+			} else {
+	
+				topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+				topcnv.style.cursor = "default";
 
-					if (changed) {
-						p_mapctx.maprefresh();
-					}
-
-					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
-					topcnv.style.cursor = "default";
-
-					break;
-
-				case 'mousemove':
-
-					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
-					topcnv.style.cursor = "pointer";
-
-					ctrToolTip(p_mapctx, p_evt, p_mapctx.i18n.msg('ALTVIZ', true), [250,30]);
-
-					break;
-
-				default:
-					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
-					topcnv.style.cursor = "default";
-
-
-
+				const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transient", '2d');		
+				const canvas_dims = [];
+				p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+				gfctx.clearRect(0, 0, ...canvas_dims); 				
 			}
-
+		
 		} else {
 
-			switch(p_evt.type) {
+			if (this.had_prev_interaction) {
 
-				case 'mousemove':
+				// emulating mouseout
+				topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+				topcnv.style.cursor = "default";
 
-					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
-					topcnv.style.cursor = "pointer";
-					break;
+				const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transient", '2d');		
+				const canvas_dims = [];
+				p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+				gfctx.clearRect(0, 0, ...canvas_dims); 	
 
-				default:
-					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
-					topcnv.style.cursor = "default";
+				this.had_prev_interaction = false;
 
 			}
 
 		}
+
+
 
 		if (ctx) {
 			ctx.restore();

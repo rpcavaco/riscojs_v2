@@ -249,10 +249,7 @@ var RISCOJS_LAYERS_CFG = {
 							}
 						}		*/				
 					]
-				},
-				"aggfields": [
-					"oumanagerpartrecord_title"
-				]
+				}
 			}
 
 
