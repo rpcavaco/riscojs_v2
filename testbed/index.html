@@ -10,6 +10,9 @@
 	<meta name="description" content="Teste RiscoJS V2<"> 
 	<meta name="author" content="Rui Cavaco, CM-Porto, DMSI-SIG"> 
 
+	<link href='shortcut icon' rel='media/fcmp.png' />
+	<link href='media/fcmp.png' rel='icon' type='image/png' />
+
 	<style>
 		#PanelDiv {
 			position: absolute;
@@ -164,6 +167,7 @@
 
 				p_this.instances["basiccontrolsbox"].addControl("gpspt", //togglable, p_drawface_func, p_endevent_func, p_mmove_func)
 					false,
+					false,
 					function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_toggle_flag) {
 
 						let imgsrc;
@@ -194,6 +198,7 @@
 
 				p_this.instances["basiccontrolsbox"].addControl("gpstrack", //p_drawface_func, p_endevent_func, p_mmove_func)
 					true,
+					false,
 					function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_control_status) {
 
 						let imgsrc;

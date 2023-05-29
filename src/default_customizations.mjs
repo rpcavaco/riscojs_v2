@@ -723,8 +723,19 @@ class BasicCtrlBox extends ControlsBox {
 			// TODO - disabled control styles
 		}
 
-		p_ctx.fillRect(left, top, boxw, boxh);		
-		p_ctx.strokeRect(left, top, boxw, boxh);
+		if (this.controls_rounded_face.includes(p_control_key)) {
+
+			p_ctx.beginPath();
+			p_ctx.arc(left+(boxw/2), top+(boxh/2), boxw/2, 0, Math.PI * 2, true);
+
+			p_ctx.fill();
+			p_ctx.stroke();
+
+
+		} else {
+			p_ctx.fillRect(left, top, boxw, boxh);		
+			p_ctx.strokeRect(left, top, boxw, boxh);
+		}
 
 	}
 

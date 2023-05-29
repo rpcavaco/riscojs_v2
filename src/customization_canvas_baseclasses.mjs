@@ -109,6 +109,7 @@ export class ControlsBox extends MapPrintInRect {
 	controls_keys = [];
 	controls_funcs = {};
 	controls_status = { }; 
+	controls_rounded_face = [];
 	controls_prevgaps = {};	
 	tool_manager = null;
 	controls_boxes = {};
@@ -165,7 +166,7 @@ export class ControlsBox extends MapPrintInRect {
 		return h;
 	}	
 
-	addControl(p_key, p_togglable, p_drawface_func, p_endevent_func, p_mmove_func, opt_gap_to_prev) {
+	addControl(p_key, p_togglable, p_is_round, p_drawface_func, p_endevent_func, p_mmove_func, opt_gap_to_prev) {
 		this.controls_keys.push(p_key);
 		this.controls_funcs[p_key] = {
 			"drawface": p_drawface_func,
@@ -180,6 +181,10 @@ export class ControlsBox extends MapPrintInRect {
 
 		if (p_togglable) {
 			this.controls_status[p_key].togglable = true;
+		}
+
+		if (p_is_round && !this.controls_rounded_face.includes(p_key)) {
+			this.controls_rounded_face.push(p_key);
 		}
 	}
 
