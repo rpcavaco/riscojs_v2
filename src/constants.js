@@ -106,9 +106,9 @@ var GlobalConst = {
 			"lineWidth": 2
 		},
 		"point" : { 
-			"fillStyle": "white",
-			"strokeStyle": "#ffff03",
-			"lineWidth": 2
+			"fillStyle": "#11fbff7f",
+			"strokeStyle": "#62efff",
+			"lineWidth": 3
 		}
 	},
 
