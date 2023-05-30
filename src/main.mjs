@@ -192,12 +192,17 @@ export class RiscoMapCtx {
 		this.#customization_object = p_object;
 		p_setmapctx_func(p_object, this);
 
-		if (p_object.instances["basiccontrolsbox"] !== undefined) {
-			this.toolmgr.addControlsMgr("basiccontrolsbox", p_object.instances["basiccontrolsbox"]);
-		}	
+		for (let objid of ["basiccontrolsbox", "basemapctrl"]) {
+			if (p_object.instances[objid] !== undefined) {
+				this.toolmgr.addControlsMgr(objid, p_object.instances[objid]);
+				if (p_object.instances[objid]['setTOCMgr'] !== undefined) {
+					p_object.instances[objid].setTOCMgr(this.tocmgr);
+				}
+			}	
+		}
 
 		if (p_object.instances["toc"] !== undefined) {
-			this.tocmgr.addControl(p_object.instances["toc"]);
+			this.tocmgr.setTOCControl(p_object.instances["toc"]);
 		}	
 
 		if (this.wait_for_customization_avail) {

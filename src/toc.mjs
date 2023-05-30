@@ -35,16 +35,19 @@ export class TOCManager {
 	after_refresh_procedure_list;
 	toccontrol;
 	prev_tocontrol_interaction_result;
+	#base_raster_layer_key;
 	
 	constructor(p_mapctx, p_mode) {
 		this.layers = [];
 		this.mode = p_mode;  // 'canvas', para já
 		this.mapctx = p_mapctx;
-		this.initLayersFromConfig();
 		this.drawlist = [];
 		this._refreshing = false;
 		this.after_refresh_procedure_list = [];
 		this.prev_tocontrol_interaction_result = null;
+		this.#base_raster_layer_key = null;
+
+		this.initLayersFromConfig();
 	}
 
 	static readLayerConfigItem(p_lyrob, p_configvar, p_layerkey, p_itemname) {
@@ -53,7 +56,7 @@ export class TOCManager {
 		}
 	}
 
-	addControl(p_tocctrl_inst) {
+	setTOCControl(p_tocctrl_inst) {
 		this.toccontrol = p_tocctrl_inst;
 		p_tocctrl_inst.setTOCMgr(this);
 	}
@@ -87,6 +90,14 @@ export class TOCManager {
 		}
 		if (lidx < this.layers.length && this.layers[lidx].key == p_layerkey) {
 			ret = this.layers[lidx];
+		}
+		return ret;
+	}
+
+	getBaseRasterLayer() {
+		let ret = null;
+		if (this.#base_raster_layer_key) {
+			ret = this.getLayer(this.#base_raster_layer_key);
 		}
 		return ret;
 	}
@@ -180,6 +191,12 @@ export class TOCManager {
 							scaneables.push(currentLayer.varstyles_symbols[vi]);
 						}
 					}
+				}
+			} else {
+				if (this.#base_raster_layer_key) {
+					throw new Error(`Base raster already defined, cannot include '${currentLayer.key}' in current workable config`);
+				} else {
+					this.#base_raster_layer_key = currentLayer.key;
 				}
 			}
 

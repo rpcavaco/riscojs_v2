@@ -60,7 +60,7 @@ export function ctrToolTip(p_mapctx, p_evt, p_text, opt_deltas) {
 	}	
 }
 
-class MapPrintInRect {
+export class MapPrintInRect {
 
 	left;
 	boxh;
@@ -71,7 +71,7 @@ class MapPrintInRect {
 	font;
 	canvaslayer = 'service_canvas';
 
-	print(p_mapctx, p_x, py) {
+	print(p_mapctx) {     // p_mapctx, ...
 		// To be implemented
 	}
 
@@ -111,7 +111,7 @@ export class ControlsBox extends MapPrintInRect {
 	controls_status = { }; 
 	controls_rounded_face = [];
 	controls_prevgaps = {};	
-	tool_manager = null;
+	//tool_manager = null;
 	controls_boxes = {};
 
 	constructor() {
@@ -244,10 +244,10 @@ export class ControlsBox extends MapPrintInRect {
 		}
 	}	
 
-	setToolmgr(p_toolmgr) {
-		console.trace("setToolmgr:", p_toolmgr)
-		this.tool_manager = p_toolmgr;
-	}
+	// setToolmgr(p_toolmgr) {
+	// 	console.trace("setToolmgr:", p_toolmgr)
+	// 	this.tool_manager = p_toolmgr;
+	// }
 
 	interact(p_mapctx, p_evt) {
 

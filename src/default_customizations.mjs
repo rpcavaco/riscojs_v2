@@ -1,7 +1,6 @@
 
-
 import {GlobalConst} from './constants.js';
-import { ctrToolTip, PermanentMessaging, LoadingMessaging, ControlsBox, Info, TOC} from './customization_canvas_baseclasses.mjs';
+import { ctrToolTip, MapPrintInRect, PermanentMessaging, LoadingMessaging, ControlsBox, Info, TOC} from './customization_canvas_baseclasses.mjs';
 
 class MousecoordsPrint extends PermanentMessaging {
 
@@ -533,76 +532,8 @@ export class GeoLocationMgr {
 		}		
 	}
 
-	/*drawGeolocationMarkings(p_scr_pt, p_radius) {
-
-		const ctx = this.mapctx.renderingsmgr.getDrwCtx("temporary", '2d');
-		ctx.save();
-
-		// console.log("##> drawGeolocationMarkings:", p_scr_pt, p_radius);
-	
-		try {
-
-			this.mapctx.renderingsmgr.clearAll(['temporary']);
-	
-			ctx.strokeStyle = "red";
-			ctx.lineWidth = 2;
-			
-			ctx.beginPath();
-			ctx.arc(...p_scr_pt, p_radius, 0, 2 * Math.PI, false);
-			ctx.stroke();	
-
-			ctx.lineWidth = 5;
-
-			ctx.beginPath();
-			ctx.arc(...p_scr_pt, 2, 0, 2 * Math.PI, false);
-			ctx.stroke();	
-			
-		} catch(e) {
-			throw e;
-		} finally {
-			ctx.restore();
-		}
-
-    } */
 }
 
-/*
-export function ctrToolTip(p_mapctx, p_evt, p_text) {
-	
-	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transient", '2d');
-	gfctx.save();
-	const slack = 6;
-
-	const canvas_dims = [];		
-	try {
-		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
-		gfctx.clearRect(0, 0, ...canvas_dims); 
-
-
-		gfctx.font = "16px Helvetica";
-		gfctx.strokeStyle = "white";
-		gfctx.lineWidth = 2;
-
-		const tm = gfctx.measureText(p_text);
-
-		const x = p_evt.clientX + 50;
-		const y = p_evt.clientY + 20;
-		const h = 2*slack + tm.actualBoundingBoxAscent + tm.actualBoundingBoxDescent;
-
-		gfctx.fillStyle = "#8080807f";
-		gfctx.fillRect(x - tm.actualBoundingBoxLeft - slack, y + tm.actualBoundingBoxDescent + slack, tm.width+2*slack, -h);
-		gfctx.strokeRect(x - tm.actualBoundingBoxLeft - slack, y + tm.actualBoundingBoxDescent + slack, tm.width+2*slack, -h);
-
-		gfctx.fillStyle = "white";
-		gfctx.fillText(p_text, x, y);
-
-	} catch(e) {
-		throw e;
-	} finally {
-		gfctx.restore();
-	}	
-}
-*/
 
 class BasicCtrlBox extends ControlsBox {
 
@@ -843,6 +774,252 @@ class BasicCtrlBox extends ControlsBox {
 
 }
 
+class BasemapCtrlBox extends MapPrintInRect {
+
+	/* left;
+	boxh;
+	boxw;
+	top;
+	fillStyleBack; 
+	fillStyleFront; 
+	font;
+	canvaslayer = 'service_canvas'; */
+	had_prev_interaction;
+	tocmgr;
+
+	constructor() {
+
+		super();
+
+		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.BCKGRD; 
+		this.strokeStyleBack = GlobalConst.CONTROLS_STYLES.COLOR;
+		this.strokeWidth = GlobalConst.CONTROLS_STYLES.STROKEWIDTH;
+
+		this.margin_offset = GlobalConst.CONTROLS_STYLES.OFFSET;
+		this.loadingMsgHeight = 2 * GlobalConst.MESSAGING_STYLES.LOADING_HEIGHT;
+
+		this.btnSize = 40;
+
+		this.FilterOption = "COLOR";
+
+		this.had_prev_interaction = false;
+
+		this.cota = -1;
+
+	}
+
+	boxSelFilterBtn() {
+		return [this.margin_offset, this.cota, this.btnSize, this.btnSize];
+	}
+
+	boxSelBasemapBtn() {
+		// if base raster exists, box is shifted right
+		if (this.tocmgr.getBaseRasterLayer() != null) {
+			return [this.margin_offset+this.btnSize, this.cota, this.btnSize, this.btnSize];
+		} else {
+			return [this.margin_offset, this.cota, this.btnSize, this.btnSize];
+		}
+	}	
+
+	setTOCMgr(p_tocmgr) {
+		this.tocmgr = p_tocmgr;
+	}	
+
+	draw3CircSymbol(p_ctx, p_colors) {
+
+		const cp = [this.margin_offset+(this.btnSize/2), 2+this.cota+(this.btnSize/2)];
+
+		let r1 = 8;
+		let r2 = 6;
+
+		let a = Math.PI;
+		let cp2;
+		
+		for (let i=0; i<3; i++) {
+			cp2 = [cp[0]+r1*Math.sin(a), cp[1]+r1*Math.cos(a)]
+			p_ctx.beginPath();
+			p_ctx.arc(...cp2, r2, 0, 2 * Math.PI, false);
+			p_ctx.fillStyle = p_colors[i];
+			p_ctx.fill();
+			a = a + (2 * Math.PI/3);	
+		}
+	}
+
+	printSelFilter(p_mapctx) {
+
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		ctx.save();
+
+		try {
+
+			const dims = [];
+			p_mapctx.renderingsmgr.getCanvasDims(dims);
+
+			ctx.fillStyle = this.fillStyleBack;
+			ctx.strokeStyle = this.strokeStyleBack;
+			ctx.lineWidth = this.strokeWidth;
+
+			if (this.cota < 0) {
+				this.cota = dims[1]-this.loadingMsgHeight-this.margin_offset-this.btnSize;
+			}
+
+			// RGB vs Grayscale
+			const b1 = this.boxSelFilterBtn();
+			ctx.clearRect(...b1);
+			ctx.fillRect(...b1);
+			ctx.strokeRect(...b1);
+
+			if (this.FilterOption == "COLOR") {
+				this.draw3CircSymbol(ctx, ["blue", "red", "green"]);
+			} else {
+				this.draw3CircSymbol(ctx, ["rgb(30, 30, 30)", "rgb(100, 100, 100)", "rgb(150, 150, 150)"]);
+			}
+
+		} catch(e) {
+			throw e;
+		} finally {
+			ctx.restore();
+		}
+
+	}	
+
+	printSelBasemap(p_mapctx) {
+
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		ctx.save();
+
+		try {
+
+			const dims = [];
+			p_mapctx.renderingsmgr.getCanvasDims(dims);
+
+			ctx.fillStyle = this.fillStyleBack;
+			ctx.strokeStyle = this.strokeStyleBack;
+			ctx.lineWidth = this.strokeWidth;
+
+			if (this.cota < 0) {
+				this.cota = dims[1]-this.loadingMsgHeight-this.margin_offset-this.btnSize;
+			}
+
+			// Base map choice
+			ctx.fillStyle = this.fillStyleBack;
+
+			const b2 = this.boxSelBasemapBtn();
+			ctx.fillRect(...b2);
+			ctx.strokeRect(...b2);
+
+		} catch(e) {
+			throw e;
+		} finally {
+			ctx.restore();
+		}
+
+	}	
+
+	print(p_mapctx) {
+
+		const bm = this.tocmgr.getBaseRasterLayer();
+		if (bm != null) {
+			if (bm.filter == 'none') {
+				this.FilterOption = "COLOR";
+			} else {
+				this.FilterOption = "BW";
+			}
+			this.printSelFilter(p_mapctx);
+		}
+		// this.printSelBasemap(p_mapctx);
+
+	}		
+
+	interact(p_mapctx, p_evt) {
+
+		if (this.cota < 0) {
+			return false;
+		}
+
+		const b1 = this.boxSelFilterBtn();
+		const b2 = this.boxSelBasemapBtn();
+		let topcnv, ret = false;
+
+		if (this.tocmgr.getBaseRasterLayer() != null && p_evt.clientX >= b1[0] && p_evt.clientX <= b1[0] + b1[2] && 
+			p_evt.clientY >= b1[1] && p_evt.clientY <= b1[1] + b1[3]) {
+
+			switch(p_evt.type) {
+
+				case 'touchend':
+				case 'mouseup':
+
+					const bm = this.tocmgr.getBaseRasterLayer();
+
+					// SelFilter
+					if (this.FilterOption == "COLOR") {
+						bm.filter = 'grayscale';
+					} else {
+						bm.filter = 'none';
+					}
+
+					this.printSelFilter(p_mapctx);
+					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					topcnv.style.cursor = "default";
+
+					p_mapctx.maprefresh();
+
+					break;
+
+				case 'mousemove':
+
+					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					topcnv.style.cursor = "pointer";
+
+					ctrToolTip(p_mapctx, p_evt, p_mapctx.i18n.msg('ALTBMFILT', true), [80,30]);
+
+					break;
+
+				default:
+					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					topcnv.style.cursor = "default";
+
+			}
+
+			ret = true;
+			this.had_prev_interaction = true;
+		}
+
+		if (!ret) {
+			if (p_evt.clientX >= b2[0] && p_evt.clientX <= b2[0] + b2[2] && 
+				p_evt.clientY >= b2[1] && p_evt.clientY <= b2[1] + b2[3]) {
+	
+				// SelBaseMap
+				ret = true;
+				this.had_prev_interaction = true;
+			}
+	
+		}
+
+		if (!ret) {
+
+			if (this.had_prev_interaction) {
+
+				// emulating mouseout
+				topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+				topcnv.style.cursor = "default";
+
+				const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transient", '2d');		
+				const canvas_dims = [];
+				p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+				gfctx.clearRect(0, 0, ...canvas_dims); 	
+
+				this.had_prev_interaction = false;
+
+			}
+
+		}
+
+		return ret;
+	}
+}
+
+
 
 export class MapCustomizations {
 
@@ -855,13 +1032,14 @@ export class MapCustomizations {
 		this.messaging_ctrlr = p_messaging_ctrlr;
 		this.instances = {
 			"basiccontrolsbox": new BasicCtrlBox(),
+			"basemapctrl": new BasemapCtrlBox(),
 			"toc": new TOC(),
 			"infoclass": new Info(GlobalConst.INFO_MAPTIPS_BOXSTYLE),
 			"mousecoordsprint": new MousecoordsPrint(),
 			"mapscaleprint": new MapScalePrint(),
 			"loadingmsgprint": new LoadingPrint()
 		}
-		this.controls_keys = ["basiccontrolsbox", "toc"];
+		this.controls_keys = ["basiccontrolsbox", "basemapctrl", "toc"];
 	}
 }
 

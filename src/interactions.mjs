@@ -839,7 +839,7 @@ export class ToolManager {
 
 	addControlsMgr(p_key, p_mapctrlmgr) {
 		this.mapcontrolmgrs[p_key] = p_mapctrlmgr;
-		this.mapcontrolmgrs[p_key].setToolmgr(this);
+		// this.mapcontrolmgrs[p_key].setToolmgr(this);
 	}
 
 	setCurrentUser(p_username) {
