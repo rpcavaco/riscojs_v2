@@ -360,7 +360,17 @@ export class LocQuery {
 			bcb = p_customization_instance.instances["basiccontrolsbox"];
 		}	
 
+		let xoffset, logo = document.createElement('img');
+		logo.src = "media/splash-logo.png";
+		logo.setAttribute("id", "logo-img");
+		p_mapctx.panelwidget.appendChild(logo);
+		logo.style.position = "absolute";
+		logo.style.zIndex = p_mapctx.renderingsmgr.getMaxZIndex()+1;
+		logo.style.width = '80px';
+
 		this.query_box = document.createElement('input');
+		this.query_box.setAttribute("id", "loc-inputtext");
+
 		p_mapctx.panelwidget.appendChild(this.query_box);
 
 		this.query_box.setAttribute("type", "text");
@@ -375,7 +385,7 @@ export class LocQuery {
 		this.query_results = document.createElement('div');
 		p_mapctx.panelwidget.appendChild(this.query_results);
 
-		this.query_results.id = "query_results";
+		this.query_results.id = "loc-query_results";
 		//this.query_results.setAttribute("type", "text");
 		this.query_results.style.position = "absolute";
 		this.query_results.style.zIndex = p_mapctx.renderingsmgr.getMaxZIndex()+1;
@@ -384,8 +394,17 @@ export class LocQuery {
 		this.query_results.style.margin = "0";
 
 		if (bcb) {
+			logo.style.top = bcb.top - 2 + "px";
+			logo.style.left = (2 * bcb.left + bcb.getWidth()) + "px";	
+
+			// com logo
+			xoffset = (2 * bcb.left + bcb.getWidth()) + 80 + 4;
+
+			// sem logo
+			//xoffset = (2 * bcb.left + bcb.getWidth());
+
 			this.query_box.style.top = bcb.top + "px";
-			this.query_box.style.left = (2 * bcb.left + bcb.getWidth()) + "px";	
+			this.query_box.style.left = xoffset + "px";	
 
 			this.query_results.style.top = bcb.top + qryboxheight + "px";
 			this.query_results.style.left = this.query_box.style.left;	
@@ -404,6 +423,7 @@ export class LocQuery {
 		this.query_results.style.display = 'none';
 		
 		this.query_clrbtn = document.createElement('button');
+		this.query_clrbtn.setAttribute("id", "loc-clrbtn");
 		p_mapctx.panelwidget.appendChild(this.query_clrbtn);
 
 		this.query_clrbtn.innerText = p_mapctx.i18n.msg('CLR', true);
@@ -417,12 +437,12 @@ export class LocQuery {
 				this.query_clrbtn.style.width =  p_basic_config["querybox"]["clrbtn_size"] + "px";
 			}
 			this.query_clrbtn.style.top = bcb.top + "px";
-			this.query_clrbtn.style.left = (3 * bcb.left + bcb.getWidth() + boxw) + "px";	
+			this.query_clrbtn.style.left = (xoffset + boxw + 12) + "px";	
 
 		} else {
 			this.query_clrbtn.style.top = p_global_constants.CONTROLS_STYLES.OFFSET + "px";
 			this.query_clrbtn.style.left = p_global_constants.CONTROLS_STYLES.OFFSET + boxw + "px";	
-			this.query_clrbtn.style.width =  p_basic_config["querybox"]["clrbtn_size"] + "px";
+			this.query_clrbtn.style.width =  (p_basic_config["querybox"]["clrbtn_size"] + 12) + "px";
 		}
 
 		this.query_clrbtn.style.zIndex = p_mapctx.renderingsmgr.getMaxZIndex()+1;
