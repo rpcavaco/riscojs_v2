@@ -1,6 +1,6 @@
 function fadeout(element, heartbeat, finalcallback) {
-    var op = 1;  // initial opacity
-    var timer = setInterval(function () {
+    let op = 1;  // initial opacity
+    let timer = setInterval(function () {
         if (op <= 0.1){
             clearInterval(timer);
             element.style.display = 'none';
@@ -38,6 +38,13 @@ let MessagesController = {
 	check() {
 		let msgsdiv = document.getElementById(this.elemid);
 		msgsdiv.style.display = 'none';
+
+		// attach self close on click event
+		(function(p_this, p_msgsdiv) {
+			p_msgsdiv.addEventListener('click', (e) => {
+				p_this.hideMessage(true);
+			})
+		})(this, msgsdiv);		
 	},
 	
 	/*reshape: function() {
@@ -46,7 +53,7 @@ let MessagesController = {
 			return;
 		}
 		
-		var msgsdiv = document.getElementById(this.elemid);
+		let msgsdiv = document.getElementById(this.elemid);
 
 		// this.height = msgsdiv.clientHeight;
 
@@ -60,7 +67,7 @@ let MessagesController = {
 	setMessage: function(p_msg_txt, p_is_timed, p_is_warning) {
 
 		this.messageText = p_msg_txt;
-		var iconimg=null, msgsdiv = document.getElementById(this.elemid);
+		let iconimg=null, msgsdiv = document.getElementById(this.elemid);
 		if (this.timer != null) {
 			clearTimeout(this.timer);
 			this.timer = null;
@@ -79,7 +86,7 @@ let MessagesController = {
 
 			msgsdiv.appendChild(iconimg);
 			
-			var p = document.createElement("p");
+			let p = document.createElement("p");
 			p.insertAdjacentHTML('afterBegin', this.messageText);
 			msgsdiv.appendChild(p);
 			
@@ -105,7 +112,7 @@ let MessagesController = {
 			return;
 		}
 		this.timer = null;
-		var msgsdiv = document.getElementById(this.elemid);
+		let msgsdiv = document.getElementById(this.elemid);
 		this.isvisible = false;
 		if (do_fadeout) 
 		{
