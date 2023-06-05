@@ -47,7 +47,13 @@
 - OK - aumentar controles no mobile
 - OK - toggle controls - visual cue - user não sabe que controle é togglable
 - OK - interatividade de TOC
-- >> label do tema não está internacionalizada - verificar info
+- OK - label do tema não está internacionalizada - verificar info
+
+- evitar o disparo de info no mouse up / touchend de final de zoom / pan
+
+- esconder TOC
+	quando o INFO está ativo
+	qunado o canvas é estreito
 
 - limitar tamanho máximo símbolo marker a p_vert_step
 

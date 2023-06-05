@@ -8,6 +8,7 @@ export class GrSymbol {
 	key = "default";
 	#toStroke = false;
 	#toFill = false;
+	globalAlpha = "none";
 	/* constructor() {
 		this.whereClause = new WhereClause();
 	} */
@@ -38,6 +39,12 @@ export class GrSymbol {
 		if (this.fillStyle !== undefined && this.fillStyle.toLowerCase() !== "none") {
 			this.#toFill = true
 			p_ctx.fillStyle = this.fillStyle;
+		}
+
+		if (this.globalAlpha !== undefined) {
+			if (this.globalAlpha !== "none") {
+				p_ctx.globalAlpha = this.globalAlpha;
+			}
 		}
 	}
 
