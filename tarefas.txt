@@ -48,6 +48,8 @@
 - OK - toggle controls - visual cue - user não sabe que controle é togglable
 - OK - interatividade de TOC
 - OK - label do tema não está internacionalizada - verificar info
+- OK - toggle cor do raster de fundo
+- >> drawSingleFeature - incluir label
 
 - evitar o disparo de info no mouse up / touchend de final de zoom / pan
 
@@ -57,20 +59,13 @@
 
 - limitar tamanho máximo símbolo marker a p_vert_step
 
-- drawSingleFeature - incluir label
 
-
-
-- toggle cor do raster de fundo
 
 - symbolo de linha na TOC - validar
-
-
 
 - controles disabled
 
 - max largura info nas basic configs
-
 
 - Edição
 
@@ -107,13 +102,13 @@ OK -querybox e Localizador
 	OK - largura da caixa de texto no telem
 	OK - throttle enrada de texto
 
-- Legenda
-- >> TOC
-	- >> simbologia linha e poligono
-	- toggle visibilidade na TOC
-	- número de elementos
 
-- PARCIAL - hovering events over control surfaces of widgets
+- OK TOC
+	OK - simbologia linha e poligono
+	OK - toggle visibilidade na TOC
+	OK - número de elementos
+
+- OK - hovering events over control surfaces of widgets
 
 ----------------------------------- Tools  ----------------------------------
 
@@ -144,6 +139,7 @@ OK -querybox e Localizador
 
 - Bug 0005 - NOBUG - respeitar limites de escala de visualização nos temas 'graticule' - era erro de config, duas layer de gratículas com nomes parecidos
 - Bug 0006 - SOLVED - click abaixo da última tool ativa-a 
+- Bug 0007 - LOWPRI PENDING - rotação etiquetas das ruas ainda com problemas (verticais à escala 1:7000 - R. Alfredo Allen) 
 
 	(A carecer de atenção urgente)
 

@@ -159,7 +159,7 @@ export class LocQuery {
 			const oqtype = this.otherqueriesmgr.test(p_qrystr);
 			const pt_buffer_dist = 50;
 			if (oqtype != "none") {
-				this.otherqueriesmgr.query("pec_findbydoc_qry", [ p_qrystr ], pt_buffer_dist);
+				this.otherqueriesmgr.query([ p_qrystr ]);
 				return;
 			}
 		}
