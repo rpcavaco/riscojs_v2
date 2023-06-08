@@ -144,7 +144,7 @@ function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coor
 export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	
 	canvasKey = 'normal';
-	canvasKeyLabels = 'labels';
+	canvasKeyLabels = 'label';
 	default_symbol;	
 	varstyles_symbols = [];
 	msgsdict = {};
@@ -162,7 +162,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		if (opt_alt_canvaskeys) {
 			canvaskey = opt_alt_canvaskeys["normal"];
-			canvaskeyLabels = opt_alt_canvaskeys["labels"];
+			canvaskeyLabels = opt_alt_canvaskeys["label"];
 		} else {
 			canvaskey = this.canvasKey;
 			canvaskeyLabels = this.canvasKeyLabels;
@@ -177,8 +177,13 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			throw e;
 		}
 
-		this._gfctxlbl = p_mapctx.renderingsmgr.getDrwCtx(canvaskeyLabels, '2d');
-		this._gfctxlbl.save();
+		try {
+			this._gfctxlbl = p_mapctx.renderingsmgr.getDrwCtx(canvaskeyLabels, '2d');
+			this._gfctxlbl.save();
+		} catch(e) {
+			console.error("canvaskeyLabels:", canvaskeyLabels, opt_alt_canvaskeys, this.canvasKeyLabels);
+			throw e;
+		}
 
 		if (opt_symbs) {
 			this._currentsymb = opt_symbs;
@@ -729,11 +734,11 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 			if (lblcontent !== null) {
 
-				if (this.grabLabelGf2DCtx(p_mapctxt, opt_alt_canvaskeys, lbloptsymbs)) {
+				if (this.grabLabelGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, lbloptsymbs)) {
 					try {
 						ret = this.drawLabel(p_mapctxt, p_coords, p_path_levels, lblcontent, opt_terrain_env);
 					} catch(e) {
-						console.log(p_coords, labelfield, lblcontent);
+						console.error(p_coords, labelfield, lblcontent);
 						throw e;
 					} finally {
 						this.releaseGf2DCtx();

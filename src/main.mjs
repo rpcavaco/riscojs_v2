@@ -360,9 +360,10 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 	drawSingleFeature(p_layer_key, p_obj_id, p_geomtype_keyed_symbdict, opt_alt_canvaskeys_dict) {
 
-		// opt_alt_canvaskeys_dict  example: {'normal': 'temporary', 'labels': 'temporary' }
+		// opt_alt_canvaskeys_dict  example: {'normal': 'temporary', 'label': 'temporary' }
 
 		let symb = new GrSymbol();
+		let lsymb = new GrSymbol();
 
 		const ly = this.tocmgr.getLayer(p_layer_key);
 
@@ -376,7 +377,14 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				symb.drawsymb = ly.default_symbol.drawsymb;
 			}
 
-			this.featureCollection.draw(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict, { "graphic": symb} );
+			Object.assign(lsymb, ly.default_symbol);
+			if (p_geomtype_keyed_symbdict['label'] !== undefined) {
+				Object.assign(lsymb, p_geomtype_keyed_symbdict['label']);
+			}
+
+			// console.log('lsymb:', lsymb);
+
+			this.featureCollection.draw(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict, { "graphic": symb, 'label': lsymb } );
 			
 		} else {
 			console.error(`[WARN] drawSingleFeature: no layer found for id ${p_layer_key}`);
@@ -384,7 +392,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 	}
 
-	// opt_alt_canvaskeys_dict: {'normal': 'temporary', 'labels': 'temporary' }
+	// opt_alt_canvaskeys_dict: {'normal': 'temporary', 'label': 'temporary' }
 	drawFeatureAsMouseSelected(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict) {
 
 		let hlStyles;

@@ -49,7 +49,7 @@
 - OK - interatividade de TOC
 - OK - label do tema não está internacionalizada - verificar info
 - OK - toggle cor do raster de fundo
-- >> drawSingleFeature - incluir label
+- OK - drawSingleFeature - incluir label
 
 - evitar o disparo de info no mouse up / touchend de final de zoom / pan
 

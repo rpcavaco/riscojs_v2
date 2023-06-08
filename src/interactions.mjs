@@ -141,7 +141,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 
 				if (GlobalConst.getDebug("FEATMOUSESEL")) {
 					try {
-						p_mapctx.drawSingleFeature(foundly.key, sqrid, GlobalConst.DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB, {'normal': 'temporary', 'labels': 'temporary' });
+						p_mapctx.drawSingleFeature(foundly.key, sqrid, GlobalConst.DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB, {'normal': 'temporary', 'label': 'temporary' });
 					} catch (e) {
 						console.log(`[DBG:FEATMOUSESEL] feature error '${e}'`);
 					}
@@ -179,7 +179,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 						if (GlobalConst.getDebug("FEATMOUSESEL")) {
 							console.log(`[DBG:FEATMOUSESEL] interact with lyr:${to_lyrk}, dist:${tmpd} (max: ${p_maxdist}) to id:${r}`);
 
-							p_mapctx.drawSingleFeature(to_lyrk, r, GlobalConst.DEBUG_FEATMOUSESEL_SELUNDERMASK_SYMB, {'normal': 'temporary', 'labels': 'temporary' });
+							p_mapctx.drawSingleFeature(to_lyrk, r, GlobalConst.DEBUG_FEATMOUSESEL_SELUNDERMASK_SYMB, {'normal': 'temporary', 'label': 'temporary' });
 						}
 					}
 				}
@@ -208,7 +208,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 
 			if (p_maxdist == null || p_maxdist >=  dist) {
 
-				p_mapctx.drawFeatureAsMouseSelected(nearestlyk, nearestid, {'normal': 'temporary', 'labels': 'temporary' });
+				p_mapctx.drawFeatureAsMouseSelected(nearestlyk, nearestid, {'normal': 'temporary', 'label': 'temporary' });
 
 				ret_dir_interact = true;
 				if (opt_actonselfeat) {

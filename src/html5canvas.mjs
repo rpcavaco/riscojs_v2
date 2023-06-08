@@ -40,7 +40,7 @@
 		this.canvases = {};
 		this.max_zindex = 0;
 
-		this.canvaskeys = ['base', 'normal', 'labels', 'temporary', 'calculated_viz', 'interactive_viz',  'service_canvas', 'transient'];
+		this.canvaskeys = ['base', 'normal', 'label', 'temporary', 'calculated_viz', 'interactive_viz',  'service_canvas', 'transient'];
 		for (let i=0; i<this.canvaskeys.length; i++) {
 
 			this.canvases[this.canvaskeys[i]] = document.createElement('canvas');
@@ -55,7 +55,7 @@
 			this.paneldiv.appendChild(this.canvases[this.canvaskeys[i]]);
 		}
 
-		const readfreq_canvaskeys = ['base', 'normal', 'labels', 'temporary'];
+		const readfreq_canvaskeys = ['base', 'normal', 'label', 'temporary'];
 		for (let ctx, i=0; i<readfreq_canvaskeys.length; i++) {
 			ctx = this.canvases[readfreq_canvaskeys[i]].getContext('2d', { willReadFrequently: true });
 		}
@@ -153,7 +153,7 @@
 	}	
 
 	getRenderedBitmaps(out_dict) {
-		const canvaskeys = ['base', 'normal', 'labels', 'temporary'], dims=[];
+		const canvaskeys = ['base', 'normal', 'label', 'temporary'], dims=[];
 		this.getCanvasDims(dims);
 		for (let ctx, i=0; i<canvaskeys.length; i++) {
 			ctx = this.canvases[canvaskeys[i]].getContext('2d');

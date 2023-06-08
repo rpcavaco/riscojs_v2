@@ -8,7 +8,7 @@
 
 	b) 'normal' vector drawing
 
-	b) 'labels' vector labels drawing
+	b) 'label' vector labels drawing
 
 	c) 'temporary' vector, like highlights
 

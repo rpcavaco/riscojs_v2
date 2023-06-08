@@ -213,7 +213,7 @@ export class LocQuery {
 											that.mapctx.featureCollection.find(that.centerlinefeats["layerkey"], 'EQ', filter_dict, foundlist);
 											for (let foundid of foundlist) {
 												that.mapctx.featureCollection.draw(that.centerlinefeats["layerkey"], 
-												foundid, {'normal': 'temporary', 'labels': 'temporary' }, 
+												foundid, {'normal': 'temporary', 'label': 'temporary' }, 
 												{ "path": that.centerlinefeats["symb"] } );
 											}
 			
@@ -248,7 +248,7 @@ export class LocQuery {
 								//console.warn("feat id:", featid, "feat:", feat, "symb:", GlobalConst.FEATMOUSESEL_HIGHLIGHT[feat.gt])
 								for (let foundid of foundlist) {
 									that.mapctx.featureCollection.draw(that.centerlinefeats["layerkey"], 
-									foundid, {'normal': 'temporary', 'labels': 'temporary' }, 
+									foundid, {'normal': 'temporary', 'label': 'temporary' }, 
 									{ "path": that.centerlinefeats["symb"] } );
 								}
 
@@ -322,7 +322,7 @@ export class LocQuery {
 								//console.warn("feat id:", featid, "feat:", feat, "symb:", GlobalConst.FEATMOUSESEL_HIGHLIGHT[feat.gt])
 								for (let foundid of foundlist) {
 									that.mapctx.featureCollection.draw(that.centerlinefeats["layerkey"], 
-									foundid, {'normal': 'temporary', 'labels': 'temporary' }, 
+									foundid, {'normal': 'temporary', 'label': 'temporary' }, 
 									{ "path": that.centerlinefeats["symb"] } );
 								}
 
@@ -333,7 +333,7 @@ export class LocQuery {
 								//console.warn("feat id:", featid, "feat:", feat, "symb:", GlobalConst.FEATMOUSESEL_HIGHLIGHT[feat.gt])
 								for (let foundid of foundlist) {
 									that.mapctx.featureCollection.draw(that.npolfeats["layerkey"], 
-									foundid, {'normal': 'temporary', 'labels': 'temporary' }, 
+									foundid, {'normal': 'temporary', 'label': 'temporary' }, 
 									{ "path": that.npolfeats["symb"] } );
 								}
 
