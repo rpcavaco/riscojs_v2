@@ -212,11 +212,11 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 
 				ret_dir_interact = true;
 				if (opt_actonselfeat) {
-					opt_actonselfeat(p_mapctx, nearestlyk, nearestid, p_mapctx.featureCollection.get(nearestlyk, nearestid), p_scrx, p_scry);
+					opt_actonselfeat(nearestlyk, nearestid, p_mapctx.featureCollection.get(nearestlyk, nearestid), p_scrx, p_scry);
 				}
 			} else {
 				if (opt_clearafterselfeat) {
-					opt_clearafterselfeat(p_mapctx, nearestlyk, nearestid, p_scrx, p_scry);
+					opt_clearafterselfeat(nearestlyk, nearestid, p_scrx, p_scry);
 				}
 			}
 		}
@@ -509,12 +509,13 @@ class InfoTool extends BaseTool {
 		}
 
 		const ic = ci.instances["infoclass"];
+		//console.log("interactions:512 - ibox is null:", ic.ibox==null);
 
 		try {
 
 			let insideactivepanel = false;
 
-			if (ic.pick !== undefined) {
+			if (ic.ibox != null && ic.pick !== undefined) {
 				if (this.pickpanel_active) {
 					if (p_evt.clientX >= ic.ibox.box[0] && p_evt.clientX <= ic.ibox.box[0] + ic.ibox.box[2] && 
 						p_evt.clientY >= ic.ibox.box[1] && p_evt.clientY <= ic.ibox.box[1] + ic.ibox.box[3]) {

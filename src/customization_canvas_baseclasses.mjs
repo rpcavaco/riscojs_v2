@@ -769,28 +769,30 @@ export class Info {
 	ibox;
 	canvaslayer = 'interactive_viz';
 	styles;
+	mapctx;
 
-	constructor(p_styles) {
+	constructor(p_mapctx, p_styles) {
 		this.styles = p_styles;
 		this.callout = null;
 		this.ibox = null;
+		this.mapctx = p_mapctx;
 	}
-	hover(p_mapctx, p_layerkey, p_featid, p_feature, p_scrx, p_scry) {
+	hover(p_layerkey, p_featid, p_feature, p_scrx, p_scry) {
 		// this.curr_layerkey = p_layerkey;
 		// this.curr_featid = p_featid;
 		//console.log("Maptip, layer:", p_layerkey, " feat:", p_featid);
-		const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
-		this.callout = new MaptipBox(p_mapctx, currlayer, p_featid, p_feature, this.styles, p_scrx, p_scry, true);
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const currlayer = this.mapctx.tocmgr.getLayer(p_layerkey);
+		this.callout = new MaptipBox(this.mapctx, currlayer, p_featid, p_feature, this.styles, p_scrx, p_scry, true);
+		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		this.callout.clear(ctx);
 		this.callout.draw(ctx);
 	}
-	pick(p_mapctx, p_layerkey, p_featid, p_feature, p_scrx, p_scry) {
-		this.clear(p_mapctx, p_layerkey, p_featid, p_scrx, p_scry)
+	pick(p_layerkey, p_featid, p_feature, p_scrx, p_scry) {
+		this.clear(this.mapctx, p_layerkey, p_featid, p_scrx, p_scry)
 		// this.curr_layerkey = p_layerkey;
 		// this.curr_featid = p_featid;
 
-		const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
+		const currlayer = this.mapctx.tocmgr.getLayer(p_layerkey);
 		if (currlayer["infocfg"] === undefined) {
 			throw new Error(`Missing 'infocfg' config for layer '${p_layerkey}, cannot 'pick' features`);
 		}
@@ -813,7 +815,7 @@ export class Info {
 
 
 		const that = this;
-		const lyr = p_mapctx.tocmgr.getLayer(p_layerkey);
+		const lyr = this.mapctx.tocmgr.getLayer(p_layerkey);
 
 		// done - [MissingFeat 0002] - Obter este URL de configs
 		fetch(currlayer.url + "/doget", {
@@ -823,11 +825,14 @@ export class Info {
 		.then(response => response.json())
 		.then(
 			function(responsejson) {
-				const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
-				that.ibox = new InfoBox(p_mapctx, currlayer, responsejson, that.styles, p_scrx, p_scry, that.infobox_pick, false);
-				const ctx = p_mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
+				// console.log("cust_canvas_baseclasses:828 - antes criação InfoBox");
+				const currlayer = that.mapctx.tocmgr.getLayer(p_layerkey);
+				that.ibox = new InfoBox(that.mapctx, currlayer, responsejson, that.styles, p_scrx, p_scry, that.infobox_pick, false);
+				const ctx = that.mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
 				that.ibox.clear(ctx);
-				that.ibox.draw(ctx);				
+				that.ibox.draw(ctx);	
+				// console.log("cust_canvas_baseclasses:836 - ibox:", that.ibox);
+				
 			}
 		).catch((error) => {
 			console.error(`Impossible to fetch attributes on '${p_layerkey}'`, error);
@@ -848,9 +853,9 @@ export class Info {
 			window.open(p_info_box.urls[p_fldname], "_blank");
 		}
 	}
-	clear(p_mapctx, p_layerkey, p_featid, p_scrx, p_scry) {
+	clear(p_layerkey, p_featid, p_scrx, p_scry) {
 		//console.log("info/tip clear, prev layer:", p_layerkey, " feat:", p_featid);
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		if (this.ibox) {
 			this.ibox.clear(ctx);
 		}
@@ -858,9 +863,9 @@ export class Info {
 			this.callout.clear(ctx);
 		}
 	}
-	interact(p_mapctx, p_evt) {
+	interact(p_evt) {
 		if (this.ibox) {
-			const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+			const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 			this.ibox.interact(ctx, p_evt);
 		}
 

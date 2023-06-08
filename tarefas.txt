@@ -46,10 +46,21 @@
 - OK - tooltips nos controles
 - OK - aumentar controles no mobile
 - OK - toggle controls - visual cue - user não sabe que controle é togglable
-- OK - interatividade de TOC
 - OK - label do tema não está internacionalizada - verificar info
 - OK - toggle cor do raster de fundo
 - OK - drawSingleFeature - incluir label
+- OK - Controles mínimos zooming
+- OK -querybox e Localizador
+	OK - marcar ponto
+	OK - largura da caixa de texto no telem
+	OK - throttle enrada de texto
+- OK TOC
+	OK - simbologia linha e poligono
+	OK - toggle visibilidade na TOC
+	OK - número de elementos
+	OK - interatividade de TOC
+- OK - hovering events over control surfaces of widgets
+- janela de info ao final de query alfa
 
 - evitar o disparo de info no mouse up / touchend de final de zoom / pan
 
@@ -94,21 +105,7 @@
 
 
 
---------------------------------- UI/Widgets  -------------------------------
 
-OK - Controles mínimos zooming
-OK -querybox e Localizador
-	OK - marcar ponto
-	OK - largura da caixa de texto no telem
-	OK - throttle enrada de texto
-
-
-- OK TOC
-	OK - simbologia linha e poligono
-	OK - toggle visibilidade na TOC
-	OK - número de elementos
-
-- OK - hovering events over control surfaces of widgets
 
 ----------------------------------- Tools  ----------------------------------
 

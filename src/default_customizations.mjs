@@ -1027,14 +1027,15 @@ export class MapCustomizations {
 	messaging_ctrlr; // object with info, warn and error methods
 	controls_keys; // custom. instances containing interactive controls
 
-	constructor(p_messaging_ctrlr) {
+	constructor(p_mapctx, p_messaging_ctrlr) {
 
+		this.mapctx = p_mapctx;
 		this.messaging_ctrlr = p_messaging_ctrlr;
 		this.instances = {
 			"basiccontrolsbox": new BasicCtrlBox(),
 			"basemapctrl": new BasemapCtrlBox(),
 			"toc": new TOC(),
-			"infoclass": new Info(GlobalConst.INFO_MAPTIPS_BOXSTYLE),
+			"infoclass": new Info(this.mapctx, GlobalConst.INFO_MAPTIPS_BOXSTYLE),
 			"mousecoordsprint": new MousecoordsPrint(),
 			"mapscaleprint": new MapScalePrint(),
 			"loadingmsgprint": new LoadingPrint()
