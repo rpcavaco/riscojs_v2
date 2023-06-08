@@ -5,6 +5,35 @@ import {EditManager} from './edit_manager.mjs';
 import {dist2D} from './geom.mjs';
 import {GrSymbol} from './canvas_symbols.mjs';
 
+function isObject(item) {
+	return (item && typeof item === 'object' && !Array.isArray(item));
+}
+  
+  /**
+   * Deep merge two objects.
+   * @param target
+   * @param ...sources
+   * 
+   * https://stackoverflow.com/questions/27936772/how-to-deep-merge-instead-of-shallow-merge 
+   */
+function mergeDeep(target, ...sources) {
+	if (!sources.length) return target;
+	const source = sources.shift();
+  
+	if (isObject(target) && isObject(source)) {
+	  for (const key in source) {
+		if (isObject(source[key])) {
+		  if (!target[key]) Object.assign(target, { [key]: {} });
+		  mergeDeep(target[key], source[key]);
+		} else {
+		  Object.assign(target, { [key]: source[key] });
+		}
+	  }
+	}
+  
+	return mergeDeep(target, ...sources);
+}
+
 export class BaseTool {
 
 	enabled = true;
@@ -142,25 +171,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 
 				if (GlobalConst.getDebug("FEATMOUSESEL")) {
 					try {
-
-						let symb = new GrSymbol();
-
-						Object.assign(symb, foundly.default_symbol);
-						Object.assign(symb, GlobalConst.DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB[foundly.geomtype]);
-						if (foundly.default_symbol['drawsymb'] !== undefined) {
-							symb.drawsymb = foundly.default_symbol.drawsymb;
-						}						
-						
-						/*if (foundly.geomtype == "point") {
-							symb = {
-								'path': GlobalConst.DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB[foundly.geomtype]
-							}
-						} else {
-							symb = {
-								'point': null
-							}
-						}*/
-						p_mapctx.featureCollection.draw(p_mapctx, foundly.key, sqrid, {'normal': 'temporary', 'labels': 'temporary' }, symb);
+						p_mapctx.drawSingleFeature(foundly.key, sqrid, GlobalConst.DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB, {'normal': 'temporary', 'labels': 'temporary' });
 					} catch (e) {
 						console.log(`[DBG:FEATMOUSESEL] feature error '${e}'`);
 					}
@@ -198,25 +209,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 						if (GlobalConst.getDebug("FEATMOUSESEL")) {
 							console.log(`[DBG:FEATMOUSESEL] interact with lyr:${to_lyrk}, dist:${tmpd} (max: ${p_maxdist}) to id:${r}`);
 
-							let symb = new GrSymbol();
-
-							Object.assign(symb, foundly.default_symbol);
-							Object.assign(symb, GlobalConst.DEBUG_FEATMOUSESEL_SELUNDERMASK_SYMB[foundly.geomtype]);
-							if (foundly.default_symbol['drawsymb'] !== undefined) {
-								symb.drawsymb = foundly.default_symbol.drawsymb;
-							}	
-
-							/*if (foundly.geomtype == "point") {
-								symb = {
-									'path': GlobalConst.DEBUG_FEATMOUSESEL_SELUNDERMASK_SYMB[foundly.geomtype]
-								}
-							} else {
-								symb = {
-									'point': null
-								}
-							}	*/
-
-							p_mapctx.featureCollection.draw(p_mapctx, to_lyrk, r, {'normal': 'temporary', 'labels': 'temporary' }, symb);
+							p_mapctx.drawSingleFeature(to_lyrk, r, GlobalConst.DEBUG_FEATMOUSESEL_SELUNDERMASK_SYMB, {'normal': 'temporary', 'labels': 'temporary' });
 						}
 					}
 				}
@@ -245,15 +238,15 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 
 			if (p_maxdist == null || p_maxdist >=  dist) {
 
-				let symb = new GrSymbol();
-
-				Object.assign(symb, foundly.default_symbol);
-				Object.assign(symb, GlobalConst.FEATMOUSESEL_HIGHLIGHT[foundly.geomtype]);
-				if (foundly.default_symbol['drawsymb'] !== undefined) {
-					symb.drawsymb = foundly.default_symbol.drawsymb;
+				let hlStyles;
+				if (p_mapctx.cfgvar['basic']['featmousesel_highlight'] !== undefined) {
+					hlStyles = mergeDeep(GlobalConst.FEATMOUSESEL_HIGHLIGHT, p_mapctx.cfgvar['basic']['featmousesel_highlight']);
+				} else {
+					hlStyles = GlobalConst.FEATMOUSESEL_HIGHLIGHT;
 				}
 
-				p_mapctx.featureCollection.draw(p_mapctx, nearestlyk, nearestid, {'normal': 'temporary', 'labels': 'temporary' }, { "graphic": symb} );
+				p_mapctx.drawSingleFeature(nearestlyk, nearestid, hlStyles, {'normal': 'temporary', 'labels': 'temporary' });
+
 				ret_dir_interact = true;
 				if (opt_actonselfeat) {
 					opt_actonselfeat(p_mapctx, nearestlyk, nearestid, p_mapctx.featureCollection.get(nearestlyk, nearestid), p_scrx, p_scry);

@@ -6,6 +6,7 @@ import {FeatureCollection} from './feature_collection.mjs';
 import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
 import {TouchController} from './touchevents.mjs';
+import {GrSymbol} from './canvas_symbols.mjs';
 /**
  * Class RiscoMapOverlay
  * 
@@ -325,6 +326,32 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 
 		}
+	}
+
+	drawSingleFeature(p_layer_key, p_obj_id, p_geomtype_keyed_symbdict, opt_alt_canvaskeys_dict) {
+
+		// opt_alt_canvaskeys_dict  example: {'normal': 'temporary', 'labels': 'temporary' }
+
+		let symb = new GrSymbol();
+
+		const ly = this.tocmgr.getLayer(p_layer_key);
+
+		if (ly) {
+
+			// TODO falta tratar da simbologia de labels
+
+			Object.assign(symb, ly.default_symbol);
+			Object.assign(symb, p_geomtype_keyed_symbdict[ly.geomtype]);
+			if (ly.default_symbol['drawsymb'] !== undefined) {
+				symb.drawsymb = ly.default_symbol.drawsymb;
+			}
+
+			this.featureCollection.draw(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict, { "graphic": symb} );
+			
+		} else {
+			console.error(`[WARN] drawSingleFeature: no layer found for id ${p_layer_key}`);
+		}
+
 	}
 
 	transformsChanged(b_dodraw) {

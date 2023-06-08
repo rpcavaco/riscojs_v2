@@ -57,6 +57,8 @@
 
 - limitar tamanho máximo símbolo marker a p_vert_step
 
+- drawSingleFeature - incluir label
+
 
 
 - toggle cor do raster de fundo

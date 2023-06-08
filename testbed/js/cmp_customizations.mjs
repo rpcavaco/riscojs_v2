@@ -17,6 +17,8 @@ export class LocQuery {
 	loc_layer_key;
 	#lastinput;
 
+	otherqueriesmgr;
+
 	constructor(p_mapctx, p_msgs_ctrlr, p_cfg, p_crs, opt_loc_layer_key) {
 		this.mapctx = p_mapctx;
 		this.msgs_ctrlr = p_msgs_ctrlr;
@@ -37,6 +39,10 @@ export class LocQuery {
 
 	get lastinput() {
 		return this.#lastinput;
+	}
+
+	setOtherQueriesMgr(p_otherqueriesmgr) {
+		this.otherqueriesmgr = p_otherqueriesmgr;
 	}
 
 /* 	isQuerying() {
@@ -149,6 +155,15 @@ export class LocQuery {
 
 		//this.startedQuerying();
 
+		if (this.otherqueriesmgr) {
+			const oqtype = this.otherqueriesmgr.test(p_qrystr);
+			const pt_buffer_dist = 50;
+			if (oqtype != "none") {
+				this.otherqueriesmgr.query("pec_findbydoc_qry", [ p_qrystr ], pt_buffer_dist);
+				return;
+			}
+		}
+
 		fetch(this.url, {
 			method: "POST",
 			body: JSON.stringify({ "curstr": p_qrystr, "outsrid": this.crs })
@@ -197,7 +212,7 @@ export class LocQuery {
 											filter_dict[that.centerlinefeats["fieldname_topo"]] = p_cod_topo;
 											that.mapctx.featureCollection.find(that.centerlinefeats["layerkey"], 'EQ', filter_dict, foundlist);
 											for (let foundid of foundlist) {
-												that.mapctx.featureCollection.draw(that.mapctx, that.centerlinefeats["layerkey"], 
+												that.mapctx.featureCollection.draw(that.centerlinefeats["layerkey"], 
 												foundid, {'normal': 'temporary', 'labels': 'temporary' }, 
 												{ "path": that.centerlinefeats["symb"] } );
 											}
@@ -232,7 +247,7 @@ export class LocQuery {
 								that.mapctx.featureCollection.find(that.centerlinefeats["layerkey"], 'EQ', filter_dict, foundlist);
 								//console.warn("feat id:", featid, "feat:", feat, "symb:", GlobalConst.FEATMOUSESEL_HIGHLIGHT[feat.gt])
 								for (let foundid of foundlist) {
-									that.mapctx.featureCollection.draw(that.mapctx, that.centerlinefeats["layerkey"], 
+									that.mapctx.featureCollection.draw(that.centerlinefeats["layerkey"], 
 									foundid, {'normal': 'temporary', 'labels': 'temporary' }, 
 									{ "path": that.centerlinefeats["symb"] } );
 								}
@@ -306,7 +321,7 @@ export class LocQuery {
 								that.mapctx.featureCollection.find(that.centerlinefeats["layerkey"], 'EQ', filter_dict, foundlist);
 								//console.warn("feat id:", featid, "feat:", feat, "symb:", GlobalConst.FEATMOUSESEL_HIGHLIGHT[feat.gt])
 								for (let foundid of foundlist) {
-									that.mapctx.featureCollection.draw(that.mapctx, that.centerlinefeats["layerkey"], 
+									that.mapctx.featureCollection.draw(that.centerlinefeats["layerkey"], 
 									foundid, {'normal': 'temporary', 'labels': 'temporary' }, 
 									{ "path": that.centerlinefeats["symb"] } );
 								}
@@ -317,7 +332,7 @@ export class LocQuery {
 								that.mapctx.featureCollection.find(that.npolfeats["layerkey"], 'EQ', filter_dict, foundlist);
 								//console.warn("feat id:", featid, "feat:", feat, "symb:", GlobalConst.FEATMOUSESEL_HIGHLIGHT[feat.gt])
 								for (let foundid of foundlist) {
-									that.mapctx.featureCollection.draw(that.mapctx, that.npolfeats["layerkey"], 
+									that.mapctx.featureCollection.draw(that.npolfeats["layerkey"], 
 									foundid, {'normal': 'temporary', 'labels': 'temporary' }, 
 									{ "path": that.npolfeats["symb"] } );
 								}
