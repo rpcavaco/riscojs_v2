@@ -2,7 +2,7 @@
 import {GlobalConst} from './constants.js';
 import {GraticuleLayer, PointGridLayer, AreaGridLayer, AGSQryLayer} from './vectorlayers.mjs';
 import { RiscoFeatsLayer } from './risco_ownlayers.mjs';
-import {evalTextAlongPathViability, pathLength, findPolygonCentroid, dist2D, segmentMeasureToPoint, loopPathParts, distanceToLine, deg2Rad, lineMeasureToPoint, lineExtremePoints} from './geom.mjs';
+import {evalTextAlongPathViability, pathLength, findPolygonCentroid, dist2D, segmentMeasureToPoint, loopPathParts, distanceToLine, deg2Rad, lineMeasureToPoint, lineExtremePoints, getFeatureCenterPoint } from './geom.mjs';
 
 
 function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coords, p_labeltxt, p_label_len, out_data) {
@@ -478,51 +478,10 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				
 		} else if (placement == "centroid") {
 
-			let lpt=[], cpt = [], pt=[], finalpt=[], rot=null;
 			let minarea = p_mapctxt.getScale() / 100.0;
-	
-			if (this._currentsymb.labelRotation.toString().toLowerCase() != "none") {
-				if (isNaN(this._currentsymb.labelRotation)) {
-					throw new Error("invalid label rotation:", this._currentsymb.labelRotation);
-				}
+			const lpt = getFeatureCenterPoint(this.geomtype, p_path_levels, p_coords, minarea);
 
-				rot = deg2Rad(this._currentsymb.labelRotation);
-			}
-
-			if (this.geomtype == "point") {
-
-				if (p_path_levels == 1) 
-					lpt = [...p_coords];
-				else if (p_path_levels == 2)
-					lpt = [...p_coords[0]];
-
-			} else {
-
-				cpt.length = 2;
-				loopPathParts(p_coords, p_path_levels, function(p_pathpart, o_cpt) {
-					for (let pi=0; pi<p_pathpart.length; pi++) {
-						if (pi==0) {
-							o_cpt[0] = p_pathpart[pi][0];  
-							o_cpt[1] = p_pathpart[pi][1];  
-						} else {
-							o_cpt[0] = (pi * o_cpt[0] + p_pathpart[pi][0] ) / (pi + 1);
-							o_cpt[1] = (pi * o_cpt[1] + p_pathpart[pi][1] ) / (pi + 1);
-						}
-					}
-				}, cpt);
-
-				if (this.geomtype == "line") {
-
-					// distanceToLine to obtain projection point in line
-					distanceToLine(p_coords, p_path_levels, cpt, minarea, false, lpt); 
-
-				} else if (this.geomtype == "poly") {
-
-					lpt = findPolygonCentroid(p_coords, p_path_levels, cpt, GlobalConst.LBL_QUANTIZE_SIZE);
-
-				}
-
-			}
+			let pt=[], finalpt=[], rot=null;
 
 			if (lpt.length < 1) {
 				throw new Error("empty label anchor point");

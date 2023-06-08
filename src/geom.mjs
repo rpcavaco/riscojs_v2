@@ -702,6 +702,52 @@ export function findPolygonCentroid(p_coords, p_path_levels, p_cpt, p_step) {
 
 }
 
+export function getFeatureCenterPoint(p_geomtype, p_path_levels, p_coords, p_minarea) {
+
+	const cpt = [];
+
+	let ret_pt;
+
+	if (p_geomtype == "point") {
+
+		if (p_path_levels == 1) 
+			ret_pt = [...p_coords];
+		else if (p_path_levels == 2)
+			ret_pt = [...p_coords[0]];
+
+	} else {
+
+		cpt.length = 2;
+		loopPathParts(p_coords, p_path_levels, function(p_pathpart, o_cpt) {
+			for (let pi=0; pi<p_pathpart.length; pi++) {
+				if (pi==0) {
+					o_cpt[0] = p_pathpart[pi][0];  
+					o_cpt[1] = p_pathpart[pi][1];  
+				} else {
+					o_cpt[0] = (pi * o_cpt[0] + p_pathpart[pi][0] ) / (pi + 1);
+					o_cpt[1] = (pi * o_cpt[1] + p_pathpart[pi][1] ) / (pi + 1);
+				}
+			}
+		}, cpt);
+
+		if (p_geomtype == "line") {
+
+			ret_pt = [];
+			// distanceToLine to obtain projection point in line
+			distanceToLine(p_coords, p_path_levels, cpt, p_minarea, false, ret_pt); 
+
+		} else if (p_geomtype == "poly") {
+
+			ret_pt = findPolygonCentroid(p_coords, p_path_levels, cpt, GlobalConst.LBL_QUANTIZE_SIZE);
+
+		}
+
+	}
+
+	return ret_pt;
+
+}
+
 export function addEnv(p_this_env, p_other_env) {
 	p_this_env[0] = Math.min(p_this_env[0], p_other_env[0]);
 	p_this_env[1] = Math.min(p_this_env[1], p_other_env[1]);
