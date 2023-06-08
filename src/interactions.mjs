@@ -545,7 +545,7 @@ class InfoTool extends BaseTool {
 					if (ic.pick !== undefined) {
 						if (this.pickpanel_active) {
 							if (insideactivepanel) {
-								ic.interact(p_mapctx, p_evt);
+								ic.interact(p_evt);
 							} else {
 								this.pickpanel_active = false;
 							}

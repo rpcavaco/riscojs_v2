@@ -133,6 +133,7 @@ export class RiscoMapOverlay {
 export class RiscoMapCtx {
 
 	#customization_object;
+	classname = "RiscoMapCtx";
 
 	// p_mode -- just 'canvas' for now
 	constructor(p_config_var, p_paneldiv, p_mode, b_wait_for_customization_avail) {

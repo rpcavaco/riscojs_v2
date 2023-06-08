@@ -418,10 +418,10 @@ export class InfoBox extends PopupBox {
 		// in header
 		if (p_evt.clientX >= this.headerbox[0] && p_evt.clientX <= this.headerbox[0] + this.headerbox[2] && 
 			p_evt.clientY >= this.headerbox[1] && p_evt.clientY <= this.headerbox[1] + this.headerbox[3]) {
+
 				let cb;
 				for (let k in this.clickboxes) {
 					cb = this.clickboxes[k];
-					// console.log(k, cb, p_evt.clientX, p_evt.clientY);
 					if (p_evt.clientX >= cb[0] && p_evt.clientX <= cb[2] && 
 						p_evt.clientY <= cb[1] && p_evt.clientY >= cb[3]) {
 							switch(k) {
