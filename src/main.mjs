@@ -7,6 +7,7 @@ import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
 import {TouchController} from './touchevents.mjs';
 import {GrSymbol} from './canvas_symbols.mjs';
+import {getFeatureCenterPoint} from './geom.mjs';
 
 function isObject(item) {
 	return (item && typeof item === 'object' && !Array.isArray(item));
@@ -464,6 +465,56 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			}			
 		}
 	}	
+
+	// opt_alt_canvaskeys_dict: {'normal': 'temporary', 'label': 'temporary' }
+	zoomToFeatsAndOpenInfoOnLast(p_featids_per_layerkey_dict, p_env, opt_alt_canvaskeys_dict, opt_adic_callback) {
+
+		this.tocmgr.addAfterRefreshProcedure(() => {
+
+			let lastk = null, lastid = null;
+			for (let k in p_featids_per_layerkey_dict) {
+				for (let id of p_featids_per_layerkey_dict[k]) {
+					this.drawFeatureAsMouseSelected(k, id, opt_alt_canvaskeys_dict);
+					lastid = id;
+				}
+				lastk = k;
+			}
+
+			//NUP/13736/2020/CMP
+			if (lastk !== null && lastid != null) {
+
+				const ci = this.getCustomizationObject();
+				if (ci == null) {
+					throw new Error("zoomToFeatAndOpenInfo, getting infotool, customization instance is missing")
+				}
+
+				const minarea = this.getScale() / 100.0;
+				const the_feat = this.featureCollection.get(lastk, lastid);
+				
+				let itool, spt = [];
+				const lpt = getFeatureCenterPoint(the_feat.gt, the_feat.l, the_feat.g, minarea);
+				this.transformmgr.getScrPt(lpt, spt);
+			
+				// abrir info
+				const ic = ci.instances["infoclass"];
+				if (ic) {
+					ic.pick(lastk, lastid, the_feat, ...spt);
+
+					itool = this.toolmgr.findTool("InfoTool");
+					if (itool) {
+						itool.setPanelActive(true);
+					}
+				}
+		
+			}
+
+			if (opt_adic_callback) {
+				opt_adic_callback();
+			}
+		});
+
+		this.transformmgr.zoomToRect(...p_env);		
+	}
 
 
 

@@ -578,6 +578,10 @@ class InfoTool extends BaseTool {
 		return ret;
 		
 	}	
+
+	setPanelActive(b_panel_is_active) {
+		this.pickpanel_active = b_panel_is_active;
+	}
 }
 
 class MeasureTool extends BaseTool {
@@ -694,7 +698,7 @@ export class ToolManager {
 		}	
 	}
 
-	_findTool(p_classname) {
+	findTool(p_classname) {
 		let foundtool = null;
 		for (let i=0; i<this.maptools.length; i++) {
 			if (this.maptools[i].constructor.name == p_classname) {
@@ -709,7 +713,7 @@ export class ToolManager {
 
 	enableTool(p_classname, p_do_enable) {
 
-		let foundtool = this._findTool(p_classname);
+		let foundtool = this.findTool(p_classname);
 
 		if (foundtool == null) {
 			return;
