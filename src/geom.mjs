@@ -702,6 +702,12 @@ export function findPolygonCentroid(p_coords, p_path_levels, p_cpt, p_step) {
 
 }
 
+export function addEnv(p_this_env, p_other_env) {
+	p_this_env[0] = Math.min(p_this_env[0], p_other_env[0]);
+	p_this_env[1] = Math.min(p_this_env[1], p_other_env[1]);
+	p_this_env[2] = Math.max(p_this_env[2], p_other_env[2]);
+	p_this_env[3] = Math.max(p_this_env[3], p_other_env[3]);			
+}
 
 export function geomTest() {
 

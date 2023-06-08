@@ -3,36 +3,6 @@ import {GlobalConst} from './constants.js';
 import {AreaGridLayer} from './vectorlayers.mjs';
 import {EditManager} from './edit_manager.mjs';
 import {dist2D} from './geom.mjs';
-import {GrSymbol} from './canvas_symbols.mjs';
-
-function isObject(item) {
-	return (item && typeof item === 'object' && !Array.isArray(item));
-}
-  
-  /**
-   * Deep merge two objects.
-   * @param target
-   * @param ...sources
-   * 
-   * https://stackoverflow.com/questions/27936772/how-to-deep-merge-instead-of-shallow-merge 
-   */
-function mergeDeep(target, ...sources) {
-	if (!sources.length) return target;
-	const source = sources.shift();
-  
-	if (isObject(target) && isObject(source)) {
-	  for (const key in source) {
-		if (isObject(source[key])) {
-		  if (!target[key]) Object.assign(target, { [key]: {} });
-		  mergeDeep(target[key], source[key]);
-		} else {
-		  Object.assign(target, { [key]: source[key] });
-		}
-	  }
-	}
-  
-	return mergeDeep(target, ...sources);
-}
 
 export class BaseTool {
 
@@ -238,14 +208,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 
 			if (p_maxdist == null || p_maxdist >=  dist) {
 
-				let hlStyles;
-				if (p_mapctx.cfgvar['basic']['featmousesel_highlight'] !== undefined) {
-					hlStyles = mergeDeep(GlobalConst.FEATMOUSESEL_HIGHLIGHT, p_mapctx.cfgvar['basic']['featmousesel_highlight']);
-				} else {
-					hlStyles = GlobalConst.FEATMOUSESEL_HIGHLIGHT;
-				}
-
-				p_mapctx.drawSingleFeature(nearestlyk, nearestid, hlStyles, {'normal': 'temporary', 'labels': 'temporary' });
+				p_mapctx.drawFeatureAsMouseSelected(nearestlyk, nearestid, {'normal': 'temporary', 'labels': 'temporary' });
 
 				ret_dir_interact = true;
 				if (opt_actonselfeat) {

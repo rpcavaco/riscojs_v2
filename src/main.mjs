@@ -7,6 +7,36 @@ import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
 import {TouchController} from './touchevents.mjs';
 import {GrSymbol} from './canvas_symbols.mjs';
+
+function isObject(item) {
+	return (item && typeof item === 'object' && !Array.isArray(item));
+}
+  
+  /**
+   * Deep merge two objects.
+   * @param target
+   * @param ...sources
+   * 
+   * https://stackoverflow.com/questions/27936772/how-to-deep-merge-instead-of-shallow-merge 
+   */
+function mergeDeep(target, ...sources) {
+	if (!sources.length) return target;
+	const source = sources.shift();
+  
+	if (isObject(target) && isObject(source)) {
+	  for (const key in source) {
+		if (isObject(source[key])) {
+		  if (!target[key]) Object.assign(target, { [key]: {} });
+		  mergeDeep(target[key], source[key]);
+		} else {
+		  Object.assign(target, { [key]: source[key] });
+		}
+	  }
+	}
+  
+	return mergeDeep(target, ...sources);
+}
+
 /**
  * Class RiscoMapOverlay
  * 
@@ -352,6 +382,19 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			console.error(`[WARN] drawSingleFeature: no layer found for id ${p_layer_key}`);
 		}
 
+	}
+
+	// opt_alt_canvaskeys_dict: {'normal': 'temporary', 'labels': 'temporary' }
+	drawFeatureAsMouseSelected(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict) {
+
+		let hlStyles;
+		if (this.cfgvar['basic']['featmousesel_highlight'] !== undefined) {
+			hlStyles = mergeDeep(GlobalConst.FEATMOUSESEL_HIGHLIGHT, this.cfgvar['basic']['featmousesel_highlight']);
+		} else {
+			hlStyles = GlobalConst.FEATMOUSESEL_HIGHLIGHT;
+		}
+
+		this.drawSingleFeature(p_layer_key, p_obj_id, hlStyles, opt_alt_canvaskeys_dict);
 	}
 
 	transformsChanged(b_dodraw) {
