@@ -307,6 +307,7 @@ export class TOC  extends MapPrintInRect {
 	leftcol_width;
 	print_attempts;
 	had_prev_interaction;
+	collapsedstate;
 
 	constructor() {
 
@@ -327,11 +328,18 @@ export class TOC  extends MapPrintInRect {
 
 		this.left = 600;
 		this.top = this.margin_offset;
-		this.boxh = 300;
-		this.boxw = 300;
+		this.boxh = {
+			"OPEN": 300,
+			"COLLAPSED": 60
+		};
+		this.boxw = {
+			"OPEN": 300,
+			"COLLAPSED": 60
+		};
 
 		this.print_attempts = 0;
 		this.had_prev_interaction = false;
+		this.collapsedstate = "COLLAPSED";
 	}
 
 	setTOCMgr(p_tocmgr) {
@@ -343,7 +351,7 @@ export class TOC  extends MapPrintInRect {
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		ctx.save();
 
-		ctx.clearRect(this.left-2, this.top-2, this.boxw+4, this.boxh+4); 
+		ctx.clearRect(this.left-2, this.top-2, this.boxw[this.collapsedstate]+4, this.boxh[this.collapsedstate]+4); 
 
 		// cal width
 		let lbl, lyr_labels={}, lyr_fc = {}, lyr_vs_captions={}, lyr_vs_fc={}, varstyle_caption, lang, max_lbl_w = 0, varstyles_fc;
@@ -406,12 +414,12 @@ export class TOC  extends MapPrintInRect {
 		}
 
 		// this.leftcol_width is merged when necessary, in max_lbl_w
-		this.boxw = max_lbl_w + 2 * this.margin_offset;
+		this.boxw["OPEN"] = max_lbl_w + 2 * this.margin_offset;
 
 		let grcota, cota, maxcota, count, lyr, txleft, indent_txleft, step, mapdims = [];
 		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
 
-		this.left = mapdims[0] - (this.boxw + this.margin_offset);
+		this.left = mapdims[0] - (this.boxw[this.collapsedstate] + this.margin_offset);
 		let symbxcenter = this.left + this.margin_offset + 0.5 * this.leftcol_width;
 
 		// const canvas_dims = [];
@@ -450,7 +458,7 @@ export class TOC  extends MapPrintInRect {
 
 			}
 			maxcota = cota;
-			this.boxh = maxcota + this.margin_offset;
+			this.boxh["OPEN"] = maxcota + this.margin_offset;
 
 			// background
 			
@@ -460,95 +468,123 @@ export class TOC  extends MapPrintInRect {
 			} else {
 				ctx.fillStyle = this.fillStyleBack;
 			}
-			ctx.fillRect(this.left, this.top, this.boxw, this.boxh);
+			//console.log(this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]);
+			ctx.fillRect(this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]);
 			
 			ctx.strokeStyle = this.activeStyleFront;
 			ctx.lineWidth = this.strokeWidth;
-			ctx.strokeRect(this.left, this.top, this.boxw, this.boxh);
-			
-			count = 0;
-			cota = 0;
-			step = GlobalConst.CONTROLS_STYLES.TOC_SEPARATION_FACTOR * this.normalszPX;
+			ctx.strokeRect(this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]);
 
-			for (let li=this.tocmgr.layers.length-1; li>=0; li--) {
+			if (this.collapsedstate == "OPEN") {
+						
+				count = 0;
+				cota = 0;
+				step = GlobalConst.CONTROLS_STYLES.TOC_SEPARATION_FACTOR * this.normalszPX;
 
-				lyr = this.tocmgr.layers[li]; 
-				if (lyr["label"] !== undefined && lyr["label"] != "none") {
-					
-					count++;
+				for (let li=this.tocmgr.layers.length-1; li>=0; li--) {
 
-					lbl = lyr_labels[lyr.key];					
+					lyr = this.tocmgr.layers[li]; 
+					if (lyr["label"] !== undefined && lyr["label"] != "none") {
+						
+						count++;
 
-					if (count == 1) {
-						cota = 2* this.margin_offset + this.normalszPX;
-					} else {
-						cota += step;
-					}
+						lbl = lyr_labels[lyr.key];					
 
-					if (lyr_fc[lyr.key] == 0) {
-						ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_INACTIVECOLOR;
-					}else {
-						ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_ACTIVECOLOR;
-					}
-					ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
-
-					if (lyr["varstyles_symbols"] === undefined || lyr["varstyles_symbols"].length == 0) {
-						grcota = 2 + cota - 0.5 * this.varstylePX;
-						drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota, step);	
-						ctx.fillText(lbl, indent_txleft, cota);	
-					} else {
-						ctx.fillText(lbl, txleft, cota);	
-
-						if (!lyr.layervisible) {
-							ctx.save();
-							ctx.strokeStyle = "rgba(200, 200, 200, 0.3)";
-							ctx.lineWidth = 12;
-							ctx.beginPath();
-							ctx.moveTo(txleft,cota-5);
-							ctx.lineTo(this.left + this.boxw - this.margin_offset, cota-4);
-							ctx.stroke();
-							ctx.restore();
+						if (count == 1) {
+							cota = 2* this.margin_offset + this.normalszPX;
+						} else {
+							cota += step;
 						}
-					}
 
-					//console.log(lyr["label"], ">> _currFeatures <<", lyr.featCount());
+						if (lyr_fc[lyr.key] == 0) {
+							ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_INACTIVECOLOR;
+						}else {
+							ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_ACTIVECOLOR;
+						}
+						ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
 
-					if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
+						if (lyr["varstyles_symbols"] === undefined || lyr["varstyles_symbols"].length == 0) {
+							grcota = 2 + cota - 0.5 * this.varstylePX;
+							drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota, step);	
+							ctx.fillText(lbl, indent_txleft, cota);	
+						} else {
+							ctx.fillText(lbl, txleft, cota);	
 
-						// console.log("334:", lyr["varstyles_symbols"] )
-						ctx.font = `${this.varstylePX}px ${this.fontfamily}`;
-						for (const vs of lyr["varstyles_symbols"]) {
-
-							varstyle_caption = lyr_vs_captions[lyr.key][vs.key]
-
-							if (lyr.filteredFeatCount(vs.func) > 0) {
-								ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_ACTIVECOLOR;
-							} else {
-								ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_INACTIVECOLOR;
-							}
-		
-							grcota = 4 + cota + 0.5 * GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
-							drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota, step, vs);							
-							cota += GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
-							ctx.fillText(varstyle_caption, indent_txleft, cota);
-
-							if (vs['hide'] !== undefined && vs['hide']) {
+							if (!lyr.layervisible) {
 								ctx.save();
-								ctx.strokeStyle = "rgba(200, 200, 200, 0.5)";
-								ctx.lineWidth = 8;
+								ctx.strokeStyle = GlobalConst.CONTROLS_STYLES.TOC_STRIKETHROUGH_FILL;
+								ctx.lineWidth = 12;
 								ctx.beginPath();
-								ctx.moveTo(txleft,cota-4);
-								ctx.lineTo(this.left + this.boxw - this.margin_offset, cota-4);
+								ctx.moveTo(txleft,cota-5);
+								ctx.lineTo(this.left + this.boxw[this.collapsedstate] - this.margin_offset, cota-4);
 								ctx.stroke();
 								ctx.restore();
 							}
-	
+						}
+
+						//console.log(lyr["label"], ">> _currFeatures <<", lyr.featCount());
+
+						if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
+
+							// console.log("334:", lyr["varstyles_symbols"] )
+							ctx.font = `${this.varstylePX}px ${this.fontfamily}`;
+							for (const vs of lyr["varstyles_symbols"]) {
+
+								varstyle_caption = lyr_vs_captions[lyr.key][vs.key]
+
+								if (lyr.filteredFeatCount(vs.func) > 0) {
+									ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_ACTIVECOLOR;
+								} else {
+									ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_INACTIVECOLOR;
+								}
+			
+								grcota = 4 + cota + 0.5 * GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
+								drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota, step, vs);							
+								cota += GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
+								ctx.fillText(varstyle_caption, indent_txleft, cota);
+
+								if (vs['hide'] !== undefined && vs['hide']) {
+									ctx.save();
+									ctx.strokeStyle = "rgba(200, 200, 200, 0.5)";
+									ctx.lineWidth = 8;
+									ctx.beginPath();
+									ctx.moveTo(txleft,cota-4);
+									ctx.lineTo(this.left + this.boxw[this.collapsedstate] - this.margin_offset, cota-4);
+									ctx.stroke();
+									ctx.restore();
+								}
+		
+							}
+
 						}
 
 					}
 
 				}
 
+			} else {
+				// collapsed TOC
+				const leftx = this.left + this.margin_offset;
+				const rightx = this.left + this.boxw["COLLAPSED"] - this.margin_offset;
+
+				const ynsteps = 4;
+				const ystep = this.boxh["COLLAPSED"] / (ynsteps+1);
+				let cota;
+
+				ctx.save();
+				for (let ri=0; ri<ynsteps; ri++) {
+
+					cota = this.top + (ri+1) * ystep;
+
+					ctx.strokeStyle = GlobalConst.CONTROLS_STYLES.TOC_COLLAPSED_STRIPES_FILL;
+					ctx.lineWidth = 6;
+					ctx.lineCap = "round";
+					ctx.beginPath();
+					ctx.moveTo(leftx, cota);
+					ctx.lineTo(rightx, cota);
+					ctx.stroke();
+				}
+				ctx.restore();
 			}
 
 		} catch(e) {
@@ -560,6 +596,7 @@ export class TOC  extends MapPrintInRect {
 
 	print(p_mapctx) {
 		const that = this;
+		// prevent drawing before configured fonts are available
 		while (!document.fonts.check("10px "+this.fontfamily) && this.print_attempts < 10) {
 			setTimeout(() => {
 				that.print(p_mapctx);
@@ -587,12 +624,12 @@ export class TOC  extends MapPrintInRect {
 		const stepSubEntry = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.normalszPX - 2;
 		let next, prev = this.top + this.margin_offset;
 
-		const width = this.boxw - 2* this.margin_offset;
+		const width = this.boxw[this.collapsedstate] - 2* this.margin_offset;
 		const left = this.left + this.margin_offset
 
 		let i=-1, ret = false, step;
 		let changed=false, found = null, topcnv;
-		if (p_evt.clientX >= this.left && p_evt.clientX <= this.left+this.boxw && p_evt.clientY >= this.top && p_evt.clientY <= this.top+this.boxh) {
+		if (p_evt.clientX >= this.left && p_evt.clientX <= this.left+this.boxw[this.collapsedstate] && p_evt.clientY >= this.top && p_evt.clientY <= this.top+this.boxh[this.collapsedstate]) {
 
 			for (let lyr, li=this.tocmgr.layers.length-1; li>=0; li--) {
 
@@ -708,8 +745,15 @@ export class TOC  extends MapPrintInRect {
 	
 						topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 						topcnv.style.cursor = "pointer";
+						let msg;
+
+						if (this.collapsedstate == "OPEN") {
+							msg = p_mapctx.i18n.msg('ALTVIZ', true);
+						} else {
+							msg = p_mapctx.i18n.msg('SHOWTOC', true);
+						}
 	
-						ctrToolTip(p_mapctx, p_evt, p_mapctx.i18n.msg('ALTVIZ', true), [250,30]);
+						ctrToolTip(p_mapctx, p_evt, msg, [250,30]);
 	
 						break;
 	
