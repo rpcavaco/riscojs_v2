@@ -66,7 +66,7 @@
 	OK - qunado o canvas é estreito
 - OK - limitar tamanho máximo símbolo marker a p_vert_step
 - OK - versão de código RISCOJS acessível via risco_js_version.txt
-- 'attribution'
+- OK - 'attribution'
 
 - >> debug geral Localizador
 

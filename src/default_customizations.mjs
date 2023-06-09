@@ -86,6 +86,54 @@ class MapScalePrint extends PermanentMessaging {
 	}	
 }
 
+class AttributionPrint extends PermanentMessaging {
+
+	constructor() {
+		super();
+	}
+
+	print(p_mapctx) {
+
+		const canvas_dims = [];
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		ctx.save();
+
+		try {
+
+			let msg;
+			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+			if (p_mapctx.cfgvar["basic"]["attribution"] !== undefined) {
+				msg = p_mapctx.cfgvar["basic"]["attribution"];
+			} else {
+				msg = "(no \"attribution\" entry in basic config)";
+			}
+
+			// const tm = ctx.measureText(msg);
+			this.boxw =  GlobalConst.MESSAGING_STYLES.ATTRIBUTION_WIDTH;
+			this.boxh = GlobalConst.MESSAGING_STYLES.ATTRIBUTION_HEIGHT;
+			this.left = canvas_dims[0] - this.boxw;
+			this.top = canvas_dims[1] - this.boxh;
+
+			ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
+			ctx.fillStyle = GlobalConst.MESSAGING_STYLES.ATTRIBUTION_BCKGRND;
+			ctx.fillRect(this.left, this.top, this.boxw, this.boxh);
+
+			ctx.fillStyle = GlobalConst.MESSAGING_STYLES.ATTRIBUTION_FOREGRND;
+			ctx.font = this.font;
+			ctx.textAlign = "center";
+
+			const bottom = canvas_dims[1];
+
+			ctx.fillText(msg, this.left+this.boxw/2, bottom-GlobalConst.MESSAGING_STYLES.ATTRIBUTION_BOTTOMOFFSET);		
+
+		} catch(e) {
+			throw e;
+		} finally {
+			ctx.restore();
+		}
+	}	
+}
+
 class LoadingPrint extends LoadingMessaging {
 
 	constructor() {
@@ -1037,7 +1085,8 @@ export class MapCustomizations {
 			"infoclass": new Info(this.mapctx, GlobalConst.INFO_MAPTIPS_BOXSTYLE),
 			"mousecoordsprint": new MousecoordsPrint(),
 			"mapscaleprint": new MapScalePrint(),
-			"loadingmsgprint": new LoadingPrint()
+			"loadingmsgprint": new LoadingPrint(),
+			"attributionprint": new AttributionPrint()
 		}
 		this.controls_keys = ["basiccontrolsbox", "basemapctrl", "toc"];
 	}

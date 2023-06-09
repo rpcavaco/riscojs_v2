@@ -356,6 +356,8 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			// maplayers refresh
 			this.tocmgr.tocMgrRefresh(sv);
 
+			this.printAttributionMsg();
+
 
 		}
 	}
@@ -456,6 +458,21 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			}	
 		} else {
 			console.error("printLoadingMsg, no map customizations available");
+		}
+	}
+
+	printAttributionMsg() {
+		const ci = this.getCustomizationObject();
+		if (ci) {
+			const apc = ci.instances["attributionprint"];
+			if (apc.print !== undefined) {
+				apc.print(this);
+			} else {
+				console.error(`attributionprint customization unavailable, cannot print attribution message`);
+
+			}	
+		} else {
+			console.error("attributionMsg, no map customizations available");
 		}
 	}
 
