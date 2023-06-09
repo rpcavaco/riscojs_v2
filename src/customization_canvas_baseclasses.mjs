@@ -705,7 +705,6 @@ export class TOC  extends MapPrintInRect {
 			} // this.collapsedstate == "OPEN"
 
 			ret = true;
-			this.had_prev_interaction = true;
 		}
 
 		// is over TOC box area
@@ -798,9 +797,12 @@ export class TOC  extends MapPrintInRect {
 
 					}
 				}
-				
-				console.log("OUT THROUGH 778");
 			}
+
+			if (!this.had_prev_interaction) {
+				p_mapctx.clearInteractions();
+			}
+			this.had_prev_interaction = true;
 
 		} else {
 
@@ -810,7 +812,7 @@ export class TOC  extends MapPrintInRect {
 				topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 				topcnv.style.cursor = "default";
 
-				p_mapctx.renderingsmgr.clearAll(['transient']);
+				p_mapctx.clearInteractions();
 
 				this.had_prev_interaction = false;
 			}

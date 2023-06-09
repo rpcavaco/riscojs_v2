@@ -538,6 +538,7 @@ export class GeoLocationMgr {
 class BasicCtrlBox extends ControlsBox {
 
 	prev_ctrl_key = null;
+	had_prev_interaction; 
 
 	constructor() {
 		super();
@@ -633,7 +634,7 @@ class BasicCtrlBox extends ControlsBox {
 		this.controls_status["zoomin"] = { "togglable": false, "togglestatus": false, "disabled": false };
 		this.controls_status["home"] = { "togglable": false, "togglestatus": false, "disabled": false };
 
-
+		this.had_prev_interaction = false;
 	}
 
 
@@ -744,6 +745,10 @@ class BasicCtrlBox extends ControlsBox {
 			}
 
 			ret = true;
+			if (!this.had_prev_interaction) {
+				p_mapctx.clearInteractions();
+			}
+			this.had_prev_interaction = true;
 
 		} else {
 
@@ -756,16 +761,10 @@ class BasicCtrlBox extends ControlsBox {
 				const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 				topcnv.style.cursor = "default";
 
-				const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transient", '2d');		
-				const canvas_dims = [];
-				p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
-				gfctx.clearRect(0, 0, ...canvas_dims); 
+				p_mapctx.clearInteractions();
 				
 			}
-
-
-
-
+			this.had_prev_interaction = false;
 
 		}
 
@@ -982,7 +981,6 @@ class BasemapCtrlBox extends MapPrintInRect {
 			}
 
 			ret = true;
-			this.had_prev_interaction = true;
 		}
 
 		if (!ret) {
@@ -991,7 +989,6 @@ class BasemapCtrlBox extends MapPrintInRect {
 	
 				// SelBaseMap
 				ret = true;
-				this.had_prev_interaction = true;
 			}
 	
 		}
@@ -1004,15 +1001,17 @@ class BasemapCtrlBox extends MapPrintInRect {
 				topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 				topcnv.style.cursor = "default";
 
-				const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transient", '2d');		
-				const canvas_dims = [];
-				p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
-				gfctx.clearRect(0, 0, ...canvas_dims); 	
+				p_mapctx.clearInteractions();
 
 				this.had_prev_interaction = false;
 
 			}
 
+		} else {
+			if (!this.had_prev_interaction) {
+				p_mapctx.clearInteractions();
+			}
+			this.had_prev_interaction = true;
 		}
 
 		return ret;

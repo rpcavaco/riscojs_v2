@@ -591,10 +591,7 @@ export class TOCManager {
 			const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 			topcnv.style.cursor = "default";
 
-			const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transient", '2d');		
-			const canvas_dims = [];
-			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
-			gfctx.clearRect(0, 0, ...canvas_dims); 		
+			p_mapctx.clearInteractions();
 			
 		}
 

@@ -50,6 +50,7 @@ class DefaultTool extends BaseTool {
 		}
 		if (p_evt.type == 'mouseout' || p_evt.type == "mouseleave") {
 			p_mapctx.removePrint("mousecoordsprint");
+			p_mapctx.clearInteractions();
 		}
 		
 	}	

@@ -521,28 +521,17 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 	clearInteractions() {
 
-		let ipanel = false;
-		const itool = this.toolmgr.findTool("InfoTool");
-		if (itool) {
-			if (itool.getPanelActive()) {
-				ipanel = true;
-			}
+		const ci = this.getCustomizationObject();
+		if (ci == null) {
+			throw new Error("clearInteractions, no customization object found")
 		}
 
-		if (ipanel) {
-			const ci = this.getCustomizationObject();
-			if (ci == null) {
-				throw new Error("clearInteractions, no customization object found")
-			}
-	
-			const ic = ci.instances["infoclass"];
-	
-			if (ic) {
-				ic.clear();
-			}
-
-			this.renderingsmgr.clearAll(['temporary', 'transient']);
+		const ic = ci.instances["infoclass"];
+		if (ic) {
+			ic.clear();
 		}
+
+		this.renderingsmgr.clearAll(['temporary', 'transient']);
 
 
 	}
