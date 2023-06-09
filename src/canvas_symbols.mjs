@@ -248,10 +248,10 @@ export class CanvasCircle extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol
 		const sclval = p_mapctx.getScale();
 		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
 
-		// TODO -  comparar dim com p_vert_step, limitar dim máximo a p_vert_step
+		const r = Math.min(dim, p_vert_step/4.0);
 
 		p_ctx.beginPath();
-		p_ctx.arc(p_symbcenter[0], p_symbcenter[1], dim, 0, Math.PI * 2, true);
+		p_ctx.arc(p_symbcenter[0], p_symbcenter[1], r, 0, Math.PI * 2, true);
 
 		if (this["fillStyle"] !== undefined && this["fillStyle"].toLowerCase() !== "none") {
 			p_ctx.fill();

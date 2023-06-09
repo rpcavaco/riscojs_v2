@@ -280,8 +280,6 @@ function drawTOCSymb(p_mapctx, p_lyr, p_ctx, p_symbxcenter, p_cota, p_vert_step,
 			symb.drawfreeSymb(p_mapctx, p_ctx, [p_symbxcenter, p_cota], p_vert_step);
 		}
 
-		//console.log("p_lyr:", p_lyr);
-
 	} catch(e) {
 		console.error(e);
 	} finally {

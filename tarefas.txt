@@ -64,7 +64,11 @@
 - OK - esconder TOC
 	OK - quando o INFO está ativo
 	OK - qunado o canvas é estreito
+- OK - limitar tamanho máximo símbolo marker a p_vert_step
+- OK - versão de código RISCOJS acessível via risco_js_version.txt
+- 'attribution'
 
+- >> debug geral Localizador
 
 - info scrollable
 
@@ -75,9 +79,8 @@
 
 
 
-- >> debug geral Localizador
 
-- >>> limitar tamanho máximo símbolo marker a p_vert_step
+
 
 
 
@@ -109,7 +112,7 @@
 
 - Completar operações lógicas no find de feature collection (tem TODO)
 
-- versão de código visível / acessível
+
 
 
 

@@ -197,7 +197,6 @@ var GlobalConst = {
 			"fillStyle": "#ffff007f",
 			"strokeStyle": "#ffff00",
 			"lineWidth": 2
-			//"drawsymb": sel_drawsymb_func		
 		}
 	},
 
@@ -213,7 +212,6 @@ var GlobalConst = {
 			"fillStyle": "#ff00007f",
 			"strokeStyle": "#ff0000",
 			"lineWidth": 2
-			//"drawsymb": sel_drawsymb_func
 		}
 	},
 
