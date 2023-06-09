@@ -1,4 +1,5 @@
 
+import {GrSymbol} from './riscojs_v2/canvas_symbols.mjs';
 
 export class LocQuery {
 
@@ -13,6 +14,7 @@ export class LocQuery {
 	zoomto;
 	npolfeats;
 	centerlinefeats;
+	symbs;
 	found;
 	loc_layer_key;
 	#lastinput;
@@ -31,6 +33,16 @@ export class LocQuery {
 		this.loc_layer_key = opt_loc_layer_key;
 		// this._querying = false;
 		// this._query_timeout_id = null;
+
+		this.symbs = {};
+
+		let symb;
+		for (let symbitem of ["npolfeats", "centerlinefeats"]) {
+			symb = new GrSymbol();
+			Object.assign(symb, p_cfg[symbitem]['symb']);
+			this.symbs[symbitem] = symb;
+		}
+
 	}
 
 	set lastinput(p_li) {
@@ -214,7 +226,7 @@ export class LocQuery {
 											for (let foundid of foundlist) {
 												that.mapctx.featureCollection.draw(that.centerlinefeats["layerkey"], 
 												foundid, {'normal': 'temporary', 'label': 'temporary' }, 
-												{ "path": that.centerlinefeats["symb"] } );
+												{ "graphic": that.symbs["centerlinefeats"] } );
 											}
 			
 										});
@@ -249,7 +261,7 @@ export class LocQuery {
 								for (let foundid of foundlist) {
 									that.mapctx.featureCollection.draw(that.centerlinefeats["layerkey"], 
 									foundid, {'normal': 'temporary', 'label': 'temporary' }, 
-									{ "path": that.centerlinefeats["symb"] } );
+									{ "graphic": that.symbs["centerlinefeats"] } );
 								}
 
 							});
@@ -319,25 +331,26 @@ export class LocQuery {
 								filter_dict = {}
 								filter_dict[that.centerlinefeats["fieldname_topo"]] = responsejson['out']['cod_topo'];
 								that.mapctx.featureCollection.find(that.centerlinefeats["layerkey"], 'EQ', filter_dict, foundlist);
-								//console.warn("feat id:", featid, "feat:", feat, "symb:", GlobalConst.FEATMOUSESEL_HIGHLIGHT[feat.gt])
 								for (let foundid of foundlist) {
 									that.mapctx.featureCollection.draw(that.centerlinefeats["layerkey"], 
 									foundid, {'normal': 'temporary', 'label': 'temporary' }, 
-									{ "path": that.centerlinefeats["symb"] } );
+									{ "graphic": that.symbs["centerlinefeats"] } );
 								}
 
 								filter_dict = {}
 								filter_dict[that.npolfeats["fieldname_topo"]] = responsejson['out']['cod_topo'];
 								filter_dict[that.npolfeats["fieldname_npol"]] = responsejson['out']['npol'];
 								that.mapctx.featureCollection.find(that.npolfeats["layerkey"], 'EQ', filter_dict, foundlist);
-								//console.warn("feat id:", featid, "feat:", feat, "symb:", GlobalConst.FEATMOUSESEL_HIGHLIGHT[feat.gt])
+
 								for (let foundid of foundlist) {
 									that.mapctx.featureCollection.draw(that.npolfeats["layerkey"], 
 									foundid, {'normal': 'temporary', 'label': 'temporary' }, 
-									{ "path": that.npolfeats["symb"] } );
+									{ "graphic": that.symbs["npolfeats"] } );
 								}
 
 							});
+
+							// console.log(responsejson['out']['tiporesp'], responsejson['out']['loc']);
 
 							if (that.loc_layer_key) {
 								const lyr = that.mapctx.tocmgr.getLayer(that.loc_layer_key);
