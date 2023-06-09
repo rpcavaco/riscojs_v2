@@ -215,14 +215,12 @@ export class PopupBox {
 
 export class MaptipBox extends PopupBox {
 
-	featid;
 	feature;
 
-	constructor(p_mapctx, p_layer, p_featid, p_feature, p_styles, p_scrx, p_scry, b_callout) {
+	constructor(p_mapctx, p_layer, p_feature, p_styles, p_scrx, p_scry, b_callout) {
 
 		super(p_mapctx, p_layer, p_styles, p_scrx, p_scry, b_callout);
 
-		this.featid = p_featid;
 		this.feature = p_feature;
 
 	}

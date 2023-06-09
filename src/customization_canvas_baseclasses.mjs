@@ -76,10 +76,7 @@ export class MapPrintInRect {
 	}
 
 	remove(p_mapctx) {
-		const canvas_dims = [];
 		const gfctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
-		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
-
 		gfctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
 	}	
 	
@@ -308,6 +305,7 @@ export class TOC  extends MapPrintInRect {
 	print_attempts;
 	had_prev_interaction;
 	collapsedstate;
+	prevboxenv;
 
 	constructor() {
 
@@ -339,7 +337,11 @@ export class TOC  extends MapPrintInRect {
 
 		this.print_attempts = 0;
 		this.had_prev_interaction = false;
-		this.collapsedstate = "COLLAPSED";
+		this.collapsedstate = "OPEN";
+
+		this.expandenv = 8;
+
+		this.prevboxenv = null;
 	}
 
 	setTOCMgr(p_tocmgr) {
@@ -351,7 +353,13 @@ export class TOC  extends MapPrintInRect {
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		ctx.save();
 
-		ctx.clearRect(this.left-2, this.top-2, this.boxw[this.collapsedstate]+4, this.boxh[this.collapsedstate]+4); 
+		if (this.prevboxenv) {
+			ctx.clearRect(...this.prevboxenv); 	
+			this.prevboxenv = null;
+		} else {
+			const dee = 2 * this.expandenv;
+			ctx.clearRect(this.left-this.expandenv, this.top-this.expandenv, this.boxw[this.collapsedstate]+dee, this.boxh[this.collapsedstate]+dee); 	
+		}
 
 		// cal width
 		let lbl, lyr_labels={}, lyr_fc = {}, lyr_vs_captions={}, lyr_vs_fc={}, varstyle_caption, lang, max_lbl_w = 0, varstyles_fc;
@@ -772,11 +780,7 @@ export class TOC  extends MapPrintInRect {
 				if (this.collapsedstate == "OPEN") {
 
 					topcnv.style.cursor = "default";
-
-					const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transient", '2d');		
-					const canvas_dims = [];
-					p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
-					gfctx.clearRect(0, 0, ...canvas_dims); 	
+					p_mapctx.renderingsmgr.clearAll(['transient']);
 
 				} else {
 
@@ -784,8 +788,7 @@ export class TOC  extends MapPrintInRect {
 	
 						case 'touchend':
 						case 'mouseup':
-							this.collapsedstate = "OPEN";
-							this.print(p_mapctx);
+							this.inflate(p_mapctx);
 							break;
 							
 						case 'mousemove':
@@ -807,10 +810,7 @@ export class TOC  extends MapPrintInRect {
 				topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 				topcnv.style.cursor = "default";
 
-				const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transient", '2d');		
-				const canvas_dims = [];
-				p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
-				gfctx.clearRect(0, 0, ...canvas_dims); 	
+				p_mapctx.renderingsmgr.clearAll(['transient']);
 
 				this.had_prev_interaction = false;
 			}
@@ -824,9 +824,24 @@ export class TOC  extends MapPrintInRect {
 	}	
 
 	collapse(p_mapctx) {
+
+		if (this.collapsedstate == "COLLAPSED") {
+			return false;
+		}
+
+		const dee = 2 * this.expandenv;
+
+		this.prevboxenv = [this.left-this.expandenv, this.top-this.expandenv, this.boxw[this.collapsedstate]+dee, this.boxh[this.collapsedstate]+dee];
 		this.collapsedstate = "COLLAPSED";
 		this.print(p_mapctx);
+
+		return true;
 	}
+
+	inflate(p_mapctx) {
+		this.collapsedstate = "OPEN";
+		this.print(p_mapctx);
+	}	
 }
 
 
@@ -845,18 +860,21 @@ export class Info {
 		this.ibox = null;
 		this.mapctx = p_mapctx;
 	}
-	hover(p_layerkey, p_featid, p_feature, p_scrx, p_scry) {
+	hover(p_layerkey, p_feature, p_scrx, p_scry) {
 		// this.curr_layerkey = p_layerkey;
 		// this.curr_featid = p_featid;
 		//console.log("Maptip, layer:", p_layerkey, " feat:", p_featid);
 		const currlayer = this.mapctx.tocmgr.getLayer(p_layerkey);
-		this.callout = new MaptipBox(this.mapctx, currlayer, p_featid, p_feature, this.styles, p_scrx, p_scry, true);
+		//console.trace(currlayer, p_featid, p_feature);
+		this.callout = new MaptipBox(this.mapctx, currlayer, p_feature, this.styles, p_scrx, p_scry, true);
 		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		this.callout.clear(ctx);
 		this.callout.draw(ctx);
 	}
-	pick(p_layerkey, p_featid, p_feature, p_scrx, p_scry) {
-		this.clear(this.mapctx, p_layerkey, p_featid, p_scrx, p_scry)
+	pick(p_layerkey, p_feature, p_scrx, p_scry) {
+
+		this.clear();
+		// this.clear(this.mapctx, p_layerkey, p_featid, p_scrx, p_scry)
 		// this.curr_layerkey = p_layerkey;
 		// this.curr_featid = p_featid;
 
@@ -873,7 +891,7 @@ export class Info {
 			return;
 		}
 
-		let keyval;
+		let keyval, ret = false;
 		const _keyval = p_feature.a[currlayer["infocfg"]["keyfield"]];
 
 		if (currlayer["infocfg"]["keyisstring"] === undefined || !currlayer["infocfg"]["keyisstring"])
@@ -881,30 +899,38 @@ export class Info {
 		else
 			keyval = _keyval.toString();
 
+		if (keyval) {
 
-		const that = this;
-		const lyr = this.mapctx.tocmgr.getLayer(p_layerkey);
+			ret = true;
 
-		// done - [MissingFeat 0002] - Obter este URL de configs
-		fetch(currlayer.url + "/doget", {
-			method: "POST",
-			body: JSON.stringify({"alias":lyr.infocfg.qrykey,"filtervals":[keyval],"pbuffer":0,"lang":"pt"})
-		})
-		.then(response => response.json())
-		.then(
-			function(responsejson) {
-				// console.log("cust_canvas_baseclasses:828 - antes criação InfoBox");
-				const currlayer = that.mapctx.tocmgr.getLayer(p_layerkey);
-				that.ibox = new InfoBox(that.mapctx, currlayer, responsejson, that.styles, p_scrx, p_scry, that.infobox_pick, false);
-				const ctx = that.mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
-				that.ibox.clear(ctx);
-				that.ibox.draw(ctx);	
-				// console.log("cust_canvas_baseclasses:836 - ibox:", that.ibox);
-				
-			}
-		).catch((error) => {
-			console.error(`Impossible to fetch attributes on '${p_layerkey}'`, error);
-		});	
+			const that = this;
+			const lyr = this.mapctx.tocmgr.getLayer(p_layerkey);
+	
+			// done - [MissingFeat 0002] - Obter este URL de configs
+			fetch(currlayer.url + "/doget", {
+				method: "POST",
+				body: JSON.stringify({"alias":lyr.infocfg.qrykey,"filtervals":[keyval],"pbuffer":0,"lang":"pt"})
+			})
+			.then(response => response.json())
+			.then(
+				function(responsejson) {
+					// console.log("cust_canvas_baseclasses:828 - antes criação InfoBox");
+					const currlayer = that.mapctx.tocmgr.getLayer(p_layerkey);
+					that.ibox = new InfoBox(that.mapctx, currlayer, responsejson, that.styles, p_scrx, p_scry, that.infobox_pick, false);
+					const ctx = that.mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
+					that.ibox.clear(ctx);
+					that.ibox.draw(ctx);	
+					// console.log("cust_canvas_baseclasses:836 - ibox:", that.ibox);
+					
+				}
+			).catch((error) => {
+				console.error(`Impossible to fetch attributes on '${p_layerkey}'`, error);
+			});	
+
+		}
+
+		return ret;
+
 	} 
 	// mouse pick inside info box and over any of its items
 	infobox_pick(p_info_box, p_data_rec, p_fldname, p_column_idx) {
@@ -921,8 +947,7 @@ export class Info {
 			window.open(p_info_box.urls[p_fldname], "_blank");
 		}
 	}
-	clear(p_layerkey, p_featid, p_scrx, p_scry) {
-		//console.log("info/tip clear, prev layer:", p_layerkey, " feat:", p_featid);
+	clear() {
 		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		if (this.ibox) {
 			this.ibox.clear(ctx);

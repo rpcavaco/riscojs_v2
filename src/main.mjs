@@ -366,6 +366,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		let symb = new GrSymbol();
 		let lsymb = new GrSymbol();
+		let ret = null;
 
 		const ly = this.tocmgr.getLayer(p_layer_key);
 
@@ -386,12 +387,13 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 			// console.log('lsymb:', lsymb);
 
-			this.featureCollection.draw(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict, { "graphic": symb, 'label': lsymb } );
+			ret = this.featureCollection.draw(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict, { "graphic": symb, 'label': lsymb } );
 			
 		} else {
 			console.error(`[WARN] drawSingleFeature: no layer found for id ${p_layer_key}`);
 		}
 
+		return ret;
 	}
 
 	// opt_alt_canvaskeys_dict: {'normal': 'temporary', 'label': 'temporary' }
@@ -404,7 +406,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			hlStyles = GlobalConst.FEATMOUSESEL_HIGHLIGHT;
 		}
 
-		this.drawSingleFeature(p_layer_key, p_obj_id, hlStyles, opt_alt_canvaskeys_dict);
+		return this.drawSingleFeature(p_layer_key, p_obj_id, hlStyles, opt_alt_canvaskeys_dict);
 	}
 
 	transformsChanged(b_dodraw) {
@@ -499,7 +501,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				// abrir info
 				const ic = ci.instances["infoclass"];
 				if (ic) {
-					ic.pick(lastk, lastid, the_feat, ...spt);
+					ic.pick(lastk, the_feat, ...spt);
 
 					itool = this.toolmgr.findTool("InfoTool");
 					if (itool) {
@@ -515,6 +517,34 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		});
 
 		this.transformmgr.zoomToRect(...p_env);		
+	}
+
+	clearInteractions() {
+
+		let ipanel = false;
+		const itool = this.toolmgr.findTool("InfoTool");
+		if (itool) {
+			if (itool.getPanelActive()) {
+				ipanel = true;
+			}
+		}
+
+		if (ipanel) {
+			const ci = this.getCustomizationObject();
+			if (ci == null) {
+				throw new Error("clearInteractions, no customization object found")
+			}
+	
+			const ic = ci.instances["infoclass"];
+	
+			if (ic) {
+				ic.clear();
+			}
+
+			this.renderingsmgr.clearAll(['temporary', 'transient']);
+		}
+
+
 	}
 
 

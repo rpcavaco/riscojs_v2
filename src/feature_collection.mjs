@@ -209,7 +209,8 @@ export class FeatureCollection {
 	
 	draw(p_layerkey, opt_featid, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
 
-		let feat;
+		let ret = null;
+		let feat = null;
 
 		if (this.featList[p_layerkey] === undefined) {
 			throw new Error(`layer '${p_layerkey}' was not set through 'setLayer' method`);
@@ -221,6 +222,7 @@ export class FeatureCollection {
 			if (feat == null) {
 				throw new Error(`layer '${p_layerkey}' no feature for id ${opt_featid}`);
 			}
+			ret = feat;
 			this.layers[p_layerkey].refreshitem(this.mapctx, feat.g, feat.a, feat.l, opt_featid, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
 
 		} else {
@@ -232,6 +234,8 @@ export class FeatureCollection {
 				}
 			}
 		}
+
+		return ret;
 	}
 
 	get(p_layerkey, p_id) {

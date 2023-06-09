@@ -190,6 +190,8 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 
 		if (nearestid >= 0) {
 
+			feat = null;
+
 			if (GlobalConst.getDebug("FEATMOUSESEL")) {
 				console.log(`[DBG:FEATMOUSESEL] interact with NEAREST: ${nearestlyk}, dist:${dist} (max: ${p_maxdist}) to id:${nearestid}`);
 			}
@@ -207,16 +209,13 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, opt_acton
 			}
 
 			if (p_maxdist == null || p_maxdist >=  dist) {
-
-				p_mapctx.drawFeatureAsMouseSelected(nearestlyk, nearestid, {'normal': 'temporary', 'label': 'temporary' });
-
-				ret_dir_interact = true;
-				if (opt_actonselfeat) {
-					opt_actonselfeat(nearestlyk, nearestid, p_mapctx.featureCollection.get(nearestlyk, nearestid), p_scrx, p_scry);
+				feat = p_mapctx.drawFeatureAsMouseSelected(nearestlyk, nearestid, {'normal': 'temporary', 'label': 'temporary' });
+				if (opt_actonselfeat && feat!=null) {
+					ret_dir_interact = opt_actonselfeat(nearestlyk, feat, p_scrx, p_scry);
 				}
 			} else {
 				if (opt_clearafterselfeat) {
-					opt_clearafterselfeat(nearestlyk, nearestid, p_scrx, p_scry);
+					opt_clearafterselfeat();
 				}
 			}
 		}
@@ -490,9 +489,11 @@ class MultiTool extends BaseTool {
 class InfoTool extends BaseTool {
 
 	pickpanel_active;
+	toc_collapsed;
 	constructor() {
 		super(true, true); // part of general toggle group, default in toogle
 		this.pickpanel_active = false;
+		this.toc_collapsed = false;
 	}
 
 	static mouseselMaxdist(p_mapctx) {
@@ -509,6 +510,7 @@ class InfoTool extends BaseTool {
 		}
 
 		const ic = ci.instances["infoclass"];
+		const toc = ci.instances["toc"];
 		//console.log("interactions:512 - ibox is null:", ic.ibox==null);
 
 		try {
@@ -516,7 +518,7 @@ class InfoTool extends BaseTool {
 			let insideactivepanel = false;
 
 			if (ic.ibox != null && ic.pick !== undefined) {
-				if (this.pickpanel_active) {
+				if (this.getPanelActive()) {
 					if (p_evt.clientX >= ic.ibox.box[0] && p_evt.clientX <= ic.ibox.box[0] + ic.ibox.box[2] && 
 						p_evt.clientY >= ic.ibox.box[1] && p_evt.clientY <= ic.ibox.box[1] + ic.ibox.box[3]) {
 							insideactivepanel = true;
@@ -543,16 +545,24 @@ class InfoTool extends BaseTool {
 				case 'touchend':
 				case 'mouseup':
 					if (ic.pick !== undefined) {
-						if (this.pickpanel_active) {
+						if (this.getPanelActive()) {
 							if (insideactivepanel) {
 								ic.interact(p_evt);
 							} else {
-								this.pickpanel_active = false;
+								this.setPanelActive(false);
 							}
 						}
-						if (!this.pickpanel_active) {
+						if (!this.getPanelActive()) {
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-							this.pickpanel_active = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, ic.pick.bind(ic));
+							this.setPanelActive(interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, ic.pick.bind(ic)));
+							if (this.getPanelActive()) {
+								this.toc_collapsed = toc.collapse(p_mapctx);
+							} else {
+								if (this.toc_collapsed) {
+									toc.inflate(p_mapctx);
+									this.toc_collapsed = false;
+								}
+							}
 						}
 					} else {
 						console.warn(`infoclass customization unavailable, cannot pick feature`);			
@@ -560,7 +570,7 @@ class InfoTool extends BaseTool {
 					break;
 
 				case 'mousemove':
-					if (!this.pickpanel_active) {
+					if (!this.getPanelActive()) {
 						if (ic.hover !== undefined) {
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
 							interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, ic.hover.bind(ic), ic.clear.bind(ic));
@@ -582,6 +592,11 @@ class InfoTool extends BaseTool {
 	setPanelActive(b_panel_is_active) {
 		this.pickpanel_active = b_panel_is_active;
 	}
+
+	getPanelActive() {
+		return this.pickpanel_active;
+	}
+
 }
 
 class MeasureTool extends BaseTool {

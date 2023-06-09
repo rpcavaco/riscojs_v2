@@ -481,13 +481,19 @@ export class LocQuery {
 		}
 		
 
-		(function(p_btn, p_query_box, p_qryb_obj) {
+		(function(p_btn, p_query_box, p_qryb_obj, pp_mapctx) {
 			
 			p_qryb_obj.lastinput = "";
 
 			// Query clear button
 			p_btn.addEventListener("click", function(e) { 
+				
+				// clear input box
 				p_qryb_obj.clear(true);
+
+				// clear up map UI
+				pp_mapctx.clearInteractions();
+
 			}); 
 
 			// Query box input event
@@ -535,7 +541,7 @@ export class LocQuery {
 				}); 
 			})(p_query_box, p_qryb_obj);	
 
-		})(this.query_clrbtn, this.query_box, this);	
+		})(this.query_clrbtn, this.query_box, this, p_mapctx);	
 
 	}				
 
