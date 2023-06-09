@@ -181,7 +181,8 @@ var GlobalConst = {
 		TOC_ACTIVECOLOR: "white",
 		TOC_INACTIVECOLOR: "grey",
 		TOC_STRIKETHROUGH_FILL: "rgba(200, 200, 200, 0.3)",
-		TOC_COLLAPSED_STRIPES_FILL: "rgba(220, 220, 220, 0.75)"
+		TOC_COLLAPSED_STRIPES_FILL: "rgba(220, 220, 220, 0.75)",
+		TOC_START_COLLAPSED_CANVAS_MAXWIDTH: 800
 	},
 
 	DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB: { // Symbolize spatial index features selected on mouse position

@@ -61,6 +61,10 @@
 	OK - interatividade de TOC
 - OK - hovering events over control surfaces of widgets
 - OK - janela de info ao final de query alfa
+- OK - esconder TOC
+	OK - quando o INFO está ativo
+	OK - qunado o canvas é estreito
+
 
 - info scrollable
 
@@ -68,15 +72,12 @@
 	- highlight com simbolo diferenciado de conjunto / individuo selecionado
 	- tabela atributos da seleção
 
-- evitar o disparo de info no mouse up / touchend de final de zoom / pan
 
-- >> esconder TOC
-	quando o INFO está ativo
-	qunado o canvas é estreito
 
-- debug geral Localizador
 
-- limitar tamanho máximo símbolo marker a p_vert_step
+- >> debug geral Localizador
+
+- >>> limitar tamanho máximo símbolo marker a p_vert_step
 
 
 

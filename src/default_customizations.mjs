@@ -1033,7 +1033,7 @@ export class MapCustomizations {
 		this.instances = {
 			"basiccontrolsbox": new BasicCtrlBox(),
 			"basemapctrl": new BasemapCtrlBox(),
-			"toc": new TOC(),
+			"toc": new TOC(p_mapctx),
 			"infoclass": new Info(this.mapctx, GlobalConst.INFO_MAPTIPS_BOXSTYLE),
 			"mousecoordsprint": new MousecoordsPrint(),
 			"mapscaleprint": new MapScalePrint(),

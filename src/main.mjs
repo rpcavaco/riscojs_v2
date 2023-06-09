@@ -519,6 +519,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		this.transformmgr.zoomToRect(...p_env);		
 	}
 
+	
 	clearInteractions() {
 
 		const ci = this.getCustomizationObject();

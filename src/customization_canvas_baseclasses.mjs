@@ -307,7 +307,7 @@ export class TOC  extends MapPrintInRect {
 	collapsedstate;
 	prevboxenv;
 
-	constructor() {
+	constructor(p_mapctx) {
 
 		super();
 
@@ -337,11 +337,20 @@ export class TOC  extends MapPrintInRect {
 
 		this.print_attempts = 0;
 		this.had_prev_interaction = false;
-		this.collapsedstate = "OPEN";
 
 		this.expandenv = 8;
 
 		this.prevboxenv = null;
+
+		let mapdims = [];
+		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
+
+		if (mapdims[0] <  GlobalConst.CONTROLS_STYLES.TOC_START_COLLAPSED_CANVAS_MAXWIDTH) {
+			this.collapsedstate = "COLLAPSED";
+
+		} else {
+			this.collapsedstate = "OPEN";
+		}
 	}
 
 	setTOCMgr(p_tocmgr) {
