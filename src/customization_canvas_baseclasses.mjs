@@ -629,69 +629,72 @@ export class TOC  extends MapPrintInRect {
 
 		let i=-1, ret = false, step;
 		let changed=false, found = null, topcnv;
+
 		if (p_evt.clientX >= this.left && p_evt.clientX <= this.left+this.boxw[this.collapsedstate] && p_evt.clientY >= this.top && p_evt.clientY <= this.top+this.boxh[this.collapsedstate]) {
 
-			for (let lyr, li=this.tocmgr.layers.length-1; li>=0; li--) {
+			if (this.collapsedstate == "OPEN") {
 
-				lyr = this.tocmgr.layers[li];
+				for (let lyr, li=this.tocmgr.layers.length-1; li>=0; li--) {
 
-				if (lyr["label"] !== undefined && lyr["label"] != "none") {
-					
-					i++;
-					if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
-						step = stepSubEntry;
-					} else {
-						step = stepEntry;
-					}
-					next = prev + step;
-
-					// use prev, next
-					if (ctx) {
-						ctx.strokeRect(left, prev, width, step);
-					}
-					if (p_evt.clientX >= left && p_evt.clientX <= this.left+width && p_evt.clientY >= prev && p_evt.clientY <= next) {
-						found = {
-							"key": lyr.key,
-							"subkey": null
-						};
-						break;
-					}
-
-					prev = next;
-					
-					if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
-						for (let vs, vi=0; vi<lyr["varstyles_symbols"].length; vi++) {
-
-							vs = lyr["varstyles_symbols"][vi];
-
-							i++;
-							if (vi < (lyr["varstyles_symbols"].length-1)) {
-								step = stepSubEntry;
-							} else {
-								step = stepEntry;
-							}
-							next = prev + step;
-
-							// use prev, next
-							if (ctx) {
-								ctx.strokeRect(left, prev, width, step);
-							}
-							if (p_evt.clientX >= left && p_evt.clientX <= this.left+width && p_evt.clientY >= prev && p_evt.clientY <= next) {
-								found = {
-									"key": lyr.key,
-									"subkey": vs.key
-								};
-								break;
-							}				
-							prev = next;	
+					lyr = this.tocmgr.layers[li];
+					if (lyr["label"] !== undefined && lyr["label"] != "none") {
+						
+						i++;
+						if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
+							step = stepSubEntry;
+						} else {
+							step = stepEntry;
 						}
+						next = prev + step;
 
-						if (found) {
+						// use prev, next
+						if (ctx) {
+							ctx.strokeRect(left, prev, width, step);
+						}
+						if (p_evt.clientX >= left && p_evt.clientX <= this.left+width && p_evt.clientY >= prev && p_evt.clientY <= next) {
+							found = {
+								"key": lyr.key,
+								"subkey": null
+							};
 							break;
 						}
-					}
-				}
-			}
+
+						prev = next;
+						
+						if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
+							for (let vs, vi=0; vi<lyr["varstyles_symbols"].length; vi++) {
+
+								vs = lyr["varstyles_symbols"][vi];
+
+								i++;
+								if (vi < (lyr["varstyles_symbols"].length-1)) {
+									step = stepSubEntry;
+								} else {
+									step = stepEntry;
+								}
+								next = prev + step;
+
+								// use prev, next
+								if (ctx) {
+									ctx.strokeRect(left, prev, width, step);
+								}
+								if (p_evt.clientX >= left && p_evt.clientX <= this.left+width && p_evt.clientY >= prev && p_evt.clientY <= next) {
+									found = {
+										"key": lyr.key,
+										"subkey": vs.key
+									};
+									break;
+								}				
+								prev = next;	
+							}
+
+							if (found) {
+								break;
+							}
+						} // if lyr["varstyles_symbols"] exist
+					} // if lyr["label"] exists
+				} // for lyr
+			} // this.collapsedstate == "OPEN"
 
 			ret = true;
 			this.had_prev_interaction = true;
@@ -753,29 +756,49 @@ export class TOC  extends MapPrintInRect {
 							msg = p_mapctx.i18n.msg('SHOWTOC', true);
 						}
 	
-						ctrToolTip(p_mapctx, p_evt, msg, [250,30]);
-	
+						ctrToolTip(p_mapctx, p_evt, p_mapctx.i18n.msg('ALTVIZ', true), [250,30]);	
 						break;
 	
 					default:
 						topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 						topcnv.style.cursor = "default";
 	
-	
-	
 				}
 	
 			} else {
 	
 				topcnv = p_mapctx.renderingsmgr.getTopCanvas();
-				topcnv.style.cursor = "default";
 
-				const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transient", '2d');		
-				const canvas_dims = [];
-				p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
-				gfctx.clearRect(0, 0, ...canvas_dims); 				
+				if (this.collapsedstate == "OPEN") {
+
+					topcnv.style.cursor = "default";
+
+					const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transient", '2d');		
+					const canvas_dims = [];
+					p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+					gfctx.clearRect(0, 0, ...canvas_dims); 	
+
+				} else {
+
+					switch(p_evt.type) {
+	
+						case 'touchend':
+						case 'mouseup':
+							this.collapsedstate = "OPEN";
+							this.print(p_mapctx);
+							break;
+							
+						case 'mousemove':
+							topcnv.style.cursor = "pointer";
+							ctrToolTip(p_mapctx, p_evt, p_mapctx.i18n.msg('SHOWTOC', true), [250,30]);	
+							break;
+
+					}
+				}
+				
+				console.log("OUT THROUGH 778");
 			}
-		
+
 		} else {
 
 			if (this.had_prev_interaction) {
@@ -790,12 +813,8 @@ export class TOC  extends MapPrintInRect {
 				gfctx.clearRect(0, 0, ...canvas_dims); 	
 
 				this.had_prev_interaction = false;
-
 			}
-
 		}
-
-
 
 		if (ctx) {
 			ctx.restore();
@@ -803,6 +822,11 @@ export class TOC  extends MapPrintInRect {
 
 		return ret;
 	}	
+
+	collapse(p_mapctx) {
+		this.collapsedstate = "COLLAPSED";
+		this.print(p_mapctx);
+	}
 }
 
 
