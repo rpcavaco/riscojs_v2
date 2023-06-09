@@ -869,7 +869,7 @@ class BasemapCtrlBox extends MapPrintInRect {
 			ctx.fillRect(...b1);
 			ctx.strokeRect(...b1);
 
-			if (this.FilterOption == "COLOR") {
+			if (this.FilterOption == "BW") {
 				this.draw3CircSymbol(ctx, ["blue", "red", "green"]);
 			} else {
 				this.draw3CircSymbol(ctx, ["rgb(30, 30, 30)", "rgb(100, 100, 100)", "rgb(150, 150, 150)"]);
