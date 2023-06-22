@@ -530,7 +530,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	}
 
 	
-	clearInteractions() { //opt_clear_temp_also) {
+	clearInteractions(opt_clear_temp_also) { 
 
 		const ci = this.getCustomizationObject();
 		if (ci == null) {
@@ -542,11 +542,11 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			ic.clear();
 		}
 
-		/* if (opt_clear_temp_also) {
+		if (opt_clear_temp_also) {
 			this.renderingsmgr.clearAll(['transient', 'temporary']);
-		} else { */
+		} else {
 			this.renderingsmgr.clearAll(['transient']);
-		//}
+		}
 
 	}
 

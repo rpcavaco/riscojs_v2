@@ -22,6 +22,7 @@ export class LocQuery {
 	otherqueriesmgr;
 
 	constructor(p_mapctx, p_msgs_ctrlr, p_cfg, p_crs, opt_loc_layer_key) {
+
 		this.mapctx = p_mapctx;
 		this.msgs_ctrlr = p_msgs_ctrlr;
 		this.url = p_cfg["url"];
@@ -68,8 +69,6 @@ export class LocQuery {
 
 
 	clear(p_full) {
-
-		// console.trace("-- LocQuery clear --, full:", p_full);
 
 		let lyr = null;
 		if (this.loc_layer_key) {
@@ -223,9 +222,12 @@ export class LocQuery {
 							that.cleanResultArea(true);	
 							that.query_results.innerText = responsejson['out']['toponym'];
 							that.query_results.style.display = '';
-							that.query_results.style.height = 40 + "px";
 
-							//console.log("TOPO >>>>> ", responsejson['out']['toponym']);
+							if (navigator.userAgent.toLowerCase().includes("mobile") || navigator.userAgent.toLowerCase().includes("android")) {
+								that.query_results.style.height = 14 + "px";
+							} else {
+								that.query_results.style.height = 16 + "px";
+							}
 
 							that.mapctx.tocmgr.addAfterRefreshProcedure(() => {
 
@@ -408,7 +410,7 @@ export class LocQuery {
 			this.query_box.style.top = bcb.top + "px";
 			this.query_box.style.left = xoffset + "px";	
 
-			this.query_results.style.top = bcb.top + qryboxheight + "px";
+			this.query_results.style.top = 6 + bcb.top + qryboxheight + "px";
 			this.query_results.style.left = this.query_box.style.left;	
 		} else {
 			this.query_box.style.top = p_global_constants.CONTROLS_STYLES.OFFSET + "px";
@@ -466,15 +468,13 @@ export class LocQuery {
 				p_qryb_obj.clear(true);
 
 				// clear up map UI
-				pp_mapctx.clearInteractions();
+				pp_mapctx.clearInteractions(true);
 
 			}); 
 
 			// Query box input event
 			(function(pp_query_box, pp_qryb_obj) {
 				const evttypes = ["input", "paste"];
-				let now, lastqtime = null;
-
 				for (let i=0; i<evttypes.length; i++) {
 
 					pp_query_box.addEventListener(evttypes[i], function(e) {
@@ -483,7 +483,6 @@ export class LocQuery {
 						if (clntxt.length > 2) {
 							if (clntxt != p_qryb_obj.lastinput) {
 								p_qryb_obj.lastinput = clntxt;
-								//lastqtime = new Date();
 								p_qryb_obj.query(p_qryb_obj.lastinput);
 							}
 						} else if (clntxt.length == 0) {
