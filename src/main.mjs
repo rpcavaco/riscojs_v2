@@ -387,8 +387,6 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				Object.assign(lsymb, p_geomtype_keyed_symbdict['label']);
 			}
 
-			// console.log('lsymb:', lsymb);
-
 			ret = this.featureCollection.draw(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict, { "graphic": symb, 'label': lsymb } );
 			
 		} else {
@@ -519,11 +517,6 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				const ic = ci.instances["infoclass"];
 				if (ic) {
 					ic.pick(lastk, the_feat, ...spt);
-
-					itool = this.toolmgr.findTool("InfoTool");
-					if (itool) {
-						itool.setPanelActive(true);
-					}
 				}
 		
 			}
@@ -537,7 +530,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	}
 
 	
-	clearInteractions() {
+	clearInteractions() { //opt_clear_temp_also) {
 
 		const ci = this.getCustomizationObject();
 		if (ci == null) {
@@ -549,8 +542,11 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			ic.clear();
 		}
 
-		this.renderingsmgr.clearAll(['temporary', 'transient']);
-
+		/* if (opt_clear_temp_also) {
+			this.renderingsmgr.clearAll(['transient', 'temporary']);
+		} else { */
+			this.renderingsmgr.clearAll(['transient']);
+		//}
 
 	}
 

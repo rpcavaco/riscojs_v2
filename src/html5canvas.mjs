@@ -90,6 +90,8 @@
 	
 	clearAll(p_ckeys) {
 
+		//console.log("   CLEAR ALL", p_ckeys);
+
 		let keys;
 		if (p_ckeys) {
 			keys = p_ckeys;

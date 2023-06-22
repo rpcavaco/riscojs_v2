@@ -834,22 +834,24 @@ export class TOC  extends MapPrintInRect {
 
 	collapse(p_mapctx) {
 
-		if (this.collapsedstate == "COLLAPSED") {
-			return false;
+		if (this.collapsedstate != "COLLAPSED") {
+
+			const dee = 2 * this.expandenv;
+
+			this.prevboxenv = [this.left-this.expandenv, this.top-this.expandenv, this.boxw[this.collapsedstate]+dee, this.boxh[this.collapsedstate]+dee];
+			this.collapsedstate = "COLLAPSED";
+			this.print(p_mapctx);
+
 		}
 
-		const dee = 2 * this.expandenv;
-
-		this.prevboxenv = [this.left-this.expandenv, this.top-this.expandenv, this.boxw[this.collapsedstate]+dee, this.boxh[this.collapsedstate]+dee];
-		this.collapsedstate = "COLLAPSED";
-		this.print(p_mapctx);
-
-		return true;
+		return (this.collapsedstate == "COLLAPSED");
 	}
 
 	inflate(p_mapctx) {
 		this.collapsedstate = "OPEN";
 		this.print(p_mapctx);
+
+		return (this.collapsedstate == "OPEN");
 	}	
 }
 
@@ -870,6 +872,7 @@ export class Info {
 		this.mapctx = p_mapctx;
 	}
 	hover(p_layerkey, p_feature, p_scrx, p_scry) {
+
 		// this.curr_layerkey = p_layerkey;
 		// this.curr_featid = p_featid;
 		//console.log("Maptip, layer:", p_layerkey, " feat:", p_featid);
@@ -881,11 +884,6 @@ export class Info {
 		this.callout.draw(ctx);
 	}
 	pick(p_layerkey, p_feature, p_scrx, p_scry) {
-
-		this.clear();
-		// this.clear(this.mapctx, p_layerkey, p_featid, p_scrx, p_scry)
-		// this.curr_layerkey = p_layerkey;
-		// this.curr_featid = p_featid;
 
 		const currlayer = this.mapctx.tocmgr.getLayer(p_layerkey);
 		if (currlayer["infocfg"] === undefined) {
@@ -929,6 +927,19 @@ export class Info {
 					const ctx = that.mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
 					that.ibox.clear(ctx);
 					that.ibox.draw(ctx);	
+
+					const ci = that.mapctx.getCustomizationObject();
+					if (ci == null) {
+						throw new Error("Info.pick, map context customization instance is missing")
+					}
+			
+					const toc = ci.instances["toc"];
+					const itool = that.mapctx.toolmgr.findTool("InfoTool");
+					if (itool) {
+						itool.setPanelActive(true);					
+						itool.setTocCollapsed(toc.collapse(that.mapctx));
+					}
+
 					// console.log("cust_canvas_baseclasses:836 - ibox:", that.ibox);
 					
 				}
@@ -958,12 +969,34 @@ export class Info {
 	}
 	clear() {
 		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+
 		if (this.ibox) {
+
 			this.ibox.clear(ctx);
+
+			const ci = this.mapctx.getCustomizationObject();
+			if (ci == null) {
+				throw new Error("Info.pick, map context customization instance is missing")
+			}
+	
+			const toc = ci.instances["toc"];
+			const itool = this.mapctx.toolmgr.findTool("InfoTool");
+			if (itool) {
+				itool.setPanelActive(false);					
+				itool.setTocCollapsed(toc.inflate(this.mapctx));
+			}
+			//console.trace("clear all temporary");
+			this.mapctx.renderingsmgr.clearAll(['temporary']);
+
 		}
+
+		// console.log("clear:", this.ibox!=null, this.callout!=null);
+
 		if (this.callout) {
 			this.callout.clear(ctx);
+			this.mapctx.renderingsmgr.clearAll(['transient']);
 		}
+
 	}
 	interact(p_evt) {
 		if (this.ibox) {
