@@ -57,20 +57,10 @@ export class LocQuery {
 		this.otherqueriesmgr = p_otherqueriesmgr;
 	}
 
-/* 	isQuerying() {
-		return this._querying;
-	}
-
-	startedQuerying() {
-		this._querying = true;
-	}	
-
-	stoppedQuerying() {
-		this._querying = false;
-	} */
-
-	cleanResultArea() {
-		this.query_results.style.display = 'none';	
+	cleanResultArea(p_keepshown) {
+		if (!p_keepshown) {
+			this.query_results.style.display = 'none';	
+		}
 		while (this.query_results.firstChild) {
 			this.query_results.removeChild(this.query_results.firstChild);
 		}
@@ -93,6 +83,8 @@ export class LocQuery {
 				this.mapctx.maprefresh();
 			}	
 		}
+
+		this.mapctx.renderingsmgr.clearAll(['temporary']);
 		this.cleanResultArea();	
 		this.query_box.value = '';	
 		this.#lastinput = '';
@@ -134,32 +126,6 @@ export class LocQuery {
 		return ret;
 	}
 
-	/* query(p_qrystr) {
-
-		if (this.isQuerying()) {
-
-			// Prevent effective re-refreshing calls while refresh process is still in progress
-			// A single refresh call is delayed to happen after previous refresh process is finished
-			
-			if (this._query_timeout_id) {
-				clearTimeout(this._query_timeout_id);
-			}
-
-			(function(p_this, pp_qrystr, p_delay_msecs) {
-				p_this._query_timeout_id = setTimeout(function() {
-					p_this.query(pp_qrystr);
-				}, p_delay_msecs);
-			})(this, p_qrystr, 700);
-
-		} else {
-
-			this.startedQuerying();
-			this._query(p_qrystr);
-
-		}
-
-	} */
-
 	query(p_qrystr) {
 
 		const msgs_ctrlr  = this.msgs_ctrlr;
@@ -169,7 +135,7 @@ export class LocQuery {
 
 		if (this.otherqueriesmgr) {
 			const oqtype = this.otherqueriesmgr.test(p_qrystr);
-			const pt_buffer_dist = 50;
+			// const pt_buffer_dist = 50;
 			if (oqtype != "none") {
 				this.otherqueriesmgr.query([ p_qrystr ]);
 				return;
@@ -208,15 +174,16 @@ export class LocQuery {
 						hei = 0;
 						that.query_results.style.display = '';		
 						for(const top of responsejson['toponyms']['list']) {
+
 							p = that.query_results.appendChild(document.createElement('p'));
 							((p_elem, p_this, p_cod_topo, p_toponimo, p_env) => {
 								p_elem.innerText = p_toponimo;
 								p_elem.classList.add("hoverme");
 								p_elem.addEventListener(
 									'click', (e) => { 
+
 										p_this.setTopo(p_cod_topo, p_toponimo);
 										p_this.query_box.value = p_toponimo;
-										p_this.query_results.style.display = 'none';
 
 										that.mapctx.tocmgr.addAfterRefreshProcedure(() => {
 
@@ -237,6 +204,7 @@ export class LocQuery {
 							})(p, that, top['cod_topo'], top['toponimo'], top['env']);
 							r = p.getBoundingClientRect();
 							hei += r.height;
+
 						}
 						if (hei == 0) {								
 							that.cleanResultArea();	
@@ -250,7 +218,14 @@ export class LocQuery {
 
 							// console.log("!! TEST B !!", p_qrystr, that.lastinput, that.query_box.value);
 
-							that.query_box.value = responsejson['out']['toponym'];
+							// that.query_box.value = responsejson['out']['toponym'];
+
+							that.cleanResultArea(true);	
+							that.query_results.innerText = responsejson['out']['toponym'];
+							that.query_results.style.display = '';
+							that.query_results.style.height = 40 + "px";
+
+							//console.log("TOPO >>>>> ", responsejson['out']['toponym']);
 
 							that.mapctx.tocmgr.addAfterRefreshProcedure(() => {
 
@@ -269,8 +244,6 @@ export class LocQuery {
 							that.mapctx.transformmgr.zoomToRect(responsejson['out']['ext'][0], responsejson['out']['ext'][1], responsejson['out']['ext'][2], responsejson['out']['ext'][3]);
 						}
 
-						that.cleanResultArea();
-						
 						if (responsejson['out']['errornp'] !== undefined) {
 
 							if (that.query_results == null) {
@@ -321,6 +294,7 @@ export class LocQuery {
 
 							that.query_results.style.height = hei + "px";
 						}
+						
 					} else if (responsejson['out']['tiporesp'] == 'npol') {
 
 						if (that.setNpol(responsejson['out']['npol'], responsejson['out']['cod_topo'], responsejson['out']['toponym'])) {
@@ -502,33 +476,21 @@ export class LocQuery {
 				let now, lastqtime = null;
 
 				for (let i=0; i<evttypes.length; i++) {
-					pp_query_box.addEventListener(evttypes[i], function(e) {
-						//console.log(">>", lastqtime, ">>>", e);
-						if (lastqtime) {
-							now = new Date();
-							if ((now-lastqtime) < 200) {
-								e.preventDefault();
-								return;
-							} else {
-								lastqtime = null;
-							}
-						} else {
 
-							let clntxt = pp_query_box.value.trim();
-							//console.log("::375:: qryb EVENT", e.type, clntxt, pp_query_box.value, "len", clntxt.length, "!=", p_qryb_obj.lastinput.length);
-							if (clntxt.length > 2) {
-								if (clntxt != p_qryb_obj.lastinput) {
-									p_qryb_obj.lastinput = clntxt;
-									lastqtime = new Date();
-									p_qryb_obj.query(p_qryb_obj.lastinput);
-								}
-							} else if (clntxt.length == 0) {
-								if (p_qryb_obj.lastinput.length > 0) {
-									p_qryb_obj.clear(true);
-								}
+					pp_query_box.addEventListener(evttypes[i], function(e) {
+						let clntxt = pp_query_box.value.trim();
+						//console.log("::375:: qryb EVENT", e.type, clntxt, pp_query_box.value, "len", clntxt.length, "!=", p_qryb_obj.lastinput.length);
+						if (clntxt.length > 2) {
+							if (clntxt != p_qryb_obj.lastinput) {
+								p_qryb_obj.lastinput = clntxt;
+								//lastqtime = new Date();
+								p_qryb_obj.query(p_qryb_obj.lastinput);
+							}
+						} else if (clntxt.length == 0) {
+							if (p_qryb_obj.lastinput.length > 0) {
+								p_qryb_obj.clear(true);
 							}
 						}
-
 					}); 
 				}
 				pp_query_box.addEventListener('keypress', function(e) { 
