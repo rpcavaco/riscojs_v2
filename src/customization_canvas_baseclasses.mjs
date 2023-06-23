@@ -211,7 +211,7 @@ export class ControlsBox extends MapPrintInRect {
 					accum += this.controls_prevgaps[this.controls_keys[ci]];
 				} 
 
-				console.log(navigator.userAgent.toLowerCase());
+				// console.log(navigator.userAgent.toLowerCase());
 				if (ci>0 && (navigator.userAgent.toLowerCase().includes("mobile") || navigator.userAgent.toLowerCase().includes("android"))) {
 					accum += GlobalConst.CONTROLS_STYLES.MOBILE_DEFGAP;
 				}
@@ -864,12 +864,14 @@ export class Info {
 	canvaslayer = 'interactive_viz';
 	styles;
 	mapctx;
+	maxrowsheight;
 
-	constructor(p_mapctx, p_styles) {
+	constructor(p_mapctx, p_styles, opt_maxrowsheight) {
 		this.styles = p_styles;
 		this.callout = null;
 		this.ibox = null;
 		this.mapctx = p_mapctx;
+		this.maxrowsheight = opt_maxrowsheight;
 	}
 	hover(p_layerkey, p_feature, p_scrx, p_scry) {
 
@@ -923,7 +925,7 @@ export class Info {
 				function(responsejson) {
 					// console.log("cust_canvas_baseclasses:828 - antes criação InfoBox");
 					const currlayer = that.mapctx.tocmgr.getLayer(p_layerkey);
-					that.ibox = new InfoBox(that.mapctx, currlayer, responsejson, that.styles, p_scrx, p_scry, that.infobox_pick, false);
+					that.ibox = new InfoBox(that.mapctx, currlayer, responsejson, that.styles, p_scrx, p_scry, that.infobox_pick, false, that.maxrowsheight);
 					const ctx = that.mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
 					that.ibox.clear(ctx);
 					that.ibox.draw(ctx);	

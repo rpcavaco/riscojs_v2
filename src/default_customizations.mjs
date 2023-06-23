@@ -1074,15 +1074,23 @@ export class MapCustomizations {
 	messaging_ctrlr; // object with info, warn and error methods
 	controls_keys; // custom. instances containing interactive controls
 
+
+
 	constructor(p_mapctx, p_messaging_ctrlr) {
 
+		let maxrowsheight;
 		this.mapctx = p_mapctx;
+
+		if (this.mapctx.cfgvar["basic"]["info"] !== "undefined") {
+			maxrowsheight = this.mapctx.cfgvar["basic"]["info"]["maxrowsheight"];
+		}
+
 		this.messaging_ctrlr = p_messaging_ctrlr;
 		this.instances = {
 			"basiccontrolsbox": new BasicCtrlBox(),
 			"basemapctrl": new BasemapCtrlBox(),
 			"toc": new TOC(p_mapctx),
-			"infoclass": new Info(this.mapctx, GlobalConst.INFO_MAPTIPS_BOXSTYLE),
+			"infoclass": new Info(this.mapctx, GlobalConst.INFO_MAPTIPS_BOXSTYLE, maxrowsheight),
 			"mousecoordsprint": new MousecoordsPrint(),
 			"mapscaleprint": new MapScalePrint(),
 			"loadingmsgprint": new LoadingPrint(),

@@ -20,7 +20,7 @@ export class InfoBox extends PopupBox {
 	colsizes;
 	columncount;
 
-	constructor(p_mapctx, p_layer, p_data, p_styles, p_scrx, p_scry, p_infobox_pick_method, b_callout) {
+	constructor(p_mapctx, p_layer, p_data, p_styles, p_scrx, p_scry, p_infobox_pick_method, b_callout, opt_max_rows_height) {
 
 		super(p_mapctx, p_layer, p_styles, p_scrx, p_scry, b_callout);
 
@@ -35,6 +35,10 @@ export class InfoBox extends PopupBox {
 		this.colsizes = [0,0];
 		this.columncount = 2;
 		this.infobox_static_pick_method = p_infobox_pick_method;
+		this.max_rows_height = opt_max_rows_height;
+
+		this.pagecount = 0;
+		this.activepageidx = -1;
 
 		if (this.layer.infocfg["qrykey"] === undefined) {
 			throw new Error(`Missing mandatory 'infocfg.qrykey' config (info query 'falias' in 'risco_find') for layer '${this.layer.key}`);
@@ -131,6 +135,57 @@ export class InfoBox extends PopupBox {
 
 		p_ctx.restore();
 
+	}
+
+	drawpagenavitems(p_ctx) {
+
+		const pagekeys = [];
+		for (let k in this.clickboxes) {
+			if (k.startsWith("page")) {
+				pagekeys.push(k);
+			}
+		}
+		for (let k of pagekeys) {
+			delete this.clickboxes[k];
+		}
+
+		if (this.pagecount <= 1) {
+			return;
+		}
+
+		const pad = 8;
+		const size = 16;
+		const sep = 6;
+		const texthoffset = 1;
+		const textvoffset = 4;
+		const rightmost = this.box[0] + this.box[2] - pad; 
+
+		let origx;
+		let origy = this.box[1] + this.box[3] - size - pad;
+
+		p_ctx.strokeStyle = this.navFillStyle;
+		p_ctx.lineWidth = 1;
+
+		p_ctx.font = '10px sans-serif';
+
+		for (let i = (this.pagecount-1); i>=0; i--) {
+			
+			origx = rightmost - (1 + (this.pagecount-1-i)) * size - (this.pagecount-1-i) * sep;
+
+			this.clickboxes[`page${(i+1)}`] = [origx, origy, origx+size, origy+size];
+
+			if (i==this.activepageidx) {
+				p_ctx.fillStyle = this.navFillStyle;
+				p_ctx.fillRect(origx, origy, size, size);
+				p_ctx.fillStyle = "black";
+				p_ctx.fillText(i+1, origx+texthoffset+(size/4), origy+size-textvoffset);	
+			} else {
+				p_ctx.fillStyle = this.navFillStyle;
+				p_ctx.fillText(i+1, origx+texthoffset+(size/4), origy+size-textvoffset);	
+			}
+			p_ctx.strokeRect(origx, origy, size, size);
+
+		}
 	}
 
 	draw(p_ctx) {
@@ -246,14 +301,22 @@ export class InfoBox extends PopupBox {
 		this.txtlnheight = this.layercaptionszPX
 
 		// console.log("-- px:", this.layercaptionszPX, "asc:", lbltm.actualBoundingBoxAscent, "desc:", lbltm.actualBoundingBoxDescent);
-
 		// ROWS: are not data rows, are rows of printing, each row corresponds to an atrribute or data field
 
 		// calculate height of all rows
 		let maxrowlen, height, textlinescnt=0;
 		height = 2.5 * this.txtlnheight;
-		for (let row, ri=0; ri<this.rows.length; ri++) {
 
+		this.pagecount = parseInt(Math.ceil(1.0 * this.rows.length / this.max_rows_height));
+		if (this.activepageidx < 0) {
+			this.activepageidx = 0;
+		}
+
+		const rowshlimit = Math.min(this.rows.length, this.max_rows_height);
+
+		//console.log("pgcnt:", this.pagecount, this.activepageidx);
+
+		for (let row, ri=0; ri<rowshlimit; ri++) {
 			maxrowlen=0;
 			row = this.rows[ri];
 			for (let colidx=0; colidx<this.columncount; colidx++) {
@@ -288,7 +351,10 @@ export class InfoBox extends PopupBox {
 
 		let crrfld, fmt, bgwidth, textorig_x;
 
-		for (let ri=0; ri<this.rows.length; ri++) {
+		const fromri = this.activepageidx * this.max_rows_height;
+		const tori = Math.min(fromri + rowshlimit, this.rows.length);
+
+		for (let ri=fromri; ri<tori; ri++) {
 
 			row = this.rows[ri]["c"];
 			lnidx = 0;
@@ -296,7 +362,6 @@ export class InfoBox extends PopupBox {
 			fmt = this.formats[crrfld];
 
 			// ---- Draw row backgrounds ----
-
 			// loop layout columns
 			for (let hunit, colidx=0; colidx<this.columncount; colidx++) {
 
@@ -319,14 +384,10 @@ export class InfoBox extends PopupBox {
 					p_ctx.fillStyle = fmt["backgroundColor"];
 					p_ctx.fillRect(textorig_x-3, cota - hunit, bgwidth, row[colidx].length * hunit + 0.25 * this.txtlnheight);
 					p_ctx.restore();
-
 				}
 			}
-
 			// --- Draw row's text ----
-
 			// loop text lines per each row
-
 			do {
 				changed_found = false;
 
@@ -374,22 +435,16 @@ export class InfoBox extends PopupBox {
 								p_ctx.restore();
 							}
 						}
-
-
 						changed_found = true;
-					}
-	
+					}	
 				}
-
 				if (changed_found) {
 					cota += lineheightfactor * this.txtlnheight;
 					lnidx++;
 				}
-
 			} while (changed_found);
 
 			// end of text lines loop
-
 			cota = cota + rowsintervalfactor *this.txtlnheight;
 		}
 
@@ -397,18 +452,18 @@ export class InfoBox extends PopupBox {
 			this.drawnavitems(p_ctx, this.recordidx+1, this.data[this.layer.infocfg.jsonkey].length);
 		}
 
-		p_ctx.restore();
-
 		this.drawcount++;
 
-		
+		this.drawpagenavitems(p_ctx);
+
+		p_ctx.restore();
 	}
 
 	clear(p_ctx) {
 		p_ctx.clearRect(0, 0, ...this.mapdims); 
 	}	
 
-	interact(p_ctx, p_evt) {
+	clickinteract(p_ctx, p_evt) {
 
 		const lineheightfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["lineheightfactor"];
 		const rowsintervalfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["rowsintervalfactor"];
@@ -422,6 +477,8 @@ export class InfoBox extends PopupBox {
 				let cb;
 				for (let k in this.clickboxes) {
 					cb = this.clickboxes[k];
+
+					// TODO . - CRITÉTIO QUASE DE CERTEZA ERRADO NOS yy
 					if (p_evt.clientX >= cb[0] && p_evt.clientX <= cb[2] && 
 						p_evt.clientY <= cb[1] && p_evt.clientY >= cb[3]) {
 							switch(k) {
@@ -466,6 +523,27 @@ export class InfoBox extends PopupBox {
 				p_ctx.fillStyle ="white";
 				p_ctx.lineWidth = 2;
 				p_ctx.font = "20px Arial";
+			}
+
+			let cb, alreadycaptured = false;
+			for (let k in this.clickboxes) {
+				if (!k.startsWith("page")) {
+					continue;
+				}
+				cb = this.clickboxes[k];
+				if (p_evt.clientX >= cb[0] && p_evt.clientX <= cb[2] && 
+					p_evt.clientY >= cb[1] && p_evt.clientY <= cb[3]) {
+						const pagenum = parseInt(k.replace(/[a-zA-Z]+/g,''));
+						this.activepageidx = pagenum-1;
+						this.clear(p_ctx);
+						this.draw(p_ctx);	
+						alreadycaptured = true;
+						break;
+				}
+			}
+
+			if (alreadycaptured) {
+				return;
 			}
 
 			let cnt = 0;
@@ -516,6 +594,40 @@ export class InfoBox extends PopupBox {
 				this.infobox_static_pick_method(this, this.data[this.layer.infocfg.jsonkey][this.recordidx], fldname, foundcolidx);
 			}
 		} 
+	}
+
+	mousemoveinteract(p_ctx, p_evt) {
+
+		let pagenum, cb;
+		const topcnv = this.mapctx.renderingsmgr.getTopCanvas();
+		topcnv.style.cursor = "default";
+
+		for (let k in this.clickboxes) {
+			cb = this.clickboxes[k];
+			if (p_evt.clientX >= cb[0] && p_evt.clientX <= cb[2] && 
+				p_evt.clientY >= cb[1] && p_evt.clientY <= cb[3]) {
+
+					pagenum = parseInt(k.replace(/[a-zA-Z]+/g,''));
+					if (!isNaN(pagenum)) {
+						if (this.activepageidx != (pagenum-1)){
+							topcnv.style.cursor = "pointer";
+						}
+					} else {
+						topcnv.style.cursor = "pointer";
+					}
+
+					break;
+			}
+		}
+	}
+
+	interact(p_ctx, p_evt) {
+		if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
+			this.clickinteract(p_ctx, p_evt);
+		}
+		if (p_evt.type == "mousemove") {
+			this.mousemoveinteract(p_ctx, p_evt);
+		}		
 	}
 
 }

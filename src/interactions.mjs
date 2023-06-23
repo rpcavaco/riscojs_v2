@@ -580,12 +580,10 @@ class InfoTool extends BaseTool {
 				case 'mouseup':
 					if (ic.pick !== undefined) {
 
-						if (this.getPanelActive()) {
-							if (insideactivepanel) {
-								ic.interact(p_evt);
-							} else {
-								this.setPanelActive(false);
-							}
+						if (insideactivepanel) {
+							ic.interact(p_evt);
+						} else {
+							this.setPanelActive(false);
 						}
 
 						if (!this.getPanelActive()) {
@@ -605,6 +603,10 @@ class InfoTool extends BaseTool {
 						} else {
 							console.warn(`infoclass customization unavailable, cannot hover / maptip feature`);			
 						}	
+					} else {
+						if (insideactivepanel) {
+							ic.interact(p_evt);
+						}						
 					}
 					break;
 
