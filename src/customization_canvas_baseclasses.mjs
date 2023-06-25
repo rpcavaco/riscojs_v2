@@ -847,6 +847,10 @@ export class TOC  extends MapPrintInRect {
 		return (this.collapsedstate == "COLLAPSED");
 	}
 
+	isCollapsed() {
+		return (this.collapsedstate == "COLLAPSED");
+	}
+
 	inflate(p_mapctx) {
 		this.collapsedstate = "OPEN";
 		this.print(p_mapctx);
@@ -986,7 +990,7 @@ export class Info {
 
 			const ci = this.mapctx.getCustomizationObject();
 			if (ci == null) {
-				throw new Error("Info.pick, map context customization instance is missing")
+				throw new Error("Info.pick, map context customization instance is missing");
 			}
 	
 			const toc = ci.instances["toc"];
@@ -994,6 +998,8 @@ export class Info {
 			if (itool) {
 				if (itool.getPanelActive()) {
 					itool.setPanelActive(false);					
+				}
+				if (toc.isCollapsed()) {
 					itool.setTocCollapsed(toc.inflate(this.mapctx));
 				}
 			}
