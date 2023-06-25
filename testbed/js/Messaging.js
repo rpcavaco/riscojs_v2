@@ -1,7 +1,8 @@
 function fadeout(element, heartbeat, finalcallback) {
     let op = 1;  // initial opacity
     let timer = setInterval(function () {
-        if (op <= 0.1){
+        if (op <= 0.2){
+			op = 0;
             clearInterval(timer);
             element.style.display = 'none';
             if (finalcallback) {
@@ -9,7 +10,9 @@ function fadeout(element, heartbeat, finalcallback) {
 			}
         }
         element.style.opacity = op;
-        op -= op * 0.1;
+		if (op > 0) {
+        	op -= op * 0.1;
+		}
     }, heartbeat);
     return timer;
 }

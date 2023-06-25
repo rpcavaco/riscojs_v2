@@ -873,6 +873,23 @@ export class Info {
 		this.mapctx = p_mapctx;
 		this.max_textlines_height = opt_max_textlines_height;
 	}
+
+	// mouse pick inside info box and over any of its items
+	static infobox_pick(p_info_box, p_data_rec, p_fldname, p_column_idx) {
+		
+		//console.log(p_info_box, p_data_rec, p_fldname, p_column_idx);
+		navigator.clipboard.writeText(p_data_rec[p_fldname]).then(function() {
+		   // console.log('infobox_pick: Copying to clipboard was successful!');
+		}, function(err) {
+		  	console.warn('[WARN] infobox_pick: Could not copy text: ', err);
+		});	
+
+		// open a new tab with URL, if it exists
+		if (p_column_idx == 1 && p_info_box.urls[p_fldname] !== undefined) {
+			window.open(p_info_box.urls[p_fldname], "_blank");
+		}
+	}
+
 	hover(p_layerkey, p_feature, p_scrx, p_scry) {
 
 		// this.curr_layerkey = p_layerkey;
@@ -954,21 +971,7 @@ export class Info {
 		return ret;
 
 	} 
-	// mouse pick inside info box and over any of its items
-	infobox_pick(p_info_box, p_data_rec, p_fldname, p_column_idx) {
-		
-		//console.log(p_info_box, p_data_rec, p_fldname, p_column_idx);
-		navigator.clipboard.writeText(p_data_rec[p_fldname]).then(function() {
-		   // console.log('infobox_pick: Copying to clipboard was successful!');
-		}, function(err) {
-		  	console.warn('[WARN] infobox_pick: Could not copy text: ', err);
-		});	
 
-		// open a new tab with URL, if it exists
-		if (p_column_idx == 1 && p_info_box.urls[p_fldname] !== undefined) {
-			window.open(p_info_box.urls[p_fldname], "_blank");
-		}
-	}
 	clear() {
 		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 

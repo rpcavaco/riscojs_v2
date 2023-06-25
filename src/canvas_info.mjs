@@ -507,7 +507,7 @@ export class InfoBox extends PopupBox {
 		const rowsintervalfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["rowsintervalfactor"];
 		const rowshlimit = Math.min(this.rows.length, this.max_textlines_height);
 
-		const SHOWROWS = true;
+		const SHOWROWS = false;
 
 		// in header
 		if (p_evt.clientX >= this.headerbox[0] && p_evt.clientX <= this.headerbox[0] + this.headerbox[2] && 
@@ -635,6 +635,10 @@ export class InfoBox extends PopupBox {
 					}
 				}
 				this.infobox_static_pick_method(this, this.data[this.layer.infocfg.jsonkey][this.recordidx], fldname, foundcolidx);
+			}
+
+			if (SHOWROWS) {
+				p_ctx.restore();
 			}
 		} 
 	}
