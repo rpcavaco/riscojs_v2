@@ -1,14 +1,19 @@
-function fadeout(element, heartbeat, finalcallback) {
+function fadeout(element, heartbeat, p_callback_obj) {
     let op = 1;  // initial opacity
     let timer = setInterval(function () {
         if (op <= 0.2){
 			op = 0;
             clearInterval(timer);
             element.style.display = 'none';
-            if (finalcallback) {
-				finalcallback();
+            if (p_callback_obj != null && p_callback_obj['threshold'] === undefined) {
+				p_callback_obj.execfunc();
 			}
         }
+		if (p_callback_obj != null && p_callback_obj['threshold'] !== undefined) {
+			if (op < p_callback_obj['threshold']) {
+				p_callback_obj.execfunc();
+			}
+		}
         element.style.opacity = op;
 		if (op > 0) {
         	op -= op * 0.1;
