@@ -794,7 +794,7 @@ class BasicCtrlBox extends ControlsBox {
 
 			ret = true;
 			if (!this.had_prev_interaction) {
-				p_mapctx.clearInteractions();
+				p_mapctx.clearInteractions('BASICCTRLBOX');
 			}
 			this.had_prev_interaction = true;
 
@@ -809,7 +809,7 @@ class BasicCtrlBox extends ControlsBox {
 				const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 				topcnv.style.cursor = "default";
 
-				p_mapctx.clearInteractions();
+				p_mapctx.clearInteractions('BASICCTRLBOX');
 				
 			}
 			this.had_prev_interaction = false;
@@ -1049,7 +1049,7 @@ class BasemapCtrlBox extends MapPrintInRect {
 				topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 				topcnv.style.cursor = "default";
 
-				p_mapctx.clearInteractions();
+				p_mapctx.clearInteractions('BASEMAPCTRLBOX');
 
 				this.had_prev_interaction = false;
 
@@ -1057,7 +1057,7 @@ class BasemapCtrlBox extends MapPrintInRect {
 
 		} else {
 			if (!this.had_prev_interaction) {
-				p_mapctx.clearInteractions();
+				p_mapctx.clearInteractions('BASEMAPCTRLBOX');
 			}
 			this.had_prev_interaction = true;
 		}

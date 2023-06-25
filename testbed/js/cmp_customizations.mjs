@@ -468,7 +468,7 @@ export class LocQuery {
 				p_qryb_obj.clear(true);
 
 				// clear up map UI
-				pp_mapctx.clearInteractions(true);
+				pp_mapctx.clearInteractions('LOCCLRBTN', true);
 
 			}); 
 

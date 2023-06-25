@@ -530,7 +530,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	}
 
 	
-	clearInteractions(opt_clear_temp_also) { 
+	clearInteractions(opt_source_id, opt_clear_temp_also) { 
 
 		const ci = this.getCustomizationObject();
 		if (ci == null) {
@@ -539,7 +539,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		const ic = ci.instances["infoclass"];
 		if (ic) {
-			ic.clear();
+			ic.clear(opt_source_id);
 		}
 
 		if (opt_clear_temp_also) {

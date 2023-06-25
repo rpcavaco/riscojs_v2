@@ -50,7 +50,7 @@ class DefaultTool extends BaseTool {
 		}
 		if (p_evt.type == 'mouseout' || p_evt.type == "mouseleave") {
 			p_mapctx.removePrint("mousecoordsprint");
-			p_mapctx.clearInteractions();
+			p_mapctx.clearInteractions('DEFTOOL');
 		}
 		
 	}	
@@ -248,7 +248,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 
 		if (feat==null || (!ret_dir_interact && p_is_end_event)) {
 			if (opt_clearafterselfeat) {
-				opt_clearafterselfeat();
+				opt_clearafterselfeat('INTERACTSRVLYR');
 			}			
 		} 
 

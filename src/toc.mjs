@@ -592,7 +592,7 @@ export class TOCManager {
 			const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 			topcnv.style.cursor = "default";
 
-			p_mapctx.clearInteractions();
+			p_mapctx.clearInteractions('TOCMGR');
 			
 		}
 

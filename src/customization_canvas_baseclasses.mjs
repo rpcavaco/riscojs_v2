@@ -807,7 +807,7 @@ export class TOC  extends MapPrintInRect {
 			}
 
 			if (!this.had_prev_interaction) {
-				p_mapctx.clearInteractions();
+				p_mapctx.clearInteractions('TOC');
 			}
 			this.had_prev_interaction = true;
 
@@ -819,7 +819,7 @@ export class TOC  extends MapPrintInRect {
 				topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 				topcnv.style.cursor = "default";
 
-				p_mapctx.clearInteractions();
+				p_mapctx.clearInteractions('TOC');
 
 				this.had_prev_interaction = false;
 			}
@@ -972,7 +972,12 @@ export class Info {
 
 	} 
 
-	clear() {
+	clear(p_source_id) {
+
+		if (p_source_id == 'TOC' || p_source_id == 'TOCMGR') {
+			return;
+		}
+
 		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 
 		if (this.ibox) {
@@ -987,8 +992,10 @@ export class Info {
 			const toc = ci.instances["toc"];
 			const itool = this.mapctx.toolmgr.findTool("InfoTool");
 			if (itool) {
-				itool.setPanelActive(false);					
-				itool.setTocCollapsed(toc.inflate(this.mapctx));
+				if (itool.getPanelActive()) {
+					itool.setPanelActive(false);					
+					itool.setTocCollapsed(toc.inflate(this.mapctx));
+				}
 			}
 			//console.trace("clear all temporary");
 			this.mapctx.renderingsmgr.clearAll(['temporary']);
