@@ -13,12 +13,13 @@ export class InfoBox extends PopupBox {
 	clickboxes;
 	urls;
 	formats;
-	field_row_count;
+	field_textlines_count;
 	ordered_fldnames;
 	txtlnheight;
 	topcota;
 	colsizes;
 	columncount;
+	rowboundaries; // for each page
 
 	constructor(p_mapctx, p_layer, p_data, p_styles, p_scrx, p_scry, p_infobox_pick_method, b_callout, opt_max_rows_height) {
 
@@ -30,16 +31,20 @@ export class InfoBox extends PopupBox {
 		this.formats = {};
 		this.field_row_count = {};
 		this.ordered_fldnames = [];
+		this.used_fldnames = [];
+		this.field_textlines_count = {};
 		this.txtlnheight = 0;
 		this.topcota = 0;
 		this.colsizes = [0,0];
 		this.columncount = 2;
 		this.infobox_static_pick_method = p_infobox_pick_method;
-		this.max_rows_height = opt_max_rows_height;
+		this.max_textlines_height = opt_max_rows_height;
 
 		this.pagecount = 0;
 		this.activepageidx = -1;
 
+		this.rowboundaries = []; // for each page
+	
 		if (this.layer.infocfg["qrykey"] === undefined) {
 			throw new Error(`Missing mandatory 'infocfg.qrykey' config (info query 'falias' in 'risco_find') for layer '${this.layer.key}`);
 		}
@@ -243,6 +248,7 @@ export class InfoBox extends PopupBox {
 
 		// collect all field names to publish
 		this.ordered_fldnames.length = 0;
+		this.used_fldnames.length = 0;
 		const unordered_fldnames = [];
 		if (ifkeys.indexOf("add") >= 0) {
 			for (let fld of this.layer.infocfg.fields["add"]) {
@@ -277,13 +283,17 @@ export class InfoBox extends PopupBox {
 		}
 
 		for (let fld of this.ordered_fldnames) {
-			this.field_row_count[fld] = canvasWrtField(this, p_ctx, recdata, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows, this.urls);
+			this.field_textlines_count[fld] = canvasWrtField(this, p_ctx, recdata, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows, this.urls);
+			if (this.field_textlines_count[fld] > 0) {
+				this.used_fldnames.push(fld);
+			}
 		}	
-		
-		// Calc text dims
-		let row, cota, lnidx, lineincell_txt, txtdims, changed_found;
+
 		this.colsizes=[0,0];
-		for (row of this.rows) {
+
+		// calc max widths of text in columns
+		for (let row of this.rows) {
+
 			for (let i=0; i<this.columncount; i++) {
 				if (i==0) {
 					p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
@@ -296,38 +306,66 @@ export class InfoBox extends PopupBox {
 			}
 		}
 
+		// console.log("-- px:", this.layercaptionszPX, "asc:", lbltm.actualBoundingBoxAscent, "desc:", lbltm.actualBoundingBoxDescent);
+		// ROWS: are not data rows, are rows of printing, each row corresponds to an atrribute or data field
+		// TEXTLINE: each row can geneate ZERO or more text lines
+
+		let height, prevrowbndry = 0, currow;
+		let maxrowtextlineslen, accumtextlineslen, pageaccumtextlineslen;
+		this.rowboundaries.length = 0;
+		pageaccumtextlineslen = 0;
+		accumtextlineslen = 0;
+
 		// calculate global height of text line - from layer caption font - e
 		p_ctx.font = `${this.layercaptionszPX}px ${this.layercaptionfontfamily}`;
 		this.txtlnheight = this.layercaptionszPX
 
-		// console.log("-- px:", this.layercaptionszPX, "asc:", lbltm.actualBoundingBoxAscent, "desc:", lbltm.actualBoundingBoxDescent);
-		// ROWS: are not data rows, are rows of printing, each row corresponds to an atrribute or data field
+		// Include header
+		height = 1.6 * this.txtlnheight;
 
-		// calculate height of all rows
-		let maxrowlen, height, textlinescnt=0;
-		height = 2.5 * this.txtlnheight;
+		// calc text line boundaries for each "page"
+		for (let onfirstpage=true, ri=0; ri<this.rows.length; ri++) {
 
-		this.pagecount = parseInt(Math.ceil(1.0 * this.rows.length / this.max_rows_height));
+			currow = ri;
+
+			maxrowtextlineslen=0;
+			for (let colidx=0; colidx<this.columncount; colidx++) {
+				maxrowtextlineslen = Math.max(maxrowtextlineslen, this.rows[ri]["c"][colidx].length);
+			}
+
+			if (onfirstpage) {
+				height += (maxrowtextlineslen * lineheightfactor * this.txtlnheight) + (rowsintervalfactor * this.txtlnheight);
+			}
+			
+			if (this.max_textlines_height) {
+				if (pageaccumtextlineslen + maxrowtextlineslen > this.max_textlines_height) {
+					onfirstpage = false;
+					this.rowboundaries.push([prevrowbndry, ri-1]);
+					prevrowbndry = ri;
+					pageaccumtextlineslen = 0;
+				}
+			}
+			pageaccumtextlineslen += maxrowtextlineslen;
+			accumtextlineslen += maxrowtextlineslen;
+		}
+		if (this.rows.length > 0) {
+			this.rowboundaries.push([prevrowbndry, currow]);
+		}
+
+		//console.log("rowboundaries:", this.rowboundaries);
+
+		if (this.max_textlines_height) {
+			this.pagecount = parseInt(Math.ceil(1.0 * this.rows.length / this.max_textlines_height));
+		} else {
+			this.pagecount = 1;
+		}
 		if (this.activepageidx < 0) {
 			this.activepageidx = 0;
 		}
 
-		const rowshlimit = Math.min(this.rows.length, this.max_rows_height);
+		console.assert(this.pagecount == this.rowboundaries.length, "incoherent page counts - pagecount:%d != rows boundary arrays:%d", this.pagecount, this.rowboundaries.length);
 
 		//console.log("pgcnt:", this.pagecount, this.activepageidx);
-
-		for (let row, ri=0; ri<rowshlimit; ri++) {
-			maxrowlen=0;
-			row = this.rows[ri];
-			for (let colidx=0; colidx<this.columncount; colidx++) {
-				maxrowlen = Math.max(maxrowlen, row["c"][colidx].length);
-			}
-			textlinescnt += maxrowlen;
-
-			height += (maxrowlen * lineheightfactor * this.txtlnheight) + (rowsintervalfactor * this.txtlnheight);
-		}
-		// height = height + textlinescnt * lineheightfactor * this.txtlnheight; // - 2 * txtlnheight;
-
 		let lbl;
 		if (this.layer["label"] !== undefined && this.layer["label"] != "none") {
 			if (this.layer['msgsdict'] !== undefined && this.layer.msgsdict[lang] !== undefined && Object.keys(this.layer.msgsdict[lang]).indexOf(this.layer["label"]) >= 0) {
@@ -344,17 +382,17 @@ export class InfoBox extends PopupBox {
 		p_ctx.fillStyle = this.fillTextStyle;
 		p_ctx.strokeStyle = this.URLStyle;
 
-		cota = this.origin[1] + 2.5*this.txtlnheight;
+		let cota = this.origin[1] + 2.5*this.txtlnheight;
 		this.topcota = cota - lineheightfactor*this.txtlnheight;
 
 		// loop through printing rows
 
-		let crrfld, fmt, bgwidth, textorig_x;
+		const fromri = this.rowboundaries[this.activepageidx][0];
+		const tori = this.rowboundaries[this.activepageidx][1];
 
-		const fromri = this.activepageidx * this.max_rows_height;
-		const tori = Math.min(fromri + rowshlimit, this.rows.length);
-
-		for (let ri=fromri; ri<tori; ri++) {
+		// Actual drawing
+		let lnidx, crrfld, fmt, bgwidth, textorig_x, lineincell_txt, txtdims, changed_found;
+		for (let row, ri=fromri; ri<=tori; ri++) {
 
 			row = this.rows[ri]["c"];
 			lnidx = 0;
@@ -467,8 +505,9 @@ export class InfoBox extends PopupBox {
 
 		const lineheightfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["lineheightfactor"];
 		const rowsintervalfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["rowsintervalfactor"];
+		const rowshlimit = Math.min(this.rows.length, this.max_textlines_height);
 
-		const SHOWROWS = false;
+		const SHOWROWS = true;
 
 		// in header
 		if (p_evt.clientX >= this.headerbox[0] && p_evt.clientX <= this.headerbox[0] + this.headerbox[2] && 
@@ -515,7 +554,7 @@ export class InfoBox extends PopupBox {
 		} else {
 			
 			// checking fldname linked to the area clicked by user
-			let prev, next, left, right, first=true, fldname=null;
+			let prev, next, left, right, first=true, fldname=null, accumrows=0;
 
 			if (SHOWROWS) {
 				p_ctx.save();
@@ -547,11 +586,15 @@ export class InfoBox extends PopupBox {
 			}
 
 			let cnt = 0;
-			for (let fld of this.ordered_fldnames) {
 
-				if (this.field_row_count[fld] == 0) {
-					continue;
-				}
+			const fromri = this.rowboundaries[this.activepageidx][0];
+			const tori = this.rowboundaries[this.activepageidx][1];
+
+			for (let fld, flix = fromri; flix<=tori; flix++) {
+
+				fld = this.used_fldnames[flix];
+
+				accumrows = accumrows + this.field_textlines_count[fld];
 				cnt++;
 
 				if (first) {
@@ -560,10 +603,10 @@ export class InfoBox extends PopupBox {
 					prev = next;
 				}
 				first = false;
-				next = prev + (this.field_row_count[fld] * lineheightfactor * this.txtlnheight) + rowsintervalfactor * this.txtlnheight;
+				next = prev + (this.field_textlines_count[fld] * lineheightfactor * this.txtlnheight) + rowsintervalfactor * this.txtlnheight;
 
 				if (SHOWROWS) {
-					p_ctx.fillText(cnt.toString(),90,next);
+					p_ctx.fillText(`${cnt.toString()} ${fld}`,90,next);
 					p_ctx.beginPath();
 					p_ctx.moveTo(100,next);
 					p_ctx.lineTo(700,next);

@@ -864,14 +864,14 @@ export class Info {
 	canvaslayer = 'interactive_viz';
 	styles;
 	mapctx;
-	maxrowsheight;
+	max_textlines_height;
 
-	constructor(p_mapctx, p_styles, opt_maxrowsheight) {
+	constructor(p_mapctx, p_styles, opt_max_textlines_height) {
 		this.styles = p_styles;
 		this.callout = null;
 		this.ibox = null;
 		this.mapctx = p_mapctx;
-		this.maxrowsheight = opt_maxrowsheight;
+		this.max_textlines_height = opt_max_textlines_height;
 	}
 	hover(p_layerkey, p_feature, p_scrx, p_scry) {
 
@@ -925,7 +925,7 @@ export class Info {
 				function(responsejson) {
 					// console.log("cust_canvas_baseclasses:828 - antes criação InfoBox");
 					const currlayer = that.mapctx.tocmgr.getLayer(p_layerkey);
-					that.ibox = new InfoBox(that.mapctx, currlayer, responsejson, that.styles, p_scrx, p_scry, that.infobox_pick, false, that.maxrowsheight);
+					that.ibox = new InfoBox(that.mapctx, currlayer, responsejson, that.styles, p_scrx, p_scry, that.infobox_pick, false, that.max_textlines_height);
 					const ctx = that.mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
 					that.ibox.clear(ctx);
 					that.ibox.draw(ctx);	

@@ -1078,11 +1078,11 @@ export class MapCustomizations {
 
 	constructor(p_mapctx, p_messaging_ctrlr) {
 
-		let maxrowsheight;
+		let max_textlines_height;
 		this.mapctx = p_mapctx;
 
 		if (this.mapctx.cfgvar["basic"]["info"] !== "undefined") {
-			maxrowsheight = this.mapctx.cfgvar["basic"]["info"]["maxrowsheight"];
+			max_textlines_height = this.mapctx.cfgvar["basic"]["info"]["max_textlines_height"];
 		}
 
 		this.messaging_ctrlr = p_messaging_ctrlr;
@@ -1090,7 +1090,7 @@ export class MapCustomizations {
 			"basiccontrolsbox": new BasicCtrlBox(),
 			"basemapctrl": new BasemapCtrlBox(),
 			"toc": new TOC(p_mapctx),
-			"infoclass": new Info(this.mapctx, GlobalConst.INFO_MAPTIPS_BOXSTYLE, maxrowsheight),
+			"infoclass": new Info(this.mapctx, GlobalConst.INFO_MAPTIPS_BOXSTYLE, max_textlines_height),
 			"mousecoordsprint": new MousecoordsPrint(),
 			"mapscaleprint": new MapScalePrint(),
 			"loadingmsgprint": new LoadingPrint(),
