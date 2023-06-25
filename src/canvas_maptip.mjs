@@ -6,7 +6,6 @@ import {canvasWrtField} from './utils.mjs';
 export class PopupBox {
 
 	origin;
-	dims;
 	box;
 	headerbox;
 	anchorpt;

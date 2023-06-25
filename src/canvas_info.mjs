@@ -498,16 +498,20 @@ export class InfoBox extends PopupBox {
 	}
 
 	clear(p_ctx) {
+		const topcnv = this.mapctx.renderingsmgr.getTopCanvas();
 		p_ctx.clearRect(0, 0, ...this.mapdims); 
+		topcnv.style.cursor = "default";
 	}	
 
-	clickinteract(p_ctx, p_evt) {
+	interact(p_ctx, p_evt) {
 
 		const lineheightfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["lineheightfactor"];
 		const rowsintervalfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["rowsintervalfactor"];
-		const rowshlimit = Math.min(this.rows.length, this.max_textlines_height);
 
 		const SHOWROWS = false;
+
+		const topcnv = this.mapctx.renderingsmgr.getTopCanvas();
+		topcnv.style.cursor = "default";
 
 		// in header
 		if (p_evt.clientX >= this.headerbox[0] && p_evt.clientX <= this.headerbox[0] + this.headerbox[2] && 
@@ -519,7 +523,7 @@ export class InfoBox extends PopupBox {
 
 					// TODO . - CRITÉTIO QUASE DE CERTEZA ERRADO NOS yy
 					if (p_evt.clientX >= cb[0] && p_evt.clientX <= cb[2] && 
-						p_evt.clientY <= cb[1] && p_evt.clientY >= cb[3]) {
+						p_evt.clientY >= cb[1] && p_evt.clientY <= cb[3]) {
 							switch(k) {
 
 								case "next":
@@ -572,10 +576,22 @@ export class InfoBox extends PopupBox {
 				cb = this.clickboxes[k];
 				if (p_evt.clientX >= cb[0] && p_evt.clientX <= cb[2] && 
 					p_evt.clientY >= cb[1] && p_evt.clientY <= cb[3]) {
+
 						const pagenum = parseInt(k.replace(/[a-zA-Z]+/g,''));
-						this.activepageidx = pagenum-1;
-						this.clear(p_ctx);
-						this.draw(p_ctx);	
+						if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
+							this.activepageidx = pagenum-1;
+							this.clear(p_ctx);
+							this.draw(p_ctx);	
+						} else {
+							const topcnv = this.mapctx.renderingsmgr.getTopCanvas();
+							if (!isNaN(pagenum)) {
+								if (this.activepageidx != (pagenum-1)){
+									topcnv.style.cursor = "pointer";
+								}
+							} else {
+								topcnv.style.cursor = "pointer";
+							}							
+						}
 						alreadycaptured = true;
 						break;
 				}
@@ -634,47 +650,23 @@ export class InfoBox extends PopupBox {
 						break;
 					}
 				}
-				this.infobox_static_pick_method(this, this.data[this.layer.infocfg.jsonkey][this.recordidx], fldname, foundcolidx);
+
+				if (foundcolidx >= 0) {
+					if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
+						this.infobox_static_pick_method(this, this.data[this.layer.infocfg.jsonkey][this.recordidx], fldname, foundcolidx);
+					} 
+					else if (p_evt.type == "mousemove") {
+						if (foundcolidx % 2 == 1) {
+							topcnv.style.cursor = "copy";
+						}
+					}						
+				}
 			}
 
 			if (SHOWROWS) {
 				p_ctx.restore();
 			}
 		} 
-	}
-
-	mousemoveinteract(p_ctx, p_evt) {
-
-		let pagenum, cb;
-		const topcnv = this.mapctx.renderingsmgr.getTopCanvas();
-		topcnv.style.cursor = "default";
-
-		for (let k in this.clickboxes) {
-			cb = this.clickboxes[k];
-			if (p_evt.clientX >= cb[0] && p_evt.clientX <= cb[2] && 
-				p_evt.clientY >= cb[1] && p_evt.clientY <= cb[3]) {
-
-					pagenum = parseInt(k.replace(/[a-zA-Z]+/g,''));
-					if (!isNaN(pagenum)) {
-						if (this.activepageidx != (pagenum-1)){
-							topcnv.style.cursor = "pointer";
-						}
-					} else {
-						topcnv.style.cursor = "pointer";
-					}
-
-					break;
-			}
-		}
-	}
-
-	interact(p_ctx, p_evt) {
-		if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
-			this.clickinteract(p_ctx, p_evt);
-		}
-		if (p_evt.type == "mousemove") {
-			this.mousemoveinteract(p_ctx, p_evt);
-		}		
 	}
 
 }

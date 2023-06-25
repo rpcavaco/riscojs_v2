@@ -942,7 +942,7 @@ export class Info {
 				function(responsejson) {
 					// console.log("cust_canvas_baseclasses:828 - antes criação InfoBox");
 					const currlayer = that.mapctx.tocmgr.getLayer(p_layerkey);
-					that.ibox = new InfoBox(that.mapctx, currlayer, responsejson, that.styles, p_scrx, p_scry, that.infobox_pick, false, that.max_textlines_height);
+					that.ibox = new InfoBox(that.mapctx, currlayer, responsejson, that.styles, p_scrx, p_scry, Info.infobox_pick, false, that.max_textlines_height);
 					const ctx = that.mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
 					that.ibox.clear(ctx);
 					that.ibox.draw(ctx);	
