@@ -543,9 +543,9 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		}
 
 		if (opt_clear_temp_also) {
-			this.renderingsmgr.clearAll(['transient', 'temporary']);
+			this.renderingsmgr.clearAll(['transientmap', 'transientviz',  'temporary']);
 		} else {
-			this.renderingsmgr.clearAll(['transient']);
+			this.renderingsmgr.clearAll(['transientmap', 'transientviz']);
 		}
 
 	}

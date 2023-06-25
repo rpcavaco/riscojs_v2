@@ -3,6 +3,7 @@ import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
 import {PopupBox} from './canvas_maptip.mjs';
 import {canvasWrtField} from './utils.mjs';
+import {ctrToolTip} from './customization_canvas_baseclasses.mjs';
 
 export class InfoBox extends PopupBox {
 
@@ -657,6 +658,8 @@ export class InfoBox extends PopupBox {
 					} 
 					else if (p_evt.type == "mousemove") {
 						if (foundcolidx % 2 == 1) {
+							// Too much intrusive
+							//ctrToolTip(this.mapctx, p_evt, this.mapctx.i18n.msg('CL2CP', true), [100,100]); 
 							topcnv.style.cursor = "copy";
 						}
 					}						
@@ -670,3 +673,4 @@ export class InfoBox extends PopupBox {
 	}
 
 }
+

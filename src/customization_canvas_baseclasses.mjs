@@ -6,7 +6,7 @@ import {I18n} from './i18n.mjs';
 
 export function ctrToolTip(p_mapctx, p_evt, p_text, opt_deltas) {
 	
-	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transient", '2d');
+	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transientviz", '2d');
 	gfctx.save();
 	const slack = 6;
 
@@ -786,7 +786,7 @@ export class TOC  extends MapPrintInRect {
 				if (this.collapsedstate == "OPEN") {
 
 					topcnv.style.cursor = "default";
-					p_mapctx.renderingsmgr.clearAll(['transient']);
+					p_mapctx.renderingsmgr.clearAll(['transientmap', 'transientviz']);
 
 				} else {
 
@@ -999,7 +999,7 @@ export class Info {
 
 		if (this.callout) {
 			this.callout.clear(ctx);
-			this.mapctx.renderingsmgr.clearAll(['transient']);
+			this.mapctx.renderingsmgr.clearAll(['transientmap']);
 		}
 
 	}

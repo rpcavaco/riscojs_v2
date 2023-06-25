@@ -19,6 +19,7 @@ export class I18n {
 				"ZOUT": "afastar",
 				"ZIN": "aproximar",
 				"HOME": "vista inicial"
+				//"CL2CP": "clicar para copiar valor"
 			}, 
 			"en": {
 				"ESCL": "scale",
@@ -27,6 +28,7 @@ export class I18n {
 				"ZOUT": "zoom out",					
 				"ZIN": "zoom in",
 				"HOME": "home view"
+				//"CL2CP": "click to copy value"
 			}
 		};	
 		

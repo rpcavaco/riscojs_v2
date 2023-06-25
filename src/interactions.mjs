@@ -147,10 +147,10 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 					try {
 						let canvas_layers;
 						if (p_is_end_event) {
-							p_mapctx.renderingsmgr.clearAll(['transient']);
+							p_mapctx.renderingsmgr.clearAll(['transientmap']);
 							canvas_layers = {'normal': 'temporary', 'label': 'temporary' };
 						} else {
-							canvas_layers = {'normal': 'transient', 'label': 'transient' };
+							canvas_layers = {'normal': 'transientmap', 'label': 'transientmap' };
 						}
 						p_mapctx.drawSingleFeature(foundly.key, sqrid, GlobalConst.DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB, canvas_layers);
 					} catch (e) {
@@ -192,10 +192,10 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 
 							let canvas_layers;
 							if (p_is_end_event) {
-								p_mapctx.renderingsmgr.clearAll(['transient']);
+								p_mapctx.renderingsmgr.clearAll(['transientmap']);
 								canvas_layers = {'normal': 'temporary', 'label': 'temporary' };
 							} else {
-								canvas_layers = {'normal': 'transient', 'label': 'transient' };
+								canvas_layers = {'normal': 'transientmap', 'label': 'transientmap' };
 							}
 	
 							p_mapctx.drawSingleFeature(to_lyrk, r, GlobalConst.DEBUG_FEATMOUSESEL_SELUNDERMASK_SYMB, canvas_layers);
@@ -228,13 +228,13 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 
 			if (p_maxdist == null || p_maxdist >=  dist) {
 
-				p_mapctx.renderingsmgr.clearAll(['temporary','transient']);
+				p_mapctx.renderingsmgr.clearAll(['temporary','transientmap']);
 
 				let canvas_layers;
 				if (p_is_end_event) {
 					canvas_layers = {'normal': 'temporary', 'label': 'temporary' };
 				} else {
-					canvas_layers = {'normal': 'transient', 'label': 'transient' };
+					canvas_layers = {'normal': 'transientmap', 'label': 'transientmap' };
 				}
 							
 				feat = p_mapctx.drawFeatureAsMouseSelected(nearestlyk, nearestid, canvas_layers);

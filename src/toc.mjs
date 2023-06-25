@@ -352,10 +352,11 @@ export class TOCManager {
 			ckeys.add(this.layers[li].canvasKey);
 		}
 		ckeys.add('label');
-		ckeys.add('transient');
+		ckeys.add('transientmap');
 		ckeys.add('temporary');
 		ckeys.add('interactive_viz');
 		ckeys.add('calculated_viz');
+		ckeys.add('transientviz');
 
 		this.mapctx.renderingsmgr.clearAll(ckeys);
 

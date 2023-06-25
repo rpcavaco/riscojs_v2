@@ -138,7 +138,7 @@ class LoadingPrint extends LoadingMessaging {
 
 	constructor() {
 		super();
-		this.canvaslayer = 'transient';
+		this.canvaslayer = 'transientmap';
 	}
 
 	print(p_mapctx, p_msg) {

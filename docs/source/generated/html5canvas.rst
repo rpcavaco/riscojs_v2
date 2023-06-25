@@ -12,7 +12,7 @@
 
 	c) 'temporary' vector, like highlights
 
-	d) 'transient' vectors, e.g.: mouse interaction or viewport manipulation artifacts
+	d) 'transientmap' and 'transientviz' vectors, e.g.: mouse interaction or viewport manipulation artifacts
 
 	:param object p_paneldiv: Non-null reference to panel's DIV DOM object
 	:param integer opt_base_zindex: Optional z-index for bottom canvas
