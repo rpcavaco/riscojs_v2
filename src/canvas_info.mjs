@@ -323,7 +323,7 @@ export class InfoBox extends PopupBox {
 
 		// Include header
 		height = 1.6 * this.txtlnheight;
-		console.log("inith:", height, "rowinterv:", (rowsintervalfactor * this.txtlnheight));
+		// console.log("inith:", height, "rowinterv:", (rowsintervalfactor * this.txtlnheight));
 
 		// calc text line boundaries for each "page"
 		for (let onfirstpage=true, ri=0; ri<this.rows.length; ri++) {
@@ -381,9 +381,16 @@ export class InfoBox extends PopupBox {
 			}	
 		} else {
 			lbl = "(sem etiqueta)";	
-		}	
+		}
 
-		this._drawBackground(p_ctx, maxboxwidth, height, this.txtlnheight, lbl);
+		let bwidth, acc_colsz = 0;
+		for (let clsz of this.colsizes) {
+			acc_colsz += clsz;
+		}		
+		
+		bwidth = Math.min(maxboxwidth, this.leftpad+this.rightpad+this.betweencols+acc_colsz+10);
+
+		this._drawBackground(p_ctx, bwidth, height, this.txtlnheight, lbl);
 
 		p_ctx.fillStyle = this.fillTextStyle;
 		p_ctx.strokeStyle = this.URLStyle;

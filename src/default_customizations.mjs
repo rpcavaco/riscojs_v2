@@ -1085,12 +1085,23 @@ export class MapCustomizations {
 			max_textlines_height = this.mapctx.cfgvar["basic"]["info"]["max_textlines_height"];
 		}
 
+		let infoboxStyle;
+
+		if (this.mapctx.cfgvar["basic"]["info"]["boxstyle"] !== undefined) {
+			infoboxStyle = {
+				...GlobalConst.INFO_MAPTIPS_BOXSTYLE,
+				...this.mapctx.cfgvar["basic"]["info"]["boxstyle"]
+			}
+		} else {
+			infoboxStyle = GlobalConst.INFO_MAPTIPS_BOXSTYLE;
+		}
+
 		this.messaging_ctrlr = p_messaging_ctrlr;
 		this.instances = {
 			"basiccontrolsbox": new BasicCtrlBox(),
 			"basemapctrl": new BasemapCtrlBox(),
 			"toc": new TOC(p_mapctx),
-			"infoclass": new Info(this.mapctx, GlobalConst.INFO_MAPTIPS_BOXSTYLE, max_textlines_height),
+			"infoclass": new Info(this.mapctx, infoboxStyle, max_textlines_height),
 			"mousecoordsprint": new MousecoordsPrint(),
 			"mapscaleprint": new MapScalePrint(),
 			"loadingmsgprint": new LoadingPrint(),

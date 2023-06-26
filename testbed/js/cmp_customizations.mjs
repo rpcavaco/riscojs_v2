@@ -365,12 +365,12 @@ export class LocQuery {
 		}	
 
 		let xoffset, logo = document.createElement('img');
-		logo.src = "media/splash-logo.png";
+		logo.src = p_basic_config["logo"]["src"];
 		logo.setAttribute("id", "logo-img");
 		p_mapctx.panelwidget.appendChild(logo);
 		logo.style.position = "absolute";
 		logo.style.zIndex = p_mapctx.renderingsmgr.getMaxZIndex()+1;
-		logo.style.width = '80px';
+		logo.style.width = p_basic_config["logo"]["width"];
 
 		this.query_box = document.createElement('input');
 		this.query_box.setAttribute("id", "loc-inputtext");
