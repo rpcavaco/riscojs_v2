@@ -323,6 +323,7 @@ export class InfoBox extends PopupBox {
 
 		// Include header
 		height = 1.6 * this.txtlnheight;
+		console.log("inith:", height, "rowinterv:", (rowsintervalfactor * this.txtlnheight));
 
 		// calc text line boundaries for each "page"
 		for (let onfirstpage=true, ri=0; ri<this.rows.length; ri++) {
@@ -333,10 +334,6 @@ export class InfoBox extends PopupBox {
 			for (let colidx=0; colidx<this.columncount; colidx++) {
 				maxrowtextlineslen = Math.max(maxrowtextlineslen, this.rows[ri]["c"][colidx].length);
 			}
-
-			if (onfirstpage) {
-				height += (maxrowtextlineslen * lineheightfactor * this.txtlnheight) + (rowsintervalfactor * this.txtlnheight);
-			}
 			
 			if (this.max_textlines_height) {
 				if (pageaccumtextlineslen + maxrowtextlineslen > this.max_textlines_height) {
@@ -344,16 +341,19 @@ export class InfoBox extends PopupBox {
 					this.rowboundaries.push([prevrowbndry, ri-1]);
 					prevrowbndry = ri;
 					pageaccumtextlineslen = 0;
+				} else {
+					if (onfirstpage) {
+						height += (maxrowtextlineslen * lineheightfactor * this.txtlnheight) + (rowsintervalfactor * this.txtlnheight);
+					}							
 				}
 			}
 			pageaccumtextlineslen += maxrowtextlineslen;
 			accumtextlineslen += maxrowtextlineslen;
 		}
+				
 		if (this.rows.length > 0) {
 			this.rowboundaries.push([prevrowbndry, currow]);
 		}
-
-		//console.log("rowboundaries:", this.rowboundaries);
 
 		if (this.max_textlines_height) {
 			this.pagecount = this.rowboundaries.length;
@@ -362,6 +362,13 @@ export class InfoBox extends PopupBox {
 		}
 		if (this.activepageidx < 0) {
 			this.activepageidx = 0;
+		}
+
+		// footer
+		if (this.pagecount > 1) {
+			height += 1.2 * this.txtlnheight;
+		} else {
+			height += 0.6 * this.txtlnheight;
 		}
 
 		//console.log("pgcnt:", this.pagecount, this.activepageidx);
