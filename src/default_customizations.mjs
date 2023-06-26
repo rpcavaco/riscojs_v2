@@ -288,11 +288,17 @@ export class CanvasLocLayerClass extends canvasVectorMethodsMixin(LocLayerClass)
 						strokeFill(this);
 
 						this._gfctx.beginPath();
+						this._gfctx.arc(cpt[0], cpt[1], 12, 0, Math.PI * 2, true);
+						strokeFill(this);
+
+						/* TODO - locrsb PRECISA DE aspeto especifico
+						this._gfctx.beginPath();
 						this._gfctx.moveTo(cpt[0]-20, cpt[1]+18);
 						this._gfctx.lineTo(cpt[0], cpt[1]-22);
 						this._gfctx.lineTo(cpt[0]+20, cpt[1]+18);
 						this._gfctx.closePath();
 						strokeFill(this);
+						*/
 					}
 
 					// accuracy circle
