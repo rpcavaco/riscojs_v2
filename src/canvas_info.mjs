@@ -97,13 +97,15 @@ export class InfoBox extends PopupBox {
 		const middle = top + height/2;
 		const bottom = top + height;
 
+		// console.log("box", this.box)
+
 		// jump end
 		let right = this.box[0] + this.box[2] - pad; 
 		let left = right - width;
 
 		if (this.recordcnt > 2) {
 
-			this.clickboxes["toend"] = [left, bottom, right, top];
+			this.clickboxes["toend"] = [left, top, right, bottom];
 
 			rightarrow(p_ctx, [left, right, bottom, middle, top]);
 
@@ -112,21 +114,19 @@ export class InfoBox extends PopupBox {
 			p_ctx.lineTo(right, top);
 			p_ctx.stroke();
 
-			// shift right
+			// move to shift right
 			right = left - smallsep; 
 			left = right - width;
 		}
 
-		this.clickboxes["next"] = [left, bottom, right, top];
-
+		// shift right
+		this.clickboxes["next"] = [left, top, right, bottom];
 		rightarrow(p_ctx, [left, right, bottom, middle, top]);
 
 		// shift left
-
 		right = left - sep; 
 		left = right - width;
-
-		this.clickboxes["prev"] = [left, bottom, right, top];
+		this.clickboxes["prev"] = [left, top, right, bottom];
 
 		p_ctx.beginPath();
 		p_ctx.moveTo(right, bottom);
@@ -356,15 +356,13 @@ export class InfoBox extends PopupBox {
 		//console.log("rowboundaries:", this.rowboundaries);
 
 		if (this.max_textlines_height) {
-			this.pagecount = parseInt(Math.ceil(1.0 * this.rows.length / this.max_textlines_height));
+			this.pagecount = this.rowboundaries.length;
 		} else {
 			this.pagecount = 1;
 		}
 		if (this.activepageidx < 0) {
 			this.activepageidx = 0;
 		}
-
-		console.assert(this.pagecount == this.rowboundaries.length, "incoherent page counts - pagecount:%d != rows boundary arrays:%d", this.pagecount, this.rowboundaries.length);
 
 		//console.log("pgcnt:", this.pagecount, this.activepageidx);
 		let lbl;
@@ -522,37 +520,44 @@ export class InfoBox extends PopupBox {
 				for (let k in this.clickboxes) {
 					cb = this.clickboxes[k];
 
-					// TODO . - CRITÉTIO QUASE DE CERTEZA ERRADO NOS yy
 					if (p_evt.clientX >= cb[0] && p_evt.clientX <= cb[2] && 
 						p_evt.clientY >= cb[1] && p_evt.clientY <= cb[3]) {
-							switch(k) {
 
-								case "next":
-									if (this.recordidx == this.recordcnt-1) {
-										this.recordidx = 0;
-									} else {
-										this.recordidx++;
-									}
-									this.clear(p_ctx);
-									this.draw(p_ctx);
-									break;
+							if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
 
-								case "prev":
-									if (this.recordidx == 0) {
-										this.recordidx = this.recordcnt-1;
-									} else {
-										this.recordidx--;
-									}
-									this.clear(p_ctx);
-									this.draw(p_ctx);
-									break;		
-									
-								case "toend":
-									this.recordidx = this.recordcnt-1;
-									this.clear(p_ctx);
-									this.draw(p_ctx);
-									break;									
+								switch(k) {
+
+									case "next":
+										if (this.recordidx == this.recordcnt-1) {
+											this.recordidx = 0;
+										} else {
+											this.recordidx++;
+										}
+										this.activepageidx = 0;
+										this.clear(p_ctx);
+										this.draw(p_ctx);
+										break;
+
+									case "prev":
+										if (this.recordidx == 0) {
+											this.recordidx = this.recordcnt-1;
+										} else {
+											this.recordidx--;
+										}
+										this.activepageidx = 0;
+										this.clear(p_ctx);
+										this.draw(p_ctx);
+										break;		
 										
+									case "toend":
+										this.recordidx = this.recordcnt-1;
+										this.activepageidx = 0;
+										this.clear(p_ctx);
+										this.draw(p_ctx);
+										break;												
+								}
+							} else {
+								topcnv.style.cursor = "pointer";	
 							}
 					}
 				}
@@ -575,6 +580,7 @@ export class InfoBox extends PopupBox {
 					continue;
 				}
 				cb = this.clickboxes[k];
+
 				if (p_evt.clientX >= cb[0] && p_evt.clientX <= cb[2] && 
 					p_evt.clientY >= cb[1] && p_evt.clientY <= cb[3]) {
 
@@ -584,7 +590,6 @@ export class InfoBox extends PopupBox {
 							this.clear(p_ctx);
 							this.draw(p_ctx);	
 						} else {
-							const topcnv = this.mapctx.renderingsmgr.getTopCanvas();
 							if (!isNaN(pagenum)) {
 								if (this.activepageidx != (pagenum-1)){
 									topcnv.style.cursor = "pointer";
