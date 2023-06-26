@@ -375,6 +375,10 @@ export class LocQuery {
 		this.query_box = document.createElement('input');
 		this.query_box.setAttribute("id", "loc-inputtext");
 
+		if (p_basic_config["querybox"]["placeholder"] !== undefined) {
+			this.query_box.setAttribute("placeholder",  p_basic_config["querybox"]["placeholder"]);
+		}
+
 		p_mapctx.panelwidget.appendChild(this.query_box);
 
 		this.query_box.setAttribute("type", "text");
