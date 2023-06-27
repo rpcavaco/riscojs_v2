@@ -710,6 +710,8 @@ export function getFeatureCenterPoint(p_geomtype, p_path_levels, p_coords, p_min
 
 	if (p_geomtype == "point") {
 
+		// console.log("p_path_levels:", p_path_levels);
+
 		if (p_path_levels == 1) 
 			ret_pt = [...p_coords];
 		else if (p_path_levels == 2)
@@ -743,6 +745,8 @@ export function getFeatureCenterPoint(p_geomtype, p_path_levels, p_coords, p_min
 		}
 
 	}
+
+	//console.log(`ret_pt: ${ret_pt}`);
 
 	return ret_pt;
 

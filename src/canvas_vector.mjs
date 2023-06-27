@@ -481,12 +481,20 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			let minarea = p_mapctxt.getScale() / 100.0;
 			const lpt = getFeatureCenterPoint(this.geomtype, p_path_levels, p_coords, minarea);
 
+			// console.log(`p_coords: ${p_coords}, p_path_levels: ${p_path_levels}`, p_coords);
+			// console.log(`lpt: ${lpt}`, lpt);
 			let pt=[], finalpt=[], rot=null;
 
 			if (lpt.length < 1) {
 				throw new Error("empty label anchor point");
-			}			
-			p_mapctxt.transformmgr.getRenderingCoordsPt(lpt, pt);
+			}
+			if (lpt.length == 1) {		
+				p_mapctxt.transformmgr.getRenderingCoordsPt(lpt[0], pt);
+			} else if (lpt.length == 2) {
+				p_mapctxt.transformmgr.getRenderingCoordsPt(lpt, pt);
+			} else {
+				throw new Error(`drawLabel, feature center point`);
+			}
 
 			if (this._currentsymb.labelLeaderLength != "none") {
 
@@ -630,10 +638,14 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		let lbloptsymbs = null;
 		let lblcontent = null;
 		let labelfield = null;
+		let labelfunc = null;
 		let doit = false;
 
 		if (this['labelfield'] !== undefined && this['labelfield'] != "none") {
 			labelfield = this['labelfield'];
+		}
+		if (this['labelfunc'] !== undefined && this['labelfunc'] != "none") {
+			labelfunc = this['labelfunc'];
 		}
 
 		if (opt_symbs) {
@@ -683,12 +695,16 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		}
 
 		if (ret && labelfield != null) {
-		
+
 			lblcontent = null;
 			if (p_attrs[labelfield] !== undefined) {
 				lblcontent = p_attrs[labelfield];
 			} else if (opt_feat_id != null && GlobalConst.TYPICAL_OIDFLDNAMES.indexOf(labelfield.toLowerCase()) >= 0) {
 				lblcontent = opt_feat_id.toString();
+			}
+
+			if (labelfunc) {
+				lblcontent = labelfunc(lblcontent);
 			}
 
 			if (lblcontent !== null) {

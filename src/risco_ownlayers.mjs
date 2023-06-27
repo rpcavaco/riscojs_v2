@@ -25,7 +25,7 @@ function calcPathLevels(p_coords_obj) {
 
 }
 
-
+/*
 function validateGeometry(p_geom_type, p_content_obj) {
 
 	let ret_path_levels;
@@ -114,6 +114,7 @@ function validateGeometry(p_geom_type, p_content_obj) {
 		return -1;
 	}	
 }
+*/
 
 function adaptCoords(p_path_levels, p_in_coords, p_center_pt, p_pixsz, out_coords) {
 
@@ -407,11 +408,13 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 
 							path_levels = calcPathLevels(feat.crds); 
 
-							// console.log("path_levels:", path_levels);
+							// console.log("path_levels:", path_levels, "key:", that.key, feat.crds);
 
 							// to terrain coords
 							const terrain_coords = [];
 							adaptCoords(path_levels, feat.crds, [responsejson.cenx, responsejson.ceny], responsejson.pxsz, terrain_coords)
+
+							// console.log("terrain_coords:", terrain_coords, "key:", that.key);
 
 							id2 = that._currFeatures.add(that.key, terrain_coords, feat.a, that.geomtype, path_levels, id);
 							// If feature still exists  between cleanups that's because it might not have been properly garbage collected

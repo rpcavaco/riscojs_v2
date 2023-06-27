@@ -116,6 +116,7 @@ export class Layer {
 	mouseinteraction = false;
 	label = "none";
 	labelfield = "none";
+	labelfunc = "none";
 
 	// Unconfigurables
 	//   If subclass has a non-null value in one of these fields,

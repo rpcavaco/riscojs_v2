@@ -546,7 +546,7 @@ class TransformsQueue {
 
 	getRenderingCoordsPt(p_terrpt, out_pt) {
 		if (p_terrpt === null || typeof p_terrpt != 'object' || p_terrpt.length != 2) {
-			throw new Error(`Class Transform2DMgr, getTerrainPt, invalid terrain point: ${p_terrpt}`);
+			throw new Error(`Class Transform2DMgr, getTerrainPt, invalid terrain point: ${p_terrpt}, type:${typeof p_terrpt}, len:${p_terrpt.length}`);
 		}
 		
 		let v1=[], v2=[], mx1=[];
