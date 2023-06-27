@@ -266,7 +266,7 @@ export class MaptipBox extends PopupBox {
 		let row, height, cota, lnidx, celltxt, changed_found, colsizes=[0,0];
 		for (row of this.rows) {
 			for (let i=0; i<numcols; i++) {
-				if (i==0) {
+				if (i % 2 ==0) {
 					p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
 				} else {
 					p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;

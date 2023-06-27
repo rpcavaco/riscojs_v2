@@ -196,6 +196,8 @@ export class InfoBox extends PopupBox {
 
 	draw(p_ctx) {
 
+		const nontext_formats = ["img", "imgcoll"];
+
 		const ifcfg = Object.keys(this.layer.infocfg);
 		if (ifcfg.length < 1) {
 			throw new Error(`Missing mandatory 'infocfg' config for layer '${this.layer.key}`);
@@ -284,6 +286,13 @@ export class InfoBox extends PopupBox {
 		}
 
 		for (let fld of this.ordered_fldnames) {
+
+			if (this.layer.infocfg.fields["formats"][fld] !== undefined) {
+				if (nontext_formats.indexOf(this.layer.infocfg.fields["formats"][fld]["type"]) > 0) {
+					continue;
+				}	
+			} 
+
 			this.field_textlines_count[fld] = canvasWrtField(this, p_ctx, recdata, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows, this.urls);
 			if (this.field_textlines_count[fld] > 0) {
 				this.used_fldnames.push(fld);

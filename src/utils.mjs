@@ -121,6 +121,8 @@ export function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdic
 
 	if (p_this.layer.infocfg.fields["formats"] !== undefined && p_this.layer.infocfg.fields["formats"][p_fld] !== undefined) {
 		if (p_this.layer.infocfg.fields["formats"][p_fld]["type"] !== undefined) {
+
+			pretext = null;
 			switch(p_this.layer.infocfg.fields["formats"][p_fld]["type"]) {
 
 				case "date":
@@ -145,7 +147,6 @@ export function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdic
 					break;
 
 				case "URL":
-					pretext = null;
 					if (o_urls != null) {
 						const urlfunc = p_this.layer.infocfg.fields["formats"][p_fld]["urlbuild"];
 						o_urls[p_fld] = urlfunc(p_attrs[p_fld]);
@@ -176,11 +177,13 @@ export function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdic
 		captionlines.push('');
 	}
 
-	if (pretext == null) {
+/* 	if (pretext == null) {
 
 		valuelines.push('');
 
-	} else {
+	} else { */
+
+	if (pretext) {	
 
 		if (typeof pretext != 'number') {
 			if (pretext.length > 0) {
@@ -200,10 +203,12 @@ export function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdic
 				valuelines.push(pretext.toString());
 			}
 		}
+
+		o_rows.push({ "c": [captionlines, valuelines], "f": p_fld });
+		ret = Math.max(captionlines.length, valuelines.length);
+	
 	}
 
-	o_rows.push({ "c": [captionlines, valuelines], "f": p_fld });
-	ret = Math.max(captionlines.length, valuelines.length);
 
 	return ret;
 }
