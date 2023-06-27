@@ -186,13 +186,16 @@ export function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdic
 	if (pretext) {	
 
 		if (typeof pretext != 'number') {
+
 			if (pretext.length > 0) {
 				pp_ctx.font = `${p_this.normalszPX}px ${p_this.fontfamily}`;
 				canvasCollectTextLines(pp_ctx, pretext, max_valuewidth, valuelines);
 			} else {
 				valuelines.push('');
 			}
+
 		} else {
+
 			if (captionlines.length == 1) {
 				valuelines = [pretext.toString()];
 			} else {
@@ -204,9 +207,20 @@ export function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdic
 			}
 		}
 
+		// prepend empty value lines, to justify text vertically to bottom
+		if (captionlines.length > valuelines.length) {
+			for (let i=0; i<(captionlines.length - valuelines.length); i++) {
+				valuelines.unshift('');
+			}
+		}
+
 		o_rows.push({ "c": [captionlines, valuelines], "f": p_fld });
-		ret = Math.max(captionlines.length, valuelines.length);
+		ret = Math.max(captionlines.length, valuelines.length);	
 	
+	} else {
+
+		o_rows.push({ "x": "teste", "f": p_fld });
+
 	}
 
 

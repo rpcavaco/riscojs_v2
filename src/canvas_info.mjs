@@ -304,6 +304,10 @@ export class InfoBox extends PopupBox {
 		// calc max widths of text in columns
 		for (let row of this.rows) {
 
+			if (row["c"] === undefined) {
+				continue;
+			}
+
 			for (let i=0; i<this.columncount; i++) {
 				if (i==0) {
 					p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
@@ -336,6 +340,10 @@ export class InfoBox extends PopupBox {
 
 		// calc text line boundaries for each "page"
 		for (let onfirstpage=true, ri=0; ri<this.rows.length; ri++) {
+
+			if (this.rows[ri]["c"] === undefined) {
+				continue;
+			}
 
 			currow = ri;
 
@@ -415,6 +423,10 @@ export class InfoBox extends PopupBox {
 		// Actual drawing
 		let lnidx, crrfld, fmt, bgwidth, textorig_x, lineincell_txt, txtdims, changed_found;
 		for (let row, ri=fromri; ri<=tori; ri++) {
+
+			if (this.rows[ri]["c"] === undefined) {
+				continue;
+			}
 
 			row = this.rows[ri]["c"];
 			lnidx = 0;

@@ -265,14 +265,16 @@ export class MaptipBox extends PopupBox {
 		// Calc text dims
 		let row, height, cota, lnidx, celltxt, changed_found, colsizes=[0,0];
 		for (row of this.rows) {
-			for (let i=0; i<numcols; i++) {
-				if (i % 2 ==0) {
-					p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
-				} else {
-					p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
-				}
-				for (let rowln of row["c"][i]) {
-					colsizes[i] = Math.max(p_ctx.measureText(rowln).width, colsizes[i]);
+			if (row["c"] !== undefined) {
+				for (let i=0; i<numcols; i++) {
+					if (i % 2 ==0) {
+						p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
+					} else {
+						p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
+					}
+					for (let rowln of row["c"][i]) {
+						colsizes[i] = Math.max(p_ctx.measureText(rowln).width, colsizes[i]);
+					}
 				}
 			}
 		}
@@ -287,15 +289,18 @@ export class MaptipBox extends PopupBox {
 		height = 2.5*txtlnheight;
 		for (let row, ri=0; ri<this.rows.length; ri++) {
 
-			maxrowlen=0;
 			row = this.rows[ri];
+			if (row["c"] === undefined) {
+				continue;
+			}
+
+			maxrowlen=0;
 			for (let colidx=0; colidx<numcols; colidx++) {
 				maxrowlen = Math.max(maxrowlen, row["c"][colidx].length);
 			}
 			textlinescnt += maxrowlen;
 			
 			height += maxrowlen * lineheightfactor * txtlnheight + 0.25 * txtlnheight;
-
 		}
 
 		// Layer label caption printing
@@ -319,6 +324,10 @@ export class MaptipBox extends PopupBox {
 
 		cota = this.origin[1]+2.5*txtlnheight;
 		for (row of this.rows) {
+
+			if (row["c"] === undefined) {
+				continue;
+			}
 
 			lnidx = 0;
 			do {
