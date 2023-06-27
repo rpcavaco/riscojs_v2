@@ -179,6 +179,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 				}
 
 				if (related_ids[from_lyrk][to_lyrk].size > 0) {
+
 					for (let r of related_ids[from_lyrk][to_lyrk]) {
 
 						tmpd = p_mapctx.featureCollection.distanceTo(terr_pt, to_lyrk, r, minarea);
@@ -197,7 +198,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 							} else {
 								canvas_layers = {'normal': 'transientmap', 'label': 'transientmap' };
 							}
-	
+
 							p_mapctx.drawSingleFeature(to_lyrk, r, GlobalConst.DEBUG_FEATMOUSESEL_SELUNDERMASK_SYMB, canvas_layers);
 						}
 					}
@@ -226,7 +227,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 				throw new Error(`to layer '${nearestlyk}' not found`);
 			}
 
-			if (p_maxdist == null || p_maxdist >=  dist) {
+			if (foundly.layervisible && (p_maxdist == null || p_maxdist >=  dist)) {
 
 				p_mapctx.renderingsmgr.clearAll(['temporary','transientmap']);
 

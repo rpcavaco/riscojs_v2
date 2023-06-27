@@ -211,6 +211,7 @@ export class FeatureCollection {
 
 		let ret = null;
 		let feat = null;
+		let refreshresult = null;
 
 		if (this.featList[p_layerkey] === undefined) {
 			throw new Error(`layer '${p_layerkey}' was not set through 'setLayer' method`);
@@ -222,9 +223,11 @@ export class FeatureCollection {
 			if (feat == null) {
 				throw new Error(`layer '${p_layerkey}' no feature for id ${opt_featid}`);
 			}
-			ret = feat;
-			this.layers[p_layerkey].refreshitem(this.mapctx, feat.g, feat.a, feat.l, opt_featid, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
-
+			refreshresult = this.layers[p_layerkey].refreshitem(this.mapctx, feat.g, feat.a, feat.l, opt_featid, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
+			// feature is returned ONLY if feature was drawn
+			if (refreshresult) {
+				ret = feat;
+			}
 		} else {
 
 			for (let id in this.featList[p_layerkey]) {

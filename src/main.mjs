@@ -372,9 +372,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		const ly = this.tocmgr.getLayer(p_layer_key);
 
-		if (ly) {
-
-			// TODO falta tratar da simbologia de labels
+		if (ly != null && ly.layervisible) {
 
 			Object.assign(symb, ly.default_symbol);
 			Object.assign(symb, p_geomtype_keyed_symbdict[ly.geomtype]);

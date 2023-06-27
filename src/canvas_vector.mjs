@@ -625,7 +625,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskeys, opt_symbs, opt_terrain_env) {
 
-		let ret = true;
+		let ret = false;
 		let groptsymbs = null;
 		let lbloptsymbs = null;
 		let lblcontent = null;
@@ -695,7 +695,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 				if (this.grabLabelGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, lbloptsymbs)) {
 					try {
-						ret = this.drawLabel(p_mapctxt, p_coords, p_path_levels, lblcontent, opt_terrain_env);
+						this.drawLabel(p_mapctxt, p_coords, p_path_levels, lblcontent, opt_terrain_env);
 					} catch(e) {
 						console.error(p_coords, labelfield, lblcontent);
 						throw e;
