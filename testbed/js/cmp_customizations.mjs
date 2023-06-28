@@ -197,7 +197,15 @@ export class LocQuery {
 			
 										});
 
-										that.mapctx.transformmgr.zoomToRect(p_env[0], p_env[1], p_env[2], p_env[3]);										
+										that.mapctx.transformmgr.zoomToRect(p_env[0], p_env[1], p_env[2], p_env[3]);	
+										
+										const el = document.getElementById('loc-query_results');
+										if (el) {
+											el.style.display = 'none';
+											while (el.firstChild) {
+												el.removeChild(el.firstChild);
+											}											
+										}
 									}
 								);	
 							})(p, that, top['cod_topo'], top['toponimo'], top['env']);
@@ -229,6 +237,12 @@ export class LocQuery {
 								that.query_results.style.height = 16 + "px";
 							}
 
+							that.query_results.addEventListener(
+								'click', (e) => { 
+									that.query_box.value = responsejson['out']['toponym'] + ' ';
+									that.query_results.style.display = 'none';
+								});
+
 							that.mapctx.tocmgr.addAfterRefreshProcedure(() => {
 
 								filter_dict = {}
@@ -251,7 +265,11 @@ export class LocQuery {
 							if (that.query_results == null) {
 								return;
 							}
-								
+
+							while (that.query_results.firstChild) {
+								that.query_results.removeChild(that.query_results.firstChild);
+							}
+
 							that.query_results.style.display = '';		
 							for (let ln of [
 								`Número '${responsejson['out']['errornp']}': não encontrado.`
@@ -285,6 +303,9 @@ export class LocQuery {
 												p_this.setNpol(p_npol, p_cod_topo, p_toponimo);
 												p_this.query_box.value = `${p_toponimo} ${p_npol}`;
 												p_this.query_results.style.display = 'none';
+												while (p_this.query_results.firstChild) {
+													p_this.query_results.removeChild(p_this.query_results.firstChild);
+												}	
 												that.mapctx.transformmgr.setScaleCenteredAtPoint(that.zoomto, [p_pt[0], p_pt[1]], true);
 											}
 										);	
