@@ -27,8 +27,9 @@ export class PopupBox {
 	drawcount;
 	rows;
 	mapctx;
+	imgbuffer;
 
-	constructor(p_mapctx, p_layer, p_styles, p_scrx, p_scry, b_callout) {
+	constructor(p_mapctx, p_imgbuffer, p_layer, p_styles, p_scrx, p_scry, b_callout) {
 
 		this.origin = [20,20];
 		this.anchorpt = [20,20];
@@ -42,6 +43,7 @@ export class PopupBox {
 		this.drawcount = 0;
 		this.rows = [];
 		this.mapctx = p_mapctx;
+		this.imgbuffer = p_imgbuffer;
 
 		if (p_styles["fillStyle"] !== undefined) {
 			this.fillStyle = p_styles["fillStyle"];
@@ -216,22 +218,18 @@ export class MaptipBox extends PopupBox {
 
 	feature;
 
-	constructor(p_mapctx, p_layer, p_feature, p_styles, p_scrx, p_scry, b_callout) {
-
-		super(p_mapctx, p_layer, p_styles, p_scrx, p_scry, b_callout);
-
+	constructor(p_mapctx, p_imgbuffer, p_layer, p_feature, p_styles, p_scrx, p_scry, b_callout) {
+		super(p_mapctx, p_imgbuffer, p_layer, p_styles, p_scrx, p_scry, b_callout);
 		this.feature = p_feature;
-
 	}
 
-	draw(p_ctx) {
+	async draw(p_ctx) {
 
 		const ifkeys = Object.keys(this.layer.maptipfields);
 		if (ifkeys.length < 1) {
 			console.warn(`[WARN] Missing 'maptipfields' config for layer '${this.layer.key}`);
 			return;
 		}
-
 
 		const lang = (new I18n(this.layer.msgsdict)).getLang();
 
@@ -248,19 +246,21 @@ export class MaptipBox extends PopupBox {
 
 		if (ifkeys.indexOf("add") >= 0) {
 			for (let fld of this.layer.maptipfields["add"]) {
-				canvasWrtField(this, p_ctx, this.feature.a, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows);
+				await canvasWrtField(this, p_ctx, this.feature.a, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows);
 			}	
 		} else if (ifkeys.indexOf("remove") >= 0) {
 			for (let fld in this.feature.a) {
 				if (this.layer.maptipfields["remove"].indexOf(fld) < 0) {
-					canvasWrtField(this, p_ctx, this.feature.a, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows);
+					await canvasWrtField(this, p_ctx, this.feature.a, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows);
 				}
 			} 
 		} else {
 			for (let fld in this.feature.a) {
-				canvasWrtField(this, p_ctx, this.feature.a, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows);
+				await canvasWrtField(this, p_ctx, this.feature.a, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows);
 			}	
 		}
+
+		// console.log("rows:", this.rows, this.rows.length);
 
 		// Calc text dims
 		let row, height, cota, lnidx, celltxt, changed_found, colsizes=[0,0];
@@ -318,9 +318,81 @@ export class MaptipBox extends PopupBox {
 		
 		const realwidth = Math.max(this.leftpad+p_ctx.measureText(lbl).width+this.rightpad, this.leftpad+colsizes[0]+this.betweencols+colsizes[1]+this.rightpad);
 
+		// addic height  of non-text rows
+		const maximgheight = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_maximgheight"], maximgwidth = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_maximgwidth"], normv = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_normwidth"], imgpadding = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_imgpadding"];
+		const usable_width = realwidth - this.leftpad - this.rightpad;
+		let w, h, fillh = 0;
+		for (row of this.rows) {
+
+			//console.log(">>>>", row);
+
+			if (row["c"] !== undefined) {
+				continue;
+			}
+
+			if (row["thumbcoll"] !== undefined) {
+				row["dims_pos"] = [];
+				let r, currfillh = 0, fillw = 0, rowi=-1, coli=0;
+
+				for (let imge of row["thumbcoll"]) {
+
+					if (imge.complete) {
+						r = 1.0 * imge.width / imge.height;
+						if (r > 1.2) {
+							w = maximgwidth;
+							h = w / r;
+						} else if (r < 0.8) {
+							h = maximgheight;
+							w = r * h;
+						} else {
+							if (r > 1.0) {
+								h = normv;
+								w = r * h;
+							} else {
+								w = normv;
+								h = w / r;
+							}
+						}
+						row["dims_pos"].push([w, h, rowi, coli]);
+						//console.log(imge.width, imge.height, r, w, h);
+
+						if ((h + imgpadding) > currfillh) {
+							currfillh = h + imgpadding;
+						}
+
+						fillw = w + imgpadding;
+						//console.log(imge.width, "w:", w, "fillw:", fillw, usable_width);
+						if (fillw > usable_width) {
+							fillw = 0;
+							fillh += currfillh;
+							currfillh = 0;
+							coli = 0;
+							rowi++;
+						} else {
+							coli++;
+						}
+					} else {
+						console.error(`[WARN] MaptipBox draw, image '${imge.src}' not complete`);
+					}
+				}
+
+				if (currfillh > 0) {
+					fillh += currfillh;
+					currfillh = 0;
+				}
+			}
+		}
+
+// -----
+		// console.log(height, fillh);
+
+		height = height + fillh + 0.5 *txtlnheight;
+
 		this._drawBackground(p_ctx, realwidth, height, txtlnheight, lbl);
 
 		p_ctx.fillStyle = this.fillTextStyle;
+
+		// console.log(this.rows);
 
 		cota = this.origin[1]+2.5*txtlnheight;
 		for (row of this.rows) {
@@ -348,8 +420,7 @@ export class MaptipBox extends PopupBox {
 							p_ctx.fillText(celltxt, this.origin[0]+this.leftpad+colsizes[colidx-1]+colidx*this.betweencols, cota);		
 						}
 						changed_found = true;
-					}
-	
+					}	
 				}
 
 				if (changed_found) {
@@ -361,6 +432,73 @@ export class MaptipBox extends PopupBox {
 
 			cota = cota + 0.25 *txtlnheight;
 		}
+
+		// Non-text items
+		const abs_left = this.origin[0]+this.leftpad;
+		const left_caption = this.origin[0] + realwidth / 2.0;
+
+		let left_symbs = 0;
+		for (row of this.rows) {
+
+			// console.log(row);
+
+			if (row["c"] !== undefined) {
+				continue;
+			}			
+
+			// Field caption
+			p_ctx.textAlign = "center";
+			p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
+			p_ctx.fillText(row["cap"], left_caption, cota);	
+			cota = cota + 0.5 * txtlnheight;
+
+			if (row["thumbcoll"] !== undefined) {
+				
+				let acumw = 0;
+
+				for (let imge, rii=0; rii < row["thumbcoll"].length; rii++) {
+					if (row["thumbcoll"][rii] !== undefined) {
+						imge = row["thumbcoll"][rii];
+						const [w, h, rowi, coli] = row["dims_pos"][rii];
+						if (imge.complete) {
+							if (coli == 0 && rowi > 0) {
+								acumw = -1;
+								break;
+							}
+							if (coli > 0) {
+								acumw += w + imgpadding;
+							} else {
+								acumw += w;
+							}
+						};	
+					}				
+				}
+
+				if (acumw > 0) {
+					left_symbs = this.origin[0] + (realwidth - acumw) / 2.0;
+				} else {
+					left_symbs = abs_left;
+				}
+
+				for (let imge, rii=0; rii < row["thumbcoll"].length; rii++) {
+					if (row["thumbcoll"][rii] !== undefined) {
+						imge = row["thumbcoll"][rii];
+						const [w, h, rowi, coli] = row["dims_pos"][rii];
+						if (imge.complete) {
+							if (coli == 0 && rowi > 0) {
+								left_symbs = abs_left;
+							}
+							p_ctx.drawImage(imge, left_symbs, cota, w, h);
+						};	
+
+						left_symbs = left_symbs + w + imgpadding;	
+					}				
+				}
+			}
+			cota = cota + 0.25 * txtlnheight;
+		}
+
+		// console.log(this.rows.length);
 
 		p_ctx.restore();
 	}

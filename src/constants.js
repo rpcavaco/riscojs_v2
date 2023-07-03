@@ -137,7 +137,12 @@ var GlobalConst = {
 		"rowsintervalfactor": 0.15,
 		"caption2value_widthfraction": 0.31,
 		"tipsbox2map_widthfraction": 2.4,
-		"infotipsbox_slack": 10
+		"infotipsbox_slack": 10,
+
+		"thumbcoll_maximgheight": 50,
+		"thumbcoll_maximgwidth": 100,
+		"thumbcoll_normwidth": 48,
+		"thumbcoll_imgpadding": 10
 	},
 
 	MESSAGING_STYLES: {

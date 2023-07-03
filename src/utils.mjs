@@ -102,7 +102,7 @@ function canvasCollectTextLines(ppp_ctx, p_intext, p_maxlen, out_lines) {
 }
 
 // writes in data structure in p_rows, not in graphics canvas, but uses canvas functions to measure text dimensions
-export function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdict, max_captwidth, max_valuewidth, o_rows, o_urls) {
+export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdict, max_captwidth, max_valuewidth, o_rows, o_urls) {
 			
 	let caption, ret = 0;
 
@@ -219,7 +219,29 @@ export function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdic
 	
 	} else {
 
-		o_rows.push({ "x": "teste", "f": p_fld });
+		let imge, src, thumbcoll=[], re;
+		if (p_this.layer.infocfg.fields["formats"][p_fld]["type"] !== undefined) {
+			
+			switch(p_this.layer.infocfg.fields["formats"][p_fld]["type"]) {
+
+				case "thumbcoll":
+
+					tmp = p_attrs[p_fld];
+					re = new RegExp(`${p_this.layer.infocfg.fields["formats"][p_fld]["splitpatt"]}`);
+					for (let spl of tmp.split(re)) {
+						
+						src = p_this.layer.infocfg.fields["formats"][p_fld]["srcfunc"](spl);
+
+						imge = await p_this.imgbuffer.syncFetchImage(src, spl);
+						thumbcoll.push(imge);
+					}
+					// console.log("pushing , cap:", caption);
+					o_rows.push({ "thumbcoll": thumbcoll, "cap": caption, "f": p_fld });
+					break;
+
+			}
+			
+		}
 
 	}
 

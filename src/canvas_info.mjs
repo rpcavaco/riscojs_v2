@@ -3,7 +3,6 @@ import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
 import {PopupBox} from './canvas_maptip.mjs';
 import {canvasWrtField} from './utils.mjs';
-import {ctrToolTip} from './customization_canvas_baseclasses.mjs';
 
 export class InfoBox extends PopupBox {
 
@@ -22,9 +21,9 @@ export class InfoBox extends PopupBox {
 	columncount;
 	rowboundaries; // for each page
 
-	constructor(p_mapctx, p_layer, p_data, p_styles, p_scrx, p_scry, p_infobox_pick_method, b_callout, opt_max_rows_height) {
+	constructor(p_mapctx, p_imgbuffer, p_layer, p_data, p_styles, p_scrx, p_scry, p_infobox_pick_method, b_callout, opt_max_rows_height) {
 
-		super(p_mapctx, p_layer, p_styles, p_scrx, p_scry, b_callout);
+		super(p_mapctx, p_imgbuffer, p_layer, p_styles, p_scrx, p_scry, b_callout);
 
 		this.data = p_data;
 		this.recordidx = -1;
@@ -196,7 +195,7 @@ export class InfoBox extends PopupBox {
 
 	draw(p_ctx) {
 
-		const nontext_formats = ["img", "imgcoll"];
+		const nontext_formats = ["img", "thumbcoll"];
 
 		const ifcfg = Object.keys(this.layer.infocfg);
 		if (ifcfg.length < 1) {
