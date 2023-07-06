@@ -186,7 +186,7 @@ export function calcNonTextRowHeight(p_row, p_boxwidth, p_imgpadding, p_leftpad,
 
 // writes in data structure in p_rows, not in graphics canvas, but uses canvas functions to measure text dimensions
 // returns height of field in textline count
-export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdict, max_captwidth, max_valuewidth, o_rows, o_urls, o_textline_height) {
+export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdict, max_captwidth, max_valuewidth, o_rows, o_urls) {
 			
 	let caption, ret = 0;
 
@@ -260,12 +260,6 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_m
 	} else {
 		captionlines.push('');
 	}
-
-/* 	if (pretext == null) {
-
-		valuelines.push('');
-
-	} else { */
 
 	if (pretext) {	
 

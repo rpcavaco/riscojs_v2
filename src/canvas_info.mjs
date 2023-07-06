@@ -2,7 +2,10 @@
 import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
 import {PopupBox} from './canvas_maptip.mjs';
-import {canvasWrtField} from './utils.mjs';
+import {canvasWrtField, calcNonTextRowHeight} from './utils.mjs';
+
+
+
 
 export class InfoBox extends PopupBox {
 
@@ -144,6 +147,8 @@ export class InfoBox extends PopupBox {
 
 	drawpagenavitems(p_ctx) {
 
+		p_ctx.save();
+
 		const pagekeys = [];
 		for (let k in this.clickboxes) {
 			if (k.startsWith("page")) {
@@ -172,28 +177,34 @@ export class InfoBox extends PopupBox {
 		p_ctx.lineWidth = 1;
 
 		p_ctx.font = '10px sans-serif';
+		p_ctx.textAlign = "left";
 
-		for (let i = (this.pagecount-1); i>=0; i--) {
+		for (let tx, ox, i = (this.pagecount-1); i>=0; i--) {
 			
 			origx = rightmost - (1 + (this.pagecount-1-i)) * size - (this.pagecount-1-i) * sep;
 
 			this.clickboxes[`page${(i+1)}`] = [origx, origy, origx+size, origy+size];
+			tx = (i+1).toString();
+			ox = Math.round(origx+texthoffset+(size/4));
 
 			if (i==this.activepageidx) {
 				p_ctx.fillStyle = this.navFillStyle;
 				p_ctx.fillRect(origx, origy, size, size);
 				p_ctx.fillStyle = "black";
-				p_ctx.fillText(i+1, origx+texthoffset+(size/4), origy+size-textvoffset);	
+				p_ctx.fillText(tx, ox, origy+size-textvoffset);	
 			} else {
 				p_ctx.fillStyle = this.navFillStyle;
-				p_ctx.fillText(i+1, origx+texthoffset+(size/4), origy+size-textvoffset);	
+				p_ctx.fillText(tx, ox, origy+size-textvoffset);	
 			}
 			p_ctx.strokeRect(origx, origy, size, size);
 
 		}
+
+		p_ctx.restore();
+
 	}
 
-	draw(p_ctx) {
+	async draw(p_ctx) {
 
 		const nontext_formats = ["img", "thumbcoll"];
 
@@ -284,21 +295,30 @@ export class InfoBox extends PopupBox {
 			}
 		}
 
+		console.log("USED FLDS 0:", this.used_fldnames);
+
 		for (let fld of this.ordered_fldnames) {
 
+			this.field_textlines_count[fld] = await canvasWrtField(this, p_ctx, recdata, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows, this.urls);
+
+			// console.log(":: 295 ::", fld, this.field_textlines_count[fld]);
 			if (this.layer.infocfg.fields["formats"][fld] !== undefined) {
 				if (nontext_formats.indexOf(this.layer.infocfg.fields["formats"][fld]["type"]) > 0) {
+					this.used_fldnames.push(fld);
 					continue;
 				}	
-			} 
-
-			this.field_textlines_count[fld] = canvasWrtField(this, p_ctx, recdata, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows, this.urls);
-			if (this.field_textlines_count[fld] > 0) {
-				this.used_fldnames.push(fld);
+			} else {
+				if (this.field_textlines_count[fld] > 0) {
+					this.used_fldnames.push(fld);
+				}
 			}
 		}	
 
 		this.colsizes=[0,0];
+
+		console.log("USED FLDS:", this.used_fldnames);
+		console.log("ftlc:", this.field_textlines_count);
+		// console.log("ROWS:", this.rows);
 
 		// calc max widths of text in columns
 		for (let row of this.rows) {
@@ -323,7 +343,7 @@ export class InfoBox extends PopupBox {
 		// ROWS: are not data rows, are rows of printing, each row corresponds to an atrribute or data field
 		// TEXTLINE: each row can geneate ZERO or more text lines
 
-		let height, prevrowbndry = 0, currow;
+		let height, currow;
 		let maxrowtextlineslen, accumtextlineslen, pageaccumtextlineslen;
 		this.rowboundaries.length = 0;
 		pageaccumtextlineslen = 0;
@@ -337,18 +357,33 @@ export class InfoBox extends PopupBox {
 		height = 1.6 * this.txtlnheight;
 		// console.log("inith:", height, "rowinterv:", (rowsintervalfactor * this.txtlnheight));
 
-		// calc text line boundaries for each "page"
-		for (let onfirstpage=true, ri=0; ri<this.rows.length; ri++) {
+		let acc_colsz = 0;
+		for (let clsz of this.colsizes) {
+			acc_colsz += clsz;
+		}		
+		let bwidth = Math.min(maxboxwidth, this.leftpad+this.rightpad+this.betweencols+acc_colsz+10);
+		let imgpadding = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_imgpadding"];
 
-			if (this.rows[ri]["c"] === undefined) {
-				continue;
-			}
+		// calc text line boundaries for each "page"
+		let prevrowbndry = 0;
+		for (let tmph, onfirstpage=true, ri=0; ri<this.rows.length; ri++) {
 
 			currow = ri;
 
-			maxrowtextlineslen=0;
-			for (let colidx=0; colidx<this.columncount; colidx++) {
-				maxrowtextlineslen = Math.max(maxrowtextlineslen, this.rows[ri]["c"][colidx].length);
+			if (this.rows[ri]["c"] === undefined) {
+				
+				tmph = calcNonTextRowHeight(this.rows[ri], bwidth, imgpadding, this.leftpad, this.rightpad);
+				// height = height + tmph + 0.5 *this.txtlnheight;
+
+				this.field_textlines_count[this.rows[ri]["f"]] = (tmph + 0.5 *this.txtlnheight) / this.txtlnheight;
+				maxrowtextlineslen = Math.ceil(this.field_textlines_count[this.rows[ri]["f"]]);
+
+			} else {
+
+				maxrowtextlineslen=0;
+				for (let colidx=0; colidx<this.columncount; colidx++) {
+					maxrowtextlineslen = Math.max(maxrowtextlineslen, this.rows[ri]["c"][colidx].length);
+				}
 			}
 			
 			if (this.max_textlines_height) {
@@ -381,8 +416,9 @@ export class InfoBox extends PopupBox {
 		}
 
 		// footer
+		console.log("this.pagecount", this.pagecount);
 		if (this.pagecount > 1) {
-			height += 1.2 * this.txtlnheight;
+			height += 1.75 * this.txtlnheight;
 		} else {
 			height += 0.6 * this.txtlnheight;
 		}
@@ -399,13 +435,7 @@ export class InfoBox extends PopupBox {
 			lbl = "(sem etiqueta)";	
 		}
 
-		let bwidth, acc_colsz = 0;
-		for (let clsz of this.colsizes) {
-			acc_colsz += clsz;
-		}		
 		
-		bwidth = Math.min(maxboxwidth, this.leftpad+this.rightpad+this.betweencols+acc_colsz+10);
-
 		this._drawBackground(p_ctx, bwidth, height, this.txtlnheight, lbl);
 
 		p_ctx.fillStyle = this.fillTextStyle;
@@ -421,6 +451,7 @@ export class InfoBox extends PopupBox {
 
 		// Actual drawing
 		let lnidx, crrfld, fmt, bgwidth, textorig_x, lineincell_txt, txtdims, changed_found;
+
 		for (let row, ri=fromri; ri<=tori; ri++) {
 
 			if (this.rows[ri]["c"] === undefined) {
@@ -518,6 +549,87 @@ export class InfoBox extends PopupBox {
 			// end of text lines loop
 			cota = cota + rowsintervalfactor *this.txtlnheight;
 		}
+
+		// Non-text items
+		const left_caption = this.origin[0] + bwidth / 2.0;
+
+		// console.log(">>>", this.rows.length, fromri, tori);
+		
+		let left_symbs = 0;
+		for (let row, ri=fromri; ri<=tori; ri++) {
+
+			row = this.rows[ri];
+			// console.log(row);
+
+			if (row["c"] !== undefined) {
+				continue;
+			}			
+
+			// Field caption
+			p_ctx.textAlign = "center";
+			p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
+			p_ctx.fillText(row["cap"], left_caption, cota);	
+			cota = cota + 0.5 * this.txtlnheight;
+
+			if (row["thumbcoll"] !== undefined) {
+				
+				let acumw = 0, prevrowi=-1, acumwidths = {};
+				for (let imge, rii=0; rii < row["thumbcoll"].length; rii++) {
+					if (row["thumbcoll"][rii] !== undefined) {
+						imge = row["thumbcoll"][rii];
+						const [w, h, rowi, coli] = row["dims_pos"][rii];
+						if (imge.complete) {
+
+							if (rowi == prevrowi) {
+								acumw += w + imgpadding;
+							} else {
+								if (prevrowi >= 0) {
+									acumwidths[prevrowi] = acumw;
+								}
+								acumw = w;
+							}
+							prevrowi = rowi;
+						}
+					}
+				}
+				if (acumw > 0 && prevrowi >= 0) {
+					acumwidths[prevrowi] = acumw;
+				}	
+
+				console.log("acumwidths:", acumwidths)
+
+				for (let imge, currh=0, rii=0; rii < row["thumbcoll"].length; rii++) {
+					if (row["thumbcoll"][rii] !== undefined) {
+						imge = row["thumbcoll"][rii];
+
+						const [w, h, rowi, coli] = row["dims_pos"][rii];
+
+						// console.log("---->", w, h, rowi, coli);
+
+						currh = Math.max(currh, h);
+						if (imge.complete) {
+							if (coli == 0) {
+
+								// console.log("::492::", rowi, coli, realwidth, acumwidths[rowi]);
+
+								left_symbs = this.origin[0] + (bwidth - acumwidths[rowi]) / 2.0;
+								console.log("left_symbs:", rowi, left_symbs, this.origin[0], bwidth, acumwidths[rowi])
+								if (rowi > 0) {
+									cota += currh + imgpadding;
+									currh = 0;
+								}
+							}
+							console.log("drawImage:", imge.src, left_symbs, cota, w, h)
+							p_ctx.drawImage(imge, left_symbs, cota, w, h);
+						};	
+
+						left_symbs = left_symbs + w + imgpadding;	
+					}				
+				}
+			}
+			cota = cota + 0.25 * this.txtlnheight;
+		}
+
 
 		if (this.recordcnt > 1) {
 			this.drawnavitems(p_ctx, this.recordidx+1, this.data[this.layer.infocfg.jsonkey].length);
@@ -676,6 +788,8 @@ export class InfoBox extends PopupBox {
 				}
 			}
 
+			console.log("fldname:", fldname);
+
 			if (fldname != null && this.columncount > 0) {
 				let foundcolidx = -1;
 				for (let colidx=0; colidx<this.columncount; colidx++) {
@@ -690,6 +804,8 @@ export class InfoBox extends PopupBox {
 						break;
 					}
 				}
+
+				console.log("foundcolidx:", foundcolidx);
 
 				if (foundcolidx >= 0) {
 					if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
