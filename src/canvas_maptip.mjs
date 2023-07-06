@@ -200,6 +200,7 @@ export class PopupBox {
 		}
 
 		p_ctx.fillStyle = this.fillTextStyle;
+		p_ctx.textAlign = "left";
 		p_ctx.fillText(p_label, this.origin[0]+this.leftpad, this.origin[1]+1.2*p_lnheight);
 
 		if (this.callout) {

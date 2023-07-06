@@ -295,8 +295,6 @@ export class InfoBox extends PopupBox {
 			}
 		}
 
-		console.log("USED FLDS 0:", this.used_fldnames);
-
 		for (let fld of this.ordered_fldnames) {
 
 			this.field_textlines_count[fld] = await canvasWrtField(this, p_ctx, recdata, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows, this.urls);
@@ -316,8 +314,8 @@ export class InfoBox extends PopupBox {
 
 		this.colsizes=[0,0];
 
-		console.log("USED FLDS:", this.used_fldnames);
-		console.log("ftlc:", this.field_textlines_count);
+		/* console.log("USED FLDS:", this.used_fldnames);
+		console.log("ftlc:", this.field_textlines_count); */
 		// console.log("ROWS:", this.rows);
 
 		// calc max widths of text in columns
@@ -416,7 +414,6 @@ export class InfoBox extends PopupBox {
 		}
 
 		// footer
-		console.log("this.pagecount", this.pagecount);
 		if (this.pagecount > 1) {
 			height += 1.75 * this.txtlnheight;
 		} else {
@@ -434,8 +431,7 @@ export class InfoBox extends PopupBox {
 		} else {
 			lbl = "(sem etiqueta)";	
 		}
-
-		
+	
 		this._drawBackground(p_ctx, bwidth, height, this.txtlnheight, lbl);
 
 		p_ctx.fillStyle = this.fillTextStyle;
@@ -596,30 +592,22 @@ export class InfoBox extends PopupBox {
 					acumwidths[prevrowi] = acumw;
 				}	
 
-				console.log("acumwidths:", acumwidths)
-
 				for (let imge, currh=0, rii=0; rii < row["thumbcoll"].length; rii++) {
 					if (row["thumbcoll"][rii] !== undefined) {
 						imge = row["thumbcoll"][rii];
 
 						const [w, h, rowi, coli] = row["dims_pos"][rii];
 
-						// console.log("---->", w, h, rowi, coli);
-
 						currh = Math.max(currh, h);
 						if (imge.complete) {
 							if (coli == 0) {
 
-								// console.log("::492::", rowi, coli, realwidth, acumwidths[rowi]);
-
 								left_symbs = this.origin[0] + (bwidth - acumwidths[rowi]) / 2.0;
-								console.log("left_symbs:", rowi, left_symbs, this.origin[0], bwidth, acumwidths[rowi])
 								if (rowi > 0) {
 									cota += currh + imgpadding;
 									currh = 0;
 								}
 							}
-							console.log("drawImage:", imge.src, left_symbs, cota, w, h)
 							p_ctx.drawImage(imge, left_symbs, cota, w, h);
 						};	
 
