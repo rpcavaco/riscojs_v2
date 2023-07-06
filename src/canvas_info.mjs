@@ -23,6 +23,7 @@ export class InfoBox extends PopupBox {
 	colsizes;
 	columncount;
 	rowboundaries; // for each page
+	nontext_formats;
 
 	constructor(p_mapctx, p_imgbuffer, p_layer, p_data, p_styles, p_scrx, p_scry, p_infobox_pick_method, b_callout, opt_max_rows_height) {
 
@@ -47,6 +48,7 @@ export class InfoBox extends PopupBox {
 		this.activepageidx = -1;
 
 		this.rowboundaries = []; // for each page
+		this.nontext_formats = ["img", "thumbcoll"];
 	
 		if (this.layer.infocfg["qrykey"] === undefined) {
 			throw new Error(`Missing mandatory 'infocfg.qrykey' config (info query 'falias' in 'risco_find') for layer '${this.layer.key}`);
@@ -206,8 +208,6 @@ export class InfoBox extends PopupBox {
 
 	async draw(p_ctx) {
 
-		const nontext_formats = ["img", "thumbcoll"];
-
 		const ifcfg = Object.keys(this.layer.infocfg);
 		if (ifcfg.length < 1) {
 			throw new Error(`Missing mandatory 'infocfg' config for layer '${this.layer.key}`);
@@ -301,10 +301,14 @@ export class InfoBox extends PopupBox {
 
 			// console.log(":: 295 ::", fld, this.field_textlines_count[fld]);
 			if (this.layer.infocfg.fields["formats"][fld] !== undefined) {
-				if (nontext_formats.indexOf(this.layer.infocfg.fields["formats"][fld]["type"]) > 0) {
+				if (this.nontext_formats.indexOf(this.layer.infocfg.fields["formats"][fld]["type"]) > 0) {
 					this.used_fldnames.push(fld);
 					continue;
-				}	
+				} else {
+					if (this.field_textlines_count[fld] > 0) {
+						this.used_fldnames.push(fld);
+					}	
+				}
 			} else {
 				if (this.field_textlines_count[fld] > 0) {
 					this.used_fldnames.push(fld);
@@ -314,8 +318,8 @@ export class InfoBox extends PopupBox {
 
 		this.colsizes=[0,0];
 
-		/* console.log("USED FLDS:", this.used_fldnames);
-		console.log("ftlc:", this.field_textlines_count); */
+		// console.log("USED FLDS:", this.used_fldnames);
+		/* console.log("ftlc:", this.field_textlines_count); */
 		// console.log("ROWS:", this.rows);
 
 		// calc max widths of text in columns
@@ -646,6 +650,8 @@ export class InfoBox extends PopupBox {
 		const topcnv = this.mapctx.renderingsmgr.getTopCanvas();
 		topcnv.style.cursor = "default";
 
+		// console.log('     ');
+
 		// in header
 		if (p_evt.clientX >= this.headerbox[0] && p_evt.clientX <= this.headerbox[0] + this.headerbox[2] && 
 			p_evt.clientY >= this.headerbox[1] && p_evt.clientY <= this.headerbox[1] + this.headerbox[3]) {
@@ -759,7 +765,7 @@ export class InfoBox extends PopupBox {
 					prev = next;
 				}
 				first = false;
-				next = prev + (this.field_textlines_count[fld] * lineheightfactor * this.txtlnheight) + rowsintervalfactor * this.txtlnheight;
+				next = prev + (Math.ceil(this.field_textlines_count[fld]) * lineheightfactor * this.txtlnheight) + rowsintervalfactor * this.txtlnheight;
 
 				if (SHOWROWS) {
 					p_ctx.fillText(`${cnt.toString()} ${fld}`,90,next);
@@ -769,43 +775,49 @@ export class InfoBox extends PopupBox {
 					p_ctx.stroke();
 				}
 
+				// console.log('     ', fld, prev, next, p_evt.clientY);
 				if (p_evt.clientY >= prev && p_evt.clientY < next) {
-					//console.log('*', fld, p, next, p_evt.clientY);
 					fldname = fld;
 					break;
 				}
 			}
 
-			console.log("fldname:", fldname);
+			// console.log("fldname:", fldname);
 
-			if (fldname != null && this.columncount > 0) {
-				let foundcolidx = -1;
-				for (let colidx=0; colidx<this.columncount; colidx++) {
-					if (colidx == 0) {
-						left = this.origin[0]+this.leftpad;
-					} else {
-						left = right+this.betweencols;
-					}
-					right = left + this.colsizes[colidx];		
-					if (p_evt.clientX >= left && p_evt.clientX <= right) {
-						foundcolidx = colidx;
-						break;
-					}
-				}
+			if (fldname != null) {
 
-				console.log("foundcolidx:", foundcolidx);
-
-				if (foundcolidx >= 0) {
-					if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
-						this.infobox_static_pick_method(this, this.data[this.layer.infocfg.jsonkey][this.recordidx], fldname, foundcolidx);
-					} 
-					else if (p_evt.type == "mousemove") {
-						if (foundcolidx % 2 == 1) {
-							// Too much intrusive
-							//ctrToolTip(this.mapctx, p_evt, this.mapctx.i18n.msg('CL2CP', true), [100,100]); 
-							topcnv.style.cursor = "copy";
+				if ((this.layer.infocfg.fields["formats"][fldname] === undefined || 
+					this.nontext_formats.indexOf(this.layer.infocfg.fields["formats"][fldname]["type"]) < 0)
+					&& this.columncount > 0) {
+				
+					let foundcolidx = -1;
+					for (let colidx=0; colidx<this.columncount; colidx++) {
+						if (colidx == 0) {
+							left = this.origin[0]+this.leftpad;
+						} else {
+							left = right+this.betweencols;
 						}
-					}						
+						right = left + this.colsizes[colidx];		
+						if (p_evt.clientX >= left && p_evt.clientX <= right) {
+							foundcolidx = colidx;
+							break;
+						}
+					}
+
+					// console.log("foundcolidx:", foundcolidx);
+
+					if (foundcolidx >= 0) {
+						if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
+							this.infobox_static_pick_method(this, this.data[this.layer.infocfg.jsonkey][this.recordidx], fldname, foundcolidx);
+						} 
+						else if (p_evt.type == "mousemove") {
+							if (foundcolidx % 2 == 1) {
+								// Too much intrusive
+								//ctrToolTip(this.mapctx, p_evt, this.mapctx.i18n.msg('CL2CP', true), [100,100]); 
+								topcnv.style.cursor = "copy";
+							}
+						}						
+					}
 				}
 			}
 
