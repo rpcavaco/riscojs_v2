@@ -1,7 +1,7 @@
 
 import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
-import {canvasWrtField} from './utils.mjs';
+import {canvasWrtField, calcNonTextRowHeight} from './utils.mjs';
 
 export class PopupBox {
 
@@ -263,8 +263,8 @@ export class MaptipBox extends PopupBox {
 		// console.log("rows:", this.rows, this.rows.length);
 
 		// Calc text dims
-		let row, height, cota, lnidx, celltxt, changed_found, colsizes=[0,0];
-		for (row of this.rows) {
+		let height, cota, lnidx, celltxt, changed_found, colsizes=[0,0];
+		for (let row of this.rows) {
 			if (row["c"] !== undefined) {
 				for (let i=0; i<numcols; i++) {
 					if (i % 2 ==0) {
@@ -282,29 +282,6 @@ export class MaptipBox extends PopupBox {
 		// calculate global height of text line - from layer caption font - e
 		p_ctx.font = `${this.layercaptionszPX}px ${this.layercaptionfontfamily}`;
 
-		const txtlnheight = this.layercaptionszPX;
-
-		// calculate height of all rows
-		let maxrowlen, textlinescnt=0;
-		height = 2.5*txtlnheight;
-		for (let row, ri=0; ri<this.rows.length; ri++) {
-
-			row = this.rows[ri];
-			if (row["c"] === undefined) {
-				continue;
-			}
-
-			maxrowlen=0;
-			for (let colidx=0; colidx<numcols; colidx++) {
-				maxrowlen = Math.max(maxrowlen, row["c"][colidx].length);
-			}
-			textlinescnt += maxrowlen;
-			
-			height += maxrowlen * lineheightfactor * txtlnheight + 0.25 * txtlnheight;
-		}
-
-		// Layer label caption printing
-
 		let lbl;
 		if (this.layer["label"] !== undefined && this.layer["label"] != "none") {
 			if (this.layer['msgsdict'] !== undefined && this.layer.msgsdict[lang] !== undefined && Object.keys(this.layer.msgsdict[lang]).indexOf(this.layer["label"]) >= 0) {
@@ -315,78 +292,39 @@ export class MaptipBox extends PopupBox {
 		} else {
 			lbl = "(sem etiqueta)";	
 		}	
-		
+
+		const txtlnheight = this.layercaptionszPX;
 		const realwidth = Math.max(this.leftpad+p_ctx.measureText(lbl).width+this.rightpad, this.leftpad+colsizes[0]+this.betweencols+colsizes[1]+this.rightpad);
+		const imgpadding = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_imgpadding"];
 
-		// addic height  of non-text rows
-		const maximgheight = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_maximgheight"], maximgwidth = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_maximgwidth"], normv = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_normwidth"], imgpadding = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_imgpadding"];
-		const usable_width = realwidth - this.leftpad - this.rightpad;
-		let w, h, fillh = 0;
-		for (row of this.rows) {
 
-			//console.log(">>>>", row);
+		// calculate height of all rows
+		let maxrowlen, textlinescnt=0;
+		height = 2.5*txtlnheight;
+		for (let row, ri=0; ri<this.rows.length; ri++) {
 
-			if (row["c"] !== undefined) {
-				continue;
-			}
+			row = this.rows[ri];
+			if (row["c"] === undefined) {
+			
+				// 0.75 = 0.25 spacing + 0.5 (caption height)
+				height = height + calcNonTextRowHeight(row, realwidth, imgpadding, this.leftpad, this.rightpad) + 0.75 * txtlnheight;
+			
+			} else { 
 
-			if (row["thumbcoll"] !== undefined) {
-				row["dims_pos"] = [];
-				let r, currfillh = 0, fillw = 0, rowi=-1, coli=0;
-
-				for (let imge of row["thumbcoll"]) {
-
-					if (imge.complete) {
-						r = 1.0 * imge.width / imge.height;
-						if (r > 1.2) {
-							w = maximgwidth;
-							h = w / r;
-						} else if (r < 0.8) {
-							h = maximgheight;
-							w = r * h;
-						} else {
-							if (r > 1.0) {
-								h = normv;
-								w = r * h;
-							} else {
-								w = normv;
-								h = w / r;
-							}
-						}
-						row["dims_pos"].push([w, h, rowi, coli]);
-						//console.log(imge.width, imge.height, r, w, h);
-
-						if ((h + imgpadding) > currfillh) {
-							currfillh = h + imgpadding;
-						}
-
-						fillw = w + imgpadding;
-						//console.log(imge.width, "w:", w, "fillw:", fillw, usable_width);
-						if (fillw > usable_width) {
-							fillw = 0;
-							fillh += currfillh;
-							currfillh = 0;
-							coli = 0;
-							rowi++;
-						} else {
-							coli++;
-						}
-					} else {
-						console.error(`[WARN] MaptipBox draw, image '${imge.src}' not complete`);
-					}
+				maxrowlen=0;
+				for (let colidx=0; colidx<numcols; colidx++) {
+					maxrowlen = Math.max(maxrowlen, row["c"][colidx].length);
 				}
+				textlinescnt += maxrowlen;
+				
+				height = height + maxrowlen * lineheightfactor * txtlnheight + 0.25 * txtlnheight;
 
-				if (currfillh > 0) {
-					fillh += currfillh;
-					currfillh = 0;
-				}
 			}
 		}
 
-// -----
-		// console.log(height, fillh);
-
-		height = height + fillh + 0.5 *txtlnheight;
+		// Layer label caption printing
+		
+		height = height + 0.5 * txtlnheight;
 
 		this._drawBackground(p_ctx, realwidth, height, txtlnheight, lbl);
 
@@ -395,7 +333,7 @@ export class MaptipBox extends PopupBox {
 		// console.log(this.rows);
 
 		cota = this.origin[1]+2.5*txtlnheight;
-		for (row of this.rows) {
+		for (let row of this.rows) {
 
 			if (row["c"] === undefined) {
 				continue;
@@ -434,11 +372,10 @@ export class MaptipBox extends PopupBox {
 		}
 
 		// Non-text items
-		const abs_left = this.origin[0]+this.leftpad;
 		const left_caption = this.origin[0] + realwidth / 2.0;
 
 		let left_symbs = 0;
-		for (row of this.rows) {
+		for (let row of this.rows) {
 
 			// console.log(row);
 
@@ -453,42 +390,52 @@ export class MaptipBox extends PopupBox {
 			cota = cota + 0.5 * txtlnheight;
 
 			if (row["thumbcoll"] !== undefined) {
-				
-				let acumw = 0;
 
+				let acumw = 0, prevrowi=-1, acumwidths = {};
 				for (let imge, rii=0; rii < row["thumbcoll"].length; rii++) {
 					if (row["thumbcoll"][rii] !== undefined) {
 						imge = row["thumbcoll"][rii];
 						const [w, h, rowi, coli] = row["dims_pos"][rii];
 						if (imge.complete) {
-							if (coli == 0 && rowi > 0) {
-								acumw = -1;
-								break;
-							}
-							if (coli > 0) {
+
+							if (rowi == prevrowi) {
 								acumw += w + imgpadding;
 							} else {
-								acumw += w;
+								if (prevrowi >= 0) {
+									acumwidths[prevrowi] = acumw;
+								}
+								acumw = w;
 							}
-						};	
-					}				
+							prevrowi = rowi;
+						}
+					}
 				}
+				if (acumw > 0 && prevrowi >= 0) {
+					acumwidths[prevrowi] = acumw;
+				}	
+				
+				// console.log("realw:", realwidth, "acumwidths:", acumwidths);
 
-				if (acumw > 0) {
-					left_symbs = this.origin[0] + (realwidth - acumw) / 2.0;
-				} else {
-					left_symbs = abs_left;
-				}
-
-				for (let imge, rii=0; rii < row["thumbcoll"].length; rii++) {
+				for (let imge, currh=0, rii=0; rii < row["thumbcoll"].length; rii++) {
 					if (row["thumbcoll"][rii] !== undefined) {
 						imge = row["thumbcoll"][rii];
+
 						const [w, h, rowi, coli] = row["dims_pos"][rii];
+
+						// console.log("---->", w, h, rowi, coli);
 						if (imge.complete) {
-							if (coli == 0 && rowi > 0) {
-								left_symbs = abs_left;
+							if (coli == 0) {
+								//console.log("::492::", rowi, coli, w, realwidth, acumwidths[rowi], "currh:", currh);
+								left_symbs = this.origin[0] + (realwidth - acumwidths[rowi]) / 2.0;
+								if (rowi > 0) {
+									//console.log("     ::502 draw::", coli, rowi, "cota:", cota, "currh:", currh);
+									cota += currh + imgpadding;
+									currh = 0;
+								}
 							}
+							//console.log("::506 draw::", coli, rowi, "h:", h, "cota:", cota, "currh:", currh);
 							p_ctx.drawImage(imge, left_symbs, cota, w, h);
+							currh = Math.max(currh, h);
 						};	
 
 						left_symbs = left_symbs + w + imgpadding;	

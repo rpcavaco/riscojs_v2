@@ -101,8 +101,92 @@ function canvasCollectTextLines(ppp_ctx, p_intext, p_maxlen, out_lines) {
 	}*/
 }
 
+
+export function calcNonTextRowHeight(p_row, p_boxwidth, p_imgpadding, p_leftpad, p_rightpad) {
+
+	const maximgheight = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_maximgheight"], normv = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_normwidth"];
+	const usable_width = p_boxwidth - p_leftpad - p_rightpad;
+	const maximgwidth = Math.min((usable_width - p_imgpadding) / 2.0, GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_maximgwidth"]);
+	let w, h, fillh = 0;
+
+	// console.log("maximgwidth:", maximgwidth);
+
+	if (p_row["thumbcoll"] !== undefined) {
+
+		p_row["dims_pos"] = [];
+		let r, currfillh = 0, fillw = 0, rowi=0, coli=0, usedrowi=-1;
+
+		for (let imge of p_row["thumbcoll"]) {
+
+			if (imge.complete) {
+				r = 1.0 * imge.width / imge.height;
+				if (r > 1.2) {
+					w = maximgwidth;
+					h = w / r;
+				} else if (r < 0.8) {
+					h = maximgheight;
+					w = r * h;
+				} else {
+					if (r > 1.0) {
+						h = normv;
+						w = r * h;
+					} else {
+						w = normv;
+						h = w / r;
+					}
+				}
+				w = parseInt(w);
+				h = parseInt(h);
+
+				if (coli==0) {
+					fillw = w;
+				} else {
+					fillw = fillw + w + p_imgpadding;
+				}
+				// console.log(imge.src, "wid:", imge.width, "w:", w, "h:", h, "fillw:", fillw, "usable_width:", usable_width);
+				if (fillw > usable_width) {
+					fillw = w;
+					fillh += currfillh;
+					// console.log("   added to  fillh:", fillh, "currfillh:", currfillh);
+					currfillh = h;
+					// console.log("         set currfillh B:", currfillh);
+					coli = 0;
+					rowi++;
+				} else {
+					if (h > currfillh) {
+						currfillh = h;
+						// console.log("         set currfillh A:", currfillh);
+					}	
+				}
+				p_row["dims_pos"].push([w, h, rowi, coli]);
+				usedrowi = rowi;
+				coli++;
+			} else {
+				console.error(`[WARN] calcNonTextRowHeight, image '${imge.src}' not complete`);
+			}
+		}
+
+		if (currfillh > 0) {
+			// console.log("    residual height:", currfillh, "fillh:", fillh);
+			fillh += currfillh;
+			currfillh = 0;
+		}
+
+		if (usedrowi > 0) {
+			//console.log("   acr padds:", usedrowi, p_imgpadding);
+			fillh += (usedrowi * p_imgpadding);
+		}
+	}
+
+	// console.log("   dimpos:", p_row["dims_pos"], "fillh:", fillh);
+
+	return fillh;
+}
+
+
 // writes in data structure in p_rows, not in graphics canvas, but uses canvas functions to measure text dimensions
-export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdict, max_captwidth, max_valuewidth, o_rows, o_urls) {
+// returns height of field in textline count
+export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdict, max_captwidth, max_valuewidth, o_rows, o_urls, o_textline_height) {
 			
 	let caption, ret = 0;
 
@@ -235,16 +319,12 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_m
 						imge = await p_this.imgbuffer.syncFetchImage(src, spl);
 						thumbcoll.push(imge);
 					}
-					// console.log("pushing , cap:", caption);
+
 					o_rows.push({ "thumbcoll": thumbcoll, "cap": caption, "f": p_fld });
 					break;
-
 			}
-			
 		}
-
 	}
-
 
 	return ret;
 }
