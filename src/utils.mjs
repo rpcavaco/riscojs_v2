@@ -298,7 +298,7 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_m
 	} else {
 
 		let imge, src, thumbcoll=[], re;
-		if (p_this.layer.infocfg.fields["formats"][p_fld]["type"] !== undefined) {
+		if (p_this.layer.infocfg.fields["formats"][p_fld] !== undefined && p_this.layer.infocfg.fields["formats"][p_fld]["type"] !== undefined) {
 			
 			switch(p_this.layer.infocfg.fields["formats"][p_fld]["type"]) {
 
