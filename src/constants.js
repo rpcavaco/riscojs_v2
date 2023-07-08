@@ -142,7 +142,9 @@ var GlobalConst = {
 		"thumbcoll_maximgheight": 50,
 		"thumbcoll_maximgwidth": 100,
 		"thumbcoll_normwidth": 48,
-		"thumbcoll_imgpadding": 10
+		"thumbcoll_imgpadding": 10,
+
+		"singleimg_maximgheight": 170
 	},
 
 	MESSAGING_STYLES: {

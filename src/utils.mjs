@@ -104,7 +104,9 @@ function canvasCollectTextLines(ppp_ctx, p_intext, p_maxlen, out_lines) {
 
 export function calcNonTextRowHeight(p_row, p_boxwidth, p_imgpadding, p_leftpad, p_rightpad) {
 
-	const maximgheight = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_maximgheight"], normv = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_normwidth"];
+	const tc_maximgheight = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_maximgheight"]
+	const si_maximgheight = GlobalConst.INFO_MAPTIPS_BOXSTYLE["singleimg_maximgheight"]
+	const normv = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_normwidth"];
 	const usable_width = p_boxwidth - p_leftpad - p_rightpad;
 	const maximgwidth = Math.min((usable_width - p_imgpadding) / 2.0, GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_maximgwidth"]);
 	let w, h, fillh = 0;
@@ -124,7 +126,7 @@ export function calcNonTextRowHeight(p_row, p_boxwidth, p_imgpadding, p_leftpad,
 					w = maximgwidth;
 					h = w / r;
 				} else if (r < 0.8) {
-					h = maximgheight;
+					h = tc_maximgheight;
 					w = r * h;
 				} else {
 					if (r > 1.0) {
@@ -176,6 +178,35 @@ export function calcNonTextRowHeight(p_row, p_boxwidth, p_imgpadding, p_leftpad,
 			//console.log("   acr padds:", usedrowi, p_imgpadding);
 			fillh += (usedrowi * p_imgpadding);
 		}
+
+	} else if (p_row["singleimg"] !== undefined) {
+
+		let r;
+
+		const imge = p_row["singleimg"];
+		if (imge) {
+			if (imge.complete) {
+				r = 1.0 * imge.width / imge.height;
+				if (r > 1.0) {
+					w = usable_width;
+					h = w / r;
+				} else {
+					h = si_maximgheight;
+					w = r * h;
+				}
+				w = parseInt(w);
+				h = parseInt(h);
+
+				fillh = h;
+
+				p_row["dims"] = [w, h];
+			} else {
+				console.error(`[WARN] calcNonTextRowHeight, single image '${imge.src}' not complete`);
+			}
+		} else {
+			console.error("[WARN] calcNonTextRowHeight, missing single image");
+		}
+
 	}
 
 	// console.log("   dimpos:", p_row["dims_pos"], "fillh:", fillh);
@@ -297,7 +328,7 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_m
 	
 	} else {
 
-		let imge, src, thumbcoll=[], re;
+		let imge, src, thumbcoll=[], re, newrow = null;
 		if (p_this.layer.infocfg.fields["formats"][p_fld] !== undefined && p_this.layer.infocfg.fields["formats"][p_fld]["type"] !== undefined) {
 			
 			switch(p_this.layer.infocfg.fields["formats"][p_fld]["type"]) {
@@ -311,11 +342,36 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_m
 						src = p_this.layer.infocfg.fields["formats"][p_fld]["srcfunc"](spl);
 
 						imge = await p_this.imgbuffer.syncFetchImage(src, spl);
-						thumbcoll.push(imge);
+						if (imge) {
+							thumbcoll.push(imge);
+						}
 					}
 
-					o_rows.push({ "thumbcoll": thumbcoll, "cap": caption, "f": p_fld });
+					newrow = { "thumbcoll": thumbcoll, "cap": caption, "f": p_fld };
 					break;
+
+
+				case "singleimg":
+
+					tmp = p_attrs[p_fld];
+					src = p_this.layer.infocfg.fields["formats"][p_fld]["srcfunc"](tmp);
+					imge = await p_this.imgbuffer.syncFetchImage(src, tmp);
+
+					if (imge) {
+						newrow = { "singleimg": imge, "cap": caption, "f": p_fld };
+					} else {
+						newrow = { "singleimg": null, "err": true, "cap": caption, "f": p_fld };
+					}
+					break;
+
+			}
+
+			if (p_this.layer.infocfg.fields["formats"][p_fld]["hidecaption"] !== undefined) {
+				newrow["hidecaption"] = p_this.layer.infocfg.fields["formats"][p_fld]["hidecaption"];
+			}
+
+			if (newrow) {
+				o_rows.push(newrow);
 			}
 		}
 	}

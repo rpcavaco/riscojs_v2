@@ -48,7 +48,7 @@ export class InfoBox extends PopupBox {
 		this.activepageidx = -1;
 
 		this.rowboundaries = []; // for each page
-		this.nontext_formats = ["img", "thumbcoll"];
+		this.nontext_formats = ["singleimg", "thumbcoll"];
 	
 		if (this.layer.infocfg["qrykey"] === undefined) {
 			throw new Error(`Missing mandatory 'infocfg.qrykey' config (info query 'falias' in 'risco_find') for layer '${this.layer.key}`);
@@ -419,12 +419,13 @@ export class InfoBox extends PopupBox {
 
 		// footer
 		if (this.pagecount > 1) {
-			height += 1.75 * this.txtlnheight;
+			height += 2 * this.txtlnheight;
 		} else {
 			height += 0.6 * this.txtlnheight;
 		}
 
 		//console.log("pgcnt:", this.pagecount, this.activepageidx);
+		// Layer caption
 		let lbl;
 		if (this.layer["label"] !== undefined && this.layer["label"] != "none") {
 			if (this.layer['msgsdict'] !== undefined && this.layer.msgsdict[lang] !== undefined && Object.keys(this.layer.msgsdict[lang]).indexOf(this.layer["label"]) >= 0) {
@@ -561,15 +562,19 @@ export class InfoBox extends PopupBox {
 			row = this.rows[ri];
 			// console.log(row);
 
-			if (row["c"] !== undefined) {
+			if (row["c"] !== undefined || row["err"] !== undefined) {
 				continue;
 			}			
 
 			// Field caption
-			p_ctx.textAlign = "center";
-			p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
-			p_ctx.fillText(row["cap"], left_caption, cota);	
-			cota = cota + 0.5 * this.txtlnheight;
+			if (row["hidecaption"] === undefined || !row["hidecaption"]) {
+				p_ctx.textAlign = "center";
+				p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
+				p_ctx.fillText(row["cap"], left_caption, cota);	
+				cota = cota + 0.5 * this.txtlnheight;
+			} else {
+				cota = cota - 0.25 * this.txtlnheight;
+			}
 
 			if (row["thumbcoll"] !== undefined) {
 				
@@ -596,7 +601,8 @@ export class InfoBox extends PopupBox {
 					acumwidths[prevrowi] = acumw;
 				}	
 
-				for (let imge, currh=0, rii=0; rii < row["thumbcoll"].length; rii++) {
+				let currh = 0;
+				for (let imge, rii=0; rii < row["thumbcoll"].length; rii++) {
 					if (row["thumbcoll"][rii] !== undefined) {
 						imge = row["thumbcoll"][rii];
 
@@ -618,8 +624,22 @@ export class InfoBox extends PopupBox {
 						left_symbs = left_symbs + w + imgpadding;	
 					}				
 				}
+				cota += currh;
+
+			} else if (row["singleimg"] !== undefined) {
+				
+				const imge = row["singleimg"];
+				if (row["dims"] !== undefined) {
+					const [w, h] = row["dims"];
+					if (imge.complete) {
+						left_symbs = this.origin[0] + (bwidth - w) / 2.0;
+						p_ctx.drawImage(imge, left_symbs, cota, w, h);
+						cota = cota + h;
+					}
+				}
 			}
-			cota = cota + 0.25 * this.txtlnheight;
+
+			cota = cota + this.txtlnheight;
 		}
 
 

@@ -117,17 +117,23 @@ class ImgLRUCache {
 			const img = new Image();
 			img.decoding = "sync";
 			img.src = p_imgpath;
-			await img.decode();
 
-			if (img.complete) {
-				this.set(p_name, img);
-			} else {
-				console.error(`[WARN] ImgLRUCache syncFetchImage: img ${p_imgpath} NOT complete.`, p_imgpath)
+			try {
+				await img.decode();
+				if (img.complete) {
+					this.set(p_name, img);
+				} else {
+					console.error(`[WARN] ImgLRUCache syncFetchImage: img ${p_imgpath} NOT complete.`, p_imgpath)
+				}
+				ret = img;		
+	
+			} catch(e) {
+				console.error(`[WARN] ImgLRUCache syncFetchImage: error '${e}'.`);
 			}
+
 
 			// console.log("-- B fetchImage decode", p_name, "complete:", img.complete);
 
-			ret = img;		
 		}
 
 		// console.log("-- C a entregar:", p_name, "buffer len:", this.cache.size);
