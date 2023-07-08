@@ -388,7 +388,11 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			ret = this.featureCollection.draw(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict, { "graphic": symb, 'label': lsymb } );
 			
 		} else {
-			console.error(`[WARN] drawSingleFeature: no layer found for id ${p_layer_key}`);
+			if (ly == null) {
+				console.error(`[WARN] drawSingleFeature: no layer found for id ${p_layer_key}`);
+			} else {
+				console.error(`[WARN] drawSingleFeature: layer found but not visible for id ${p_layer_key}`);
+			}
 		}
 
 		return ret;
@@ -506,10 +510,17 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 				const minarea = this.getScale() / 100.0;
 				const the_feat = this.featureCollection.get(lastk, lastid);
-				
-				let itool, spt = [];
+				if (the_feat == null) {
+					throw new Error(`zoomToFeatAndOpenInfo, getting infotool, no feature, layer key:${lastk} id:${lastid}`)
+				}
+
+				let spt = [];
 				const lpt = getFeatureCenterPoint(the_feat.gt, the_feat.l, the_feat.g, minarea);
-				this.transformmgr.getScrPt(lpt, spt);
+				if (lpt.length == 1) {
+					this.transformmgr.getScrPt(lpt[0], spt);
+				} else {
+					this.transformmgr.getScrPt(lpt, spt);
+				}
 			
 				// abrir info
 				const ic = ci.instances["infoclass"];
@@ -523,6 +534,10 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				opt_adic_callback();
 			}
 		});
+
+		for (let k in p_featids_per_layerkey_dict) {
+			this.tocmgr.setLayerVisibility(k, true);
+		}
 
 		this.transformmgr.zoomToRect(...p_env);		
 	}

@@ -94,6 +94,19 @@ export class TOCManager {
 		return ret;
 	}
 
+	setLayerVisibility(p_layerkey, p_visible) {
+		let ret = false;
+		for (let lyr of this.layers) {
+			if (lyr.key == p_layerkey) {
+				lyr.layervisible = p_visible;
+				ret = true;
+				break;
+			}
+		}
+		return ret;
+	}
+
+
 	getBaseRasterLayer() {
 		let ret = null;
 		if (this.#base_raster_layer_key) {
