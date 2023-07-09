@@ -155,10 +155,16 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	_gfctxlbl;
 	_currentsymb;
 
-	_grabGf2DCtx(p_mapctx, b_forlabel, opt_attrs, opt_alt_canvaskeys, opt_symbs) {
+	// b_protect_from_async_use - during async use, this._gfctx should be permanent and not constantly saved and restored.
+	// To be only used for applying drawImage symbols, context state shouldn't be altered
+	_grabGf2DCtx(p_mapctx, b_forlabel, opt_attrs, opt_alt_canvaskeys, opt_symbs, b_protect_from_async_use) {
 
 		let canvaskey;
 		let canvaskeyLabels;
+
+		if (b_protect_from_async_use && this._gfctx != null) {
+			return true;
+		}
 
 		if (opt_alt_canvaskeys) {
 			canvaskey = opt_alt_canvaskeys["normal"];
@@ -171,7 +177,9 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		// _gfctx has underscore to protect from automatic attribute collection from config files
 		try {
 			this._gfctx = p_mapctx.renderingsmgr.getDrwCtx(canvaskey, '2d');
-			this._gfctx.save();
+			if (b_protect_from_async_use) {
+				this._gfctx.save();
+			}
 		} catch(e) {
 			console.error("canvaskey:", canvaskey, opt_alt_canvaskeys, this.canvasKey);
 			throw e;
@@ -179,9 +187,11 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		try {
 			this._gfctxlbl = p_mapctx.renderingsmgr.getDrwCtx(canvaskeyLabels, '2d');
-			this._gfctxlbl.save();
+			if (b_protect_from_async_use) {
+				this._gfctxlbl.save();
+			}
 		} catch(e) {
-			console.error("canvaskeyLabels:", canvaskeyLabels, opt_alt_canvaskeys, this.canvasKeyLabels);
+			console.error("_grabGf2DCtx, canvaskeyLabels:", canvaskeyLabels, opt_alt_canvaskeys, this.canvasKeyLabels);
 			throw e;
 		}
 
@@ -203,7 +213,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		}	
 
 		if (b_forlabel) {
-
 
 			this._currentsymb.setLabelStyle(this._gfctx);
 	
@@ -237,16 +246,22 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		return true;
 	}
 
-	grabGf2DCtx(p_mapctx, opt_attrs, opt_alt_canvaskey, opt_symbs) {
-		return this._grabGf2DCtx(p_mapctx, false, opt_attrs, opt_alt_canvaskey, opt_symbs);
+	grabGf2DCtx(p_mapctx, opt_attrs, opt_alt_canvaskey, opt_symbs, b_protect_from_async_use) {
+		return this._grabGf2DCtx(p_mapctx, false, opt_attrs, opt_alt_canvaskey, opt_symbs, b_protect_from_async_use);
 	}
 
-	grabLabelGf2DCtx(p_mapctx, opt_attrs, opt_alt_canvaskey, opt_symbs) {
-		return this._grabGf2DCtx(p_mapctx, true, opt_attrs, opt_alt_canvaskey, opt_symbs);
+	grabLabelGf2DCtx(p_mapctx, opt_attrs, opt_alt_canvaskey, opt_symbs, b_protect_from_async_use) {
+		return this._grabGf2DCtx(p_mapctx, true, opt_attrs, opt_alt_canvaskey, opt_symbs, b_protect_from_async_use);
 	}	
 
 	// must this.grabGf2DCtx first !	
-	releaseGf2DCtx() {
+	releaseGf2DCtx(b_protect_from_async_use) {
+
+		if (b_protect_from_async_use) {
+			return;
+		}
+
+		console.log("Releasing gfctx, key", this.key);
 
 		if (this._gfctx == null) {
 			throw new Error(`graphics context was not previously grabbed for layer '${this.key}'`);
@@ -256,7 +271,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	
 	}	
 
-	drawMarker(p_mapctxt, p_coords, opt_feat_id) {
+	drawMarker(p_mapctxt, p_coords, p_iconname, opt_feat_id) {
 
 		if (this._gfctx == null) {
 			throw new Error(`graphics context was not previously grabbed for layer '${this.key}'`);
@@ -274,10 +289,11 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		//console.log(this.key, symblabel, this.varstyles_symbols);
 
 		try {
-			this._currentsymb.drawsymb(p_mapctxt, this, pt, opt_feat_id);
+			this._currentsymb.drawsymb(p_mapctxt, this, pt, p_iconname, opt_feat_id);
 		} catch(e) {
 			console.error(this,  pt, opt_feat_id);
 			console.error(this._currentsymb);
+			console.log("error:", e)
 			throw e;
 		}
 
@@ -638,14 +654,24 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		let lbloptsymbs = null;
 		let lblcontent = null;
 		let labelfield = null;
+		let iconnamefield = null;
 		let labelfunc = null;
+		let iconsrcfunc = null;
 		let doit = false;
+
+		let iconname = null;
 
 		if (this['labelfield'] !== undefined && this['labelfield'] != "none") {
 			labelfield = this['labelfield'];
 		}
 		if (this['labelfunc'] !== undefined && this['labelfunc'] != "none") {
 			labelfunc = this['labelfunc'];
+		}
+		if (this['iconnamefield'] !== undefined && this['iconnamefield'] != "none") {
+			iconnamefield = this['iconnamefield'];
+		}
+		if (this['iconsrcfunc'] !== undefined && this['iconsrcfunc'] != "none") {
+			iconsrcfunc = this['iconsrcfunc'];
 		}
 
 		if (opt_symbs) {
@@ -658,13 +684,15 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			}
 		}
 
+		const protectCanvasFromAsyncUse = (iconnamefield != null);
+
 		/*if (opt_feat_id == 34517 ) {
 			console.log(":: canvas_vector 703 :: refreshitem:", pathoptsymbs, lbloptsymbs);
 		} */
 
 		//console.log(">>", this.key, this.default_symbol, pathoptsymbs);
 
-		if (this.grabGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, groptsymbs)) {
+		if (this.grabGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, groptsymbs, protectCanvasFromAsyncUse)) {
 			try {
 
 				doit = true;
@@ -681,7 +709,11 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 				if (doit) {
 					if (this.geomtype == "point") {
-						ret = this.drawMarker( p_mapctxt, p_coords[0], opt_feat_id);
+						iconname = null;
+						if (iconnamefield && p_attrs[iconnamefield] !== undefined) {
+							iconname = p_attrs[iconnamefield];
+						}
+						ret = this.drawMarker( p_mapctxt, p_coords[0], iconname, opt_feat_id);
 					} else {
 						ret = this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
 					}
@@ -690,7 +722,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				console.error(p_coords, p_path_levels, this.geomtype);
 				throw e;
 			} finally {
-				this.releaseGf2DCtx();
+				this.releaseGf2DCtx(protectCanvasFromAsyncUse);
 			}				
 		}
 
@@ -709,14 +741,14 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 			if (lblcontent !== null) {
 
-				if (this.grabLabelGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, lbloptsymbs)) {
+				if (this.grabLabelGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, lbloptsymbs, protectCanvasFromAsyncUse)) {
 					try {
 						this.drawLabel(p_mapctxt, p_coords, p_path_levels, lblcontent, opt_terrain_env);
 					} catch(e) {
 						console.error(p_coords, labelfield, lblcontent);
 						throw e;
 					} finally {
-						this.releaseGf2DCtx();
+						this.releaseGf2DCtx(protectCanvasFromAsyncUse);
 					}				
 				}
 			}

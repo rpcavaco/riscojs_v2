@@ -116,6 +116,9 @@ export class Layer {
 	mouseinteraction = false;
 	label = "none";
 	labelfield = "none";
+	iconnamefield = "none";
+	iconsrcfunc = "none";
+	icondefsymb = "none";
 	labelfunc = "none";
 
 	// Unconfigurables

@@ -60,88 +60,6 @@ export function ctrToolTip(p_mapctx, p_evt, p_text, opt_deltas) {
 	}	
 }
 
-
-// based on Odinho - Velmont - https://stackoverflow.com/a/46432113
-class ImgLRUCache {
-
-	buffer;
-	bufferkeys;
-	size;
-	timeout;
-	constructor(p_size) {
-		this.size = p_size;
-		this.cache = new Map();
-	}
-
-	has(p_name) {
-		return this.cache.has(p_name);
-	}
-
-    get(p_name) {
-        let item = this.cache.get(p_name);
-        if (item) {
-            // refresh key
-            this.cache.delete(p_name);
-            this.cache.set(p_name, item);
-        }
-        return item;
-    }
-
-    set(p_name, val) {
-        // refresh key
-        if (this.cache.has(p_name)) {
-			this.cache.delete(p_name);
-		} else if (this.cache.size == this.size) {
-			// evict oldest
-			this.cache.delete(this.first()) 
-		};
-        this.cache.set(p_name, val);
-    }
-
-    first() {
-        return this.cache.keys().next().value;
-    }	
-
-	async syncFetchImage(p_imgpath, p_name) {
-
-		// console.log("-- A a pedir:", p_name, "buffer len:", this.cache.size, Array.from(this.cache.keys()));
-
-		let ret = null;
-		if (this.has(p_name)) {
-
-			ret = this.get(p_name);
-			//console.log("-- A fetchImage get", p_name, "complete:", ret.complete);
-
-		} else {
-
-			const img = new Image();
-			img.decoding = "sync";
-			img.src = p_imgpath;
-
-			try {
-				await img.decode();
-				if (img.complete) {
-					this.set(p_name, img);
-				} else {
-					console.error(`[WARN] ImgLRUCache syncFetchImage: img ${p_imgpath} NOT complete.`, p_imgpath)
-				}
-				ret = img;		
-	
-			} catch(e) {
-				console.error(`[WARN] ImgLRUCache syncFetchImage: error '${e}'.`);
-			}
-
-
-			// console.log("-- B fetchImage decode", p_name, "complete:", img.complete);
-
-		}
-
-		// console.log("-- C a entregar:", p_name, "buffer len:", this.cache.size);
-
-		return ret;
-	}
-}
-
 export class MapPrintInRect {
 
 	left;
@@ -359,7 +277,7 @@ function drawTOCSymb(p_mapctx, p_lyr, p_ctx, p_symbxcenter, p_cota, p_vert_step,
 			console.trace(`[WARN] No 'drawfreeSymb' method in ${JSON.stringify(symb)}`);
 		} else {
 			symb.setStyle(p_ctx);
-			symb.drawfreeSymb(p_mapctx, p_ctx, [p_symbxcenter, p_cota], p_vert_step);
+			symb.drawfreeSymb(p_mapctx, p_ctx, [p_symbxcenter, p_cota], p_vert_step, p_lyr);
 		}
 
 	} catch(e) {
@@ -951,7 +869,6 @@ export class Info {
 	styles;
 	mapctx;
 	max_textlines_height;
-	imgbuffer = new ImgLRUCache(128);
 
 	constructor(p_mapctx, p_styles, opt_max_textlines_height) {
 		this.styles = p_styles;
@@ -988,7 +905,7 @@ export class Info {
 		//console.log("Maptip, layer:", p_layerkey, " feat:", p_featid);
 		const currlayer = this.mapctx.tocmgr.getLayer(p_layerkey);
 		//console.trace(currlayer, p_featid, p_feature);
-		this.callout = new MaptipBox(this.mapctx, this.imgbuffer, currlayer, p_feature, this.styles, p_scrx, p_scry, true);
+		this.callout = new MaptipBox(this.mapctx, this.mapctx.imgbuffer, currlayer, p_feature, this.styles, p_scrx, p_scry, true);
 		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		this.callout.clear(ctx);
 		this.callout.draw(ctx);
@@ -1035,7 +952,7 @@ export class Info {
 				function(responsejson) {
 					// console.log("cust_canvas_baseclasses:828 - antes criação InfoBox");
 					const currlayer = that.mapctx.tocmgr.getLayer(p_layerkey);
-					that.ibox = new InfoBox(that.mapctx, that.imgbuffer, currlayer, responsejson, that.styles, p_scrx, p_scry, Info.infobox_pick, Info.expand_image, false, that.max_textlines_height);
+					that.ibox = new InfoBox(that.mapctx, that.mapctx.imgbuffer, currlayer, responsejson, that.styles, p_scrx, p_scry, Info.infobox_pick, Info.expand_image, false, that.max_textlines_height);
 					const ctx = that.mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
 					that.ibox.clear(ctx);
 					that.ibox.draw(ctx);	

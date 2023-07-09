@@ -387,3 +387,76 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_m
 	return ret;
 }
 
+// based on Odinho - Velmont - https://stackoverflow.com/a/46432113
+export class ImgLRUCache {
+
+	buffer;
+	bufferkeys;
+	size;
+	timeout;
+	constructor(p_size) {
+		this.size = p_size;
+		this.cache = new Map();
+	}
+
+	has(p_name) {
+		return this.cache.has(p_name.toLowerCase());
+	}
+
+    get(p_name) {
+		const name = p_name.toLowerCase();
+        let item = this.cache.get(name);
+        if (item) {
+            // refresh key
+            this.cache.delete(name);
+            this.cache.set(name, item);
+        }
+        return item;
+    }
+
+    set(p_name, val) {
+        // refresh key
+		const name = p_name.toLowerCase();
+        if (this.cache.has(name)) {
+			this.cache.delete(name);
+		} else if (this.cache.size == this.size) {
+			// evict oldest
+			this.cache.delete(this.first()) 
+		};
+        this.cache.set(name, val);
+    }
+
+    first() {
+        return this.cache.keys().next().value;
+    }	
+
+	async syncFetchImage(p_imgpath, p_name) {
+
+		// console.log("-- A a pedir:", p_name, "buffer len:", this.cache.size, Array.from(this.cache.keys()));
+		const name = p_name.toLowerCase();
+		let ret = null;
+		if (this.has(name)) {
+			ret = this.get(name);
+		} else {
+
+			const img = new Image();
+			img.decoding = "sync";
+			img.src = p_imgpath;
+
+			try {
+				await img.decode();
+				if (img.complete) {
+					this.set(name, img);
+				} else {
+					console.error(`[WARN] ImgLRUCache syncFetchImage: img ${p_imgpath} NOT complete.`, p_imgpath)
+				}
+				ret = img;		
+	
+			} catch(e) {
+				console.error(`[WARN] ImgLRUCache syncFetchImage: error '${e}'.`);
+			}
+		}
+
+		return ret;
+	}
+}

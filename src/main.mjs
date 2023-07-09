@@ -8,6 +8,7 @@ import {GlobalConst} from './constants.js';
 import {TouchController} from './touchevents.mjs';
 import {GrSymbol} from './canvas_symbols.mjs';
 import {getFeatureCenterPoint} from './geom.mjs';
+import {ImgLRUCache} from './utils.mjs';
 
 function isObject(item) {
 	return (item && typeof item === 'object' && !Array.isArray(item));
@@ -180,6 +181,7 @@ export class RiscoMapCtx {
 		this.tocmgr = new TOCManager(this, p_mode);
 		this.i18n = new I18n(p_config_var["text"]);
 		this.touchevtctrlr = new TouchController();
+		this.imgbuffer = new ImgLRUCache(128);
 
 		this.query_box = new I18n(p_config_var["text"]);
 

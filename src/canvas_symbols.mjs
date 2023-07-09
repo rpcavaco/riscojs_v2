@@ -114,7 +114,7 @@ export class CanvasLineSymbol extends labelSymbolMixin(strokeSymbolMixin(GrSymbo
 		return this._variablesymb_idx;
 	}
 
-	drawfreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step) {
+	drawfreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step, p_lyr) {
 
 		let hw = 10;
 		let x = p_symbcenter[0] - hw;
@@ -150,7 +150,7 @@ export class CanvasPolygonSymbol extends labelSymbolMixin(fillSymbolMixin(stroke
 		return this._variablesymb_idx;
 	}	
 
-	drawfreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step) {
+	drawfreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step, p_lyr) {
 
 		let hw = 10;
 		let x = p_symbcenter[0] - hw;
@@ -183,7 +183,7 @@ class MarkerSymbol extends labelSymbolMixin(GrSymbol) {
 	get variablesymb_idx() {
 		return this._variablesymb_idx;
 	}	
-	drawsymb(p_mapctxt, p_layer, p_coords, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords, p_iconname, opt_feat_id) {
 		// asbtract, to be implemented by subclasses
 	}
 }
@@ -195,7 +195,7 @@ export class CanvasVertCross extends strokeSymbolMixin(MarkerSymbol) {
 		super(opt_variablesymb_idx);
 		this.symbname = "VertCross";
 	}
-	drawsymb(p_mapctxt, p_layer, p_coords, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords, p_iconname, opt_feat_id) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = this.markersize * GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval);
@@ -224,7 +224,7 @@ export class CanvasCircle extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol
 		super(opt_variablesymb_idx);
 		this.symbname = "Circle";
 	}
-	drawsymb(p_mapctxt, p_layer, p_coords, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords, p_iconname, opt_feat_id) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
@@ -243,7 +243,7 @@ export class CanvasCircle extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol
 
 	}
 
-	drawfreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step) {
+	drawfreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step, p_lyr) {
 
 		const sclval = p_mapctx.getScale();
 		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
@@ -269,7 +269,7 @@ export class CanvasDiamond extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbo
 		super(opt_variablesymb_idx);
 		this.symbname = "Diamond";
 	}
-	drawsymb(p_mapctxt, p_layer, p_coords, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords, p_iconname, opt_feat_id) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
@@ -291,3 +291,53 @@ export class CanvasDiamond extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbo
 	}
 }
 		
+export class CanvasIcon extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol)) { 
+
+	symbname;
+	constructor(opt_variablesymb_idx) {
+		super(opt_variablesymb_idx);
+		this.symbname = "Icon";
+	}
+	async drawsymb(p_mapctxt, p_layer, p_coords, p_iconname, opt_feat_id) {
+
+		const sclval = p_mapctxt.getScale();
+		const dim = Math.round(this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval)));
+
+		const img = await p_mapctxt.imgbuffer.syncFetchImage(p_layer.iconsrcfunc(p_iconname), p_iconname)
+
+		const r = img.width / img.height;
+		let w, h;
+		if (r > 1) {
+			h = dim;
+			w = h * r;
+		} else {
+			w = dim;
+			h = w / r;
+		}
+
+		p_layer._gfctx.drawImage(img, p_coords[0]-(w/2), p_coords[1]-(h/2), w, h);
+
+	}
+
+	async drawfreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step, p_lyr) {
+
+		const sclval = p_mapctx.getScale();
+		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
+
+		const r0 = Math.min(dim, 2.0*p_vert_step/3.0);
+
+		const img = await p_mapctx.imgbuffer.syncFetchImage(p_lyr.iconsrcfunc(p_lyr.icondefsymb), p_lyr.icondefsymb);
+
+		const r = img.width / img.height;
+		let w, h;
+		if (r > 1) {
+			h = r0;
+			w = h * r;
+		} else {
+			w = r0;
+			h = w / r;
+		}
+
+		p_ctx.drawImage(img, p_symbcenter[0]-(w/2), p_symbcenter[1]-(h/2), w, h);		
+	}
+}
