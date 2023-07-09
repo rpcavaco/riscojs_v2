@@ -9,6 +9,7 @@ export class BaseTool {
 	enabled = true;
 	start_time = null;
 	editmanager = null;
+	name = 'BaseTool';
 	constructor(p_joinstogglegroup, opt_defaultintoggle) {
 		this.joinstogglegroup = p_joinstogglegroup;
 		if (this.joinstogglegroup) {
@@ -24,6 +25,9 @@ export class BaseTool {
 
 	onEvent(p_mapctx, p_evt) {
 		// Abstract
+
+		// event had no interaction with this tool
+		return false;
 	}
 
 	setEditManager(p_edit_manager) {
@@ -35,11 +39,14 @@ export class BaseTool {
 
 class DefaultTool extends BaseTool {
 
+	name = 'DefaultTool';
 	constructor() {
 		super(false);
 	}
 
 	onEvent(p_mapctx, p_evt) {
+
+		let ret = false;
 
 		if (GlobalConst.getDebug("INTERACTION")) {
 			console.log("[DBG:INTERACTION] DEFTOOL, evt.type:", p_evt.type);
@@ -47,12 +54,16 @@ class DefaultTool extends BaseTool {
 
 		if (p_evt.type == 'mousemove') {
 			p_mapctx.printMouseCoords(p_evt.clientX, p_evt.clientY);
+			ret = true;
 		}
 		if (p_evt.type == 'mouseout' || p_evt.type == "mouseleave") {
 			p_mapctx.removePrint("mousecoordsprint");
 			p_mapctx.clearInteractions('DEFTOOL');
+			ret = true;
 		}
-		
+
+		// event interacted with this tool ?
+		return ret;	
 	}	
 }
 
@@ -242,6 +253,9 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 				if (feat!=null) {
 					if (opt_actonselfeat) {
 						ret_dir_interact = opt_actonselfeat(nearestlyk, feat, p_scrx, p_scry);
+						if (ret_dir_interact === undefined) {
+							console.log("interactions 257:", opt_actonselfeat);
+						}
 					}
 				}
 			}
@@ -253,6 +267,13 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 			}			
 		} 
 
+	}
+
+	if (GlobalConst.getDebug("INTERACTION")) {
+		console.log("[DBG:INTERACTION] interactWithSpindexLayer:", ret_dir_interact);
+	}
+	if (GlobalConst.getDebug("INTERACTIONCLICK") && p_is_end_event) {
+		console.log("[DBG:INTERACTIONCLICK] interactWithSpindexLayer:", ret_dir_interact);
 	}
 
 	return ret_dir_interact;
@@ -364,6 +385,7 @@ class wheelEventCtrller {
 // pan, zoom wheel
 class MultiTool extends BaseTool {
 
+	name = 'MultiTool';
 	constructor() {
 		super(false, false); // not part of general toggle group, surely not default in toogle
 		this.start_screen = null;
@@ -397,6 +419,10 @@ class MultiTool extends BaseTool {
 			if (opt_origin == 'touch') {
 				dx = 6;
 				dy = 6;
+			}
+
+			if (GlobalConst.getDebug("INTERACTIONCLICK")) {
+				console.log("[DBG:INTERACTIONCLICK] MULTITOOL finishPan, deltascr:", deltascrx, deltascry, "dx_dy:", dx, dy);
 			}
 
 			if (deltascrx > dx || deltascry > dy) {		
@@ -436,10 +462,13 @@ class MultiTool extends BaseTool {
 	}
 
 	onEvent(p_mapctx, p_evt) {
-		let orig;
+		let orig, ret = false;
 
 		if (GlobalConst.getDebug("INTERACTION")) {
 			console.log("[DBG:INTERACTION] MULTITOOL evt.type:", p_evt.type);
+		}
+		if (GlobalConst.getDebug("INTERACTIONCLICK") && ["touchstart", "touchend", "mousedown", "mouseup"].indexOf(p_evt.type) >= 0) {
+			console.log("[DBG:INTERACTIONCLICK] MULTITOOL onEvent evt.type:", p_evt.type);
 		}
 
 		try {
@@ -448,6 +477,7 @@ class MultiTool extends BaseTool {
 
 				case 'touchpinch':
 					this.pending_pinch = p_evt;
+					ret = true;
 					break;
 
 				case 'touchstart':
@@ -455,13 +485,24 @@ class MultiTool extends BaseTool {
 					//console.log("mdown multitool");
 					//console.trace();
 					// console.log(p_evt, "start:", this.start_screen, (p_evt.buttons & 1) == 1);
+
+					if (GlobalConst.getDebug("INTERACTIONCLICK") && ["touchstart", "touchend", "mousedown", "mouseup"].indexOf(p_evt.type) >= 0) {
+						console.log("[DBG:INTERACTIONCLICK] MULTITOOL mdown:", p_evt, "startscrpt:", this.start_screen, "orig:", orig, "pinch:", this.pending_pinch);
+					}
+
 					if (this.start_screen == null) {
 						if (p_evt.buttons === undefined || (p_evt.buttons & 1) == 1) {						
 							this.start_screen = [p_evt.clientX, p_evt.clientY];		
+							if (GlobalConst.getDebug("INTERACTIONCLICK") && ["touchstart", "touchend", "mousedown", "mouseup"].indexOf(p_evt.type) >= 0) {
+								console.log("[DBG:INTERACTIONCLICK] MULTITOOL mdown start point marked at:", this.start_screen);
+							}		
 							p_mapctx.renderingsmgr.getRenderedBitmaps(this.imgs_dict);
 						}
+					} else {
+						this.start_screen = null;
 					}
 					this.wheelevtctrlr.clear();
+					ret = true;
 					break;
 
 				case 'touchend':
@@ -478,7 +519,10 @@ class MultiTool extends BaseTool {
 					if (GlobalConst.getDebug("INTERACTION")) {
 						console.log("[DBG:INTERACTION] MULTITOOL up/end/out/leave:", this.start_screen, orig, p_evt, this.pending_pinch);
 					}
-
+					if (GlobalConst.getDebug("INTERACTIONCLICK") && ["touchstart", "touchend", "mousedown", "mouseup"].indexOf(p_evt.type) >= 0) {
+						console.log("[DBG:INTERACTIONCLICK] MULTITOOL up/end/out/leave", p_evt, "startscrpt:", this.start_screen, "orig:", orig, "pinch:", this.pending_pinch);
+					}
+			
 					if (this.pending_pinch) {
 
 						this.finishZoomTo(p_mapctx.transformmgr, this.pending_pinch.centerx, this.pending_pinch.centery, this.pending_pinch.scale)
@@ -490,6 +534,7 @@ class MultiTool extends BaseTool {
 						this.start_screen = null;
 					}
 					this.wheelevtctrlr.clear();
+					ret = true;
 					break;
 
 				case 'touchmove':
@@ -500,11 +545,13 @@ class MultiTool extends BaseTool {
 						}
 					}
 					//this.wheelevtctrlr.clear();
+					ret = true;
 					break;
 
 				case 'wheel':
 
 					this.wheelevtctrlr.onWheelEvent(p_mapctx, this.imgs_dict, p_evt);
+					ret = true;
 					break;
 
 
@@ -515,12 +562,17 @@ class MultiTool extends BaseTool {
 			this.pending_pinch = null;
 			console.error(e);
 		}  
+
+		// interacted with this tool ?
+		return ret;
+
 		
 	}	
 }
 
 class InfoTool extends BaseTool {
 
+	name = 'InfoTool';
 	pickpanel_active;
 	toc_collapsed;
 	constructor() {
@@ -540,7 +592,7 @@ class InfoTool extends BaseTool {
 
 	onEvent(p_mapctx, p_evt) {
 
-		let mxdist, ret = true; // let other tool events be processed
+		let mxdist, ret = false; 
 		const ci = p_mapctx.getCustomizationObject();
 		if (ci == null) {
 			throw new Error("InfoTool, customization instance is missing")
@@ -562,7 +614,10 @@ class InfoTool extends BaseTool {
 			}
 	
 			if (GlobalConst.getDebug("INTERACTION")) {
-				console.log("[DBG:INTERACTION] INFOTOOL evt.type:", p_evt.type);
+				console.log("[DBG:INTERACTION] INFOTOOL onEvent evt.type:", p_evt.type, "insideactivepanel:", insideactivepanel);
+			}
+			if (GlobalConst.getDebug("INTERACTIONCLICK") && ["touchstart", "touchend", "mousedown", "mouseup"].indexOf(p_evt.type) >= 0) {
+				console.log("[DBG:INTERACTIONCLICK] INFOTOOL onEvent evt.type:", p_evt.type, "insideactivepanel:", insideactivepanel);
 			}
 
 			switch(p_evt.type) {
@@ -570,11 +625,8 @@ class InfoTool extends BaseTool {
 				case 'touchstart':
 				case 'mousedown':
 					if (insideactivepanel) {
-						ret = false; 
+						ret = true; 
 					}
-						// Prevent mousedown being processed in subsequent onevent methods in remaining tools
-						// This prevents unwanted map interaction (e.g.: panning) through infobox background
-					
 					break;
 
 				case 'touchend':
@@ -583,13 +635,14 @@ class InfoTool extends BaseTool {
 
 						if (insideactivepanel) {
 							ic.interact(p_evt);
+							ret = true; 
 						} else {
 							this.setPanelActive(false);
 						}
 
 						if (!this.getPanelActive()) {
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-							interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, true, ic.pick.bind(ic), ic.clear.bind(ic));
+							ret = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, true, ic.pick.bind(ic), ic.clear.bind(ic));
 						}
 					} else {
 						console.warn(`infoclass customization unavailable, cannot pick feature`);			
@@ -600,13 +653,14 @@ class InfoTool extends BaseTool {
 					if (!this.getPanelActive()) {
 						if (ic.hover !== undefined) {
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-							interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, false, ic.hover.bind(ic), ic.clear.bind(ic));
+							ret = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, false, ic.hover.bind(ic), ic.clear.bind(ic));
 						} else {
 							console.warn(`infoclass customization unavailable, cannot hover / maptip feature`);			
 						}	
 					} else {
 						if (insideactivepanel) {
 							ic.interact(p_evt);
+							ret = true; 
 						}						
 					}
 					break;
@@ -616,6 +670,7 @@ class InfoTool extends BaseTool {
 			console.error(e);
 		}  
 
+		// has this tool interacted with event ?
 		return ret;
 		
 	}	
@@ -632,6 +687,7 @@ class InfoTool extends BaseTool {
 
 class MeasureTool extends BaseTool {
 
+	name = 'MeasureTool';
 	accumdist;
 	prevpt;
 	constructor() {
@@ -643,7 +699,7 @@ class MeasureTool extends BaseTool {
 
 	onEvent(p_mapctx, p_evt) {
 
-		let d, pt;
+		let d, pt, ret = false;
 		// const ci = p_mapctx.getCustomizationObject();
 		// if (ci == null) {
 		// 	throw new Error("InfoTool, customization instance is missing")
@@ -657,6 +713,7 @@ class MeasureTool extends BaseTool {
 				case 'dblclick':
 					this.accumdist = 0;
 					this.prevpt = null;
+					ret = true;
 					break;
 
 				case 'mouseup':
@@ -675,13 +732,16 @@ class MeasureTool extends BaseTool {
 							this.prevpt = [p_evt.clientX, p_evt.clientY];
 							console.log("dist:", this.accumdist);
 						}
-					}						
+					}	
+					ret = true;					
 					break;
 
 			}
 		} catch(e) {
 			console.error(e);
 		}  
+
+		return ret;
 		
 	}	
 }
@@ -811,7 +871,10 @@ export class ToolManager {
 		}
 	}
 
+	// eventprocedes from mxOnEvent
 	tmOnEvent(p_mapctx, p_evt) {
+
+		const clickevents = ["touchstart", "touchend", "mousedown", "mouseup"];
 
 		let _ret;
 
@@ -823,7 +886,10 @@ export class ToolManager {
 		}
 
 		if (GlobalConst.getDebug("INTERACTION")) {
-			console.log("[DBG:INTERACTION] ToolManager, interacted with map controls:", _ret);
+			console.log("[DBG:INTERACTION] ToolManager tmOnEvent evt.type:", p_evt.type, "interacted with map controls:", _ret);
+		}
+		if (GlobalConst.getDebug("INTERACTIONCLICK") && clickevents.indexOf(p_evt.type) >= 0) {
+			console.log("[DBG:INTERACTIONCLICK] ToolManager tmOnEvent evt.type:", p_evt.type, "interacted with map controls:", _ret);
 		}
 
 		// if event interacted with any map controls (_ret is true) 
@@ -833,7 +899,12 @@ export class ToolManager {
 			for (let i=this.maptools.length-1; i>=0; i--) {
 				if (this.maptools[i].enabled) {
 					_ret = this.maptools[i].onEvent(p_mapctx, p_evt);
-					if (!_ret && this.maptools[i].joinstogglegroup) {
+
+					if (GlobalConst.getDebug("INTERACTIONCLICK") && clickevents.indexOf(p_evt.type) >= 0) {
+						console.log("[DBG:INTERACTIONCLICK] ToolManager tool", this.maptools[i].name, "onEvent, returned:", _ret, "togglegrp:", this.maptools[i].joinstogglegroup);
+					}
+			
+					if (_ret && this.maptools[i].joinstogglegroup) {
 						break;
 					}
 				}

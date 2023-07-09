@@ -977,6 +977,10 @@ export class Info {
 		}
 	}
 
+	static expand_image(p_image_obj) {
+		this.mapctx.showImageOnOverlay(p_image_obj);
+	}
+
 	hover(p_layerkey, p_feature, p_scrx, p_scry) {
 
 		// this.curr_layerkey = p_layerkey;
@@ -988,6 +992,8 @@ export class Info {
 		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		this.callout.clear(ctx);
 		this.callout.draw(ctx);
+
+		return true;
 	}
 	pick(p_layerkey, p_feature, p_scrx, p_scry) {
 
@@ -1029,7 +1035,7 @@ export class Info {
 				function(responsejson) {
 					// console.log("cust_canvas_baseclasses:828 - antes criação InfoBox");
 					const currlayer = that.mapctx.tocmgr.getLayer(p_layerkey);
-					that.ibox = new InfoBox(that.mapctx, that.imgbuffer, currlayer, responsejson, that.styles, p_scrx, p_scry, Info.infobox_pick, false, that.max_textlines_height);
+					that.ibox = new InfoBox(that.mapctx, that.imgbuffer, currlayer, responsejson, that.styles, p_scrx, p_scry, Info.infobox_pick, Info.expand_image, false, that.max_textlines_height);
 					const ctx = that.mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
 					that.ibox.clear(ctx);
 					that.ibox.draw(ctx);	
@@ -1105,6 +1111,50 @@ export class Info {
 			this.ibox.interact(ctx, p_evt);
 		}
 
+	}
+}
+
+export class OverlayMgr {
+
+	canvaslayer = 'overlay_canvas';
+	mapctx;
+	is_active = false;
+	constructor (p_mapctx) {
+		this.mapctx = p_mapctx;
+	}
+
+	clear() {
+
+		this.is_active = false;
+
+		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+
+		const mapdims = [];
+		this.mapctx.renderingsmgr.getCanvasDims(mapdims);
+
+		ctx.clearRect(0, 0, ...mapdims); 
+	}
+
+	drawImage(p_imageobj) {
+
+		this.is_active = true;
+		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		console.log(p_imageobj, p_imageobj.width, p_imageobj.height);
+		ctx.drawImage(p_imageobj, 100, 100, p_imageobj.width, p_imageobj.height);
+
+	}
+
+	interact(p_mapctx, p_evt) {
+
+		let ret = false;
+		if (this.is_active) {
+			if (['touchend', 'mouseup', 'mouseout', 'mouseleave'].indexOf(p_evt.type) >= 0) {
+				ret = true;
+				console.trace("pimba on overlay");
+				this.clear();
+			}
+		}
+		return ret;
 	}
 }
 

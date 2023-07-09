@@ -264,23 +264,51 @@ export class RiscoMapCtx {
 	}
 
 	/**
-	 * Method onEvent
+	 * Method mxOnEvent
 	 * Fired on every listened event 
 	 * @param {object} p_mapctx - Map context for which interactions managing is needed
 s 	 * @param {object} p_evt - Event (user event expected)
 	 */
 	mxOnEvent(p_evt) {
+
+		const clickevents = ["touchstart", "touchend", "mousedown", "mouseup"];
+
 		if (p_evt.target.tagName.toLowerCase() == "canvas") {
 			const evt = this.touchevtctrlr.adapt(p_evt);
 			if (evt) {
 
+				if (GlobalConst.getDebug("INTERACTIONCLICK") && clickevents.indexOf(p_evt.type) >= 0) {
+					console.log("[DBG:INTERACTIONCLICK] MAIN - mxOnEvent event adapted from touch - original, adapted:", p_evt, evt);
+				}
+		
 				if (GlobalConst.getDebug("INTERACTION")) {
-					console.log("[DBG:INTERACTION] MAIN - event adapted from touch - original, adapted:", p_evt, evt);
+					console.log("[DBG:INTERACTION] MAIN - mxOnEvent event adapted from touch - original, adapted:", p_evt, evt);
 				}
 
-				// if event interacts with TOC, it will not interact with tools and controls
-				if (!this.tocmgr.tocmOnEvent(this, evt)) {
-					this.toolmgr.tmOnEvent(this, evt);
+				let overlay_responded = false;
+				if (clickevents.indexOf(p_evt.type) >= 0) {
+
+					const ci = this.getCustomizationObject();
+					for (let k of ci.overlay_keys) {
+						if (ci && ci.instances[k] !== undefined) {
+							const ciitem = ci.instances[k];
+							if (ciitem.interact !== undefined) {
+								overlay_responded = ciitem.interact(this, p_evt);
+							}
+						}	
+					}
+
+					if (GlobalConst.getDebug("INTERACTIONCLICK") && clickevents.indexOf(p_evt.type) >= 0) {
+						console.log("[DBG:INTERACTIONCLICK] MAIN - mxOnEvent overlay_responded:", overlay_responded);
+					}
+
+				}
+			
+				if (!overlay_responded) {
+					// if event interacts with TOC, it will not interact with tools and controls
+					if (!this.tocmgr.tocmOnEvent(this, evt)) {
+						this.toolmgr.tmOnEvent(this, evt);
+					}
 				}
 
 				p_evt.stopPropagation();
@@ -559,6 +587,20 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			this.renderingsmgr.clearAll(['transientmap', 'transientviz',  'temporary']);
 		} else {
 			this.renderingsmgr.clearAll(['transientmap', 'transientviz']);
+		}
+
+	}
+
+	showImageOnOverlay(p_imageobj) {
+
+		const ci = this.getCustomizationObject();
+		if (ci == null) {
+			throw new Error("showImgageOnOverlay, no customization object found")
+		}
+
+		const ic = ci.instances["overlay"];
+		if (ic) {
+			ic.drawImage(p_imageobj);
 		}
 
 	}

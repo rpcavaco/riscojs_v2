@@ -1,6 +1,6 @@
 
 import {GlobalConst} from './constants.js';
-import { ctrToolTip, MapPrintInRect, PermanentMessaging, LoadingMessaging, ControlsBox, Info, TOC} from './customization_canvas_baseclasses.mjs';
+import { ctrToolTip, MapPrintInRect, PermanentMessaging, LoadingMessaging, ControlsBox, Info, TOC, OverlayMgr} from './customization_canvas_baseclasses.mjs';
 
 class MousecoordsPrint extends PermanentMessaging {
 
@@ -1079,8 +1079,7 @@ export class MapCustomizations {
 	mapctx;
 	messaging_ctrlr; // object with info, warn and error methods
 	controls_keys; // custom. instances containing interactive controls
-
-
+	overlay_keys; // custom. instances directly interacting with default tool
 
 	constructor(p_mapctx, p_messaging_ctrlr) {
 
@@ -1111,9 +1110,11 @@ export class MapCustomizations {
 			"mousecoordsprint": new MousecoordsPrint(),
 			"mapscaleprint": new MapScalePrint(),
 			"loadingmsgprint": new LoadingPrint(),
-			"attributionprint": new AttributionPrint()
+			"attributionprint": new AttributionPrint(),
+			"overlay": new OverlayMgr(this.mapctx)
 		}
 		this.controls_keys = ["basiccontrolsbox", "basemapctrl", "toc"];
+		this.overlay_keys = ["overlay"];
 	}
 }
 

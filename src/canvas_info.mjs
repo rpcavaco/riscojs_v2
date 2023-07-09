@@ -24,8 +24,10 @@ export class InfoBox extends PopupBox {
 	columncount;
 	rowboundaries; // for each page
 	nontext_formats;
+	infobox_static_pick_method;
+	infobox_static_expandimage_method;
 
-	constructor(p_mapctx, p_imgbuffer, p_layer, p_data, p_styles, p_scrx, p_scry, p_infobox_pick_method, b_callout, opt_max_rows_height) {
+	constructor(p_mapctx, p_imgbuffer, p_layer, p_data, p_styles, p_scrx, p_scry, p_infobox_pick_method, p_expandimage_method, b_callout, opt_max_rows_height) {
 
 		super(p_mapctx, p_imgbuffer, p_layer, p_styles, p_scrx, p_scry, b_callout);
 
@@ -42,6 +44,7 @@ export class InfoBox extends PopupBox {
 		this.colsizes = [0,0];
 		this.columncount = 2;
 		this.infobox_static_pick_method = p_infobox_pick_method;
+		this.infobox_static_expandimage_method = p_expandimage_method;
 		this.max_textlines_height = opt_max_rows_height;
 
 		this.pagecount = 0;
@@ -301,7 +304,7 @@ export class InfoBox extends PopupBox {
 
 			// console.log(":: 295 ::", fld, this.field_textlines_count[fld]);
 			if (this.layer.infocfg.fields["formats"][fld] !== undefined) {
-				if (this.nontext_formats.indexOf(this.layer.infocfg.fields["formats"][fld]["type"]) > 0) {
+				if (this.nontext_formats.indexOf(this.layer.infocfg.fields["formats"][fld]["type"]) >= 0) {
 					this.used_fldnames.push(fld);
 					continue;
 				} else {
@@ -724,7 +727,7 @@ export class InfoBox extends PopupBox {
 		} else {
 			
 			// checking fldname linked to the area clicked by user
-			let prev, next, left, right, first=true, fldname=null, accumrows=0;
+			let prev, next, left, right, first=true, fldname=null, accumrows=0, row=null;
 
 			if (SHOWROWS) {
 				p_ctx.save();
@@ -798,17 +801,43 @@ export class InfoBox extends PopupBox {
 				// console.log('     ', fld, prev, next, p_evt.clientY);
 				if (p_evt.clientY >= prev && p_evt.clientY < next) {
 					fldname = fld;
+					row = this.rows[flix];
 					break;
 				}
 			}
 
-			// console.log("fldname:", fldname);
+			//console.log("fldname:", fldname, "type:", p_evt.type, "row", row);
 
 			if (fldname != null) {
 
-				if ((this.layer.infocfg.fields["formats"][fldname] === undefined || 
-					this.nontext_formats.indexOf(this.layer.infocfg.fields["formats"][fldname]["type"]) < 0)
-					&& this.columncount > 0) {
+				let mode = 'NONE';
+
+				if (this.layer.infocfg.fields["formats"][fldname] !== undefined) {
+					if (this.nontext_formats.indexOf(this.layer.infocfg.fields["formats"][fldname]["type"]) < 0) {
+						if (this.columncount > 0) {
+							mode = 'GOTEXTCOLS';
+						}
+					} else {
+						mode = 'GOELSE';
+					}
+				} else {
+					if (this.columncount > 0) {
+						mode = 'GOTEXTCOLS';
+					}
+				}
+
+				// if ((this.layer.infocfg.fields["formats"][fldname] === undefined || 
+				// 	this.nontext_formats.indexOf(this.layer.infocfg.fields["formats"][fldname]["type"]) < 0)
+				// 	&& this.columncount > 0) {
+
+				// images and icons, collections etc.
+				if (mode == 'GOELSE') {	
+
+					if (this.layer.infocfg.fields["formats"][fldname]["type"] == "singleimg" && ['touchend', 'mouseup', 'mouseout', 'mouseleave'].indexOf(p_evt.type) >= 0) {
+						this.infobox_static_expandimage_method(row["singleimg"]);
+					}
+
+				} else if (mode == 'GOTEXTCOLS') {	
 				
 					let foundcolidx = -1;
 					for (let colidx=0; colidx<this.columncount; colidx++) {
@@ -824,7 +853,7 @@ export class InfoBox extends PopupBox {
 						}
 					}
 
-					// console.log("foundcolidx:", foundcolidx);
+					// console.log("foundcolidx:", foundcolidx, "type:", p_evt.type);
 
 					if (foundcolidx >= 0) {
 						if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
@@ -845,6 +874,8 @@ export class InfoBox extends PopupBox {
 				p_ctx.restore();
 			}
 		} 
+
+		p_evt.preventDefault();
 	}
 
 }
