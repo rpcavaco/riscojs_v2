@@ -268,6 +268,11 @@ export class MaptipBox extends PopupBox {
 		for (let row of this.rows) {
 			if (row["c"] !== undefined) {
 				for (let i=0; i<numcols; i++) {
+
+					if (row["err"] !== undefined && row["err"]) {
+						colsizes[i] = 0;
+					}
+
 					if (i % 2 ==0) {
 						p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
 					} else {
@@ -380,7 +385,7 @@ export class MaptipBox extends PopupBox {
 
 			// console.log(row);
 
-			if (row["c"] !== undefined) {
+			if (row["c"] !== undefined || (row["err"] !== undefined && row["err"])) {
 				continue;
 			}			
 

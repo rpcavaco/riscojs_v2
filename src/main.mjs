@@ -271,14 +271,14 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	 */
 	mxOnEvent(p_evt) {
 
-		const clickevents = ["touchstart", "touchend", "mousedown", "mouseup"];
+		const clickendevents = ["touchstart", "touchend", "mousedown", "mouseup", "mouseleave", "mouseout"];
 
 		if (p_evt.target.tagName.toLowerCase() == "canvas") {
 			const evt = this.touchevtctrlr.adapt(p_evt);
 			if (evt) {
 
-				if (GlobalConst.getDebug("INTERACTIONCLICK") && clickevents.indexOf(p_evt.type) >= 0) {
-					console.log("[DBG:INTERACTIONCLICK] MAIN - mxOnEvent event adapted from touch - original, adapted:", p_evt, evt);
+				if (GlobalConst.getDebug("INTERACTIONCLICKEND") && clickendevents.indexOf(p_evt.type) >= 0) {
+					console.log("[DBG:INTERACTIONCLICKEND] MAIN - mxOnEvent event adapted from touch - original, adapted:", p_evt, evt);
 				}
 		
 				if (GlobalConst.getDebug("INTERACTION")) {
@@ -286,7 +286,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				}
 
 				let overlay_responded = false;
-				if (clickevents.indexOf(p_evt.type) >= 0) {
+				if (clickendevents.indexOf(p_evt.type) >= 0) {
 
 					const ci = this.getCustomizationObject();
 					for (let k of ci.overlay_keys) {
@@ -298,8 +298,8 @@ s 	 * @param {object} p_evt - Event (user event expected)
 						}	
 					}
 
-					if (GlobalConst.getDebug("INTERACTIONCLICK") && clickevents.indexOf(p_evt.type) >= 0) {
-						console.log("[DBG:INTERACTIONCLICK] MAIN - mxOnEvent overlay_responded:", overlay_responded);
+					if (GlobalConst.getDebug("INTERACTIONCLICKEND") && clickendevents.indexOf(p_evt.type) >= 0) {
+						console.log("[DBG:INTERACTIONCLICKEND] MAIN - mxOnEvent overlay_responded:", overlay_responded);
 					}
 
 				}

@@ -113,6 +113,10 @@ export function calcNonTextRowHeight(p_row, p_boxwidth, p_imgpadding, p_leftpad,
 
 	// console.log("maximgwidth:", maximgwidth);
 
+	if (p_row["err"] !== undefined && p_row["err"]) {
+		return fillh;
+	}
+
 	if (p_row["thumbcoll"] !== undefined) {
 
 		p_row["dims_pos"] = [];
@@ -336,18 +340,22 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_m
 				case "thumbcoll":
 
 					tmp = p_attrs[p_fld];
-					re = new RegExp(`${p_this.layer.infocfg.fields["formats"][p_fld]["splitpatt"]}`);
-					for (let spl of tmp.split(re)) {
-						
-						src = p_this.layer.infocfg.fields["formats"][p_fld]["srcfunc"](spl);
-
-						imge = await p_this.imgbuffer.syncFetchImage(src, spl);
-						if (imge) {
-							thumbcoll.push(imge);
+					if (tmp == null) {
+						newrow = { "thumbcoll": [], "err": true, "cap": caption, "f": p_fld };
+					} else {
+						re = new RegExp(`${p_this.layer.infocfg.fields["formats"][p_fld]["splitpatt"]}`);
+						for (let spl of tmp.split(re)) {
+							
+							src = p_this.layer.infocfg.fields["formats"][p_fld]["srcfunc"](spl);
+	
+							imge = await p_this.imgbuffer.syncFetchImage(src, spl);
+							if (imge) {
+								thumbcoll.push(imge);
+							}
 						}
+	
+						newrow = { "thumbcoll": thumbcoll, "cap": caption, "f": p_fld };	
 					}
-
-					newrow = { "thumbcoll": thumbcoll, "cap": caption, "f": p_fld };
 					break;
 
 

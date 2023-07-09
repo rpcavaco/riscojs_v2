@@ -302,10 +302,11 @@ export class InfoBox extends PopupBox {
 
 			this.field_textlines_count[fld] = await canvasWrtField(this, p_ctx, recdata, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows, this.urls);
 
-			// console.log(":: 295 ::", fld, this.field_textlines_count[fld]);
 			if (this.layer.infocfg.fields["formats"][fld] !== undefined) {
 				if (this.nontext_formats.indexOf(this.layer.infocfg.fields["formats"][fld]["type"]) >= 0) {
-					this.used_fldnames.push(fld);
+					if (recdata[fld] !== undefined && recdata[fld] !== null) {
+						this.used_fldnames.push(fld);
+					}
 					continue;
 				} else {
 					if (this.field_textlines_count[fld] > 0) {
@@ -406,6 +407,8 @@ export class InfoBox extends PopupBox {
 			pageaccumtextlineslen += maxrowtextlineslen;
 			accumtextlineslen += maxrowtextlineslen;
 		}
+
+		// console.log("::canvas_info 410::", this.rows.length, this.rowboundaries);
 				
 		if (this.rows.length > 0) {
 			this.rowboundaries.push([prevrowbndry, currow]);
@@ -565,7 +568,7 @@ export class InfoBox extends PopupBox {
 			row = this.rows[ri];
 			// console.log(row);
 
-			if (row["c"] !== undefined || row["err"] !== undefined) {
+			if (row["c"] !== undefined || (row["err"] !== undefined && row["err"])) {
 				continue;
 			}			
 
@@ -580,6 +583,10 @@ export class InfoBox extends PopupBox {
 			}
 
 			if (row["thumbcoll"] !== undefined) {
+
+				if (row["err"] !== undefined && row["err"]) {
+					continue;
+				}
 				
 				let acumw = 0, prevrowi=-1, acumwidths = {};
 				for (let imge, rii=0; rii < row["thumbcoll"].length; rii++) {
@@ -772,6 +779,8 @@ export class InfoBox extends PopupBox {
 
 			let cnt = 0;
 
+			//console.log("::779:: used fldnames:", this.used_fldnames);
+
 			const fromri = this.rowboundaries[this.activepageidx][0];
 			const tori = this.rowboundaries[this.activepageidx][1];
 
@@ -791,6 +800,7 @@ export class InfoBox extends PopupBox {
 				next = prev + (Math.ceil(this.field_textlines_count[fld]) * lineheightfactor * this.txtlnheight) + rowsintervalfactor * this.txtlnheight;
 
 				if (SHOWROWS) {
+					console.log(`${cnt.toString()} ${fld}`);
 					p_ctx.fillText(`${cnt.toString()} ${fld}`,90,next);
 					p_ctx.beginPath();
 					p_ctx.moveTo(100,next);
