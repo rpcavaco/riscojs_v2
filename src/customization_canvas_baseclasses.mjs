@@ -1189,10 +1189,16 @@ export class OverlayMgr {
 
 		let ret = false;
 		if (this.is_active) {
+
+			const topcnv = this.mapctx.renderingsmgr.getTopCanvas();
+			topcnv.style.cursor = "default";
+	
 			ret = true;
-			if (['touchend', 'mouseup', 'mouseout', 'mouseleave'].indexOf(p_evt.type) >= 0) {
-				if (this.box != null && p_evt.clientX >= this.box[0] && p_evt.clientX <= this.box[0]+this.box[2] && p_evt.clientY >= this.box[1] && p_evt.clientY <= this.box[1]+this.box[3]) {
+			if (this.box != null && p_evt.clientX >= this.box[0] && p_evt.clientX <= this.box[0]+this.box[2] && p_evt.clientY >= this.box[1] && p_evt.clientY <= this.box[1]+this.box[3]) {
+				if (['touchend', 'mouseup', 'mouseout', 'mouseleave'].indexOf(p_evt.type) >= 0) {
 					this.clear();	
+				} else if (p_evt.type == "mousemove") {
+					topcnv.style.cursor = "pointer";
 				}
 			}
 		}

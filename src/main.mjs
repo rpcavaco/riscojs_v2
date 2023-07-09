@@ -286,24 +286,21 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				}
 
 				let overlay_responded = false;
-				if (clickendevents.indexOf(p_evt.type) >= 0) {
 
-					const ci = this.getCustomizationObject();
-					for (let k of ci.overlay_keys) {
-						if (ci && ci.instances[k] !== undefined) {
-							const ciitem = ci.instances[k];
-							if (ciitem.interact !== undefined) {
-								overlay_responded = ciitem.interact(this, p_evt);
-							}
-						}	
-					}
-
-					if (GlobalConst.getDebug("INTERACTIONCLICKEND") && clickendevents.indexOf(p_evt.type) >= 0) {
-						console.log("[DBG:INTERACTIONCLICKEND] MAIN - mxOnEvent overlay_responded:", overlay_responded);
-					}
-
+				const ci = this.getCustomizationObject();
+				for (let k of ci.overlay_keys) {
+					if (ci && ci.instances[k] !== undefined) {
+						const ciitem = ci.instances[k];
+						if (ciitem.interact !== undefined) {
+							overlay_responded = ciitem.interact(this, p_evt);
+						}
+					}	
 				}
-			
+
+				if (GlobalConst.getDebug("INTERACTIONCLICKEND") && clickendevents.indexOf(p_evt.type) >= 0) {
+					console.log("[DBG:INTERACTIONCLICKEND] MAIN - mxOnEvent overlay_responded:", overlay_responded);
+				}
+		
 				if (!overlay_responded) {
 					// if event interacts with TOC, it will not interact with tools and controls
 					if (!this.tocmgr.tocmOnEvent(this, evt)) {

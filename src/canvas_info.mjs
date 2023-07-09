@@ -680,8 +680,6 @@ export class InfoBox extends PopupBox {
 		const topcnv = this.mapctx.renderingsmgr.getTopCanvas();
 		topcnv.style.cursor = "default";
 
-		// console.log('     ');
-
 		// in header
 		if (p_evt.clientX >= this.headerbox[0] && p_evt.clientX <= this.headerbox[0] + this.headerbox[2] && 
 			p_evt.clientY >= this.headerbox[1] && p_evt.clientY <= this.headerbox[1] + this.headerbox[3]) {
@@ -843,10 +841,18 @@ export class InfoBox extends PopupBox {
 				// images and icons, collections etc.
 				if (mode == 'GOELSE') {	
 
-					if (this.layer.infocfg.fields["formats"][fldname]["type"] == "singleimg" && ['touchend', 'mouseup', 'mouseout', 'mouseleave'].indexOf(p_evt.type) >= 0) {
-						this.infobox_static_expandimage_method(row["singleimg"]);
+					if (this.layer.infocfg.fields["formats"][fldname]["type"] == "singleimg") {
+						if (['touchend', 'mouseup', 'mouseout', 'mouseleave'].indexOf(p_evt.type) >= 0) {
+							topcnv.style.cursor = "default";
+							this.infobox_static_expandimage_method(row["singleimg"]);
+						} else if ("mousemove" == p_evt.type) {
+							if (p_evt.clientX >= this.box[0]+this.leftpad 
+								&& p_evt.clientX <= this.box[0]+this.box[2]-this.rightpad) {
+								topcnv.style.cursor = "pointer";
+							}
+						}
 					}
-
+					
 				} else if (mode == 'GOTEXTCOLS') {	
 				
 					let foundcolidx = -1;
