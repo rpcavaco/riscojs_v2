@@ -1119,6 +1119,7 @@ export class OverlayMgr {
 	canvaslayer = 'overlay_canvas';
 	mapctx;
 	is_active = false;
+	box = null;
 	constructor (p_mapctx) {
 		this.mapctx = p_mapctx;
 	}
@@ -1133,14 +1134,54 @@ export class OverlayMgr {
 		this.mapctx.renderingsmgr.getCanvasDims(mapdims);
 
 		ctx.clearRect(0, 0, ...mapdims); 
+
+		this.box = null;
 	}
 
 	drawImage(p_imageobj) {
 
 		this.is_active = true;
 		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
-		console.log(p_imageobj, p_imageobj.width, p_imageobj.height);
-		ctx.drawImage(p_imageobj, 100, 100, p_imageobj.width, p_imageobj.height);
+
+		ctx.save();
+
+		const mapdims = [];
+		this.mapctx.renderingsmgr.getCanvasDims(mapdims);
+
+		const rm = mapdims[0] / mapdims[1];
+		const ri = p_imageobj.width / p_imageobj.height;
+
+		let h, w;
+		
+		if (ri > rm) {
+			w = Math.min(p_imageobj.width, 0.9 * mapdims[0]);
+			h = w / ri;
+		} else {
+			h = Math.min(p_imageobj.height, 0.9 * mapdims[1]);
+			w = h * ri;
+		}
+
+		const ox = (mapdims[0]-w)/2.0;
+		const oy = (mapdims[1]-h)/2.0;
+		this.box = [ox, oy, w, h];
+
+		ctx.drawImage(p_imageobj, ox, oy, w, h);
+		ctx.strokeStyle = "white";
+		ctx.lineWidth = 1;
+		ctx.strokeRect(ox, oy, w, h);
+
+		ctx.fillStyle = "white";
+		ctx.textAlign = "center";
+		ctx.font = "14px sans-serif";
+
+		ctx.shadowColor = "black" // string
+		ctx.shadowOffsetX = 2; // integer
+		ctx.shadowOffsetY = 2; // integer
+		ctx.shadowBlur = 2; 
+		ctx.fillText(this.mapctx.i18n.msg('CLKIMG2CLOSE', false), mapdims[0]/2.0, oy+h-20);
+
+
+		ctx.restore();
 
 	}
 
@@ -1148,10 +1189,11 @@ export class OverlayMgr {
 
 		let ret = false;
 		if (this.is_active) {
+			ret = true;
 			if (['touchend', 'mouseup', 'mouseout', 'mouseleave'].indexOf(p_evt.type) >= 0) {
-				ret = true;
-				console.trace("pimba on overlay");
-				this.clear();
+				if (this.box != null && p_evt.clientX >= this.box[0] && p_evt.clientX <= this.box[0]+this.box[2] && p_evt.clientY >= this.box[1] && p_evt.clientY <= this.box[1]+this.box[3]) {
+					this.clear();	
+				}
 			}
 		}
 		return ret;
