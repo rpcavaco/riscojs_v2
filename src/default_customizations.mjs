@@ -53,19 +53,32 @@ class MapScalePrint extends PermanentMessaging {
 		super();
 	}
 
-	print(p_mapctx, p_scaleval) {
+	print(p_mapctx, p_scaleval, opt_right_offset) {
 
 		const canvas_dims = [];
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		ctx.save();
 
+		let right_offset = 0;
+		if (opt_right_offset) {
+			right_offset = opt_right_offset;
+		}
+
 		try {
 			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
-			this.boxh = 20;
-			this.boxw = 130;
-			this.left = canvas_dims[0]-this.boxw;
-			this.top = canvas_dims[1]-(2*this.boxh);
+			this.boxw =  GlobalConst.MESSAGING_STYLES.MAPSCALE_WIDTH;
+			this.boxh = GlobalConst.MESSAGING_STYLES.MAPSCALE_HEIGHT;
+
+			const text_baseline_offset = GlobalConst.MESSAGING_STYLES.MAPSCALE_TXTBASEOFFSET;
+	
+			this.left = canvas_dims[0]-this.boxw-right_offset;
+
+			if (opt_right_offset) {
+				this.top = canvas_dims[1] - this.boxh;
+			} else {
+				this.top = canvas_dims[1]-(2*this.boxh);
+			}
 
 			ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
 			ctx.fillStyle = this.fillStyleBack;
@@ -76,7 +89,7 @@ class MapScalePrint extends PermanentMessaging {
 
 			const bottom = this.top + this.boxh;
 
-			ctx.fillText(p_mapctx.i18n.msg('ESCL', true) + " 1:"+p_scaleval, this.left+GlobalConst.MESSAGING_STYLES.TEXT_OFFSET, bottom-6);		
+			ctx.fillText(p_mapctx.i18n.msg('ESCL', true) + " 1:"+p_scaleval, this.left+GlobalConst.MESSAGING_STYLES.TEXT_OFFSET, bottom+text_baseline_offset);		
 
 		} catch(e) {
 			throw e;
@@ -92,6 +105,24 @@ class AttributionPrint extends PermanentMessaging {
 		super();
 	}
 
+	setdims(p_mapctx, opt_canvas_dims) {
+
+		let canvas_dims;
+
+		if (opt_canvas_dims) {
+			canvas_dims = opt_canvas_dims;
+		} else {
+			canvas_dims = [];
+			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+		}
+
+		this.boxw =  GlobalConst.MESSAGING_STYLES.ATTRIBUTION_WIDTH;
+		this.boxh = GlobalConst.MESSAGING_STYLES.ATTRIBUTION_HEIGHT;
+		this.left = canvas_dims[0] - this.boxw;
+		this.top = canvas_dims[1] - this.boxh;
+
+	}
+
 	print(p_mapctx) {
 
 		const canvas_dims = [];
@@ -102,6 +133,9 @@ class AttributionPrint extends PermanentMessaging {
 
 			let msg;
 			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+
+			this.setdims(p_mapctx, canvas_dims);
+
 			if (p_mapctx.cfgvar["basic"]["attribution"] !== undefined) {
 				msg = p_mapctx.cfgvar["basic"]["attribution"];
 			} else {
@@ -109,10 +143,10 @@ class AttributionPrint extends PermanentMessaging {
 			}
 
 			// const tm = ctx.measureText(msg);
-			this.boxw =  GlobalConst.MESSAGING_STYLES.ATTRIBUTION_WIDTH;
-			this.boxh = GlobalConst.MESSAGING_STYLES.ATTRIBUTION_HEIGHT;
-			this.left = canvas_dims[0] - this.boxw;
-			this.top = canvas_dims[1] - this.boxh;
+			// this.boxw =  GlobalConst.MESSAGING_STYLES.ATTRIBUTION_WIDTH;
+			// this.boxh = GlobalConst.MESSAGING_STYLES.ATTRIBUTION_HEIGHT;
+			// this.left = canvas_dims[0] - this.boxw;
+			// this.top = canvas_dims[1] - this.boxh;
 
 			ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
 			ctx.fillStyle = GlobalConst.MESSAGING_STYLES.ATTRIBUTION_BCKGRND;
@@ -124,7 +158,7 @@ class AttributionPrint extends PermanentMessaging {
 
 			const bottom = canvas_dims[1];
 
-			ctx.fillText(msg, this.left+this.boxw/2, bottom-GlobalConst.MESSAGING_STYLES.ATTRIBUTION_BOTTOMOFFSET);		
+			ctx.fillText(msg, this.left+this.boxw/2, bottom+GlobalConst.MESSAGING_STYLES.ATTRIBUTION_TXTBASEOFFSET);		
 
 		} catch(e) {
 			throw e;

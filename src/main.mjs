@@ -462,11 +462,20 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		const ci = this.getCustomizationObject();
 		if (ci) {
 			const mpc = ci.instances["mapscaleprint"];
+
 			if (mpc.print !== undefined) {
-				mpc.print(this, p_scaleval);
+				let right_offset = 0;
+				if (GlobalConst.MESSAGING_STYLES.MAPSCALE_LEFTOF_ATTRIBUTION) {
+					const apc = ci.instances["attributionprint"];
+					if (apc != null && apc['setdims'] !== undefined) {
+						apc.setdims(this);
+						right_offset = apc.boxw;	
+					}
+				}
+				console.log("right_offset:", right_offset);
+				mpc.print(this, p_scaleval, right_offset);
 			} else {
 				console.error(`mapscaleprint customization unavailable, cannot print scale value of ${p_scaleval}`);
-
 			}	
 		} else {
 			console.error("printScale, no map customizations available");
