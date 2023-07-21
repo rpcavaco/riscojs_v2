@@ -261,8 +261,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			return;
 		}
 
-		console.log("Releasing gfctx, key", this.key);
-
 		if (this._gfctx == null) {
 			throw new Error(`graphics context was not previously grabbed for layer '${this.key}'`);
 		}

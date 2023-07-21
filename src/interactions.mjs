@@ -531,9 +531,9 @@ class MultiTool extends BaseTool {
 					} else if (this.start_screen != null) {
 
 						// never do pan on mouseout or mouseleave events
-						if (["mouseleave", "mouseout"].indexOf(p_evt.type) < 0) {
+						//if (["mouseleave", "mouseout"].indexOf(p_evt.type) < 0) {
 							this.finishPan(p_mapctx.transformmgr, p_evt.clientX, p_evt.clientY, orig);	
-						}
+						//}
 						this.imgs_dict={};
 						this.start_screen = null;
 					}
