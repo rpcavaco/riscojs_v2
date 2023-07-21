@@ -609,7 +609,7 @@ class InfoTool extends BaseTool {
 
 			let insideactivepanel = false;
 
-			if (ic.ibox != null && ic.pick !== undefined) {
+			if (ic.ibox != null && ic.pick !== undefined && ic.ibox['box'] !== undefined) {
 				if (this.getPanelActive()) {
 					if (p_evt.clientX >= ic.ibox.box[0] && p_evt.clientX <= ic.ibox.box[0] + ic.ibox.box[2] && 
 						p_evt.clientY >= ic.ibox.box[1] && p_evt.clientY <= ic.ibox.box[1] + ic.ibox.box[3]) {
@@ -636,6 +636,7 @@ class InfoTool extends BaseTool {
 
 				case 'touchend':
 				case 'mouseup':
+					// console.log("mup INFOtool");
 					if (ic.pick !== undefined) {
 
 						if (insideactivepanel) {
@@ -911,15 +912,28 @@ export class ToolManager {
 
 		if (!_ret) {
 			for (let i=this.maptools.length-1; i>=0; i--) {
+
+				// toggletool_already_interacted - signals if a tool joining a toggle group already interacted with this event.
+				// In that case, other tools joining toggle groups should not interact
+
+				// Other tools, including always-available ones like 'base' tool, should not be prevented
+				// from interacting
+
+				let toggletool_already_interacted = false; 
 				if (this.maptools[i].enabled) {
+
+					if (this.maptools[i].joinstogglegroup && toggletool_already_interacted) {
+						continue;
+					}
+
 					_ret = this.maptools[i].onEvent(p_mapctx, p_evt);
 
 					if (GlobalConst.getDebug("INTERACTIONCLICKEND") && clickendevents.indexOf(p_evt.type) >= 0) {
 						console.log("[DBG:INTERACTIONCLICKEND] ToolManager tool", this.maptools[i].name, "onEvent, returned:", _ret, "togglegrp:", this.maptools[i].joinstogglegroup);
 					}
-			
+
 					if (_ret && this.maptools[i].joinstogglegroup) {
-						break;
+						toggletool_already_interacted = true;
 					}
 				}
 			}	
