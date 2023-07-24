@@ -53,7 +53,7 @@ class MapScalePrint extends PermanentMessaging {
 		super();
 	}
 
-	print(p_mapctx, p_scaleval, opt_right_offset) {
+	print(p_mapctx, p_scaleval, opt_right_offset, opt_vert_offset) {
 
 		const canvas_dims = [];
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
@@ -74,10 +74,10 @@ class MapScalePrint extends PermanentMessaging {
 	
 			this.left = canvas_dims[0]-this.boxw-right_offset;
 
-			if (opt_right_offset) {
-				this.top = canvas_dims[1] - this.boxh;
+			if (opt_vert_offset) {
+				this.top = canvas_dims[1] - this.boxh - opt_vert_offset;
 			} else {
-				this.top = canvas_dims[1]-(2*this.boxh);
+				this.top = canvas_dims[1] - this.boxh;
 			}
 
 			ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 

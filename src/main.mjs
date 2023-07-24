@@ -462,18 +462,39 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		const ci = this.getCustomizationObject();
 		if (ci) {
 			const mpc = ci.instances["mapscaleprint"];
+			const apc = ci.instances["attributionprint"];
 
 			if (mpc.print !== undefined) {
-				let right_offset = 0;
-				if (GlobalConst.MESSAGING_STYLES.MAPSCALE_LEFTOF_ATTRIBUTION) {
-					const apc = ci.instances["attributionprint"];
-					if (apc != null && apc['setdims'] !== undefined) {
-						apc.setdims(this);
-						right_offset = apc.boxw;	
+
+				let sep=0, right_offset = null, vert_offset = null;
+
+				if (apc) {
+
+					let loa = false;
+					if (this.cfgvar["basic"]["mapscale"]["left_of_attribution"] !== undefined) {
+						loa = this.cfgvar["basic"]["mapscale"]["left_of_attribution"];
+					} else {
+						loa = GlobalConst.MESSAGING_STYLES.MAPSCALE_LEFTOF_ATTRIBUTION;
+					}
+					if (this.cfgvar["basic"]["mapscale"]["sep_from_attribution"] !== undefined) {
+						sep = this.cfgvar["basic"]["mapscale"]["sep_from_attribution"];
+					} else {
+						sep = GlobalConst.MESSAGING_STYLES.MAPSCALE_SEPFROM_ATTRIBUTION;
+					}
+
+					if (loa) {						
+						if (apc['setdims'] !== undefined) {
+							apc.setdims(this);
+							right_offset = apc.boxw + sep;	
+						}
+					} else {
+						if (apc['setdims'] !== undefined) {
+							apc.setdims(this);
+							vert_offset = apc.boxh + sep;	
+						}
 					}
 				}
-				console.log("right_offset:", right_offset);
-				mpc.print(this, p_scaleval, right_offset);
+				mpc.print(this, p_scaleval, right_offset, vert_offset);
 			} else {
 				console.error(`mapscaleprint customization unavailable, cannot print scale value of ${p_scaleval}`);
 			}	
