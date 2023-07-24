@@ -471,12 +471,13 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				if (apc) {
 
 					let loa = false;
-					if (this.cfgvar["basic"]["mapscale"]["left_of_attribution"] !== undefined) {
+
+					if (this.cfgvar["basic"]["mapscale"] !== undefined && this.cfgvar["basic"]["mapscale"]["left_of_attribution"] !== undefined) {
 						loa = this.cfgvar["basic"]["mapscale"]["left_of_attribution"];
 					} else {
 						loa = GlobalConst.MESSAGING_STYLES.MAPSCALE_LEFTOF_ATTRIBUTION;
 					}
-					if (this.cfgvar["basic"]["mapscale"]["sep_from_attribution"] !== undefined) {
+					if (this.cfgvar["basic"]["mapscale"] !== undefined && this.cfgvar["basic"]["mapscale"]["sep_from_attribution"] !== undefined) {
 						sep = this.cfgvar["basic"]["mapscale"]["sep_from_attribution"];
 					} else {
 						sep = GlobalConst.MESSAGING_STYLES.MAPSCALE_SEPFROM_ATTRIBUTION;
