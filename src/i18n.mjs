@@ -13,22 +13,30 @@ export class I18n {
 		this.msgs = {
 			"deflang": "pt",
 			"pt": {
+				"Y": "sim",
+				"N": "não",
+				"C": "cancelar",
 				"ESCL": "escala",
 				"LDNG": "a carregar",
 				"CLR": "limpar",
 				"ZOUT": "afastar",
 				"ZIN": "aproximar",
-				"HOME": "vista inicial"
-				//"CL2CP": "clicar para copiar valor"
+				"HOME": "vista inicial",
+				//"CL2CP": "clicar para copiar valor",
+				"DEFSCL": "indique a escala"
 			}, 
 			"en": {
+				"Y": "yes",
+				"N": "no",
+				"C": "cancel",
 				"ESCL": "scale",
 				"LDNG": "loading",
 				"CLR": "clear",
 				"ZOUT": "zoom out",					
 				"ZIN": "zoom in",
-				"HOME": "home view"
+				"HOME": "home view",
 				//"CL2CP": "click to copy value"
+				"DEFSCL": "set maps scale"
 			}
 		};	
 		
@@ -74,7 +82,7 @@ export class I18n {
 		let reallang = this.getLang();
 
 		if (this.msgs[reallang] !== undefined && this.msgs[reallang][p_msgkey] !== undefined) {
-			
+
 			ret = this.msgs[reallang][p_msgkey];
 
 			if (b_capitalize) {

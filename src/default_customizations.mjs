@@ -97,6 +97,79 @@ class MapScalePrint extends PermanentMessaging {
 			ctx.restore();
 		}
 	}	
+
+	interact(p_mapctx, p_evt) {
+
+
+		let topcnv, ret = false;
+		let maxscl = 1000000;
+
+		if (p_mapctx.cfgvar.basic["maxscaleview"] !== undefined && p_mapctx.cfgvar.basic["maxscaleview"]["scale"] !== undefined) {
+			maxscl = p_mapctx.cfgvar.basic["maxscaleview"]["scale"];
+		}
+
+		if (this.top == null) {
+			return ret;
+		}
+
+		if (p_evt.clientX >= this.left && p_evt.clientX <= this.left + this.boxw && 
+			p_evt.clientY >= this.top && p_evt.clientY <= this.top + this.boxh) {
+
+			switch(p_evt.type) {
+
+				case 'mousemove':
+					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					topcnv.style.cursor = "pointer";
+					break; 
+
+				case 'touchend':
+				case 'mouseup':
+					const sv = p_mapctx.transformmgr.getReadableCartoScale();
+					p_mapctx.getCustomizationObject().messaging_ctrlr.numberMessage(
+						[p_mapctx.i18n.msg('DEFSCL', true), "1:", sv], 
+						(evt, p_result, p_value) => { 
+							if (p_value) {
+								p_mapctx.transformmgr.setScaleFromReadableCartoScale(p_value, true);
+							}
+						}, 
+						{"step": 10, "min": 100, "max": maxscl}
+					);
+					break; 
+								
+				default:
+					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					topcnv.style.cursor = "default";
+	
+			}
+
+			// SelBaseMap
+			ret = true;
+		}
+	
+
+		if (!ret) {
+
+			if (this.had_prev_interaction) {
+
+				// emulating mouseout
+				topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+				topcnv.style.cursor = "default";
+
+				p_mapctx.clearInteractions('MAPSCALEBOX');
+
+				this.had_prev_interaction = false;
+
+			}
+
+		} else {
+			if (!this.had_prev_interaction) {
+				p_mapctx.clearInteractions('MAPSCALEBOX');
+			}
+			this.had_prev_interaction = true;
+		}
+
+		return ret;		
+	}
 }
 
 class AttributionPrint extends PermanentMessaging {
@@ -1136,6 +1209,7 @@ export class MapCustomizations {
 		}
 
 		this.messaging_ctrlr = p_messaging_ctrlr;
+		this.messaging_ctrlr.setI18n(this.mapctx.i18n);
 		this.instances = {
 			"basiccontrolsbox": new BasicCtrlBox(),
 			"basemapctrl": new BasemapCtrlBox(),
@@ -1148,7 +1222,7 @@ export class MapCustomizations {
 			"overlay": new OverlayMgr(this.mapctx)
 		}
 		this.controls_keys = ["basiccontrolsbox", "basemapctrl", "toc"];
-		this.overlay_keys = ["overlay"];
+		this.overlay_keys = ["overlay", "mapscaleprint"];
 	}
 }
 

@@ -22,6 +22,10 @@ function fadeout(element, heartbeat, p_callback_obj) {
     return timer;
 }
 
+function getSelOption(p_wdg) {
+	return p_wdg.options[p_wdg.selectedIndex].value;
+}
+
 // Singleton
 let MessagesController = {
 
@@ -41,6 +45,19 @@ let MessagesController = {
 	height: 0,
 	isvisible: false,
 	timer: null,
+	i18n: null,
+
+	setI18n(p_i18nobj) {
+		this.i18n = p_i18nobj;
+	},
+
+	i18nMsg(p_input, p_capitalize) {
+		let ret = p_input;
+		if (this.i18n) {
+			ret = this.i18n.msg(p_input, p_capitalize);
+		}
+		return ret;
+	},
 
 	check() {
 		let msgsdiv = document.getElementById(this.elemid);
@@ -49,7 +66,9 @@ let MessagesController = {
 		// attach self close on click event
 		(function(p_this, p_msgsdiv) {
 			p_msgsdiv.addEventListener('click', (e) => {
-				p_this.hideMessage(true);
+				if (!p_this.persist) {
+					p_this.hideMessage(true);
+				}
 			})
 		})(this, msgsdiv);		
 	},
@@ -70,8 +89,288 @@ let MessagesController = {
 		msgsdiv.style.left = this.left + 'px';
 	}, */
 	
+	_setMessage: function(p_msg_txt, p_is_timed, p_type, opt_callback, opt_value_text_pairs, opt_constraintitems) {
+
+		this.messageText = p_msg_txt;
+		let iconimg=null, msgsdiv = document.getElementById(this.elemid), innercontentdiv;
+		if (this.timer != null) {
+			clearTimeout(this.timer);
+			this.timer = null;
+		}
+
+		if (opt_value_text_pairs) {
+			console.assert(p_type == "SELECT", "optional value-text pairs will work only with type SELECT, not with '%s'", p_type);
+		}
+
+		if (msgsdiv!=null) {
+
+			let contentelem = null;
+			let initialvalue = null;
+
+			while (msgsdiv.firstChild) {
+				msgsdiv.removeChild(msgsdiv.firstChild);
+			}	
+
+			iconimg = document.createElement("img");
+			if (p_type == "WARN") {
+				this.persist = false;
+				iconimg.src = "media/warning-5-32.png";
+			} else if (p_type == "INFO") {
+				this.persist = false;
+				iconimg.src = "media/info-3-32.png";
+			} else if (p_type == "YESNO" || p_type == "OKCANCEL" || p_type == "SELECT" || p_type == "TEXT" || p_type == "NUMBER") {
+				this.persist = true;
+				iconimg.src = "media/q-32.png";
+			}
+
+			msgsdiv.appendChild(iconimg);
+
+			if (typeof this.messageText == "string") {
+
+				if (p_type == "TEXT") {
+					contentelem = document.createElement("input");
+					contentelem.setAttribute('type', 'text');
+					contentelem.value = this.messageText;
+					initialvalue = contentelem.value;
+					if (opt_constraintitems) {
+						if (opt_constraintitems['pattern'] !== undefined) {
+							contentelem.setAttribute('pattern',opt_constraintitems['pattern']);
+						}
+					}
+				} else if (p_type == "NUMBER") {
+					contentelem = document.createElement("input");
+					contentelem.setAttribute('type', 'number');
+					contentelem.value = this.messageText;
+					initialvalue = contentelem.value;
+					if (opt_constraintitems) {
+						for (let item of ['min', 'max', 'step', 'pattern']) {
+							if (opt_constraintitems[item] !== undefined) {
+								contentelem.setAttribute(item, opt_constraintitems[item]);
+							}
+						}
+					}
+					if (contentelem.getAttribute('pattern') == null) {
+						contentelem.setAttribute('pattern', '\d+');
+					}
+				} else {
+					contentelem = document.createElement("p");
+					contentelem.insertAdjacentHTML('afterbegin', this.messageText);
+					initialvalue = this.messageText;
+				}
+				msgsdiv.appendChild(contentelem);
+
+				innercontentdiv = document.createElement("div");
+				innercontentdiv.classList.add("innercont");
+				msgsdiv.appendChild(innercontentdiv);
+									
+			} else if (this.messageText instanceof Array) {
+
+				if (this.messageText.length < 1) {
+					return;
+				}
+
+				if (p_type == "TEXT" || p_type == "NUMBER") {
+					console.assert(this.messageText.length > 0 && this.messageText.length < 4, "array of messages for TEXT_xx mode must have 1,2 or 3 lines (just caption; caption, initial textbox content; caption, textbox prefix, initial textbox content)");
+				}
+
+				let br, p = document.createElement("p");
+				p.insertAdjacentHTML('afterbegin', this.messageText[0]);
+				msgsdiv.appendChild(p);
+
+				innercontentdiv = document.createElement("div");
+				innercontentdiv.classList.add("innercont");
+				msgsdiv.appendChild(innercontentdiv);
+				
+				for (let i=1; i<this.messageText.length; i++) {
+					if (i > 1 && !p_type == "TEXT") {
+						br = document.createElement("br");
+						innercontentdiv.appendChild(br);	
+					}
+					if (p_type == "TEXT" && ((i==1 && this.messageText.length == 2) || (i==2 && this.messageText.length == 3))) {
+
+						contentelem = document.createElement("input");
+						contentelem.setAttribute('type', 'text');
+						contentelem.value = this.messageText[i];	
+						initialvalue = contentelem.value;
+
+						if (opt_constraintitems) {
+							for (let item of ['pattern']) {
+								if (opt_constraintitems[item] !== undefined) {
+									contentelem.setAttribute(item, opt_constraintitems[item]);
+								}
+							}
+						}
+
+						innercontentdiv.appendChild(contentelem);
+
+					} else if (p_type == "NUMBER" && ((i==1 && this.messageText.length == 2) || (i==2 && this.messageText.length == 3))) {
+
+						contentelem = document.createElement("input");
+						contentelem.setAttribute('type', 'number');
+						contentelem.value = this.messageText[i];	
+						initialvalue = contentelem.value;
+
+						if (opt_constraintitems) {
+							for (let item of ['min', 'max', 'step', 'pattern']) {
+								if (opt_constraintitems[item] !== undefined) {
+									contentelem.setAttribute(item, opt_constraintitems[item]);
+								}
+							}
+						}						
+
+						if (contentelem.getAttribute('pattern') == null) {
+							contentelem.setAttribute('pattern', '\d+');
+						}
 	
+						innercontentdiv.appendChild(contentelem);	
+
+					} else {
+						innercontentdiv.insertAdjacentHTML('beforeend', this.messageText[i]);
+					}
+				}
+			}
+			
+			msgsdiv.style.display = 'block';
+			msgsdiv.style.opacity = 1;
+			msgsdiv.style.filter = 'none';
+			this.isvisible = true;
+
+			let btn1 = null;
+
+			if (opt_callback) {
+
+				const ctrldiv = document.createElement("div");
+				ctrldiv.style.float = "right";
+				innercontentdiv.appendChild(ctrldiv);
+
+				if (p_type.endsWith("YESNO") || p_type.endsWith("OKCANCEL") || p_type == "TEXT" || p_type == "NUMBER") {
+
+					btn1 = document.createElement("button");
+					const btn2 = document.createElement("button");
+					ctrldiv.appendChild(btn1);
+					ctrldiv.appendChild(btn2);
+					if (p_type.endsWith("YESNO")) {
+						btn1.insertAdjacentHTML('afterBegin', this.i18nMsg("Y", true));
+						btn2.insertAdjacentHTML('afterBegin', this.i18nMsg("N", true));
+					} else if (p_type.endsWith("OKCANCEL") || p_type == "TEXT" || p_type == "NUMBER") {
+						btn1.insertAdjacentHTML('afterBegin', "Ok");
+						btn1.disabled = true;
+						btn2.insertAdjacentHTML('afterBegin', this.i18nMsg("C", true));
+					}
+
+					// Activation of OK button when effective content change happens 
+					(function(p_init_value, p_content_elem, p_btn) {
+						['change', 'keypress'].forEach(evttype => {
+							p_content_elem.addEventListener(evttype, function(ev) {
+								if (p_content_elem.value != p_init_value) {
+									p_btn.disabled = false;
+								}
+							});
+						});
+					})(initialvalue, contentelem, btn1);					
+
+					(function(p_this, p_btn, pp_type, pp_callback) {
+						p_btn.addEventListener('click', function(ev) {
+							p_this.hideMessage(true);
+							let ret = null;
+							if (contentelem) {
+								switch(pp_type) {
+									case "TEXT":
+									case "NUMBER":
+										ret = contentelem.value;
+										break;
+								}
+							}
+							pp_callback(ev, true, ret);
+						});
+					})(this, btn1, p_type, opt_callback);
+
+					(function(p_this, p_btn, pp_callback) {
+						p_btn.addEventListener('click', function(ev) {
+							p_this.hideMessage(true);
+							pp_callback(ev, false, null);
+						});
+					})(this, btn2, opt_callback);
+
+				}
+
+			}
+
+			if (opt_callback!=null && opt_value_text_pairs!=null) {
+
+				let selel;
+				const ctrldiv = document.createElement("div");
+				ctrldiv.style.float = "right";
+				innercontentdiv.appendChild(ctrldiv);
+
+				if (p_type == "SELECT") { 
+
+					const wdg0 = document.createElement("div");
+					wdg0.classList.add("attention-select");
+					ctrldiv.appendChild(wdg0);
+
+					selel = document.createElement("select");
+					wdg0.appendChild(selel);
+
+					for (let optel, i=0; i<opt_value_text_pairs.length; i++) {
+						optel = document.createElement("option");
+						optel.value = opt_value_text_pairs[i][0];
+						optel.text = opt_value_text_pairs[i][1];
+						selel.appendChild(optel);
+					}
+				}
+
+				const btn1 = document.createElement("button");
+				const btn2 = document.createElement("button");
+				ctrldiv.appendChild(btn1);
+				ctrldiv.appendChild(btn2);
+
+				btn1.insertAdjacentHTML('afterBegin', "Ok");
+				btn2.insertAdjacentHTML('afterBegin', this.i18nMsg("C", true));
+
+				(function(p_this, p_selel, p_btn, pp_callback) {
+					p_btn.addEventListener('click', function(ev) {
+						const optval = getSelOption(p_selel);
+						p_this.hideMessage(true);						
+						pp_callback(optval);
+					});
+				})(this, selel, btn1, opt_callback);
+
+				(function(p_this, p_btn, pp_callback) {
+					p_btn.addEventListener('click', function(ev) {
+						p_this.hideMessage(true);
+						pp_callback(null);
+					});
+				})(this, btn2, opt_callback);				
+			
+			}
+
+		}
+
+		let tmo;
+		if (p_is_timed) {			
+			if (p_type == "WARN") {
+				tmo = this.shortMessageTimeout;
+			} else {
+				tmo = this.messageTimeout;
+			}
+			this.timer = setTimeout(function() { MessagesController.hideMessage(true); }, tmo);
+		}
+	},
+
 	setMessage: function(p_msg_txt, p_is_timed, p_is_warning) {
+		
+		let type;
+		if (p_is_warning) {
+			type = 'WARN';
+		} else {
+			type = 'INFO';
+		}
+
+		this._setMessage(p_msg_txt, p_is_timed, type);
+	},
+	
+	/*setMessage: function(p_msg_txt, p_is_timed, p_is_warning) {
 
 		this.messageText = p_msg_txt;
 		let iconimg=null, msgsdiv = document.getElementById(this.elemid);
@@ -112,7 +411,34 @@ let MessagesController = {
 			}
 			this.timer = setTimeout(function() { MessagesController.hideMessage(true); }, tmo);
 		}
+	},*/
+
+	confirmMessage: function(p_msg_txt, p_yes_no, p_callback) {
+		
+		let type;
+		if (p_yes_no) {
+			type = 'YESNO';
+		} else {
+			type = 'OKCANCEL';
+		}
+
+		this._setMessage(p_msg_txt, false, type, p_callback);
 	},
+
+	selectMessage: function(p_msg_txt, p_value_text_pairs, p_callback) {
+		
+		this._setMessage(p_msg_txt, false, "SELECT", p_callback, p_value_text_pairs);
+	},	
+
+	textMessage: function(p_msg_txt, p_callback, opt_constraint_items) {
+
+		this._setMessage(p_msg_txt, false, "TEXT", p_callback, null, opt_constraint_items);
+	},
+	
+	numberMessage: function(p_msg_txt, p_callback, opt_constraint_items) {
+
+		this._setMessage(p_msg_txt, false, "NUMBER", p_callback, null, opt_constraint_items);
+	},		
 	
 	hideMessage: function(do_fadeout) {
 		if (!this.isvisible) {

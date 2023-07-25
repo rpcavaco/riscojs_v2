@@ -295,6 +295,10 @@ s 	 * @param {object} p_evt - Event (user event expected)
 						const ciitem = ci.instances[k];
 						if (ciitem.interact !== undefined) {
 							overlay_responded = ciitem.interact(this, p_evt);
+							if (overlay_responded) {
+								// if more than one overlay, only one interaction allowed
+								break;
+							}
 						}
 					}	
 				}

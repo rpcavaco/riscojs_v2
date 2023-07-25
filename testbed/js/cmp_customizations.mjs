@@ -476,9 +476,9 @@ export class LocQuery {
 
 		this.query_clrbtn.style.zIndex = p_mapctx.renderingsmgr.getMaxZIndex()+1;
 		if (navigator.userAgent.toLowerCase().includes("mobile") || navigator.userAgent.toLowerCase().includes("android")) {
-			this.query_clrbtn.style.fontSize = "14pt";
-		} else {
 			this.query_clrbtn.style.fontSize = "12pt";
+		} else {
+			this.query_clrbtn.style.fontSize = "10pt";
 		}
 		
 
