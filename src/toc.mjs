@@ -596,6 +596,8 @@ export class TOCManager {
 
 	tocmOnEvent(p_mapctx, p_evt) {
 
+		// console.trace("INT TOC");
+
 		const ret =  this.toccontrol.interact(p_mapctx, p_evt);
 
 		if (this.prev_tocontrol_interaction_result !== null && this.prev_tocontrol_interaction_result != ret && !ret) {

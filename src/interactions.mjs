@@ -894,6 +894,9 @@ export class ToolManager {
 		let _ret;
 
 		for (let mapctrl_key in this.mapcontrolmgrs) {
+
+			// console.trace("INT mapctrl_key:", mapctrl_key);
+
 			_ret = this.mapcontrolmgrs[mapctrl_key].interact(p_mapctx, p_evt);
 			if (_ret) {
 				break;

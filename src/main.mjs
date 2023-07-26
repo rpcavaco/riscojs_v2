@@ -227,7 +227,7 @@ export class RiscoMapCtx {
 		this.#customization_object = p_object;
 		p_setmapctx_func(p_object, this);
 
-		for (let objid of ["basiccontrolsbox", "basemapctrl"]) {
+		for (let objid of this.#customization_object.mapcustom_controlsmgrs_keys) {
 			if (p_object.instances[objid] !== undefined) {
 				this.toolmgr.addControlsMgr(objid, p_object.instances[objid]);
 				if (p_object.instances[objid]['setTOCMgr'] !== undefined) {
@@ -295,6 +295,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 						const ciitem = ci.instances[k];
 						if (ciitem.interact !== undefined) {
 							overlay_responded = ciitem.interact(this, p_evt);
+							// console.trace("INT overlay_responded:", k, overlay_responded);
 							if (overlay_responded) {
 								// if more than one overlay, only one interaction allowed
 								break;
@@ -347,7 +348,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 	drawControls() {
 		const ci = this.getCustomizationObject();
-		for (let k of ci.controls_keys) {
+		for (let k of ci.mapcustom_controls_keys) {
 			if (ci && ci.instances[k] !== undefined) {
 				const bcb = ci.instances[k];
 				if (bcb.print !== undefined) {

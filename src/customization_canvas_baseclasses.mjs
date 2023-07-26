@@ -319,7 +319,7 @@ export class TOC  extends MapPrintInRect {
 		this.leftcol_width = GlobalConst.CONTROLS_STYLES.TOC_LEFTCOL_WIDTH;
 		this.normalszPX = GlobalConst.CONTROLS_STYLES.TOC_NORMALSZ_PX;
 		this.varstylePX = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLESZ_PX;
-		this.fontfamily = GlobalConst.CONTROLS_STYLES.TOC_FONTFAMILY;
+		this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
 		this.canvaslayer = 'service_canvas'; 
 
 		this.left = 600;
@@ -622,7 +622,6 @@ export class TOC  extends MapPrintInRect {
 		this.print_attempts = 0;
 		return this._print(p_mapctx)
 	}
-
 
 	interact(p_mapctx, p_evt) {
 
@@ -1123,3 +1122,414 @@ export class OverlayMgr {
 	}
 }
 
+export class AnalysisMgr extends MapPrintInRect {
+
+	left;
+	boxh;
+	boxw;
+	top;
+	fillStyleBack; 
+	fillStyleFront; 
+	font;
+	leftcol_width;
+	print_attempts;
+	had_prev_interaction;
+	collapsedstate;
+	prevboxenv;
+	bottom;
+
+	constructor(p_mapctx, p_attributionprint_widget) {
+
+		super();
+
+		this.attributionprint_widget = p_attributionprint_widget;
+
+		// ** - can be overrriden in basic config, at 'style_override' group, 
+		//      creating a key with same property name in CONTROLS_STYLES, but in lower case
+
+		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.AM_BCKGRD;  // **
+		this.activeStyleFront = GlobalConst.CONTROLS_STYLES.AM_ACTIVECOLOR;
+		this.inactiveStyleFront = GlobalConst.CONTROLS_STYLES.AM_INACTIVECOLOR;
+		this.margin_offset = GlobalConst.CONTROLS_STYLES.OFFSET;
+		this.normalszPX = GlobalConst.CONTROLS_STYLES.AM_NORMALSZ_PX;
+		this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
+		this.canvaslayer = 'service_canvas'; 
+
+		this.left = 600;
+		this.top = 600;
+		this.boxh = {
+			"OPEN": 300,
+			"COLLAPSED": 60
+		};
+		this.boxw = {
+			"OPEN": 300,
+			"COLLAPSED": 60
+		};
+
+		this.print_attempts = 0;
+		this.had_prev_interaction = false;
+
+		this.expandenv = 1;
+		this.prevboxenv = null;
+
+		let mapdims = [];
+		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
+
+		if (mapdims[0] <  GlobalConst.CONTROLS_STYLES.AM_START_COLLAPSED_CANVAS_MAXWIDTH) {
+			this.collapsedstate = "COLLAPSED";
+		} else {
+			this.collapsedstate = "OPEN";
+		}
+
+		this.bottom = mapdims[1];
+
+		this.top = this.bottom - this.boxh[this.collapsedstate];
+
+	}
+
+	_print(p_mapctx) {
+
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		ctx.save();
+
+		if (this.prevboxenv) {
+			ctx.clearRect(...this.prevboxenv); 	
+			this.prevboxenv = null;
+		} else {
+			const dee = 2 * this.expandenv;
+			ctx.clearRect(this.left-this.expandenv, this.top-this.expandenv, this.boxw[this.collapsedstate]+dee, this.boxh[this.collapsedstate]+dee); 	
+		}
+
+		// cal width
+		this.boxw["OPEN"] = 400 + 2 * this.margin_offset;
+
+		let mapdims = [];
+		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
+
+		this.left = mapdims[0] - (this.boxw[this.collapsedstate] + this.margin_offset);
+
+		try {
+
+			this.boxh["OPEN"] = 400 + this.margin_offset;
+			if (this.attributionprint_widget && this.attributionprint_widget['setdims'] !== undefined) {
+				this.attributionprint_widget.setdims(p_mapctx, mapdims);
+				this.bottom = mapdims[1] - this.attributionprint_widget.boxh - this.margin_offset;	
+			}		
+	
+	
+			// background
+			
+			// ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
+			if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["toc_bckgrd"] !== undefined) {
+				ctx.fillStyle = p_mapctx.cfgvar["basic"]["style_override"]["toc_bckgrd"];
+			} else {
+				ctx.fillStyle = this.fillStyleBack;
+			}
+
+			this.top = this.bottom - this.boxh[this.collapsedstate];
+
+			//console.log(this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]);
+			ctx.fillRect(this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]);
+			
+			ctx.strokeStyle = this.activeStyleFront;
+			ctx.lineWidth = this.strokeWidth;
+			ctx.strokeRect(this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]);
+
+			if (this.collapsedstate == "OPEN") {
+						
+				// blah
+
+			} else {
+				// collapsed TOC
+				const leftx = this.left + this.margin_offset;
+				const rightx = this.left + this.boxw["COLLAPSED"] - this.margin_offset;
+
+				const ynsteps = 4;
+				const ystep = this.boxh["COLLAPSED"] / (ynsteps+1);
+				let cota;
+
+				ctx.save();
+				for (let ri=0; ri<ynsteps; ri++) {
+
+					cota = this.top + (ri+1) * ystep;
+
+					ctx.strokeStyle = GlobalConst.CONTROLS_STYLES.TOC_COLLAPSED_STRIPES_FILL;
+					ctx.lineWidth = 6;
+					ctx.lineCap = "round";
+					ctx.beginPath();
+					ctx.moveTo(leftx, cota);
+					ctx.lineTo(rightx, cota);
+					ctx.stroke();
+				}
+				ctx.restore();
+			}
+
+		} catch(e) {
+			throw e;
+		} finally {
+			ctx.restore();
+		}
+	}	
+
+	print(p_mapctx) {
+		const that = this;
+		// prevent drawing before configured fonts are available
+		while (!document.fonts.check("10px "+this.fontfamily) && this.print_attempts < 10) {
+			setTimeout(() => {
+				that.print(p_mapctx);
+			}, 200);
+			that.print_attempts++;
+			return;
+		}
+		this.print_attempts = 0;
+		return this._print(p_mapctx)
+	}
+
+	interact(p_mapctx, p_evt) {
+		let ret = false;
+
+		if (p_evt.clientX >= this.left && 
+			p_evt.clientX <= this.left+this.boxw[this.collapsedstate] && 
+			p_evt.clientY >= this.top && 
+			p_evt.clientY <= this.top+this.boxh[this.collapsedstate]) {
+
+				ret = true;
+		}
+
+		return ret;
+	}
+
+	_interact(p_mapctx, p_evt) {
+
+		const SHOWROWS = false;
+
+		let ctx = null;
+		if (SHOWROWS) {
+			ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+			ctx.save();
+			ctx.strokeStyle = "cyan";	
+		}
+
+		const stepEntry = GlobalConst.CONTROLS_STYLES.TOC_SEPARATION_FACTOR * this.normalszPX - 2;
+		const stepSubEntry = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.normalszPX - 2;
+		let next, prev = this.top + this.margin_offset;
+
+		const width = this.boxw[this.collapsedstate] - 2* this.margin_offset;
+		const left = this.left + this.margin_offset
+
+		let i=-1, ret = false, step;
+		let changed=false, found = null, topcnv;
+
+		if (p_evt.clientX >= this.left && p_evt.clientX <= this.left+this.boxw[this.collapsedstate] && p_evt.clientY >= this.top && p_evt.clientY <= this.top+this.boxh[this.collapsedstate]) {
+
+			if (this.collapsedstate == "OPEN") {
+
+				for (let lyr, li=this.tocmgr.layers.length-1; li>=0; li--) {
+
+					lyr = this.tocmgr.layers[li];
+					if (lyr["label"] !== undefined && lyr["label"] != "none") {
+						
+						i++;
+						if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
+							step = stepSubEntry;
+						} else {
+							step = stepEntry;
+						}
+						next = prev + step;
+
+						// use prev, next
+						if (ctx) {
+							ctx.strokeRect(left, prev, width, step);
+						}
+						if (p_evt.clientX >= left && p_evt.clientX <= this.left+width && p_evt.clientY >= prev && p_evt.clientY <= next) {
+							found = {
+								"key": lyr.key,
+								"subkey": null
+							};
+							break;
+						}
+
+						prev = next;
+						
+						if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
+							for (let vs, vi=0; vi<lyr["varstyles_symbols"].length; vi++) {
+
+								vs = lyr["varstyles_symbols"][vi];
+
+								i++;
+								if (vi < (lyr["varstyles_symbols"].length-1)) {
+									step = stepSubEntry;
+								} else {
+									step = stepEntry;
+								}
+								next = prev + step;
+
+								// use prev, next
+								if (ctx) {
+									ctx.strokeRect(left, prev, width, step);
+								}
+								if (p_evt.clientX >= left && p_evt.clientX <= this.left+width && p_evt.clientY >= prev && p_evt.clientY <= next) {
+									found = {
+										"key": lyr.key,
+										"subkey": vs.key
+									};
+									break;
+								}				
+								prev = next;	
+							}
+
+							if (found) {
+								break;
+							}
+						} // if lyr["varstyles_symbols"] exist
+					} // if lyr["label"] exists
+				} // for lyr
+			} // this.collapsedstate == "OPEN"
+
+			ret = true;
+		}
+
+		// is over TOC box area
+		if (ret) {
+
+			if (found) {
+	
+				switch(p_evt.type) {
+	
+					case 'touchend':
+					case 'mouseup':
+	
+						for (let lyr of this.tocmgr.layers) {
+							if (lyr.key == found.key) {
+								if (found.subkey === null) {
+									lyr.layervisible = !lyr.layervisible;
+									changed = true;
+								} else {
+									if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
+	
+										for (const vs of lyr["varstyles_symbols"]) {			
+											if (vs.key == found.subkey) {
+												if (vs['hide'] !== undefined) {
+													vs.hide = !vs.hide;
+												} else {
+													vs['hide'] = true;
+												}
+												changed = true;
+												break;
+											}
+										}
+									}
+								}
+								break;
+							}
+						};
+	
+						if (changed) {
+							p_mapctx.maprefresh();
+						}
+	
+						topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+						topcnv.style.cursor = "default";
+	
+						break;
+	
+					case 'mousemove':
+	
+						topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+						topcnv.style.cursor = "pointer";
+						let msg;
+
+						if (this.collapsedstate == "OPEN") {
+							msg = p_mapctx.i18n.msg('ALTVIZ', true);
+						} else {
+							msg = p_mapctx.i18n.msg('SHOWTOC', true);
+						}
+	
+						ctrToolTip(p_mapctx, p_evt, p_mapctx.i18n.msg('ALTVIZ', true), [250,30]);	
+						break;
+	
+					default:
+						topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+						topcnv.style.cursor = "default";
+	
+				}
+	
+			} else {
+	
+				topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+
+				if (this.collapsedstate == "OPEN") {
+
+					topcnv.style.cursor = "default";
+					p_mapctx.renderingsmgr.clearAll(['transientmap', 'transientviz']);
+
+				} else {
+
+					switch(p_evt.type) {
+	
+						case 'touchend':
+						case 'mouseup':
+							this.inflate(p_mapctx);
+							break;
+							
+						case 'mousemove':
+							topcnv.style.cursor = "pointer";
+							ctrToolTip(p_mapctx, p_evt, p_mapctx.i18n.msg('SHOWTOC', true), [250,30]);	
+							break;
+
+					}
+				}
+			}
+
+			if (!this.had_prev_interaction) {
+				p_mapctx.clearInteractions('TOC');
+			}
+			this.had_prev_interaction = true;
+
+		} else {
+
+			if (this.had_prev_interaction) {
+
+				// emulating mouseout
+				topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+				topcnv.style.cursor = "default";
+
+				p_mapctx.clearInteractions('TOC');
+
+				this.had_prev_interaction = false;
+			}
+		}
+
+		if (ctx) {
+			ctx.restore();
+		}
+
+		return ret;
+	}	
+
+	collapse(p_mapctx) {
+
+		if (this.collapsedstate != "COLLAPSED") {
+
+			const dee = 2 * this.expandenv;
+
+			this.prevboxenv = [this.left-this.expandenv, this.top-this.expandenv, this.boxw[this.collapsedstate]+dee, this.boxh[this.collapsedstate]+dee];
+			this.collapsedstate = "COLLAPSED";
+			this.print(p_mapctx);
+
+		}
+
+		return (this.collapsedstate == "COLLAPSED");
+	}
+
+	isCollapsed() {
+		return (this.collapsedstate == "COLLAPSED");
+	}
+
+	inflate(p_mapctx) {
+		this.collapsedstate = "OPEN";
+		this.print(p_mapctx);
+
+		return (this.collapsedstate == "OPEN");
+	}	
+}

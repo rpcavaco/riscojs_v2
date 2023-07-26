@@ -1,6 +1,6 @@
 
 import {GlobalConst} from './constants.js';
-import { ctrToolTip, MapPrintInRect, PermanentMessaging, LoadingMessaging, ControlsBox, Info, TOC, OverlayMgr} from './customization_canvas_baseclasses.mjs';
+import { ctrToolTip, MapPrintInRect, PermanentMessaging, LoadingMessaging, ControlsBox, Info, TOC, OverlayMgr, AnalysisMgr} from './customization_canvas_baseclasses.mjs';
 
 class MousecoordsPrint extends PermanentMessaging {
 
@@ -849,9 +849,11 @@ class BasicCtrlBox extends ControlsBox {
 
 	}
 
+	// interaction -- called from tmOnEvent (tool manager)
 	interact(p_mapctx, p_evt) {
 
 		let ret = false;
+		// console.trace("XYZZ");
 		const ctrl_key = super.interact(p_mapctx, p_evt);
 
 		if (GlobalConst.getDebug("INTERACTION")) {
@@ -1185,7 +1187,8 @@ export class MapCustomizations {
 
 	mapctx;
 	messaging_ctrlr; // object with info, warn and error methods
-	controls_keys; // custom. instances containing interactive controls
+	mapcustom_controls_keys; // custom. instances containing interactive controls
+	mapcustom_controlsmgrs_keys; // custom. instances containing interactive controls, acting as controls managers
 	overlay_keys; // custom. instances directly interacting with default tool
 
 	constructor(p_mapctx, p_messaging_ctrlr) {
@@ -1210,18 +1213,23 @@ export class MapCustomizations {
 
 		this.messaging_ctrlr = p_messaging_ctrlr;
 		this.messaging_ctrlr.setI18n(this.mapctx.i18n);
+		const ap = new AttributionPrint();
 		this.instances = {
 			"basiccontrolsbox": new BasicCtrlBox(),
 			"basemapctrl": new BasemapCtrlBox(),
-			"toc": new TOC(p_mapctx),
+			"toc": new TOC(this.mapctx),
 			"infoclass": new Info(this.mapctx, infoboxStyle, max_textlines_height),
 			"mousecoordsprint": new MousecoordsPrint(),
 			"mapscaleprint": new MapScalePrint(),
 			"loadingmsgprint": new LoadingPrint(),
-			"attributionprint": new AttributionPrint(),
-			"overlay": new OverlayMgr(this.mapctx)
+			"attributionprint": ap,
+			"overlay": new OverlayMgr(this.mapctx),
+			"analysis": new AnalysisMgr(this.mapctx, ap)
 		}
-		this.controls_keys = ["basiccontrolsbox", "basemapctrl", "toc"];
+		this.mapcustom_controls_keys = ["basiccontrolsbox", "basemapctrl", "toc", "analysis"]; // widgets exposing a 'print' method, just for display
+		this.mapcustom_controlsmgrs_keys = ["basiccontrolsbox", "basemapctrl", "analysis"]; // controls manager widgets, exposing a generic 'interact' method
+																		// TOC is a special widget, not considered as a 'controls manager', its interactions
+																		// are trated separately.
 		this.overlay_keys = ["overlay", "mapscaleprint"];
 	}
 }
