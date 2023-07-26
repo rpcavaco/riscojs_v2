@@ -937,8 +937,16 @@ export class ToolManager {
 
 
 			_ret = this.mapcontrolmgrs[mapctrl_key].interact(p_mapctx, p_evt);
-			console.log("INTERACT mapctrl_key:", mapctrl_key, "_ret:", _ret);
 			if (_ret) {
+
+				// Conclude the first pending action found on an active maptool, searching from last in maptools list
+				for (let i=this.maptools.length-1; i>=0; i--) {
+					if (this.maptools[i].enabled) {
+						if (this.maptools[i].concludePendingAction(p_mapctx, p_evt)) {
+							break;
+						}
+					}
+				}
 				break;
 			}
 		}
