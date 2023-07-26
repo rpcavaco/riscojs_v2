@@ -34,6 +34,10 @@ export class BaseTool {
 		this.editmanager = p_edit_manager;
 	}
 
+	concludePendingAction(p_mapctx, p_evt) {
+		return false
+	}
+
 }
 
 
@@ -461,6 +465,39 @@ class MultiTool extends BaseTool {
 
 	}
 
+	concludePendingAction(p_mapctx, p_evt, p_orig) {
+		
+		let orig, ret =false;
+
+		if (this.pending_pinch) {
+
+			this.finishZoomTo(p_mapctx.transformmgr, this.pending_pinch.centerx, this.pending_pinch.centery, this.pending_pinch.scale)
+			this.pending_pinch = null;
+
+			this.wheelevtctrlr.clear();
+			ret = true;
+
+		} else if (this.start_screen != null) {
+
+			// never do pan on mouseout or mouseleave events
+			//if (["mouseleave", "mouseout"].indexOf(p_evt.type) < 0) {
+				if (p_orig) {
+					orig = p_orig;
+				} else {
+					orig = "mouse";
+				}
+				this.finishPan(p_mapctx.transformmgr, p_evt.clientX, p_evt.clientY, orig);	
+			//}
+			this.imgs_dict={};
+			this.start_screen = null;
+
+			this.wheelevtctrlr.clear();
+			ret = true;
+		}
+
+		return ret;
+	}	
+
 	onEvent(p_mapctx, p_evt) {
 		let orig, ret = false;
 
@@ -523,7 +560,7 @@ class MultiTool extends BaseTool {
 						console.log("[DBG:INTERACTIONCLICKEND] MULTITOOL up/end/out/leave", p_evt, "startscrpt:", this.start_screen, "orig:", orig, "pinch:", this.pending_pinch);
 					}
 			
-					if (this.pending_pinch) {
+					/*if (this.pending_pinch) {
 
 						this.finishZoomTo(p_mapctx.transformmgr, this.pending_pinch.centerx, this.pending_pinch.centery, this.pending_pinch.scale)
 						this.pending_pinch = null;
@@ -536,9 +573,12 @@ class MultiTool extends BaseTool {
 						//}
 						this.imgs_dict={};
 						this.start_screen = null;
+					} */
+
+					if (!this.concludePendingAction(p_mapctx, p_evt, orig)) {
+						this.wheelevtctrlr.clear();
 					}
 
-					this.wheelevtctrlr.clear();
 					ret = true;
 					break;
 
@@ -886,8 +926,8 @@ export class ToolManager {
 		}
 	}
 
-	// eventprocedes from mxOnEvent
-	tmOnEvent(p_mapctx, p_evt) {
+	// event procedes from mxOnEvent
+	toolmgrOnEvent(p_mapctx, p_evt) {
 
 		const clickendevents = ["touchstart", "touchend", "mousedown", "mouseup", "mouseleave", "mouseout"];
 
@@ -895,19 +935,19 @@ export class ToolManager {
 
 		for (let mapctrl_key in this.mapcontrolmgrs) {
 
-			// console.trace("INT mapctrl_key:", mapctrl_key);
 
 			_ret = this.mapcontrolmgrs[mapctrl_key].interact(p_mapctx, p_evt);
+			console.log("INTERACT mapctrl_key:", mapctrl_key, "_ret:", _ret);
 			if (_ret) {
 				break;
 			}
 		}
 
 		if (GlobalConst.getDebug("INTERACTION")) {
-			console.log("[DBG:INTERACTION] ToolManager tmOnEvent evt.type:", p_evt.type, "interacted with map controls:", _ret);
+			console.log("[DBG:INTERACTION] ToolManager toolmgrOnEvent evt.type:", p_evt.type, "interacted with map controls:", _ret);
 		}
 		if (GlobalConst.getDebug("INTERACTIONCLICKEND") && clickendevents.indexOf(p_evt.type) >= 0) {
-			console.log("[DBG:INTERACTIONCLICKEND] ToolManager tmOnEvent evt.type:", p_evt.type, "interacted with map controls:", _ret);
+			console.log("[DBG:INTERACTIONCLICKEND] ToolManager toolmgrOnEvent evt.type:", p_evt.type, "interacted with map controls:", _ret);
 		}
 
 		// if event interacted with any map controls (_ret is true) 

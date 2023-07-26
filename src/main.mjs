@@ -311,7 +311,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				if (!overlay_responded) {
 					// if event interacts with TOC, it will not interact with tools and controls
 					if (!this.tocmgr.tocmOnEvent(this, evt)) {
-						this.toolmgr.tmOnEvent(this, evt);
+						this.toolmgr.toolmgrOnEvent(this, evt);
 					}
 				}
 

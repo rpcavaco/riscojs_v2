@@ -849,7 +849,7 @@ class BasicCtrlBox extends ControlsBox {
 
 	}
 
-	// interaction -- called from tmOnEvent (tool manager)
+	// interaction -- called from toolmgrOnEvent (tool manager)
 	interact(p_mapctx, p_evt) {
 
 		let ret = false;
@@ -1229,7 +1229,7 @@ export class MapCustomizations {
 		this.mapcustom_controls_keys = ["basiccontrolsbox", "basemapctrl", "toc", "analysis"]; // widgets exposing a 'print' method, just for display
 		this.mapcustom_controlsmgrs_keys = ["basiccontrolsbox", "basemapctrl", "analysis"]; // controls manager widgets, exposing a generic 'interact' method
 																		// TOC is a special widget, not considered as a 'controls manager', its interactions
-																		// are trated separately.
+																		// are trated separately, as it is a default map context member
 		this.overlay_keys = ["overlay", "mapscaleprint"];
 	}
 }

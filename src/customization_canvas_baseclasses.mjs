@@ -623,7 +623,7 @@ export class TOC  extends MapPrintInRect {
 		return this._print(p_mapctx)
 	}
 
-	interact(p_mapctx, p_evt) {
+	tocinteract(p_mapctx, p_evt) {
 
 		const SHOWROWS = false;
 
@@ -1293,6 +1293,7 @@ export class AnalysisMgr extends MapPrintInRect {
 			p_evt.clientY >= this.top && 
 			p_evt.clientY <= this.top+this.boxh[this.collapsedstate]) {
 
+				console.log("1296:", p_evt.type);
 				ret = true;
 		}
 
