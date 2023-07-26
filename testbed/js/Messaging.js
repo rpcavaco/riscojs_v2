@@ -309,7 +309,7 @@ let MessagesController = {
 					wdg0.classList.add("attention-select");
 					ctrldiv.appendChild(wdg0);
 
-					selel = document.createElement("select");
+					let selel = document.createElement("select");
 					wdg0.appendChild(selel);
 
 					for (let optel, i=0; i<opt_value_text_pairs.length; i++) {
@@ -328,13 +328,15 @@ let MessagesController = {
 				btn1.insertAdjacentHTML('afterBegin', "Ok");
 				btn2.insertAdjacentHTML('afterBegin', this.i18nMsg("C", true));
 
-				(function(p_this, p_selel, p_btn, pp_callback) {
-					p_btn.addEventListener('click', function(ev) {
-						const optval = getSelOption(p_selel);
-						p_this.hideMessage(true);						
-						pp_callback(optval);
-					});
-				})(this, selel, btn1, opt_callback);
+				if (p_type == "SELECT" && selel != null) { 
+					(function(p_this, p_selel, p_btn, pp_callback) {
+						p_btn.addEventListener('click', function(ev) {
+							const optval = getSelOption(p_selel);
+							p_this.hideMessage(true);						
+							pp_callback(optval);
+						});
+					})(this, selel, btn1, opt_callback);
+				}
 
 				(function(p_this, p_btn, pp_callback) {
 					p_btn.addEventListener('click', function(ev) {
@@ -343,6 +345,10 @@ let MessagesController = {
 					});
 				})(this, btn2, opt_callback);				
 			
+			}
+
+			if (contentelem) {
+				contentelem.focus({ focusVisible: true });
 			}
 
 		}
