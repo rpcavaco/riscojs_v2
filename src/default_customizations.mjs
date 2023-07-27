@@ -1,6 +1,6 @@
 
 import {GlobalConst} from './constants.js';
-import { ctrToolTip, MapPrintInRect, PermanentMessaging, LoadingMessaging, ControlsBox, Info, TOC, OverlayMgr, AnalysisMgr} from './customization_canvas_baseclasses.mjs';
+import { ctrToolTip, MapPrintInRect, PermanentMessaging, LoadingMessaging, ControlsBox, Info, TOC, OverlayMgr, AnalysisMgr, SelectionsNavigator} from './customization_canvas_baseclasses.mjs';
 
 class MousecoordsPrint extends PermanentMessaging {
 
@@ -1213,7 +1213,11 @@ export class MapCustomizations {
 
 		this.messaging_ctrlr = p_messaging_ctrlr;
 		this.messaging_ctrlr.setI18n(this.mapctx.i18n);
+
+		// widget which presence impacts others, at least through display area occupied
 		const ap = new AttributionPrint();
+		const nav = new SelectionsNavigator(this.mapctx, [ap]);
+		
 		this.instances = {
 			"basiccontrolsbox": new BasicCtrlBox(),
 			"basemapctrl": new BasemapCtrlBox(),
@@ -1224,12 +1228,20 @@ export class MapCustomizations {
 			"loadingmsgprint": new LoadingPrint(),
 			"attributionprint": ap,
 			"overlay": new OverlayMgr(this.mapctx),
-			"analysis": new AnalysisMgr(this.mapctx, ap)
+			// "analysis": new AnalysisMgr(this.mapctx, [ap, nav]),
+			"analysis": new AnalysisMgr(this.mapctx, [ap]),
+			"navigator": nav
 		}
+
+		// Temporariamente sem navigator
 		this.mapcustom_controls_keys = ["basiccontrolsbox", "basemapctrl", "toc", "analysis"]; // widgets exposing a 'print' method, just for display
 		this.mapcustom_controlsmgrs_keys = ["basiccontrolsbox", "basemapctrl", "analysis"]; // controls manager widgets, exposing a generic 'interact' method
+
+/* 		this.mapcustom_controls_keys = ["basiccontrolsbox", "basemapctrl", "toc", "navigator", "analysis"]; // widgets exposing a 'print' method, just for display
+		this.mapcustom_controlsmgrs_keys = ["basiccontrolsbox", "basemapctrl", "navigator", "analysis"]; // controls manager widgets, exposing a generic 'interact' method
 																		// TOC is a special widget, not considered as a 'controls manager', its interactions
-																		// are trated separately, as it is a default map context member
+																		// are trated separately, as it is a default map context member, opposite to these widgets 
+																		// which act as plugins */
 		this.overlay_keys = ["overlay", "mapscaleprint"];
 	}
 }
