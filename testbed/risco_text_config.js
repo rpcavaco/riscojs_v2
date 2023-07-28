@@ -5,28 +5,30 @@ var RISCOJS_TEXT_CFG = {
 		"GEOP": "localização atual",
 		"GEOTRK": "seguir localização",
 		"ALTVIZ": "alternar visibilidade",
-		"APANEL": "dashboard e segmentação",
+		"DASH": "dashboard",
+		"SEGM": "segmentação",
 		"NAV": "navegador na seleção",
 		"HELP": "ajuda",
 		"ALTBMFILT": "alternar filtro mapa base",
 		"SHOWTOC": "mostrar lista camadas",
 		"SHOWAP": "mostrar painel análise",
-		"SHOWNAV": "mostrar navigador seleção",
+		"SHOWNAV": "mostrar navegador seleção",
 		"CLKIMG2CLOSE": "clicar na imagem para a fechar"			
-	
+
 	},
 	"en": {
 		"GEOP": "current location",
 		"GEOTRK": "tracking location",
 		"ALTVIZ": "toggle visibility",
-		"APANEL": "dashboard and segmentation",
+		"DASH": "dashboard",
+		"SEGM": "segmentation",
 		"NAV": "navigate selection set",
 		"HELP": "help",
 		"ALTBMFILT": "toggle basemap filter",
 		"SHOWTOC": "show layer list",
 		"SHOWAP": "show analysis panel",
-		"SHOWNAV": "show selection navigator",
-		"CLKIMG2CLOSE": "click on image to close it"	
+		"SHOWNAV": "show selection set navigator",
+		"CLKIMG2CLOSE": "click on image to close it"
 	}
 }
 

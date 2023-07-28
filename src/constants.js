@@ -212,7 +212,10 @@ var GlobalConst = {
 		AM_ACTIVECOLOR: "white",
 		AM_INACTIVECOLOR: "grey",
 		AM_COLLAPSED_STRIPES_FILL: "rgba(220, 220, 220, 0.75)",
-		AM_START_COLLAPSED_CANVAS_MAXWIDTH: 800		
+		AM_START_COLLAPSED_CANVAS_MAXWIDTH: 800,
+
+		AM_BOXDIMS: [150, 50],
+		AM_ICONDIM: 30
 	},
 
 	DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB: { // Symbolize spatial index features selected on mouse position

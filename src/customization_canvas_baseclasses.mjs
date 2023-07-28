@@ -1157,6 +1157,7 @@ export class AnalysisMgr extends MapPrintInRect {
 	prevboxenv;
 	bottom;
 	other_widgets;
+	std_boxdims;
 
 	constructor(p_mapctx, p_other_widgets) {
 
@@ -1174,16 +1175,17 @@ export class AnalysisMgr extends MapPrintInRect {
 		this.margin_offset = GlobalConst.CONTROLS_STYLES.OFFSET;
 		this.normalszPX = GlobalConst.CONTROLS_STYLES.AM_NORMALSZ_PX;
 		this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
+		this.std_boxdims = GlobalConst.CONTROLS_STYLES.AM_BOXDIMS;
 		this.canvaslayer = 'service_canvas'; 
 
 		this.left = 600;
 		this.top = 600;
 		this.boxh = {
-			"OPEN": 180,
+			"OPEN": this.std_boxdims[1],
 			"COLLAPSED": 60
 		};
 		this.boxw = {
-			"OPEN": 180,
+			"OPEN": this.std_boxdims[0],
 			"COLLAPSED": 60
 		};
 
@@ -1214,6 +1216,8 @@ export class AnalysisMgr extends MapPrintInRect {
 
 	_print(p_mapctx) {
 
+		const icondim = GlobalConst.CONTROLS_STYLES.AM_ICONDIM;
+
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		ctx.save();
 
@@ -1226,7 +1230,7 @@ export class AnalysisMgr extends MapPrintInRect {
 		}
 
 		// cal width
-		this.boxw["OPEN"] = 400 + 2 * this.margin_offset;
+		this.boxw["OPEN"] = this.std_boxdims[0];
 
 		let mapdims = [];
 		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
@@ -1235,17 +1239,17 @@ export class AnalysisMgr extends MapPrintInRect {
 
 		try {
 
-			this.boxh["OPEN"] = 180;
+			this.boxh["OPEN"] = this.std_boxdims[1];
 
-			let boxesheight = 0;
+			let otherboxesheight = 0;
 			for (let ow of this.other_widgets) {
 				if (ow['setdims'] !== undefined) {
 					ow.setdims(p_mapctx, mapdims);
 				}		
-				boxesheight += ow.getHeight();
-				console.warn("AM boxesheight:", boxesheight, this.other_widgets.length);
+				otherboxesheight += ow.getHeight();
+				console.warn("AM boxesheight:", otherboxesheight, this.other_widgets.length);
 			}
-			this.bottom = mapdims[1] - boxesheight - this.margin_offset;
+			this.bottom = mapdims[1] - otherboxesheight - this.margin_offset;
 		
 			// background
 			
@@ -1266,8 +1270,37 @@ export class AnalysisMgr extends MapPrintInRect {
 			ctx.strokeRect(this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]);
 
 			if (this.collapsedstate == "OPEN") {
-						
-				// blah
+					
+				const imgfilt = new Image();
+				imgfilt.decoding = "sync";
+				let imgfltsrc = p_mapctx.cfgvar["basic"]["filtericon"];
+
+				const imgchart = new Image();
+				imgchart.decoding = "sync";
+				let imgchrtsrc = p_mapctx.cfgvar["basic"]["charticon"];
+
+				const topval = this.top+this.margin_offset;
+				const occupwidth = 2*icondim + 2*this.margin_offset;
+				const leftoffset = (this.std_boxdims[0] - occupwidth) / 2.0;
+
+				imgchart.src = imgchrtsrc;
+				imgchart.decode()
+				.then(() => {
+					ctx.drawImage(imgchart, this.left+leftoffset, topval, icondim, icondim);
+				});
+
+				ctx.beginPath()
+				const xval = this.left+leftoffset+this.margin_offset+icondim;
+				ctx.moveTo(xval, topval);
+				ctx.lineTo(xval, topval+icondim);
+				ctx.stroke();
+
+				imgfilt.src = imgfltsrc;
+				imgfilt.decode()
+				.then(() => {
+					ctx.drawImage(imgfilt, xval+this.margin_offset, topval, icondim, icondim);
+				});
+
 
 			} else {
 				// collapsed TOC
@@ -1315,6 +1348,24 @@ export class AnalysisMgr extends MapPrintInRect {
 		return this._print(p_mapctx)
 	}
 
+	_checkPickWhichSide(p_evt) {
+		let ret = null;
+		
+		if (p_evt.clientX >= this.left+this.margin_offset && 
+			p_evt.clientX <= this.left+(this.boxw[this.collapsedstate] / 2.0) && 
+			p_evt.clientY >= this.top+this.margin_offset && 
+			p_evt.clientY <= this.top+this.boxh[this.collapsedstate]-+this.margin_offset) {					
+				ret = 'LEFT';
+		} else if (p_evt.clientX >= this.left+(this.boxw[this.collapsedstate] / 2.0) && 
+			p_evt.clientX <= this.left+this.boxw[this.collapsedstate]-this.margin_offset && 
+			p_evt.clientY >= this.top+this.margin_offset && 
+			p_evt.clientY <= this.top+this.boxh[this.collapsedstate]-this.margin_offset) {
+				ret = 'RIGHT';
+		}
+
+		return ret;
+	}
+
 	interact(p_mapctx, p_evt) {
 		let topcnv, ret = false;
 
@@ -1332,12 +1383,30 @@ export class AnalysisMgr extends MapPrintInRect {
 						let msg;
 
 						if (this.collapsedstate == "OPEN") {
-							msg = p_mapctx.i18n.msg('APANEL', true);
+
+							if (this._checkPickWhichSide(p_evt) == 'LEFT') {					
+								msg = p_mapctx.i18n.msg('DASH', true);
+							}
+							else if (this._checkPickWhichSide(p_evt) == 'RIGHT') {					
+								msg = p_mapctx.i18n.msg('SEGM', true);
+							}
+
 						} else {
 							msg = p_mapctx.i18n.msg('SHOWAP', true);
 						}
 
 						ctrToolTip(p_mapctx, p_evt, msg, [250,30]);	
+						break;
+
+					case 'mouseup':
+					case 'touchend':
+						if (this._checkPickWhichSide(p_evt) == 'LEFT') {					
+							// Fazer nada, de momento
+							//msg = p_mapctx.i18n.msg('DASH', true);
+						}
+						else if (this._checkPickWhichSide(p_evt) == 'RIGHT') {					
+							// BRIR PAINEL SEGM
+						}
 						break;
 
 					default:
@@ -1372,214 +1441,6 @@ export class AnalysisMgr extends MapPrintInRect {
 
 		return ret;
 	}
-
-	_interact(p_mapctx, p_evt) {
-
-		const SHOWROWS = false;
-
-		let ctx = null;
-		if (SHOWROWS) {
-			ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
-			ctx.save();
-			ctx.strokeStyle = "cyan";	
-		}
-
-		const stepEntry = GlobalConst.CONTROLS_STYLES.TOC_SEPARATION_FACTOR * this.normalszPX - 2;
-		const stepSubEntry = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.normalszPX - 2;
-		let next, prev = this.top + this.margin_offset;
-
-		const width = this.boxw[this.collapsedstate] - 2* this.margin_offset;
-		const left = this.left + this.margin_offset
-
-		let i=-1, ret = false, step;
-		let changed=false, found = null, topcnv;
-
-		if (p_evt.clientX >= this.left && p_evt.clientX <= this.left+this.boxw[this.collapsedstate] && p_evt.clientY >= this.top && p_evt.clientY <= this.top+this.boxh[this.collapsedstate]) {
-
-			if (this.collapsedstate == "OPEN") {
-
-				for (let lyr, li=this.tocmgr.layers.length-1; li>=0; li--) {
-
-					lyr = this.tocmgr.layers[li];
-					if (lyr["label"] !== undefined && lyr["label"] != "none") {
-						
-						i++;
-						if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
-							step = stepSubEntry;
-						} else {
-							step = stepEntry;
-						}
-						next = prev + step;
-
-						// use prev, next
-						if (ctx) {
-							ctx.strokeRect(left, prev, width, step);
-						}
-						if (p_evt.clientX >= left && p_evt.clientX <= this.left+width && p_evt.clientY >= prev && p_evt.clientY <= next) {
-							found = {
-								"key": lyr.key,
-								"subkey": null
-							};
-							break;
-						}
-
-						prev = next;
-						
-						if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
-							for (let vs, vi=0; vi<lyr["varstyles_symbols"].length; vi++) {
-
-								vs = lyr["varstyles_symbols"][vi];
-
-								i++;
-								if (vi < (lyr["varstyles_symbols"].length-1)) {
-									step = stepSubEntry;
-								} else {
-									step = stepEntry;
-								}
-								next = prev + step;
-
-								// use prev, next
-								if (ctx) {
-									ctx.strokeRect(left, prev, width, step);
-								}
-								if (p_evt.clientX >= left && p_evt.clientX <= this.left+width && p_evt.clientY >= prev && p_evt.clientY <= next) {
-									found = {
-										"key": lyr.key,
-										"subkey": vs.key
-									};
-									break;
-								}				
-								prev = next;	
-							}
-
-							if (found) {
-								break;
-							}
-						} // if lyr["varstyles_symbols"] exist
-					} // if lyr["label"] exists
-				} // for lyr
-			} // this.collapsedstate == "OPEN"
-
-			ret = true;
-		}
-
-		// is over TOC box area
-		if (ret) {
-
-			if (found) {
-	
-				switch(p_evt.type) {
-	
-					case 'touchend':
-					case 'mouseup':
-	
-						for (let lyr of this.tocmgr.layers) {
-							if (lyr.key == found.key) {
-								if (found.subkey === null) {
-									lyr.layervisible = !lyr.layervisible;
-									changed = true;
-								} else {
-									if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
-	
-										for (const vs of lyr["varstyles_symbols"]) {			
-											if (vs.key == found.subkey) {
-												if (vs['hide'] !== undefined) {
-													vs.hide = !vs.hide;
-												} else {
-													vs['hide'] = true;
-												}
-												changed = true;
-												break;
-											}
-										}
-									}
-								}
-								break;
-							}
-						};
-	
-						if (changed) {
-							p_mapctx.maprefresh();
-						}
-	
-						topcnv = p_mapctx.renderingsmgr.getTopCanvas();
-						topcnv.style.cursor = "default";
-	
-						break;
-	
-					case 'mousemove':
-	
-						topcnv = p_mapctx.renderingsmgr.getTopCanvas();
-						topcnv.style.cursor = "pointer";
-						let msg;
-
-						if (this.collapsedstate == "OPEN") {
-							msg = p_mapctx.i18n.msg('ALTVIZ', true);
-						} else {
-							msg = p_mapctx.i18n.msg('SHOWTOC', true);
-						}
-	
-						ctrToolTip(p_mapctx, p_evt, p_mapctx.i18n.msg('ALTVIZ', true), [250,30]);	
-						break;
-	
-					default:
-						topcnv = p_mapctx.renderingsmgr.getTopCanvas();
-						topcnv.style.cursor = "default";
-	
-				}
-	
-			} else {
-	
-				topcnv = p_mapctx.renderingsmgr.getTopCanvas();
-
-				if (this.collapsedstate == "OPEN") {
-
-					topcnv.style.cursor = "default";
-					p_mapctx.renderingsmgr.clearAll(['transientmap', 'transientviz']);
-
-				} else {
-
-					switch(p_evt.type) {
-	
-						case 'touchend':
-						case 'mouseup':
-							this.inflate(p_mapctx);
-							break;
-							
-						case 'mousemove':
-							topcnv.style.cursor = "pointer";
-							ctrToolTip(p_mapctx, p_evt, p_mapctx.i18n.msg('SHOWTOC', true), [250,30]);	
-							break;
-
-					}
-				}
-			}
-
-			if (!this.had_prev_interaction) {
-				p_mapctx.clearInteractions('TOC');
-			}
-			this.had_prev_interaction = true;
-
-		} else {
-
-			if (this.had_prev_interaction) {
-
-				// emulating mouseout
-				topcnv = p_mapctx.renderingsmgr.getTopCanvas();
-				topcnv.style.cursor = "default";
-
-				p_mapctx.clearInteractions('TOC');
-
-				this.had_prev_interaction = false;
-			}
-		}
-
-		if (ctx) {
-			ctx.restore();
-		}
-
-		return ret;
-	}	
 
 	collapse(p_mapctx) {
 
