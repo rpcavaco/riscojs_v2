@@ -1,6 +1,7 @@
 
 import {GlobalConst} from './constants.js';
-import { ctrToolTip, MapPrintInRect, PermanentMessaging, LoadingMessaging, ControlsBox, Info, OverlayMgr, AnalysisMgr, SelectionsNavigator} from './customization_canvas_baseclasses.mjs';
+import { ctrToolTip, MapPrintInRect, PermanentMessaging, LoadingMessaging, ControlsBox, Info, OverlayMgr } from './customization_canvas_baseclasses.mjs';
+import { AnalysisMgr, SelectionsNavigator} from './analysis.mjs';
 import { TOC } from './tocwidget.mjs';
 
 class MousecoordsPrint extends PermanentMessaging {
