@@ -211,11 +211,19 @@ var GlobalConst = {
 		AM_BCKGRD: "#0b1d1fe0",
 		AM_ACTIVECOLOR: "white",
 		AM_INACTIVECOLOR: "grey",
+		AM_INUSE: "cyan",
 		AM_COLLAPSED_STRIPES_FILL: "rgba(220, 220, 220, 0.75)",
 		AM_START_COLLAPSED_CANVAS_MAXWIDTH: 800,
 
 		AM_BOXDIMS: [150, 50],
-		AM_ICONDIM: 30
+		AM_ICONDIM: 30,
+
+		SEG_WIDTHS: [400, 800], // min, max
+		SEG_WIDTH_PERC: 80,
+		SEG_BCKGRD: "#0b1d1fe0",
+		SEG_ACTIVECOLOR: "white",
+		SEG_INACTIVECOLOR: "grey",
+
 	},
 
 	DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB: { // Symbolize spatial index features selected on mouse position

@@ -368,7 +368,7 @@ export class TOCManager {
 		ckeys.add('transientmap');
 		ckeys.add('temporary');
 		ckeys.add('interactive_viz');
-		ckeys.add('calculated_viz');
+		ckeys.add('data_viz');
 		ckeys.add('transientviz');
 
 		this.mapctx.renderingsmgr.clearAll(ckeys);

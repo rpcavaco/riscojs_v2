@@ -19,11 +19,13 @@ export class AnalysisMgr extends MapPrintInRect {
 	bottom;
 	other_widgets;
 	std_boxdims;
+	active_mode;
 
 	constructor(p_mapctx, p_other_widgets) {
 
 		super();
 		this.name = "AnalysisMgr";
+		this.active_mode = 'NONE';
 
 		this.other_widgets = p_other_widgets;
 
@@ -37,7 +39,10 @@ export class AnalysisMgr extends MapPrintInRect {
 		this.normalszPX = GlobalConst.CONTROLS_STYLES.AM_NORMALSZ_PX;
 		this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
 		this.std_boxdims = GlobalConst.CONTROLS_STYLES.AM_BOXDIMS;
+		this.inUseStyle = GlobalConst.CONTROLS_STYLES.AM_INUSE;
 		this.canvaslayer = 'service_canvas'; 
+
+		this.dashboard_available = false;
 
 		this.left = 600;
 		this.top = 600;
@@ -132,13 +137,31 @@ export class AnalysisMgr extends MapPrintInRect {
 
 			if (this.collapsedstate == "OPEN") {
 					
+				let vstyle;
 				const imgfilt = new Image();
 				imgfilt.decoding = "sync";
-				let imgfltsrc = p_mapctx.cfgvar["basic"]["filtericon"];
+
+				if (this.active_mode == 'SEG') {
+					vstyle = this.inUseStyle;
+				} else {
+					vstyle = this.activeStyleFront;
+				}
+				let imgfltsrc = p_mapctx.cfgvar["basic"]["filtericon"].replace(/stroke:%23fff;/g, `stroke:${encodeURIComponent(vstyle)};`);
 
 				const imgchart = new Image();
 				imgchart.decoding = "sync";
-				let imgchrtsrc = p_mapctx.cfgvar["basic"]["charticon"];
+
+				let imgchrtsrc;
+				if (!this.dashboard_available) {
+					vstyle = this.inactiveStyleFront;
+				} else {
+					if (this.active_mode == 'DASH') {
+						vstyle = this.inUseStyle;
+					} else {
+						vstyle = this.activeStyleFront;
+					}
+				}
+				imgchrtsrc = p_mapctx.cfgvar["basic"]["charticon"].replace(/stroke:%23fff;/g, `stroke:${encodeURIComponent(vstyle)};`);
 
 				const topval = this.top+this.margin_offset;
 				const occupwidth = 2*icondim + 2*this.margin_offset;
@@ -267,6 +290,26 @@ export class AnalysisMgr extends MapPrintInRect {
 						}
 						else if (this._checkPickWhichSide(p_evt) == 'RIGHT') {					
 							// BRIR PAINEL SEGM
+							const ci = p_mapctx.getCustomizationObject();
+							if (ci == null) {
+								throw new Error("Segmentation panel opening, map context customization instance is missing")
+							}
+					
+							if (this.active_mode == 'SEG') {
+
+								this.active_mode = 'NONE';
+
+								const segpanel = ci.instances["segmentation"];
+								this.print(p_mapctx);
+								segpanel.clear();									
+
+							} else {
+								this.active_mode = 'SEG';
+
+								const segpanel = ci.instances["segmentation"];
+								this.print(p_mapctx);
+								segpanel.draw();	
+							}
 						}
 						break;
 

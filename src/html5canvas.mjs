@@ -8,7 +8,7 @@
  *  b) 'normal' vector drawing
  *  c) 'temporary' vector, like highlights
  *  d) 'transient' vectors, e.g.: mouse interaction or viewport manipulation artifacts
- *  e) 'calculated_viz' dataviz or charting
+ *  e) 'data_viz' dataviz, charting, segmenting
  *  f) 'interactive_viz' popups 
  *  g) 'service_canvas' for servicing warnings, messages, toolwdigets
  * 
@@ -40,7 +40,7 @@
 		this.canvases = {};
 		this.max_zindex = 0;
 
-		this.canvaskeys = ['base', 'normal', 'label', 'temporary', 'transientmap', 'calculated_viz', 'interactive_viz',  'service_canvas', 'transientviz', 'overlay_canvas'];
+		this.canvaskeys = ['base', 'normal', 'label', 'temporary', 'transientmap', 'data_viz', 'interactive_viz',  'service_canvas', 'transientviz', 'overlay_canvas'];
 		for (let i=0; i<this.canvaskeys.length; i++) {
 
 			this.canvases[this.canvaskeys[i]] = document.createElement('canvas');
