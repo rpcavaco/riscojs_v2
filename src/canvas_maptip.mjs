@@ -296,7 +296,7 @@ export class MaptipBox extends PopupBox {
 				lbl = I18n.capitalize(this.layer["label"]);
 			}	
 		} else {
-			lbl = "(sem etiqueta)";	
+			lbl = "(void label)";	
 		}	
 
 		const txtlnheight = this.layercaptionszPX;

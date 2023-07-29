@@ -33,7 +33,7 @@ export class TOC  extends MapPrintInRect {
 		this.inactiveStyleFront = GlobalConst.CONTROLS_STYLES.TOC_INACTIVECOLOR;
 		this.margin_offset = GlobalConst.CONTROLS_STYLES.OFFSET;
 		this.leftcol_width = GlobalConst.CONTROLS_STYLES.TOC_LEFTCOL_WIDTH;
-		this.normalszPX = GlobalConst.CONTROLS_STYLES.TOC_NORMALSZ_PX;
+		this.normalszPX = GlobalConst.CONTROLS_STYLES.NORMALSZ_PX;
 		this.varstylePX = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLESZ_PX;
 		this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
 		this.canvaslayer = 'service_canvas'; 
@@ -101,7 +101,7 @@ export class TOC  extends MapPrintInRect {
 						lbl = I18n.capitalize(lyr["label"]);
 					}	
 				} else {
-					lbl = "(sem etiqueta)";	
+					lbl = "(void label)";	
 				}
 
 				lyr_fc[lyr.key] = lyr.featCount();

@@ -2,7 +2,7 @@
 import {GlobalConst} from './constants.js';
 import { ctrToolTip, MapPrintInRect, PermanentMessaging, LoadingMessaging, ControlsBox, Info, OverlayMgr } from './customization_canvas_baseclasses.mjs';
 import { AnalysisMgr, SelectionsNavigator } from './analysis.mjs';
-import { SegmentationPanel } from './segmentation.mjs';
+import { SlicingPanel } from './slicing.mjs';
 import { TOC } from './tocwidget.mjs';
 
 class MousecoordsPrint extends PermanentMessaging {
@@ -1234,12 +1234,12 @@ export class MapCustomizations {
 			// "analysis": new AnalysisMgr(this.mapctx, [ap, nav]),
 			"analysis": new AnalysisMgr(this.mapctx, [ap]),
 			"navigator": nav,
-			"segmentation": new SegmentationPanel(this.mapctx)
+			"slicing": new SlicingPanel(this.mapctx)
 		}
 
 		// Temporariamente sem navigator
-		this.mapcustom_controls_keys = ["basiccontrolsbox", "basemapctrl", "toc", "analysis"]; // widgets exposing a 'print' method, just for display
-		this.mapcustom_controlsmgrs_keys = ["basiccontrolsbox", "basemapctrl", "analysis", "segmentation"]; // controls manager widgets, exposing a generic 'interact' method
+		this.mapcustom_controls_keys = ["basiccontrolsbox", "basemapctrl", "toc", "analysis", "slicing"]; // widgets exposing a 'print' method, just for display
+		this.mapcustom_controlsmgrs_keys = ["basiccontrolsbox", "basemapctrl", "analysis", "slicing"]; // controls manager widgets, exposing a generic 'interact' method
 
 /* 		this.mapcustom_controls_keys = ["basiccontrolsbox", "basemapctrl", "toc", "navigator", "analysis"]; // widgets exposing a 'print' method, just for display
 		this.mapcustom_controlsmgrs_keys = ["basiccontrolsbox", "basemapctrl", "navigator", "analysis"]; // controls manager widgets, exposing a generic 'interact' method

@@ -13,22 +13,23 @@ var RISCOJS_TEXT_CFG = {
 		"SHOWTOC": "mostrar lista camadas",
 		"SHOWAP": "mostrar painel análise",
 		"SHOWNAV": "mostrar navegador seleção",
-		"CLKIMG2CLOSE": "clicar na imagem para a fechar"			
-
+		"CLKIMG2CLOSE": "clicar na imagem para a fechar",
+		"SEGM": "segmentação"		
 	},
 	"en": {
 		"GEOP": "current location",
 		"GEOTRK": "tracking location",
 		"ALTVIZ": "toggle visibility",
 		"DASH": "dashboard",
-		"SEGM": "segmentation",
+		"SEGM": "slicing",
 		"NAV": "navigate selection set",
 		"HELP": "help",
 		"ALTBMFILT": "toggle basemap filter",
 		"SHOWTOC": "show layer list",
 		"SHOWAP": "show analysis panel",
 		"SHOWNAV": "show selection set navigator",
-		"CLKIMG2CLOSE": "click on image to close it"
+		"CLKIMG2CLOSE": "click on image to close it",
+		"SEGM": "data slicer"		
 	}
 }
 

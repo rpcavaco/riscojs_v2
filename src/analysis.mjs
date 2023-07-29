@@ -299,16 +299,16 @@ export class AnalysisMgr extends MapPrintInRect {
 
 								this.active_mode = 'NONE';
 
-								const segpanel = ci.instances["segmentation"];
+								const segpanel = ci.instances["slicing"];
 								this.print(p_mapctx);
-								segpanel.clear();									
+								segpanel.setState(p_mapctx, false);								
 
 							} else {
 								this.active_mode = 'SEG';
 
-								const segpanel = ci.instances["segmentation"];
+								const segpanel = ci.instances["slicing"];
 								this.print(p_mapctx);
-								segpanel.draw();	
+								segpanel.setState(p_mapctx, true);	
 							}
 						}
 						break;
