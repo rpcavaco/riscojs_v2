@@ -1,4 +1,5 @@
 
+import {I18n} from './riscojs_v2/i18n.mjs';
 import {GrSymbol} from './riscojs_v2/canvas_symbols.mjs';
 
 export class LocQuery {
@@ -396,9 +397,24 @@ export class LocQuery {
 		this.query_box = document.createElement('input');
 		this.query_box.setAttribute("id", "loc-inputtext");
 
-		if (p_basic_config["querybox"]["placeholder"] !== undefined) {
-			this.query_box.setAttribute("placeholder",  p_basic_config["querybox"]["placeholder"]);
+		let lbl = "(void placeholder, edit 'querybox'->'placeholder' and 'msgs' in risco_basic_config.js)";
+
+		if (p_basic_config["querybox"]["placeholder"] !== undefined && p_basic_config["msgs"] !== undefined) {
+
+			const lang = (new I18n(p_basic_config["msgs"])).getLang();
+			console.log("lang:", lang);
+
+			// Layer caption
+			if (p_basic_config["querybox"]["placeholder"] != "none") {
+				if (Object.keys(p_basic_config["msgs"][lang]).indexOf(p_basic_config["querybox"]["placeholder"]) >= 0) {
+					lbl = I18n.capitalize(p_basic_config["msgs"][lang][p_basic_config["querybox"]["placeholder"]]);
+				} else {
+					lbl = I18n.capitalize(p_basic_config["querybox"]["placeholder"]);
+				}	
+			}
 		}
+
+		this.query_box.setAttribute("placeholder", lbl );
 
 		p_mapctx.panelwidget.appendChild(this.query_box);
 
