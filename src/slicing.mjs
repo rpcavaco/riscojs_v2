@@ -17,6 +17,9 @@ export class SlicingPanel {
 	inactiveStyleFront;
 	is_active;
 
+	interaction_boxes = {};
+	active_key;
+
 	constructor() {
 
 		this.fillTextStyle = GlobalConst.CONTROLS_STYLES.SEG_TEXTFILL;  
@@ -32,6 +35,8 @@ export class SlicingPanel {
 
 		this.is_active = false;
 		this.had_prev_interaction = false;
+
+		this.active_key = null;
 	}
 
 	calcDims(p_mapctx) {
@@ -98,10 +103,12 @@ export class SlicingPanel {
 			let txtdims = ctx.measureText(slicekeystxt);
 			const lang = (new I18n(p_mapctx.cfgvar["basic"]["msgs"])).getLang();
 
-			if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(p_mapctx.cfgvar["basic"]["slicing"][keys[0]]) >= 0) {
-				lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][p_mapctx.cfgvar["basic"]["slicing"][keys[0]]];
+			this.active_key = keys[0];
+
+			if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(p_mapctx.cfgvar["basic"]["slicing"][this.active_key]) >= 0) {
+				lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][p_mapctx.cfgvar["basic"]["slicing"][this.active_key]];
 			} else {
-				lbl = p_mapctx.cfgvar["basic"]["slicing"][keys[0]];
+				lbl = p_mapctx.cfgvar["basic"]["slicing"][this.active_key];
 			}	
 			indent = indent+txtdims.width+2*this.margin_offset;
 			ctx.fillText(lbl, indent, cota);
@@ -119,16 +126,18 @@ export class SlicingPanel {
 
 			if (keys.length > 1) {
 
-				ctx.beginPath();
-
+				// draw dropdown arrow
 				let x = indent + txtdims.width + slack;
 				let y = cota-2;
+				ctx.beginPath();
 				ctx.lineJoin = "round";
 				ctx.moveTo(x, y-selwigetsymb_dim);
 				ctx.lineTo(x+(selwigetsymb_dim/2.0), y);
 				ctx.lineTo(x+selwigetsymb_dim, y-selwigetsymb_dim);
 				ctx.closePath();
 				ctx.fill();
+
+				this.interaction_boxes["segmattr"] = [...ritems]; 
 			}
 
 			ctx.strokeRect(...ritems);	
@@ -157,7 +166,7 @@ export class SlicingPanel {
 
 	interact(p_mapctx, p_evt) {
 
-		let topcnv, ret = false;
+		let topcnv, ret = false, interact_box_key = null;
 
 		if (!this.is_active) {
 			return ret;
@@ -169,6 +178,34 @@ export class SlicingPanel {
 			p_evt.clientY <= this.top+this.height) {
 
 			ret = true;
+		}
+
+		if (ret) {
+
+			for (let k in this.interaction_boxes) {
+
+				if (p_evt.clientX >= this.interaction_boxes[k][0] && 
+					p_evt.clientX <= this.interaction_boxes[k][0]+this.interaction_boxes[k][2] && 
+					p_evt.clientY <= this.interaction_boxes[k][1] && 
+					p_evt.clientY >= this.interaction_boxes[k][1]+this.interaction_boxes[k][3]) {
+		
+					interact_box_key = k;
+					break;
+				}
+			}
+
+			switch(p_evt.type) {
+
+				case "mousemove":
+					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					if (interact_box_key) {
+						topcnv.style.cursor = "pointer";
+					} else {
+						topcnv.style.cursor = "default";
+					}
+					break;
+			}
+	
 		}
 
 		if (ret) {
