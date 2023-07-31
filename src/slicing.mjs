@@ -56,6 +56,29 @@ export class SlicingPanel {
 
 	}
 
+	fillSlicer(p_mapctx) {
+
+		if (!this.active_key) {
+			return;
+		}
+
+		const url = p_mapctx.cfgvar["basic"]["slicing"]["url"];
+
+		fetch(url + "/astats", {
+			method: "POST",
+			body: JSON.stringify({"key":this.active_key,"options":{}})
+		})
+		.then(response => response.json())
+		.then(
+			function(responsejson) {
+				console.log(responsejson);
+			}
+		).catch((error) => {
+			console.error(`Impossible to fetch stats on '${this.active_key}'`, error);
+		});	
+
+	}
+
 	print(p_mapctx) {
 
 		if (!this.is_active) {
@@ -86,8 +109,8 @@ export class SlicingPanel {
 		ctx.fillText(msg, indent, cota);
 		
 		let keys=[], slicekeystxt = "(error: slicing not properly configured in risco_basic_config.js)";
-		if (p_mapctx.cfgvar["basic"]["slicing"] !== undefined) {
-			keys = Object.keys(p_mapctx.cfgvar["basic"]["slicing"]);
+		if (p_mapctx.cfgvar["basic"]["slicing"] !== undefined && p_mapctx.cfgvar["basic"]["slicing"]["keys"] !== undefined) {
+			keys = Object.keys(p_mapctx.cfgvar["basic"]["slicing"]["keys"]);
 			if (keys.length > 0) {
 				slicekeystxt = p_mapctx.i18n.msg('SEGMBY', true) + ":";
 			}
@@ -108,10 +131,10 @@ export class SlicingPanel {
 			let txtdims = ctx.measureText(slicekeystxt);
 			const lang = (new I18n(p_mapctx.cfgvar["basic"]["msgs"])).getLang();
 
-			if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(p_mapctx.cfgvar["basic"]["slicing"][this.active_key]) >= 0) {
-				lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][p_mapctx.cfgvar["basic"]["slicing"][this.active_key]];
+			if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(p_mapctx.cfgvar["basic"]["slicing"]["keys"][this.active_key]) >= 0) {
+				lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][p_mapctx.cfgvar["basic"]["slicing"]["keys"][this.active_key]];
 			} else {
-				lbl = p_mapctx.cfgvar["basic"]["slicing"][this.active_key];
+				lbl = p_mapctx.cfgvar["basic"]["slicing"]["keys"][this.active_key];
 			}	
 			indent = indent+txtdims.width+2*this.margin_offset;
 			ctx.fillText(lbl, indent, cota);
@@ -144,6 +167,8 @@ export class SlicingPanel {
 			}
 
 			ctx.strokeRect(...ritems);	
+
+			this.fillSlicer(p_mapctx);
 		}
 
 		ctx.restore();
@@ -206,11 +231,11 @@ export class SlicingPanel {
 					const seldict = {};
 					const lang = (new I18n(p_mapctx.cfgvar["basic"]["msgs"])).getLang();
 
-					for (let k in p_mapctx.cfgvar["basic"]["slicing"]) {
-						if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(p_mapctx.cfgvar["basic"]["slicing"][k]) >= 0) {
-							lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][p_mapctx.cfgvar["basic"]["slicing"][k]];
+					for (let k in p_mapctx.cfgvar["basic"]["slicing"]["keys"]) {
+						if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(p_mapctx.cfgvar["basic"]["slicing"]["keys"][k]) >= 0) {
+							lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][p_mapctx.cfgvar["basic"]["slicing"]["keys"][k]];
 						} else {
-							lbl = p_mapctx.cfgvar["basic"]["slicing"][k];
+							lbl = p_mapctx.cfgvar["basic"]["slicing"]["keys"][k];
 						}	
 						seldict[k] = lbl;	
 					}

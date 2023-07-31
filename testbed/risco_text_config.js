@@ -15,7 +15,8 @@ var RISCOJS_TEXT_CFG = {
 		"SHOWNAV": "mostrar navegador seleção",
 		"CLKIMG2CLOSE": "clicar na imagem para a fechar",
 		"SEGM": "segmentação",
-		"SEGMBY": "segmentar por"	
+		"SEGMBY": "atributo a segmentar por",
+		"SELSEGMBY": "escolha o atributo para segmentação"	
 	},
 	"en": {
 		"GEOP": "current location",
@@ -31,8 +32,7 @@ var RISCOJS_TEXT_CFG = {
 		"SHOWNAV": "show selection set navigator",
 		"CLKIMG2CLOSE": "click on image to close it",
 		"SEGM": "data slicer",
-		"SEGMBY": "slice data by"	
+		"SEGMBY": "attribute to slice data on", 
+		"SELSEGMBY": "select attribute to slice data on"	
 	}
 }
-
-

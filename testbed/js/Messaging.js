@@ -235,114 +235,124 @@ let MessagesController = {
 			msgsdiv.style.filter = 'none';
 			this.isvisible = true;
 
+			if (p_type == "TEXT" || p_type == "NUMBER" || p_type == "SELECT") {
+				msgsdiv.style.top = '40%';
+			} else {
+				msgsdiv.style.top = '10%';
+			}
+
 			let btn1 = null;
 
-			if (opt_callback && opt_value_text_dict==null) {
+			if (opt_callback) {
 
-				const ctrldiv = document.createElement("div");
-				ctrldiv.style.float = "right";
-				innercontentdiv.appendChild(ctrldiv);
+				if (opt_value_text_dict==null) {
 
-				if (p_type.endsWith("YESNO") || p_type.endsWith("OKCANCEL") || p_type == "TEXT" || p_type == "NUMBER") {
+					const ctrldiv = document.createElement("div");
+					ctrldiv.style.float = "right";
+					innercontentdiv.appendChild(ctrldiv);
 
-					btn1 = document.createElement("button");
+					if (p_type.endsWith("YESNO") || p_type.endsWith("OKCANCEL") || p_type == "TEXT" || p_type == "NUMBER") {
+
+						btn1 = document.createElement("button");
+						const btn2 = document.createElement("button");
+						ctrldiv.appendChild(btn1);
+						ctrldiv.appendChild(btn2);
+						if (p_type.endsWith("YESNO")) {
+							btn1.insertAdjacentHTML('afterBegin', this.i18nMsg("Y", true));
+							btn2.insertAdjacentHTML('afterBegin', this.i18nMsg("N", true));
+						} else if (p_type.endsWith("OKCANCEL") || p_type == "TEXT" || p_type == "NUMBER") {
+							btn1.insertAdjacentHTML('afterBegin', "Ok");
+							btn1.disabled = true;
+							btn2.insertAdjacentHTML('afterBegin', this.i18nMsg("C", true));
+						}
+
+						// Activation of OK button when effective content change happens 
+						(function(p_init_value, p_content_elem, p_btn) {
+							['change', 'keypress'].forEach(evttype => {
+								p_content_elem.addEventListener(evttype, function(ev) {
+									if (p_content_elem.value != p_init_value) {
+										p_btn.disabled = false;
+									}
+								});
+							});
+						})(initialvalue, contentelem, btn1);					
+
+						(function(p_this, p_btn, pp_type, pp_callback) {
+							p_btn.addEventListener('click', function(ev) {
+								p_this.hideMessage(true);
+								let ret = null;
+								if (contentelem) {
+									ret = contentelem.value;
+								}
+								pp_callback(ev, true, ret);
+							});
+						})(this, btn1, p_type, opt_callback);
+
+						(function(p_this, p_btn, pp_callback) {
+							p_btn.addEventListener('click', function(ev) {
+								p_this.hideMessage(true);
+								pp_callback(ev, false, null);
+							});
+						})(this, btn2, opt_callback);
+
+					}
+
+				} else {
+
+					const ctrldiv = document.createElement("div");
+					ctrldiv.style.float = "right";
+					innercontentdiv.appendChild(ctrldiv);
+
+					const wdg0 = document.createElement("div");
+					wdg0.classList.add("attention-select");
+					innercontentdiv.appendChild(wdg0);
+
+					contentelem = document.createElement("select");
+					wdg0.appendChild(contentelem);
+
+					let optel;
+					for (let k in opt_value_text_dict) {
+						optel = document.createElement("option");
+						optel.value = k;
+						optel.text = opt_value_text_dict[k];
+						contentelem.appendChild(optel);
+
+						if (opt_constraintitems) {
+							if (opt_constraintitems['selected'] !== undefined) {
+								if (opt_constraintitems['selected'] == k) {
+									optel.selected = 'selected';
+								}
+							}
+						}
+					}
+
+					const btn1 = document.createElement("button");
 					const btn2 = document.createElement("button");
 					ctrldiv.appendChild(btn1);
 					ctrldiv.appendChild(btn2);
-					if (p_type.endsWith("YESNO")) {
-						btn1.insertAdjacentHTML('afterBegin', this.i18nMsg("Y", true));
-						btn2.insertAdjacentHTML('afterBegin', this.i18nMsg("N", true));
-					} else if (p_type.endsWith("OKCANCEL") || p_type == "TEXT" || p_type == "NUMBER") {
-						btn1.insertAdjacentHTML('afterBegin', "Ok");
-						btn1.disabled = true;
-						btn2.insertAdjacentHTML('afterBegin', this.i18nMsg("C", true));
-					}
 
-					// Activation of OK button when effective content change happens 
-					(function(p_init_value, p_content_elem, p_btn) {
-						['change', 'keypress'].forEach(evttype => {
-							p_content_elem.addEventListener(evttype, function(ev) {
-								if (p_content_elem.value != p_init_value) {
-									p_btn.disabled = false;
-								}
+					btn1.insertAdjacentHTML('afterBegin', "Ok");
+					btn2.insertAdjacentHTML('afterBegin', this.i18nMsg("C", true));
+
+					if (contentelem != null) { 
+						(function(p_this, p_selel, p_btn, pp_callback) {
+							p_btn.addEventListener('click', function(ev) {
+								const optval = getSelOption(p_selel);
+								p_this.hideMessage(true);						
+								pp_callback(ev, true, optval);
 							});
-						});
-					})(initialvalue, contentelem, btn1);					
-
-					(function(p_this, p_btn, pp_type, pp_callback) {
-						p_btn.addEventListener('click', function(ev) {
-							p_this.hideMessage(true);
-							let ret = null;
-							if (contentelem) {
-								ret = contentelem.value;
-							}
-							pp_callback(ev, true, ret);
-						});
-					})(this, btn1, p_type, opt_callback);
+						})(this, contentelem, btn1, opt_callback);
+					}
 
 					(function(p_this, p_btn, pp_callback) {
 						p_btn.addEventListener('click', function(ev) {
 							p_this.hideMessage(true);
 							pp_callback(ev, false, null);
 						});
-					})(this, btn2, opt_callback);
-
+					})(this, btn2, opt_callback);				
+				
 				}
 
-			} else {
-
-				const ctrldiv = document.createElement("div");
-				ctrldiv.style.float = "right";
-				innercontentdiv.appendChild(ctrldiv);
-
-				const wdg0 = document.createElement("div");
-				wdg0.classList.add("attention-select");
-				innercontentdiv.appendChild(wdg0);
-
-				contentelem = document.createElement("select");
-				wdg0.appendChild(contentelem);
-
-				let optel;
-				for (let k in opt_value_text_dict) {
-					optel = document.createElement("option");
-					optel.value = k;
-					optel.text = opt_value_text_dict[k];
-					contentelem.appendChild(optel);
-
-					if (opt_constraintitems) {
-						if (opt_constraintitems['selected'] !== undefined) {
-							if (opt_constraintitems['selected'] == k) {
-								optel.selected = 'selected';
-							}
-						}
-					}
-				}
-
-				const btn1 = document.createElement("button");
-				const btn2 = document.createElement("button");
-				ctrldiv.appendChild(btn1);
-				ctrldiv.appendChild(btn2);
-
-				btn1.insertAdjacentHTML('afterBegin', "Ok");
-				btn2.insertAdjacentHTML('afterBegin', this.i18nMsg("C", true));
-
-				if (contentelem != null) { 
-					(function(p_this, p_selel, p_btn, pp_callback) {
-						p_btn.addEventListener('click', function(ev) {
-							const optval = getSelOption(p_selel);
-							p_this.hideMessage(true);						
-							pp_callback(ev, true, optval);
-						});
-					})(this, contentelem, btn1, opt_callback);
-				}
-
-				(function(p_this, p_btn, pp_callback) {
-					p_btn.addEventListener('click', function(ev) {
-						p_this.hideMessage(true);
-						pp_callback(ev, false, null);
-					});
-				})(this, btn2, opt_callback);				
-			
 			}
 
 			if (contentelem) {
