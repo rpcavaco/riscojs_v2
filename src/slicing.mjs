@@ -1,5 +1,6 @@
 
 import {GlobalConst} from './constants.js';
+import {I18n} from './i18n.mjs';
 
 export class SlicingPanel {
 
@@ -16,7 +17,7 @@ export class SlicingPanel {
 	inactiveStyleFront;
 	is_active;
 
-	constructor(p_mapctx) {
+	constructor() {
 
 		this.fillTextStyle = GlobalConst.CONTROLS_STYLES.SEG_TEXTFILL;  
 		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.SEG_BCKGRD; 
@@ -27,6 +28,7 @@ export class SlicingPanel {
 		this.captionszPX = GlobalConst.CONTROLS_STYLES.CAPTIONSZ_PX;
 
 		this.captionfontfamily = GlobalConst.CONTROLS_STYLES.CAPTIONFONTFAMILY;
+		this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
 
 		this.is_active = false;
 		this.had_prev_interaction = false;
@@ -56,7 +58,6 @@ export class SlicingPanel {
 		}
 
 		this.clear(p_mapctx);
-
 		this.calcDims(p_mapctx);
 
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
@@ -73,8 +74,65 @@ export class SlicingPanel {
 		let msg = p_mapctx.i18n.msg('SEGM', true);
 		ctx.fillStyle = this.fillTextStyle;
 		ctx.textAlign = "left";
+
+		let cota  = this.top+this.margin_offset+this.captionszPX;
+		let indent = this.left+2*this.margin_offset;
 		ctx.font = `${this.captionszPX}px ${this.captionfontfamily}`;
-		ctx.fillText(msg, this.left+2*this.margin_offset, this.top+this.margin_offset+this.captionszPX);
+		ctx.fillText(msg, indent, cota);
+		
+		let keys=[], slicekeystxt = "(error: slicing not properly configured in risco_basic_config.js)";
+		if (p_mapctx.cfgvar["basic"]["slicing"] !== undefined) {
+			keys = Object.keys(p_mapctx.cfgvar["basic"]["slicing"]);
+			if (keys.length > 0) {
+				slicekeystxt = p_mapctx.i18n.msg('SEGMBY', true) + ":";
+			}
+		}
+
+		cota += 2 * this.normalszPX;
+		ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
+		ctx.fillText(slicekeystxt, this.left+2*this.margin_offset, cota);
+
+		let lbl, w, h, slack = GlobalConst.CONTROLS_STYLES.TEXTBOXSLACK, selwigetsymb_dim = GlobalConst.CONTROLS_STYLES.DROPDOWNARROWSZ;
+		if (keys.length > 0) {
+
+			let txtdims = ctx.measureText(slicekeystxt);
+			const lang = (new I18n(p_mapctx.cfgvar["basic"]["msgs"])).getLang();
+
+			if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(p_mapctx.cfgvar["basic"]["slicing"][keys[0]]) >= 0) {
+				lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][p_mapctx.cfgvar["basic"]["slicing"][keys[0]]];
+			} else {
+				lbl = p_mapctx.cfgvar["basic"]["slicing"][keys[0]];
+			}	
+			indent = indent+txtdims.width+2*this.margin_offset;
+			ctx.fillText(lbl, indent, cota);
+
+			txtdims = ctx.measureText(lbl);
+
+			if (keys.length > 1) {
+				w = txtdims.width+3*slack + selwigetsymb_dim;
+			} else {
+				w = txtdims.width+2*slack;
+			}
+
+			h = 2*slack + txtdims.actualBoundingBoxAscent + txtdims.actualBoundingBoxDescent;
+			const ritems = [indent - txtdims.actualBoundingBoxLeft - slack, cota + txtdims.actualBoundingBoxDescent + slack, w, -h];
+
+			if (keys.length > 1) {
+
+				ctx.beginPath();
+
+				let x = indent + txtdims.width + slack;
+				let y = cota-2;
+				ctx.lineJoin = "round";
+				ctx.moveTo(x, y-selwigetsymb_dim);
+				ctx.lineTo(x+(selwigetsymb_dim/2.0), y);
+				ctx.lineTo(x+selwigetsymb_dim, y-selwigetsymb_dim);
+				ctx.closePath();
+				ctx.fill();
+			}
+
+			ctx.strokeRect(...ritems);	
+		}
 
 		ctx.restore();
 	}

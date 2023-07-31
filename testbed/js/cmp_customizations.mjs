@@ -402,9 +402,8 @@ export class LocQuery {
 		if (p_basic_config["querybox"]["placeholder"] !== undefined && p_basic_config["msgs"] !== undefined) {
 
 			const lang = (new I18n(p_basic_config["msgs"])).getLang();
-			console.log("lang:", lang);
 
-			// Layer caption
+			// Querybox placeholder caption
 			if (p_basic_config["querybox"]["placeholder"] != "none") {
 				if (Object.keys(p_basic_config["msgs"][lang]).indexOf(p_basic_config["querybox"]["placeholder"]) >= 0) {
 					lbl = I18n.capitalize(p_basic_config["msgs"][lang][p_basic_config["querybox"]["placeholder"]]);

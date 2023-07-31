@@ -47,8 +47,9 @@ export function ctrToolTip(p_mapctx, p_evt, p_text, opt_deltas) {
 		const h = 2*slack + tm.actualBoundingBoxAscent + tm.actualBoundingBoxDescent;
 
 		gfctx.fillStyle = "#8080807f";
-		gfctx.fillRect(x - tm.actualBoundingBoxLeft - slack, y + tm.actualBoundingBoxDescent + slack, tm.width+2*slack, -h);
-		gfctx.strokeRect(x - tm.actualBoundingBoxLeft - slack, y + tm.actualBoundingBoxDescent + slack, tm.width+2*slack, -h);
+		const ritems = [x - tm.actualBoundingBoxLeft - slack, y + tm.actualBoundingBoxDescent + slack, tm.width+2*slack, -h];
+		gfctx.fillRect(...ritems);
+		gfctx.strokeRect(...ritems);
 
 		gfctx.fillStyle = "white";
 		gfctx.fillText(p_text, x, y);

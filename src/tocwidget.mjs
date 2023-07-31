@@ -52,7 +52,7 @@ export class TOC  extends MapPrintInRect {
 		this.print_attempts = 0;
 		this.had_prev_interaction = false;
 
-		this.expandenv = 8;
+		this.expandenv = 1;
 
 		this.prevboxenv = null;
 

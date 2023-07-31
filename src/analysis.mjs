@@ -21,7 +21,7 @@ export class AnalysisMgr extends MapPrintInRect {
 	std_boxdims;
 	active_mode;
 
-	constructor(p_mapctx, p_other_widgets) {
+	constructor(p_other_widgets) {
 
 		super();
 		this.name = "AnalysisMgr";
@@ -61,7 +61,7 @@ export class AnalysisMgr extends MapPrintInRect {
 		this.expandenv = 1;
 		this.prevboxenv = null;
 
-		let mapdims = [];
+		/*let mapdims = [];
 		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
 
 		if (mapdims[0] <  GlobalConst.CONTROLS_STYLES.AM_START_COLLAPSED_CANVAS_MAXWIDTH) {
@@ -71,6 +71,23 @@ export class AnalysisMgr extends MapPrintInRect {
 		}
 
 		this.bottom = mapdims[1];
+
+		this.top = this.bottom - this.boxh[this.collapsedstate];*/
+
+	}
+
+	_preCalcDims(p_mapctx) {
+
+		const dims=[];
+		p_mapctx.getCanvasDims(dims);
+
+		if (dims[0] <  GlobalConst.CONTROLS_STYLES.AM_START_COLLAPSED_CANVAS_MAXWIDTH) {
+			this.collapsedstate = "COLLAPSED";
+		} else {
+			this.collapsedstate = "OPEN";
+		}
+
+		this.bottom = dims[1];
 
 		this.top = this.bottom - this.boxh[this.collapsedstate];
 
@@ -87,13 +104,7 @@ export class AnalysisMgr extends MapPrintInRect {
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		ctx.save();
 
-		if (this.prevboxenv) {
-			ctx.clearRect(...this.prevboxenv); 	
-			this.prevboxenv = null;
-		} else {
-			const dee = 2 * this.expandenv;
-			ctx.clearRect(this.left-this.expandenv, this.top-this.expandenv, this.boxw[this.collapsedstate]+dee, this.boxh[this.collapsedstate]+dee); 	
-		}
+		this._preCalcDims(p_mapctx)
 
 		// cal width
 		this.boxw["OPEN"] = this.std_boxdims[0];
@@ -128,6 +139,16 @@ export class AnalysisMgr extends MapPrintInRect {
 
 			this.top = this.bottom - this.boxh[this.collapsedstate];
 
+			if (this.prevboxenv) {
+				console.warn("CR 1:", this.prevboxenv);
+				//ctx.clearRect(...this.prevboxenv); 	
+				this.prevboxenv = null;
+			} else {
+				const dee = 2 * this.expandenv;
+				//console.warn("CR 2:", this.left-this.expandenv, this.top-this.expandenv, this.boxw[this.collapsedstate]+dee, this.boxh[this.collapsedstate]+dee);
+				ctx.clearRect(this.left-this.expandenv, this.top-this.expandenv, this.boxw[this.collapsedstate]+dee, this.boxh[this.collapsedstate]+dee); 	
+			}
+		
 			//console.log(this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]);
 			ctx.fillRect(this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]);
 			
@@ -450,10 +471,12 @@ export class SelectionsNavigator extends MapPrintInRect {
 		ctx.save();
 
 		if (this.prevboxenv) {
+			// console.warn("CR 1:", this.prevboxenv);
 			ctx.clearRect(...this.prevboxenv); 	
 			this.prevboxenv = null;
 		} else {
 			const dee = 2 * this.expandenv;
+			// console.warn("CR 2:", this.left-this.expandenv, this.top-this.expandenv, this.boxw[this.collapsedstate]+dee, this.boxh[this.collapsedstate]+dee);
 			ctx.clearRect(this.left-this.expandenv, this.top-this.expandenv, this.boxw[this.collapsedstate]+dee, this.boxh[this.collapsedstate]+dee); 	
 		}
 

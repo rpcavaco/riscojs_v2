@@ -1232,9 +1232,9 @@ export class MapCustomizations {
 			"attributionprint": ap,
 			"overlay": new OverlayMgr(this.mapctx),
 			// "analysis": new AnalysisMgr(this.mapctx, [ap, nav]),
-			"analysis": new AnalysisMgr(this.mapctx, [ap]),
+			"analysis": new AnalysisMgr([ap]),
 			"navigator": nav,
-			"slicing": new SlicingPanel(this.mapctx)
+			"slicing": new SlicingPanel()
 		}
 
 		// Temporariamente sem navigator

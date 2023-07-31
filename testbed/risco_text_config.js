@@ -14,7 +14,8 @@ var RISCOJS_TEXT_CFG = {
 		"SHOWAP": "mostrar painel análise",
 		"SHOWNAV": "mostrar navegador seleção",
 		"CLKIMG2CLOSE": "clicar na imagem para a fechar",
-		"SEGM": "segmentação"		
+		"SEGM": "segmentação",
+		"SEGMBY": "segmentar por"	
 	},
 	"en": {
 		"GEOP": "current location",
@@ -29,7 +30,8 @@ var RISCOJS_TEXT_CFG = {
 		"SHOWAP": "show analysis panel",
 		"SHOWNAV": "show selection set navigator",
 		"CLKIMG2CLOSE": "click on image to close it",
-		"SEGM": "data slicer"		
+		"SEGM": "data slicer",
+		"SEGMBY": "slice data by"	
 	}
 }
 
