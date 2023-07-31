@@ -89,7 +89,7 @@ let MessagesController = {
 		msgsdiv.style.left = this.left + 'px';
 	}, */
 	
-	_setMessage: function(p_msg_txt, p_is_timed, p_type, opt_callback, opt_value_text_pairs, opt_constraintitems) {
+	_setMessage: function(p_msg_txt, p_is_timed, p_type, opt_callback, opt_value_text_dict, opt_constraintitems) {
 
 		this.messageText = p_msg_txt;
 		let iconimg=null, msgsdiv = document.getElementById(this.elemid), innercontentdiv;
@@ -98,7 +98,7 @@ let MessagesController = {
 			this.timer = null;
 		}
 
-		if (opt_value_text_pairs) {
+		if (opt_value_text_dict) {
 			console.assert(p_type == "SELECT", "optional value-text pairs will work only with type SELECT, not with '%s'", p_type);
 		}
 
@@ -237,7 +237,7 @@ let MessagesController = {
 
 			let btn1 = null;
 
-			if (opt_callback) {
+			if (opt_callback && opt_value_text_dict==null) {
 
 				const ctrldiv = document.createElement("div");
 				ctrldiv.style.float = "right";
@@ -274,12 +274,7 @@ let MessagesController = {
 							p_this.hideMessage(true);
 							let ret = null;
 							if (contentelem) {
-								switch(pp_type) {
-									case "TEXT":
-									case "NUMBER":
-										ret = contentelem.value;
-										break;
-								}
+								ret = contentelem.value;
 							}
 							pp_callback(ev, true, ret);
 						});
@@ -294,29 +289,32 @@ let MessagesController = {
 
 				}
 
-			}
+			} else {
 
-			if (opt_callback!=null && opt_value_text_pairs!=null) {
-
-				let selel;
 				const ctrldiv = document.createElement("div");
 				ctrldiv.style.float = "right";
 				innercontentdiv.appendChild(ctrldiv);
 
-				if (p_type == "SELECT") { 
+				const wdg0 = document.createElement("div");
+				wdg0.classList.add("attention-select");
+				innercontentdiv.appendChild(wdg0);
 
-					const wdg0 = document.createElement("div");
-					wdg0.classList.add("attention-select");
-					ctrldiv.appendChild(wdg0);
+				contentelem = document.createElement("select");
+				wdg0.appendChild(contentelem);
 
-					let selel = document.createElement("select");
-					wdg0.appendChild(selel);
+				let optel;
+				for (let k in opt_value_text_dict) {
+					optel = document.createElement("option");
+					optel.value = k;
+					optel.text = opt_value_text_dict[k];
+					contentelem.appendChild(optel);
 
-					for (let optel, i=0; i<opt_value_text_pairs.length; i++) {
-						optel = document.createElement("option");
-						optel.value = opt_value_text_pairs[i][0];
-						optel.text = opt_value_text_pairs[i][1];
-						selel.appendChild(optel);
+					if (opt_constraintitems) {
+						if (opt_constraintitems['selected'] !== undefined) {
+							if (opt_constraintitems['selected'] == k) {
+								optel.selected = 'selected';
+							}
+						}
 					}
 				}
 
@@ -328,20 +326,20 @@ let MessagesController = {
 				btn1.insertAdjacentHTML('afterBegin', "Ok");
 				btn2.insertAdjacentHTML('afterBegin', this.i18nMsg("C", true));
 
-				if (p_type == "SELECT" && selel != null) { 
+				if (contentelem != null) { 
 					(function(p_this, p_selel, p_btn, pp_callback) {
 						p_btn.addEventListener('click', function(ev) {
 							const optval = getSelOption(p_selel);
 							p_this.hideMessage(true);						
-							pp_callback(optval);
+							pp_callback(ev, true, optval);
 						});
-					})(this, selel, btn1, opt_callback);
+					})(this, contentelem, btn1, opt_callback);
 				}
 
 				(function(p_this, p_btn, pp_callback) {
 					p_btn.addEventListener('click', function(ev) {
 						p_this.hideMessage(true);
-						pp_callback(null);
+						pp_callback(ev, false, null);
 					});
 				})(this, btn2, opt_callback);				
 			
@@ -431,17 +429,17 @@ let MessagesController = {
 		this._setMessage(p_msg_txt, false, type, p_callback);
 	},
 
-	selectMessage: function(p_msg_txt, p_value_text_pairs, p_callback) {
+	selectInputMessage: function(p_msg_txt, p_value_text_pairs, p_callback, opt_constraint_items) {
 		
-		this._setMessage(p_msg_txt, false, "SELECT", p_callback, p_value_text_pairs);
+		this._setMessage(p_msg_txt, false, "SELECT", p_callback, p_value_text_pairs, opt_constraint_items);
 	},	
 
-	textMessage: function(p_msg_txt, p_callback, opt_constraint_items) {
+	textInputMessage: function(p_msg_txt, p_callback, opt_constraint_items) {
 
 		this._setMessage(p_msg_txt, false, "TEXT", p_callback, null, opt_constraint_items);
 	},
 	
-	numberMessage: function(p_msg_txt, p_callback, opt_constraint_items) {
+	numberInputMessage: function(p_msg_txt, p_callback, opt_constraint_items) {
 
 		this._setMessage(p_msg_txt, false, "NUMBER", p_callback, null, opt_constraint_items);
 	},		

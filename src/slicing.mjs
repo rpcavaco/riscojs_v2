@@ -98,12 +98,15 @@ export class SlicingPanel {
 		ctx.fillText(slicekeystxt, this.left+2*this.margin_offset, cota);
 
 		let lbl, w, h, slack = GlobalConst.CONTROLS_STYLES.TEXTBOXSLACK, selwigetsymb_dim = GlobalConst.CONTROLS_STYLES.DROPDOWNARROWSZ;
-		if (keys.length > 0) {
+
+		if (this.active_key == null && keys.length > 0) {
+			this.active_key = keys[0]; 
+		}
+
+		if (this.active_key) {
 
 			let txtdims = ctx.measureText(slicekeystxt);
 			const lang = (new I18n(p_mapctx.cfgvar["basic"]["msgs"])).getLang();
-
-			this.active_key = keys[0];
 
 			if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(p_mapctx.cfgvar["basic"]["slicing"][this.active_key]) >= 0) {
 				lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][p_mapctx.cfgvar["basic"]["slicing"][this.active_key]];
@@ -196,6 +199,38 @@ export class SlicingPanel {
 
 			switch(p_evt.type) {
 
+				case "touchend":
+				case "mouseup":
+
+					let lbl, constraintitems=null, that = this;
+					const seldict = {};
+					const lang = (new I18n(p_mapctx.cfgvar["basic"]["msgs"])).getLang();
+
+					for (let k in p_mapctx.cfgvar["basic"]["slicing"]) {
+						if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(p_mapctx.cfgvar["basic"]["slicing"][k]) >= 0) {
+							lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][p_mapctx.cfgvar["basic"]["slicing"][k]];
+						} else {
+							lbl = p_mapctx.cfgvar["basic"]["slicing"][k];
+						}	
+						seldict[k] = lbl;	
+					}
+
+					if (this.active_key) {
+						constraintitems = {'selected': this.active_key};
+					}
+					p_mapctx.getCustomizationObject().messaging_ctrlr.selectInputMessage(
+						p_mapctx.i18n.msg('SELSEGMBY', true), 
+						seldict,
+						(evt, p_result, p_value) => { 
+							if (p_value) {
+								that.active_key = p_value;
+								that.print(p_mapctx);
+							}
+						},
+						constraintitems
+					);
+					break;
+
 				case "mousemove":
 					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 					if (interact_box_key) {
@@ -204,6 +239,7 @@ export class SlicingPanel {
 						topcnv.style.cursor = "default";
 					}
 					break;
+
 			}
 	
 		}

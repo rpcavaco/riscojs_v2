@@ -128,7 +128,7 @@ class MapScalePrint extends PermanentMessaging {
 				case 'touchend':
 				case 'mouseup':
 					const sv = p_mapctx.transformmgr.getReadableCartoScale();
-					p_mapctx.getCustomizationObject().messaging_ctrlr.numberMessage(
+					p_mapctx.getCustomizationObject().messaging_ctrlr.numberInputMessage(
 						[p_mapctx.i18n.msg('DEFSCL', true), "1:", sv], 
 						(evt, p_result, p_value) => { 
 							if (p_value) {
