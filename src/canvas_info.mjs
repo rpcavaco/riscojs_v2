@@ -891,7 +891,10 @@ export class InfoBox extends PopupBox {
 			}
 		} 
 
-		p_evt.preventDefault();
+		
+		if (p_evt['preventDefault'] !== undefined) {
+			p_evt.preventDefault();
+		} 
 	}
 
 }
