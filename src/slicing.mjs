@@ -2,6 +2,68 @@
 import {GlobalConst} from './constants.js';
 import {I18n} from './i18n.mjs';
 
+function fillTreemapGraph_dumpResult(p_data_dict, p_dump_count) {
+			
+	if (p_data_dict.accum_queue.length == 1) {
+			
+		const [ varvalue, count ] = p_data_dict.accum_queue.shift();
+		
+		if (p_data_dict.current_orient == 'LAND') {
+			p_data_dict.response.push([varvalue, p_data_dict.current_orig[0], p_data_dict.current_orig[1], p_data_dict.flex_dim, p_data_dict.outer_flex_dim, p_dump_count]);
+			p_data_dict.current_orig[0] = p_data_dict.current_orig[0]+p_data_dict.flex_dim;
+			p_data_dict.restspace = [p_data_dict.current_orig[0], p_data_dict.current_orig[1], p_data_dict.restspace[2]-p_data_dict.flex_dim, p_data_dict.outer_flex_dim];
+		} else {
+			p_data_dict.response.push([varvalue, p_data_dict.current_orig[0], p_data_dict.current_orig[1], p_data_dict.outer_flex_dim, p_data_dict.flex_dim, p_dump_count]);
+			p_data_dict.current_orig[1] = p_data_dict.current_orig[1]+p_data_dict.flex_dim;
+			p_data_dict.restspace = [p_data_dict.current_orig[0], p_data_dict.current_orig[1], p_data_dict.outer_flex_dim, p_data_dict.restspace[3]-p_data_dict.flex_dim];
+		}	
+		
+
+	} else {
+
+		let orig, area, flex_dim;
+
+		orig = [...p_data_dict.current_orig];
+		while(p_data_dict.accum_queue.length > 0) {
+
+			const [ varvalue, count ] = p_data_dict.accum_queue.shift();
+			area = count * p_data_dict.area_factor;
+			flex_dim = area / p_data_dict.outer_flex_dim;
+
+			// orientation inverted, rects are layout vertically if larger area is LAND and horizontally if larger free area is PORT
+			if (p_data_dict.current_orient == 'LAND') {
+				p_data_dict.response.push([varvalue, orig[0], orig[1], p_data_dict.outer_flex_dim, flex_dim, p_dump_count]);
+				orig[1] = orig[1] + flex_dim;
+			} else {
+				p_data_dict.response.push([varvalue, orig[0], orig[1], flex_dim, p_data_dict.outer_flex_dim, p_dump_count]);
+				orig[0] = orig[0] + flex_dim;
+			}	
+				
+		}
+
+		if (p_data_dict.current_orient == 'LAND') {
+			p_data_dict.restspace = [p_data_dict.current_orig[0]+p_data_dict.outer_flex_dim, p_data_dict.current_orig[1], p_data_dict.restspace[2]-p_data_dict.outer_flex_dim, p_data_dict.restspace[3]];
+		} else {
+			p_data_dict.restspace = [p_data_dict.current_orig[0], p_data_dict.current_orig[1]+p_data_dict.outer_flex_dim, p_data_dict.restspace[2], p_data_dict.restspace[3]-p_data_dict.outer_flex_dim];
+		}	
+
+	}
+
+	if (p_data_dict.restspace[2] > p_data_dict.restspace[3]) {
+		p_data_dict.current_orient = 'LAND';
+		p_data_dict.constrained_dim = p_data_dict.restspace[3];
+	} else {
+		p_data_dict.current_orient = 'PORT';
+		p_data_dict.constrained_dim = p_data_dict.restspace[2];
+	}
+	p_data_dict.current_orig = [p_data_dict.restspace[0], p_data_dict.restspace[1]];
+
+	// console.log("B restspace:", restspace);
+	// console.log("B current_orig:", current_orig, "current_orient", current_orient, "constrained_dim", constrained_dim);
+
+}
+
+
 export class SlicingPanel {
 
 	top;
@@ -56,25 +118,225 @@ export class SlicingPanel {
 
 	}
 
-	fillSlicer(p_mapctx) {
+	fillTreemapGraph(p_ctx, p_total_count, p_sorted_pairs) {
+
+		function aspect(p_dim1, p_dim2) {
+			return Math.max(p_dim1, p_dim2) / Math.min(p_dim1, p_dim2);
+		}
+
+		const k = 1.01;
+		const minarea = 3000;
+
+		let dataDict = {};
+
+		dataDict.restspace = [...this.interaction_boxes["graphbox"]];
+
+		dataDict.area_factor = (dataDict.restspace[2] * dataDict.restspace[3]) / p_total_count;
+		dataDict.response=[];
+
+		console.log("area_factor 1", dataDict.area_factor, p_total_count);
+
+		const mincount = minarea / dataDict.area_factor;
+		console.log("mincount", mincount);
+
+		console.log("pre pairs:", p_sorted_pairs.length);
+
+		const sorted_pairs = p_sorted_pairs.filter((p_pair) => {
+			return p_pair[1] >=  mincount;
+		});
+
+		console.log("post pairs:", sorted_pairs.length);
+
+		let filtered_total_count = 0;
+		for (let sp of sorted_pairs) {
+			filtered_total_count += sp[1];
+		}
+		dataDict.area_factor = (dataDict.restspace[2] * dataDict.restspace[3]) / filtered_total_count;
+
+		console.log("area_factor 2", dataDict.area_factor, filtered_total_count);
+
+		//let sorted_pairs = [...p_sorted_pairs];
+		dataDict.current_orient = null;
+
+		dataDict.constrained_dim = 0;
+		if (dataDict.restspace[2] > dataDict.restspace[3]) {
+			dataDict.current_orient = 'LAND';
+			dataDict.constrained_dim = dataDict.restspace[3];
+		} else {
+			dataDict.current_orient = 'PORT';
+			dataDict.constrained_dim = dataDict.restspace[2];
+		}
+		dataDict.current_orig = [dataDict.restspace[0], dataDict.restspace[1]];
+
+		 console.log("A restspace:", dataDict.restspace);
+		 console.log("A current_orig:", dataDict.current_orig, "current_orient", dataDict.current_orient, "constrained_dim", dataDict.constrained_dim);
+
+		let prev_r=9999, r1, reference_r = aspect(dataDict.restspace[2], dataDict.restspace[3]);
+
+		const local_accum_queue = [];
+		let accum_count=0, local_flex_dim = 0, local_outer_flex_dim= 0;
+
+		dataDict.accum_queue = [];
+
+		let ctrlcnt = 2000, accum_area = 0, area=0, dump_count=0;
+		while (sorted_pairs.length > 0 && ctrlcnt > 0) {
+			
+			ctrlcnt--;
+			const [ varvalue, count ] = sorted_pairs[0];
+			local_accum_queue.push([varvalue, count]);
+			//dataDict.accum_queue.push([varvalue, count])
+			accum_count += count;
+			area = count * dataDict.area_factor;
+			
+			if (local_accum_queue.length == 1) {
+				local_flex_dim = area / dataDict.constrained_dim;
+				// dataDict.flex_dim = area / dataDict.constrained_dim;
+				local_outer_flex_dim = dataDict.constrained_dim;
+				// dataDict.outer_flex_dim = dataDict.constrained_dim;
+			} else {
+				accum_area = accum_count * dataDict.area_factor;
+				local_outer_flex_dim = accum_area / dataDict.constrained_dim;
+				// dataDict.outer_flex_dim = accum_area / dataDict.constrained_dim;
+				local_flex_dim = area / local_outer_flex_dim;
+				// dataDict.flex_dim = area / dataDict.outer_flex_dim;
+			}
+			
+			console.log("dims:", local_flex_dim, local_outer_flex_dim);
+			r1 = aspect(local_flex_dim, local_outer_flex_dim);
+			
+			console.log(varvalue, "r1:", r1, "prev r:",prev_r,'<', "ref_r", k * reference_r);
+			console.log("       > acclen:", local_accum_queue.length, "flexdim:", local_flex_dim, "outer:", local_outer_flex_dim);
+			// if (r1 <= k * reference_r) {
+			if (r1 > prev_r) {
+				//dataDict.accum_count = prev_accum_count;
+				//dataDict.accum_queue.pop();
+				accum_count = 0;
+				local_accum_queue.length = 0;
+				prev_r = 9999;
+				dump_count++;
+				fillTreemapGraph_dumpResult(dataDict, dump_count);
+			} else {
+				dataDict.accum_queue.push([varvalue, count]);
+				dataDict.flex_dim = local_flex_dim;
+				dataDict.outer_flex_dim = local_outer_flex_dim;
+				sorted_pairs.shift();
+				prev_r = r1;
+			}
+
+		
+		}
+
+		if (dataDict.accum_queue.length > 0) {
+			accum_count = 0;
+			dump_count++;
+			fillTreemapGraph_dumpResult(dataDict, dump_count);
+		}
+
+		// console.log(response);
+
+		p_ctx.strokeStyle = "grey";
+		p_ctx.fillStyle = "white";
+		const ost = 2;
+
+		for (let gr of dataDict.response) {
+
+			let color;
+			switch(gr[5]) {
+
+				case 1:
+					color = "white";
+					break;
+
+				case 2:
+					color = "red";
+					break;
+
+
+				case 3:
+					color = "green";
+					break;
+
+				
+				case 4:
+					color = "orange";
+					break;
+
+							
+				case 5:
+					color = "darkcyan";
+					break;
+
+					
+				case 6:
+					color = "yellow";
+					break;
+
+					
+				case 7:
+					color = "lightsalmon";
+					break;
+					
+				case 8:
+					color = "mediumseagreen";
+					break;
+					
+				case 9:
+					color = "tomato";
+					break;
+		
+			}
+			p_ctx.fillStyle = color;
+			p_ctx.strokeRect(gr[1]+ost, gr[2]+ost, gr[3]-2*ost, gr[4]-2*ost);
+			p_ctx.fillText(gr[0], gr[1]+10, gr[2]+20)
+		}
+
+
+	}
+
+	fetchGraphdata(p_mapctx, p_ctx) {
 
 		if (!this.active_key) {
 			return;
 		}
 
 		const url = p_mapctx.cfgvar["basic"]["slicing"]["url"];
+		const splits = this.active_key.split("#");
+		const that  = this;
 
 		fetch(url + "/astats", {
 			method: "POST",
-			body: JSON.stringify({"key":this.active_key,"options":{}})
+			body: JSON.stringify({"key":splits[0],"options":{}})
 		})
 		.then(response => response.json())
 		.then(
 			function(responsejson) {
-				console.log(responsejson);
+				//console.log(responsejson);
+
+				const fields = Object.keys(responsejson);
+				console.assert(fields.indexOf(splits[1]) >= 0, "field not found in slicing data, key '%s', field '%s'", splits[0], splits[1]) 
+
+				const dict = responsejson[splits[1]];
+
+				console.log(dict);
+
+				// Create items array
+				const varvalues = Object.keys(dict['classcounts']);
+				const items = varvalues.map(function(key) {
+					return [key, dict['classcounts'][key]];
+				});
+				
+				// Sort the array based on the second element
+				items.sort(function(first, second) {
+					return second[1] - first[1];
+				});
+
+				that.fillTreemapGraph(p_ctx, dict['sumofclasscounts'], items);
+				
+				// Create a new array with only the first 5 items
+				// console.log("Sort:", items.slice(0, 5));
 			}
 		).catch((error) => {
-			console.error(`Impossible to fetch stats on '${this.active_key}'`, error);
+			console.error(`Impossible to fetch stats on '${splits[0]}'`, error);
 		});	
 
 	}
@@ -108,10 +370,15 @@ export class SlicingPanel {
 		ctx.font = `${this.captionszPX}px ${this.captionfontfamily}`;
 		ctx.fillText(msg, indent, cota);
 		
-		let keys=[], slicekeystxt = "(error: slicing not properly configured in risco_basic_config.js)";
+		let itemkeys=[], itemdict={}, slicekeystxt = "(error: slicing empty or not properly configured in risco_basic_config.js)";
 		if (p_mapctx.cfgvar["basic"]["slicing"] !== undefined && p_mapctx.cfgvar["basic"]["slicing"]["keys"] !== undefined) {
-			keys = Object.keys(p_mapctx.cfgvar["basic"]["slicing"]["keys"]);
-			if (keys.length > 0) {
+			for (let k in p_mapctx.cfgvar["basic"]["slicing"]["keys"]) {
+				for (let fld in p_mapctx.cfgvar["basic"]["slicing"]["keys"][k]) {
+					itemkeys.push(`${k}#${fld}`);
+					itemdict[`${k}#${fld}`] = p_mapctx.cfgvar["basic"]["slicing"]["keys"][k][fld];
+				}
+			}
+			if (itemkeys.length > 0) {
 				slicekeystxt = p_mapctx.i18n.msg('SEGMBY', true) + ":";
 			}
 		}
@@ -122,8 +389,8 @@ export class SlicingPanel {
 
 		let lbl, w, h, slack = GlobalConst.CONTROLS_STYLES.TEXTBOXSLACK, selwigetsymb_dim = GlobalConst.CONTROLS_STYLES.DROPDOWNARROWSZ;
 
-		if (this.active_key == null && keys.length > 0) {
-			this.active_key = keys[0]; 
+		if (this.active_key == null && itemkeys.length > 0) {
+			this.active_key = itemkeys[0]; 
 		}
 
 		if (this.active_key) {
@@ -131,26 +398,26 @@ export class SlicingPanel {
 			let txtdims = ctx.measureText(slicekeystxt);
 			const lang = (new I18n(p_mapctx.cfgvar["basic"]["msgs"])).getLang();
 
-			if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(p_mapctx.cfgvar["basic"]["slicing"]["keys"][this.active_key]) >= 0) {
-				lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][p_mapctx.cfgvar["basic"]["slicing"]["keys"][this.active_key]];
+			if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(itemdict[this.active_key]) >= 0) {
+				lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][itemdict[this.active_key]];
 			} else {
-				lbl = p_mapctx.cfgvar["basic"]["slicing"]["keys"][this.active_key];
+				lbl = itemdict[itemdict[this.active_key]];
 			}	
 			indent = indent+txtdims.width+2*this.margin_offset;
 			ctx.fillText(lbl, indent, cota);
 
 			txtdims = ctx.measureText(lbl);
 
-			if (keys.length > 1) {
+			if (itemkeys.length > 1) {
 				w = txtdims.width+3*slack + selwigetsymb_dim;
 			} else {
 				w = txtdims.width+2*slack;
 			}
 
 			h = 2*slack + txtdims.actualBoundingBoxAscent + txtdims.actualBoundingBoxDescent;
-			const ritems = [indent - txtdims.actualBoundingBoxLeft - slack, cota + txtdims.actualBoundingBoxDescent + slack, w, -h];
+			const selbox = [indent - txtdims.actualBoundingBoxLeft - slack, cota + txtdims.actualBoundingBoxDescent + slack, w, -h];
 
-			if (keys.length > 1) {
+			if (itemkeys.length > 1) {
 
 				// draw dropdown arrow
 				let x = indent + txtdims.width + slack;
@@ -163,12 +430,20 @@ export class SlicingPanel {
 				ctx.closePath();
 				ctx.fill();
 
-				this.interaction_boxes["segmattr"] = [...ritems]; 
+				this.interaction_boxes["segmattr"] = [...selbox]; 
 			}
 
-			ctx.strokeRect(...ritems);	
+			indent = this.left+2*this.margin_offset;
+			cota += 2 * this.normalszPX;
+			const graphbox = [indent, cota, this.width-4*this.margin_offset, this.height+this.top-cota-2*this.margin_offset];
 
-			this.fillSlicer(p_mapctx);
+			this.interaction_boxes["graphbox"] = [...graphbox]; 
+
+			ctx.strokeRect(...selbox);	
+			ctx.strokeStyle = "purple"
+			ctx.strokeRect(...graphbox);	
+
+			this.fetchGraphdata(p_mapctx, ctx);
 		}
 
 		ctx.restore();
@@ -231,17 +506,27 @@ export class SlicingPanel {
 					const seldict = {};
 					const lang = (new I18n(p_mapctx.cfgvar["basic"]["msgs"])).getLang();
 
-					for (let k in p_mapctx.cfgvar["basic"]["slicing"]["keys"]) {
-						if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(p_mapctx.cfgvar["basic"]["slicing"]["keys"][k]) >= 0) {
-							lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][p_mapctx.cfgvar["basic"]["slicing"]["keys"][k]];
+					let itemkeys=[], itemdict={};
+					if (p_mapctx.cfgvar["basic"]["slicing"] !== undefined && p_mapctx.cfgvar["basic"]["slicing"]["keys"] !== undefined) {
+						for (let k in p_mapctx.cfgvar["basic"]["slicing"]["keys"]) {
+							for (let fld in p_mapctx.cfgvar["basic"]["slicing"]["keys"][k]) {
+								itemkeys.push(`${k}#${fld}`);
+								itemdict[`${k}#${fld}`] = p_mapctx.cfgvar["basic"]["slicing"]["keys"][k][fld];
+							}
+						}
+					}
+																			
+					for (let k of itemkeys) {
+						if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(itemdict[k]) >= 0) {
+							lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][itemdict[k]];
 						} else {
-							lbl = p_mapctx.cfgvar["basic"]["slicing"]["keys"][k];
+							lbl = itemdict[k];
 						}	
 						seldict[k] = lbl;	
 					}
 
-					if (this.active_key) {
-						constraintitems = {'selected': this.active_key};
+					if (this.active_item) {
+						constraintitems = {'selected': `${this.active_item[0]}#${this.active_item[1]}` };
 					}
 					p_mapctx.getCustomizationObject().messaging_ctrlr.selectInputMessage(
 						p_mapctx.i18n.msg('SELSEGMBY', true), 
