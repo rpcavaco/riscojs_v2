@@ -460,3 +460,12 @@ export class ImgLRUCache {
 		return ret;
 	}
 }
+
+export function genRainbowColor(p_max, p_value) {
+
+	const h = Math.round(360 * (p_value / p_max));
+	
+	return `hsl(${h} 100% 50%)`;
+
+
+}

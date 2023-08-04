@@ -223,11 +223,14 @@ var GlobalConst = {
 		AM_ICONDIM: 30,
 
 		SEG_TEXTFILL: "white",
-		SEG_WIDTHS: [400, 800], // min, max
-		SEG_WIDTH_PERC: 80,
+		SEG_WIDTHS: [400, 1200], // min, max
+		SEG_WIDTH_PERC: 0.8,
 		SEG_BCKGRD: "#0b1d1fe0",
 		SEG_ACTIVECOLOR: "white",
 		SEG_INACTIVECOLOR: "grey",
+		SEG_DATAFONTFAMILY: "sans-serif",
+		SEG_DATACAPTIONFONTSIZE_PX: 13,
+		SEG_DATAFONTSIZE_PX: 10
 
 	},
 

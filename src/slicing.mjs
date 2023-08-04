@@ -1,6 +1,11 @@
 
 import {GlobalConst} from './constants.js';
 import {I18n} from './i18n.mjs';
+import {genRainbowColor} from './utils.mjs';
+
+function aspect(p_dim1, p_dim2) {
+	return Math.max(p_dim1, p_dim2) / Math.min(p_dim1, p_dim2);
+}
 
 function fillTreemapGraph_dumpResult(p_data_dict, p_dump_count) {
 			
@@ -9,11 +14,11 @@ function fillTreemapGraph_dumpResult(p_data_dict, p_dump_count) {
 		const [ varvalue, count ] = p_data_dict.accum_queue.shift();
 		
 		if (p_data_dict.current_orient == 'LAND') {
-			p_data_dict.response.push([varvalue, p_data_dict.current_orig[0], p_data_dict.current_orig[1], p_data_dict.flex_dim, p_data_dict.outer_flex_dim, p_dump_count]);
+			p_data_dict.response.push([varvalue, count, p_data_dict.current_orig[0], p_data_dict.current_orig[1], p_data_dict.flex_dim, p_data_dict.outer_flex_dim, p_dump_count]);
 			p_data_dict.current_orig[0] = p_data_dict.current_orig[0]+p_data_dict.flex_dim;
 			p_data_dict.restspace = [p_data_dict.current_orig[0], p_data_dict.current_orig[1], p_data_dict.restspace[2]-p_data_dict.flex_dim, p_data_dict.outer_flex_dim];
 		} else {
-			p_data_dict.response.push([varvalue, p_data_dict.current_orig[0], p_data_dict.current_orig[1], p_data_dict.outer_flex_dim, p_data_dict.flex_dim, p_dump_count]);
+			p_data_dict.response.push([varvalue, count, p_data_dict.current_orig[0], p_data_dict.current_orig[1], p_data_dict.outer_flex_dim, p_data_dict.flex_dim, p_dump_count]);
 			p_data_dict.current_orig[1] = p_data_dict.current_orig[1]+p_data_dict.flex_dim;
 			p_data_dict.restspace = [p_data_dict.current_orig[0], p_data_dict.current_orig[1], p_data_dict.outer_flex_dim, p_data_dict.restspace[3]-p_data_dict.flex_dim];
 		}	
@@ -32,10 +37,10 @@ function fillTreemapGraph_dumpResult(p_data_dict, p_dump_count) {
 
 			// orientation inverted, rects are layout vertically if larger area is LAND and horizontally if larger free area is PORT
 			if (p_data_dict.current_orient == 'LAND') {
-				p_data_dict.response.push([varvalue, orig[0], orig[1], p_data_dict.outer_flex_dim, flex_dim, p_dump_count]);
+				p_data_dict.response.push([varvalue, count, orig[0], orig[1], p_data_dict.outer_flex_dim, flex_dim, p_dump_count]);
 				orig[1] = orig[1] + flex_dim;
 			} else {
-				p_data_dict.response.push([varvalue, orig[0], orig[1], flex_dim, p_data_dict.outer_flex_dim, p_dump_count]);
+				p_data_dict.response.push([varvalue, count, orig[0], orig[1], flex_dim, p_data_dict.outer_flex_dim, p_dump_count]);
 				orig[0] = orig[0] + flex_dim;
 			}	
 				
@@ -94,6 +99,9 @@ export class SlicingPanel {
 
 		this.captionfontfamily = GlobalConst.CONTROLS_STYLES.CAPTIONFONTFAMILY;
 		this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
+		this.datafontfamily = GlobalConst.CONTROLS_STYLES.SEG_DATAFONTFAMILY;
+		this.datacaptionfontsz = GlobalConst.CONTROLS_STYLES.SEG_DATACAPTIONFONTSIZE_PX;
+		this.datafontsz = GlobalConst.CONTROLS_STYLES.SEG_DATAFONTSIZE_PX;
 
 		this.is_active = false;
 		this.had_prev_interaction = false;
@@ -109,8 +117,12 @@ export class SlicingPanel {
 		const r = dims[0] / dims[1];
 
 		this.width = Math.min(GlobalConst.CONTROLS_STYLES.SEG_WIDTHS[1], Math.max(GlobalConst.CONTROLS_STYLES.SEG_WIDTH_PERC * dims[0], GlobalConst.CONTROLS_STYLES.SEG_WIDTHS[0]));
-		this.left = dims[0] -  this.width;
-
+		// console.log("------- width ---------");
+		// console.log("dim width:", dims[0]);
+		// console.log("max:", GlobalConst.CONTROLS_STYLES.SEG_WIDTH_PERC * dims[0], GlobalConst.CONTROLS_STYLES.SEG_WIDTHS[0]);
+		// console.log("min:", GlobalConst.CONTROLS_STYLES.SEG_WIDTHS[1], Math.max(GlobalConst.CONTROLS_STYLES.SEG_WIDTH_PERC * dims[0], GlobalConst.CONTROLS_STYLES.SEG_WIDTHS[0]));
+		// console.log("calc width:", this.width);
+		// console.log("-----------------------");
 		this.height = this.width / r;
 
 		this.top = Math.round((dims[1] - this.height) / 2.0);
@@ -118,27 +130,19 @@ export class SlicingPanel {
 
 	}
 
-	fillTreemapGraph(p_ctx, p_total_count, p_sorted_pairs) {
+	fillMostFrequentTreemap(p_ctx, p_total_count, p_sorted_pairs) {
 
-		function aspect(p_dim1, p_dim2) {
-			return Math.max(p_dim1, p_dim2) / Math.min(p_dim1, p_dim2);
-		}
-
-		const k = 1.01;
 		const minarea = 3000;
 
 		let dataDict = {};
 
 		dataDict.restspace = [...this.interaction_boxes["graphbox"]];
-
 		dataDict.area_factor = (dataDict.restspace[2] * dataDict.restspace[3]) / p_total_count;
 		dataDict.response=[];
 
-		console.log("area_factor 1", dataDict.area_factor, p_total_count);
-
+		console.log("area", dataDict.restspace[2], "x", dataDict.restspace[3], "area_factor 1", dataDict.area_factor, p_total_count);
 		const mincount = minarea / dataDict.area_factor;
 		console.log("mincount", mincount);
-
 		console.log("pre pairs:", p_sorted_pairs.length);
 
 		const sorted_pairs = p_sorted_pairs.filter((p_pair) => {
@@ -171,10 +175,9 @@ export class SlicingPanel {
 		 console.log("A restspace:", dataDict.restspace);
 		 console.log("A current_orig:", dataDict.current_orig, "current_orient", dataDict.current_orient, "constrained_dim", dataDict.constrained_dim);
 
-		let prev_r=9999, r1, reference_r = aspect(dataDict.restspace[2], dataDict.restspace[3]);
-
 		const local_accum_queue = [];
 		let accum_count=0, local_flex_dim = 0, local_outer_flex_dim= 0;
+		let prev_r=9999, r1;
 
 		dataDict.accum_queue = [];
 
@@ -184,32 +187,25 @@ export class SlicingPanel {
 			ctrlcnt--;
 			const [ varvalue, count ] = sorted_pairs[0];
 			local_accum_queue.push([varvalue, count]);
-			//dataDict.accum_queue.push([varvalue, count])
 			accum_count += count;
 			area = count * dataDict.area_factor;
 			
 			if (local_accum_queue.length == 1) {
 				local_flex_dim = area / dataDict.constrained_dim;
-				// dataDict.flex_dim = area / dataDict.constrained_dim;
 				local_outer_flex_dim = dataDict.constrained_dim;
-				// dataDict.outer_flex_dim = dataDict.constrained_dim;
 			} else {
 				accum_area = accum_count * dataDict.area_factor;
 				local_outer_flex_dim = accum_area / dataDict.constrained_dim;
-				// dataDict.outer_flex_dim = accum_area / dataDict.constrained_dim;
 				local_flex_dim = area / local_outer_flex_dim;
-				// dataDict.flex_dim = area / dataDict.outer_flex_dim;
 			}
 			
-			console.log("dims:", local_flex_dim, local_outer_flex_dim);
+			// console.log("dims:", local_flex_dim, local_outer_flex_dim);
 			r1 = aspect(local_flex_dim, local_outer_flex_dim);
 			
-			console.log(varvalue, "r1:", r1, "prev r:",prev_r,'<', "ref_r", k * reference_r);
-			console.log("       > acclen:", local_accum_queue.length, "flexdim:", local_flex_dim, "outer:", local_outer_flex_dim);
+			//console.log(varvalue, "r1:", r1, "prev r:",prev_r,'<', "ref_r", k * reference_r);
+			//console.log("       > acclen:", local_accum_queue.length, "flexdim:", local_flex_dim, "outer:", local_outer_flex_dim);
 			// if (r1 <= k * reference_r) {
 			if (r1 > prev_r) {
-				//dataDict.accum_count = prev_accum_count;
-				//dataDict.accum_queue.pop();
 				accum_count = 0;
 				local_accum_queue.length = 0;
 				prev_r = 9999;
@@ -222,7 +218,6 @@ export class SlicingPanel {
 				sorted_pairs.shift();
 				prev_r = r1;
 			}
-
 		
 		}
 
@@ -234,64 +229,122 @@ export class SlicingPanel {
 
 		// console.log(response);
 
-		p_ctx.strokeStyle = "grey";
-		p_ctx.fillStyle = "white";
 		const ost = 2;
-
+		let color, boxw, boxh, tm0, tm1, tm2, tm3, perc, proptxt, limh, limw, largeh=false, mxw1,mxw2, cota;
 		for (let gr of dataDict.response) {
 
-			let color;
-			switch(gr[5]) {
+			color = genRainbowColor(2.2*dump_count, gr[6]+1);
+			boxw = gr[4]-2*ost;
+			boxh = gr[5]-2*ost;
 
-				case 1:
-					color = "white";
-					break;
+			const captionfont = `${this.datacaptionfontsz}px ${this.captionfontfamily}`;
+			const normalfont = `${this.datafontsz}px ${this.datafontfamily}`;
 
-				case 2:
-					color = "red";
-					break;
+			p_ctx.save();
+
+			// filtered_total_count
 
 
-				case 3:
-					color = "green";
-					break;
+			p_ctx.globalAlpha = 0.2;
+			p_ctx.fillStyle = color;	
+			p_ctx.fillRect(gr[2]+ost, gr[3]+ost, boxw, gr[5]-2*ost);
+	
+			p_ctx.globalAlpha = 1.0;
+			p_ctx.strokeStyle = color;
+			p_ctx.strokeRect(gr[2]+ost, gr[3]+ost, boxw, gr[5]-2*ost);
 
-				
-				case 4:
-					color = "orange";
-					break;
+			p_ctx.restore();
 
-							
-				case 5:
-					color = "darkcyan";
-					break;
+			p_ctx.save();
+			p_ctx.fillStyle = "white";	
+			p_ctx.textAlign = "left";
+			p_ctx.font = normalfont;
 
-					
-				case 6:
-					color = "yellow";
-					break;
+			const tol = 0.7;
 
-					
-				case 7:
-					color = "lightsalmon";
-					break;
-					
-				case 8:
-					color = "mediumseagreen";
-					break;
-					
-				case 9:
-					color = "tomato";
-					break;
-		
+			limh = boxh-tol*1.5*this.datafontsz;
+			limw = boxw-tol*2*this.datafontsz;
+
+			largeh = (boxh / this.datafontsz) > 5.0;
+
+			perc = (Math.round((gr[1]/filtered_total_count) * 1000) / 10).toFixed(1);
+			proptxt = `${gr[1]} (${perc}%)`;
+
+			if (largeh) {
+				p_ctx.font = captionfont;
 			}
-			p_ctx.fillStyle = color;
-			p_ctx.strokeRect(gr[1]+ost, gr[2]+ost, gr[3]-2*ost, gr[4]-2*ost);
-			p_ctx.fillText(gr[0], gr[1]+10, gr[2]+20)
+			tm0 = p_ctx.measureText(gr[0]);
+			if (largeh) {
+				p_ctx.font = normalfont;
+			}
+			tm1 = p_ctx.measureText(gr[1]);
+			tm2 = p_ctx.measureText(`${perc}%`);
+			tm3 = p_ctx.measureText(proptxt);
+
+			mxw1 = Math.max(tm0.width, tm1.width, tm2.width);
+			mxw2 = tm3.width;
+
+			if (4*this.datafontsz < limh) {
+				if (mxw1 < limw) {
+					// Normal horizontal label
+					if (largeh) {
+						p_ctx.save();
+						p_ctx.font = captionfont;
+						cota = gr[3]+this.datafontsz+this.datacaptionfontsz;
+					} else {
+						cota = gr[3]+2*this.datafontsz;
+					}
+					p_ctx.fillText(gr[0], gr[2]+this.datafontsz, cota);
+					if (largeh) {
+						p_ctx.restore();
+						cota += this.datacaptionfontsz; 
+					} else {
+						cota += this.datafontsz; 
+					}					
+					p_ctx.fillText(gr[1], gr[2]+this.datafontsz, cota);
+					cota += this.datafontsz; 
+					p_ctx.fillText(`${perc}%`, gr[2]+this.datafontsz, cota);	
+				} else {
+					// Vertical label
+					p_ctx.translate(gr[2]+this.datafontsz, gr[3]+this.datafontsz);
+					p_ctx.rotate(-Math.PI/2);
+					p_ctx.textAlign = "right";
+					p_ctx.fillText(gr[0], 0, this.datafontsz);
+					if (3*this.datafontsz < limh) {
+						p_ctx.fillText(gr[1], 0, 2*this.datafontsz);
+					}
+				}
+			} else {
+				// Horizontal but height-constrained label
+				p_ctx.fillText(gr[0], gr[2]+this.datafontsz, gr[3]+2*this.datafontsz);
+				console.log(gr[0], 3*this.datafontsz, limh);
+				if (3*this.datafontsz < limh) {
+					p_ctx.fillText(gr[1], gr[2]+this.datafontsz, gr[3]+3*this.datafontsz);
+				}
+				if (4*this.datafontsz < limh) {
+					p_ctx.fillText(`${perc}%`, gr[2]+this.datafontsz, gr[3]+4*this.datafontsz);
+				}
+
+			}
+
+			/*if (Math.max(tm0.width, tm1.width) < limw) {
+				p_ctx.fillText(gr[0], gr[2]+this.datafontsz, gr[3]+2*this.datafontsz);
+				p_ctx.fillText(proptxt, gr[2]+this.datafontsz, gr[3]+3*this.datafontsz);
+			} else {
+				p_ctx.translate(gr[2]+2*this.datafontsz, gr[3]+this.datafontsz+tm0.width);
+				p_ctx.rotate(-Math.PI/2);
+				p_ctx.fillText(gr[0], 0, 0);
+				p_ctx.fillText(proptxt, 0, 10);
+			}*/
+
+
+			p_ctx.restore();
 		}
 
 
 	}
+
+	// p_data_dict.response.push([varvalue, count, orig[0], orig[1], p_data_dict.outer_flex_dim, flex_dim, p_dump_count]);
 
 	fetchGraphdata(p_mapctx, p_ctx) {
 
@@ -330,7 +383,7 @@ export class SlicingPanel {
 					return second[1] - first[1];
 				});
 
-				that.fillTreemapGraph(p_ctx, dict['sumofclasscounts'], items);
+				that.fillMostFrequentTreemap(p_ctx, dict['sumofclasscounts'], items);
 				
 				// Create a new array with only the first 5 items
 				// console.log("Sort:", items.slice(0, 5));
