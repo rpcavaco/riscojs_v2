@@ -307,8 +307,14 @@ export class CanvasIcon extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol))
 
 		const r = img.width / img.height;
 		let w, h;
-		if (r > 1) {
+		if (r > 1.5) {
+			w = 1.5 * dim;
+			h = w / r;
+		} else if (r > 1) { 
 			h = dim;
+			w = h * r;
+		} else if (r < 0.67) { 
+			h = 1.5 * dim;
 			w = h * r;
 		} else {
 			w = dim;
