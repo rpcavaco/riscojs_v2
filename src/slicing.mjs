@@ -94,17 +94,23 @@ export class SlicingPanel {
 
 	fillStyleBack;
 	activeStyleFront;
+	navFillStyle;
 	inactiveStyleFront;
 	is_active;
 
 	interaction_boxes = {};
 	active_key;
+	itemdict;
+	itemkeys;
+	activepageidx;
+	sorted_pairs_collection;
 
 	constructor() {
 
 		this.fillTextStyle = GlobalConst.CONTROLS_STYLES.SEG_TEXTFILL;  
 		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.SEG_BCKGRD; 
 		this.activeStyleFront = GlobalConst.CONTROLS_STYLES.SEG_ACTIVECOLOR;
+		this.navFillStyle = GlobalConst.CONTROLS_STYLES.SEG_ACTIVECOLOR;
 		this.inactiveStyleFront = GlobalConst.CONTROLS_STYLES.SEG_INACTIVECOLOR;
 		this.margin_offset = GlobalConst.CONTROLS_STYLES.OFFSET;
 		this.normalszPX = GlobalConst.CONTROLS_STYLES.NORMALSZ_PX;
@@ -120,6 +126,9 @@ export class SlicingPanel {
 		this.had_prev_interaction = false;
 
 		this.active_key = null;
+		this.itemdict = null;
+		this.itemkeys = [];
+		this.activepageidx = null;
 		this.iconfuncs = {};
 
 	}
@@ -145,10 +154,85 @@ export class SlicingPanel {
 
 	}
 
-	genTreeMaps(p_mapctx, p_ctx, p_total_count, p_sorted_pairs, p_minarea) {
+	drawTreemapPagenavItems(p_mapctx) {
+
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+
+		ctx.save();
+
+		const pagekeys = [];
+		for (let k in this.interaction_boxes) {
+			if (k.startsWith("slicerpage")) {
+				pagekeys.push(k);
+			}
+		}
+		for (let k of pagekeys) {
+			delete this.interaction_boxes[k];
+		}
+
+		const ost = 2;
+		const size = 16;
+		const sep = 6;
+		const texthoffset = 1;
+		const textvoffset = 4;
+		//const rightmost = this.left + this.width - this.margin_offset; 
+		const rs = this.interaction_boxes["graphbox"];
+		const rightmost = rs[0] + rs[2];
+
+		let origx;
+		let origy = rs[1] - size - sep;
+
+		ctx.strokeStyle = this.navFillStyle;
+		ctx.lineWidth = 1;
+
+		ctx.font = '10px sans-serif';
+		ctx.textAlign = "left";
+
+		for (let tx, ox, i = (this.sorted_pairs_collection.length-1); i>=0; i--) {
+
+			if (this.activepageidx == null) {
+				this.activepageidx = 0;
+			}
+
+			
+			// console.log(i, (1 + (p_sorted_pairs_collection.length-1-i)), (p_sorted_pairs_collection.length-1-i));
+			
+			origx = rightmost - (1 + (this.sorted_pairs_collection.length-1-i)) * size - (this.sorted_pairs_collection.length-1-i) * sep - ost;
+
+			// console.log(p_rightmost, "==", origx+size);
+
+
+			this.interaction_boxes[`slicerpage${(i+1)}`] = [origx, origy, size, size];
+			tx = (i+1).toString();
+			ox = Math.round(origx+texthoffset+(size/4));
+
+			ctx.clearRect(origx, origy, size, size);
+			ctx.fillStyle = this.fillStyleBack;
+			ctx.fillRect(origx, origy, size, size);
+
+			if (i==this.activepageidx) {
+				ctx.fillStyle = this.navFillStyle;
+				ctx.fillRect(origx, origy, size, size);
+				ctx.fillStyle = "black";
+				ctx.fillText(tx, ox, origy+size-textvoffset);	
+			} else {
+				ctx.fillStyle = this.navFillStyle;
+				ctx.fillText(tx, ox, origy+size-textvoffset);	
+			}
+			ctx.strokeRect(origx, origy, size, size);
+
+		}
+
+		ctx.restore();
+
+	}
+
+	genTreeMaps(p_mapctx, p_total_count, p_sorted_pairs, p_topcota, p_minarea) {
 
 		const iconFuncDict = {};
 		fillIconFuncDict(p_mapctx, iconFuncDict);
+
+		console.log(p_total_count, p_sorted_pairs, p_topcota, p_minarea);
 
 		const rs = this.interaction_boxes["graphbox"];
 		let area_factor = rs[2] * rs[3] / p_total_count;
@@ -156,28 +240,27 @@ export class SlicingPanel {
 
 		let filtered_total_count = 0;
 		let rest_total_count = p_total_count;
-		const sorted_pairs_collection = [];
+		this.sorted_pairs_collection = [];
 
 		let i = 10
 		while (mincount > 0 && rest_total_count > 0) {
-
-			console.log("A", mincount);
 
 			i--;
 			if (i <= 0) {
 				break;
 			}
-			sorted_pairs_collection.push({
+			this.sorted_pairs_collection.push({
 				"af": area_factor,
 				"sp": p_sorted_pairs.filter((p_pair) => {
 					return p_pair[1] < prevmincount && p_pair[1] >=  mincount;
 				})
 			});
 			filtered_total_count = 0;
-			for (let sp of sorted_pairs_collection[sorted_pairs_collection.length-1]["sp"]) {
+			for (let sp of this.sorted_pairs_collection[this.sorted_pairs_collection.length-1]["sp"]) {
 				filtered_total_count += sp[1];
 			}
-			sorted_pairs_collection[sorted_pairs_collection.length-1]["cnt"] = filtered_total_count;
+			this.sorted_pairs_collection[this.sorted_pairs_collection.length-1]["cnt"] = filtered_total_count;
+			this.sorted_pairs_collection[this.sorted_pairs_collection.length-1]["minarea"] = p_minarea;
 
 			console.log(rest_total_count, "-", filtered_total_count);
 
@@ -188,17 +271,21 @@ export class SlicingPanel {
 			prevmincount = mincount;
 			mincount = Math.ceil(p_minarea / area_factor);
 
-			console.log("len", sorted_pairs_collection[sorted_pairs_collection.length-1]["sp"].length);
+			console.log("len", this.sorted_pairs_collection[this.sorted_pairs_collection.length-1]["sp"].length);
 
 		}
 
-		console.log(sorted_pairs_collection);
+		console.log(this.sorted_pairs_collection);
+
+		// generate page navigation
+
+		this.drawTreemapPagenavItems(p_mapctx);
 
 		let j=0;
-		for (const spobj of sorted_pairs_collection) {
+		for (const spobj of this.sorted_pairs_collection) {
 			j++;
-			if (j==4) {
-				this.fillTreemap(p_mapctx, p_ctx, iconFuncDict, spobj.cnt, spobj.sp, p_minarea);
+			if (j==1) {
+				this.fillTreemap(p_mapctx, iconFuncDict, spobj.cnt, spobj.sp, p_minarea);
 				break;
 			}
 		}
@@ -208,8 +295,7 @@ export class SlicingPanel {
 
 	}
 
-
-	async fillTreemap(p_mapctx, p_ctx, p_icon_func_dict, p_total_count, p_sorted_pairs, p_minarea) {
+	async fillTreemap(p_mapctx, p_icon_func_dict, p_total_count, p_sorted_pairs, p_minarea) {
 
 		const dataDict = {};
 
@@ -222,7 +308,7 @@ export class SlicingPanel {
 		console.log("mincount", mincount);
 		console.log("pre pairs:", p_sorted_pairs.length);
 
-		const sorted_pairs = p_sorted_pairs;
+		const sorted_pairs = [...p_sorted_pairs];
 		/*const sorted_pairs = p_sorted_pairs.filter((p_pair) => {
 			return p_pair[1] >=  mincount;
 		});*/
@@ -308,9 +394,18 @@ export class SlicingPanel {
 
 		// console.log(response);
 
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+
 		const ost = 2;
 		let color, boxw, boxh, tm0, tm1, tm2, tm3, perc, proptxt, limh, limw, largeh=false;
-		let spacing, mxw1,mxw2, cota, imgpath, imge, dim;
+		let spacing, mxw1, mxw2, cota, imgpath, imge, dim;
+
+		if (dataDict.response.length > 0) {
+			ctx.clearRect(...this.interaction_boxes["graphbox"]);
+			ctx.fillStyle = this.fillStyleBack;
+			ctx.fillRect(...this.interaction_boxes["graphbox"]);
+		}
+
 		for (let gr of dataDict.response) {
 
 			color = genRainbowColor(2.2*dump_count, gr[6]+1);
@@ -320,24 +415,24 @@ export class SlicingPanel {
 			const captionfont = `${this.datacaptionfontsz}px ${this.captionfontfamily}`;
 			const normalfont = `${this.datafontsz}px ${this.datafontfamily}`;
 
-			p_ctx.save();
+			ctx.save();
 
 			// filtered_total_count
 
-			p_ctx.globalAlpha = 0.2;
-			p_ctx.fillStyle = color;	
-			p_ctx.fillRect(gr[2]+ost, gr[3]+ost, boxw, gr[5]-2*ost);
+			ctx.globalAlpha = 0.2;
+			ctx.fillStyle = color;	
+			ctx.fillRect(gr[2]+ost, gr[3]+ost, boxw, gr[5]-2*ost);
 	
-			p_ctx.globalAlpha = 1.0;
-			p_ctx.strokeStyle = color;
-			p_ctx.strokeRect(gr[2]+ost, gr[3]+ost, boxw, gr[5]-2*ost);
+			ctx.globalAlpha = 1.0;
+			ctx.strokeStyle = color;
+			ctx.strokeRect(gr[2]+ost, gr[3]+ost, boxw, gr[5]-2*ost);
 
-			p_ctx.restore();
+			ctx.restore();
 
-			p_ctx.save();
-			p_ctx.fillStyle = "white";	
-			p_ctx.textAlign = "left";
-			p_ctx.font = normalfont;
+			ctx.save();
+			ctx.fillStyle = "white";	
+			ctx.textAlign = "left";
+			ctx.font = normalfont;
 
 			const tol = 0.7;
 
@@ -350,15 +445,15 @@ export class SlicingPanel {
 			proptxt = `${gr[1]} (${perc}%)`;
 
 			if (largeh) {
-				p_ctx.font = captionfont;
+				ctx.font = captionfont;
 			}
-			tm0 = p_ctx.measureText(gr[0]);
+			tm0 = ctx.measureText(gr[0]);
 			if (largeh) {
-				p_ctx.font = normalfont;
+				ctx.font = normalfont;
 			}
-			tm1 = p_ctx.measureText(gr[1]);
-			tm2 = p_ctx.measureText(`${perc}%`);
-			tm3 = p_ctx.measureText(proptxt);
+			tm1 = ctx.measureText(gr[1]);
+			tm2 = ctx.measureText(`${perc}%`);
+			tm3 = ctx.measureText(proptxt);
 
 			mxw1 = Math.max(tm0.width, tm1.width, tm2.width);
 			mxw2 = tm3.width;
@@ -372,8 +467,8 @@ export class SlicingPanel {
 				if (mxw1 < limw) {
 					// Normal horizontal label
 					if (largeh) {
-						p_ctx.save();
-						p_ctx.font = captionfont;
+						ctx.save();
+						ctx.font = captionfont;
 						cota = gr[3]+this.datafontsz+this.datacaptionfontsz;
 					} else {
 						cota = gr[3]+2*this.datafontsz;
@@ -402,42 +497,42 @@ export class SlicingPanel {
 								h = w / r;
 							}
 	
-							p_ctx.drawImage(imge, gr[2]+ost+boxw-w-spacing*this.datafontsz, gr[3]+gr[5]-ost-spacing*this.datafontsz-h, w, h);
+							ctx.drawImage(imge, gr[2]+ost+boxw-w-spacing*this.datafontsz, gr[3]+gr[5]-ost-spacing*this.datafontsz-h, w, h);
 						};							
 					}
 
 					// imge = await p_mapctx.imgbuffer.syncFetchImage(src, spl);
 
 
-					p_ctx.fillText(gr[0], gr[2]+this.datafontsz, cota);
+					ctx.fillText(gr[0], gr[2]+this.datafontsz, cota);
 					if (largeh) {
-						p_ctx.restore();
+						ctx.restore();
 						cota += this.datacaptionfontsz; 
 					} else {
 						cota += this.datafontsz; 
 					}					
-					p_ctx.fillText(gr[1], gr[2]+this.datafontsz, cota);
+					ctx.fillText(gr[1], gr[2]+this.datafontsz, cota);
 					cota += this.datafontsz; 
-					p_ctx.fillText(`${perc}%`, gr[2]+this.datafontsz, cota);	
+					ctx.fillText(`${perc}%`, gr[2]+this.datafontsz, cota);	
 				} else {
 					// Vertical label
-					p_ctx.translate(gr[2]+this.datafontsz, gr[3]+this.datafontsz);
-					p_ctx.rotate(-Math.PI/2);
-					p_ctx.textAlign = "right";
-					p_ctx.fillText(gr[0], 0, this.datafontsz);
+					ctx.translate(gr[2]+this.datafontsz, gr[3]+this.datafontsz);
+					ctx.rotate(-Math.PI/2);
+					ctx.textAlign = "right";
+					ctx.fillText(gr[0], 0, this.datafontsz);
 					if (3*this.datafontsz < limh) {
-						p_ctx.fillText(gr[1], 0, 2*this.datafontsz);
+						ctx.fillText(gr[1], 0, 2*this.datafontsz);
 					}
 				}
 			} else {
 				// Horizontal but height-constrained label
-				p_ctx.fillText(gr[0], gr[2]+this.datafontsz, gr[3]+2*this.datafontsz);
+				ctx.fillText(gr[0], gr[2]+this.datafontsz, gr[3]+2*this.datafontsz);
 				//console.log(gr[0], 3*this.datafontsz, limh);
 				if (3*this.datafontsz < limh) {
-					p_ctx.fillText(gr[1], gr[2]+this.datafontsz, gr[3]+3*this.datafontsz);
+					ctx.fillText(gr[1], gr[2]+this.datafontsz, gr[3]+3*this.datafontsz);
 				}
 				if (4*this.datafontsz < limh) {
-					p_ctx.fillText(`${perc}%`, gr[2]+this.datafontsz, gr[3]+4*this.datafontsz);
+					ctx.fillText(`${perc}%`, gr[2]+this.datafontsz, gr[3]+4*this.datafontsz);
 				}
 
 			}
@@ -453,7 +548,7 @@ export class SlicingPanel {
 			}*/
 
 
-			p_ctx.restore();
+			ctx.restore();
 		}
 
 
@@ -461,7 +556,7 @@ export class SlicingPanel {
 
 	// p_data_dict.response.push([varvalue, count, orig[0], orig[1], p_data_dict.outer_flex_dim, flex_dim, p_dump_count]);
 
-	fetchGraphdata(p_mapctx, p_ctx, p_minarea) {
+	fetchGraphdata(p_mapctx, p_minarea) {
 
 		if (!this.active_key) {
 			return;
@@ -470,6 +565,8 @@ export class SlicingPanel {
 		const url = p_mapctx.cfgvar["basic"]["slicing"]["url"];
 		const splits = this.active_key.split("#");
 		const that  = this;
+
+		const cota = this.interaction_boxes["graphbox"][0] + this.interaction_boxes["graphbox"][2];
 
 		fetch(url + "/astats", {
 			method: "POST",
@@ -498,7 +595,7 @@ export class SlicingPanel {
 					return second[1] - first[1];
 				});
 
-				that.genTreeMaps(p_mapctx, p_ctx, dict['sumofclasscounts'], items, p_minarea);
+				that.genTreeMaps(p_mapctx, dict['sumofclasscounts'], items, cota, p_minarea);
 				
 				// Create a new array with only the first 5 items
 				// console.log("Sort:", items.slice(0, 5));
@@ -538,15 +635,17 @@ export class SlicingPanel {
 		ctx.font = `${this.captionszPX}px ${this.captionfontfamily}`;
 		ctx.fillText(msg, indent, cota);
 		
-		let itemkeys=[], itemdict={}, slicekeystxt = "(error: slicing empty or not properly configured in risco_basic_config.js)";
+		let slicekeystxt = "(error: slicing empty or not properly configured in risco_basic_config.js)";
+		this.itemkeys.length = 0;
+		this.itemdict = {};
 		if (p_mapctx.cfgvar["basic"]["slicing"] !== undefined && p_mapctx.cfgvar["basic"]["slicing"]["keys"] !== undefined) {
 			for (let k in p_mapctx.cfgvar["basic"]["slicing"]["keys"]) {
 				for (let fld in p_mapctx.cfgvar["basic"]["slicing"]["keys"][k]) {
-					itemkeys.push(`${k}#${fld}`);
-					itemdict[`${k}#${fld}`] = p_mapctx.cfgvar["basic"]["slicing"]["keys"][k][fld];
+					this.itemkeys.push(`${k}#${fld}`);
+					this.itemdict[`${k}#${fld}`] = p_mapctx.cfgvar["basic"]["slicing"]["keys"][k][fld];
 				}
 			}
-			if (itemkeys.length > 0) {
+			if (this.itemkeys.length > 0) {
 				slicekeystxt = p_mapctx.i18n.msg('SEGMBY', true) + ":";
 			}
 		}
@@ -557,8 +656,8 @@ export class SlicingPanel {
 
 		let lbl, w, h, slack = GlobalConst.CONTROLS_STYLES.TEXTBOXSLACK, selwigetsymb_dim = GlobalConst.CONTROLS_STYLES.DROPDOWNARROWSZ;
 
-		if (this.active_key == null && itemkeys.length > 0) {
-			this.active_key = itemkeys[0]; 
+		if (this.active_key == null && this.itemkeys.length > 0) {
+			this.active_key = this.itemkeys[0]; 
 		}
 
 		if (this.active_key) {
@@ -566,26 +665,32 @@ export class SlicingPanel {
 			let txtdims = ctx.measureText(slicekeystxt);
 			const lang = (new I18n(p_mapctx.cfgvar["basic"]["msgs"])).getLang();
 
-			if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(itemdict[this.active_key].label) >= 0) {
-				lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][itemdict[this.active_key].label];
+			if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(this.itemdict[this.active_key].label) >= 0) {
+				lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][this.itemdict[this.active_key].label];
 			} else {
-				lbl = itemdict[this.active_key].label;
+				lbl = this.itemdict[this.active_key].label;
 			}	
 			indent = indent+txtdims.width+2*this.margin_offset;
 			ctx.fillText(lbl, indent, cota);
 
 			txtdims = ctx.measureText(lbl);
 
-			if (itemkeys.length > 1) {
+			if (this.itemkeys.length > 1) {
 				w = txtdims.width+3*slack + selwigetsymb_dim;
 			} else {
 				w = txtdims.width+2*slack;
 			}
 
-			h = 2*slack + txtdims.actualBoundingBoxAscent + txtdims.actualBoundingBoxDescent;
-			const selbox = [indent - txtdims.actualBoundingBoxLeft - slack, cota + txtdims.actualBoundingBoxDescent + slack, w, -h];
+			//cota + txtdims.actualBoundingBoxDescent + slack - (2*slack + txtdims.actualBoundingBoxAscent + txtdims.actualBoundingBoxDescent)
 
-			if (itemkeys.length > 1) {
+			// cota - slack - txtdims.actualBoundingBoxAscent
+
+			// antigo: cota + txtdims.actualBoundingBoxDescent + slack
+
+			h = 2*slack + txtdims.actualBoundingBoxAscent + txtdims.actualBoundingBoxDescent;
+			const selbox = [indent - txtdims.actualBoundingBoxLeft - slack, cota - slack - txtdims.actualBoundingBoxAscent, w, h];
+
+			if (this.itemkeys.length > 1) {
 
 				// draw dropdown arrow
 				let x = indent + txtdims.width + slack;
@@ -602,19 +707,27 @@ export class SlicingPanel {
 			}
 
 			indent = this.left+2*this.margin_offset;
-			cota += 2 * this.normalszPX;
+			cota += 4 * this.normalszPX;
 			const graphbox = [indent, cota, this.width-4*this.margin_offset, this.height+this.top-cota-2*this.margin_offset];
 
 			this.interaction_boxes["graphbox"] = [...graphbox]; 
 
 			ctx.strokeRect(...selbox);	
+
+
 			ctx.strokeStyle = "purple"
 			ctx.strokeRect(...graphbox);	
+			
+			ctx.restore(); // fetchGraphdata and children funcs have their own autonomous invocations of graphic context
 
-			this.fetchGraphdata(p_mapctx, ctx,  itemdict[this.active_key].minarea);
+			this.fetchGraphdata(p_mapctx, this.itemdict[this.active_key].minarea);
+		
+		} else {
+
+			ctx.restore();
+
 		}
 
-		ctx.restore();
 	}
 
 	clear(p_mapctx) {
@@ -657,11 +770,10 @@ export class SlicingPanel {
 
 				if (p_evt.clientX >= this.interaction_boxes[k][0] && 
 					p_evt.clientX <= this.interaction_boxes[k][0]+this.interaction_boxes[k][2] && 
-					p_evt.clientY <= this.interaction_boxes[k][1] && 
-					p_evt.clientY >= this.interaction_boxes[k][1]+this.interaction_boxes[k][3]) {
-		
-					interact_box_key = k;
-					break;
+					p_evt.clientY >= this.interaction_boxes[k][1] && 
+					p_evt.clientY <= this.interaction_boxes[k][1]+this.interaction_boxes[k][3]) {
+						interact_box_key = k;
+						break;
 				}
 			}
 
@@ -671,44 +783,73 @@ export class SlicingPanel {
 				case "mouseup":
 
 					if (interact_box_key) {
-		
-						let lbl, constraintitems=null, that = this;
-						const seldict = {};
-						const lang = (new I18n(p_mapctx.cfgvar["basic"]["msgs"])).getLang();
 
-						let itemkeys=[], itemdict={};
-						if (p_mapctx.cfgvar["basic"]["slicing"] !== undefined && p_mapctx.cfgvar["basic"]["slicing"]["keys"] !== undefined) {
-							for (let k in p_mapctx.cfgvar["basic"]["slicing"]["keys"]) {
-								for (let fld in p_mapctx.cfgvar["basic"]["slicing"]["keys"][k]) {
-									itemkeys.push(`${k}#${fld}`);
-									itemdict[`${k}#${fld}`] = p_mapctx.cfgvar["basic"]["slicing"]["keys"][k][fld];
+						console.log("end:", interact_box_key);
+		
+						if (interact_box_key == "segmattr") {
+
+							let lbl, constraintitems=null, that = this;
+							const seldict = {};
+							const lang = (new I18n(p_mapctx.cfgvar["basic"]["msgs"])).getLang();
+	
+							/*let itemkeys=[], itemdict={};
+							if (p_mapctx.cfgvar["basic"]["slicing"] !== undefined && p_mapctx.cfgvar["basic"]["slicing"]["keys"] !== undefined) {
+								for (let k in p_mapctx.cfgvar["basic"]["slicing"]["keys"]) {
+									for (let fld in p_mapctx.cfgvar["basic"]["slicing"]["keys"][k]) {
+										itemkeys.push(`${k}#${fld}`);
+										itemdict[`${k}#${fld}`] = p_mapctx.cfgvar["basic"]["slicing"]["keys"][k][fld];
+									}
 								}
+							} */
+																					
+							for (let k of this.itemkeys) {
+								if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(this.itemdict[k].label) >= 0) {
+									lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][this.itemdict[k].label];
+								} else {
+									lbl = this.itemdict[k].label;
+								}	
+								seldict[k] = lbl;	
+							}
+	
+							if (this.active_item) {
+								constraintitems = {'selected': `${this.active_item[0]}#${this.active_item[1]}` };
+							}
+							p_mapctx.getCustomizationObject().messaging_ctrlr.selectInputMessage(
+								p_mapctx.i18n.msg('SELSEGMBY', true), 
+								seldict,
+								(evt, p_result, p_value) => { 
+									if (p_value) {
+										that.active_key = p_value;
+										that.print(p_mapctx);
+									}
+								},
+								constraintitems
+							);
+
+						} else if (interact_box_key.startsWith("slicerpage")) {
+
+							let page = parseInt(interact_box_key.replace("slicerpage", ""));
+
+							console.log(page, this.activepageidx, this.sorted_pairs_collection.length);
+
+							if (page-1 != this.activepageidx) {
+
+								console.assert((page-1) >= 0 && page <= this.sorted_pairs_collection.length, `invalid page ${page-1}, should be in interval [0, ${this.sorted_pairs_collection.length}[`)
+
+								this.activepageidx = page-1;
+
+								const spobj = this.sorted_pairs_collection[this.activepageidx];
+								console.log(spobj);
+
+								const iconFuncDict = {};
+								fillIconFuncDict(p_mapctx, iconFuncDict);
+
+								this.drawTreemapPagenavItems(p_mapctx)								
+								this.fillTreemap(p_mapctx, iconFuncDict, spobj.cnt, spobj.sp, spobj.minarea);
 							}
 						}
-																				
-						for (let k of itemkeys) {
-							if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(itemdict[k].label) >= 0) {
-								lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][itemdict[k].label];
-							} else {
-								lbl = itemdict[k].label;
-							}	
-							seldict[k] = lbl;	
-						}
+						
 
-						if (this.active_item) {
-							constraintitems = {'selected': `${this.active_item[0]}#${this.active_item[1]}` };
-						}
-						p_mapctx.getCustomizationObject().messaging_ctrlr.selectInputMessage(
-							p_mapctx.i18n.msg('SELSEGMBY', true), 
-							seldict,
-							(evt, p_result, p_value) => { 
-								if (p_value) {
-									that.active_key = p_value;
-									that.print(p_mapctx);
-								}
-							},
-							constraintitems
-						);
 					}
 
 					break;

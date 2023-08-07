@@ -50,11 +50,11 @@ export class TOCManager {
 		this.initLayersFromConfig();
 	}
 
-	static readLayerConfigItem(p_lyrob, p_configvar, p_layerkey, p_itemname) {
+	/* static readLayerConfigItem(p_lyrob, p_configvar, p_layerkey, p_itemname) {
 		if (p_configvar.lorder[p_layerkey][p_itemname] !== undefined) {	
 			p_lyrob[p_itemname]	= p_configvar.lorder[p_layerkey][p_itemname];
 		}
-	}
+	} */
 
 	setTOCControl(p_tocctrl_inst) {
 		this.toccontrol = p_tocctrl_inst;
