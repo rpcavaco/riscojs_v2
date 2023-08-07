@@ -68,6 +68,19 @@ function fillTreemapGraph_dumpResult(p_data_dict, p_dump_count) {
 
 }
 
+function fillIconFuncDict(p_mapctx, p_ifdict) {
+
+	let itemkeys=[];
+	if (p_mapctx.cfgvar["basic"]["slicing"] !== undefined && p_mapctx.cfgvar["basic"]["slicing"]["keys"] !== undefined) {
+		for (let k in p_mapctx.cfgvar["basic"]["slicing"]["keys"]) {
+			for (let fld in p_mapctx.cfgvar["basic"]["slicing"]["keys"][k]) {
+				itemkeys.push(`${k}#${fld}`);
+				p_ifdict[`${k}#${fld}`] = p_mapctx.cfgvar["basic"]["slicing"]["keys"][k][fld].iconsrcfunc;
+			}
+		}
+	}
+
+}
 
 export class SlicingPanel {
 
@@ -107,6 +120,8 @@ export class SlicingPanel {
 		this.had_prev_interaction = false;
 
 		this.active_key = null;
+		this.iconfuncs = {};
+
 	}
 
 	calcDims(p_mapctx) {
@@ -130,18 +145,19 @@ export class SlicingPanel {
 
 	}
 
-	fillMostFrequentTreemap(p_ctx, p_total_count, p_sorted_pairs) {
+	async fillMostFrequentTreemap(p_mapctx, p_ctx, p_total_count, p_sorted_pairs, p_minarea) {
 
-		const minarea = 3000;
+		const dataDict = {};
 
-		let dataDict = {};
+		const iconFuncDict = {};
+		fillIconFuncDict(p_mapctx, iconFuncDict);
 
 		dataDict.restspace = [...this.interaction_boxes["graphbox"]];
 		dataDict.area_factor = (dataDict.restspace[2] * dataDict.restspace[3]) / p_total_count;
 		dataDict.response=[];
 
 		console.log("area", dataDict.restspace[2], "x", dataDict.restspace[3], "area_factor 1", dataDict.area_factor, p_total_count);
-		const mincount = minarea / dataDict.area_factor;
+		const mincount = p_minarea / dataDict.area_factor;
 		console.log("mincount", mincount);
 		console.log("pre pairs:", p_sorted_pairs.length);
 
@@ -172,8 +188,8 @@ export class SlicingPanel {
 		}
 		dataDict.current_orig = [dataDict.restspace[0], dataDict.restspace[1]];
 
-		 console.log("A restspace:", dataDict.restspace);
-		 console.log("A current_orig:", dataDict.current_orig, "current_orient", dataDict.current_orient, "constrained_dim", dataDict.constrained_dim);
+		// console.log("A restspace:", dataDict.restspace);
+		// console.log("A current_orig:", dataDict.current_orig, "current_orient", dataDict.current_orient, "constrained_dim", dataDict.constrained_dim);
 
 		const local_accum_queue = [];
 		let accum_count=0, local_flex_dim = 0, local_outer_flex_dim= 0;
@@ -230,7 +246,8 @@ export class SlicingPanel {
 		// console.log(response);
 
 		const ost = 2;
-		let color, boxw, boxh, tm0, tm1, tm2, tm3, perc, proptxt, limh, limw, largeh=false, mxw1,mxw2, cota;
+		let color, boxw, boxh, tm0, tm1, tm2, tm3, perc, proptxt, limh, limw, largeh=false;
+		let spacing, mxw1,mxw2, cota, imgpath, imge, dim;
 		for (let gr of dataDict.response) {
 
 			color = genRainbowColor(2.2*dump_count, gr[6]+1);
@@ -243,7 +260,6 @@ export class SlicingPanel {
 			p_ctx.save();
 
 			// filtered_total_count
-
 
 			p_ctx.globalAlpha = 0.2;
 			p_ctx.fillStyle = color;	
@@ -284,6 +300,11 @@ export class SlicingPanel {
 			mxw1 = Math.max(tm0.width, tm1.width, tm2.width);
 			mxw2 = tm3.width;
 
+			dim = boxw / 5.0;
+			dim = Math.min(GlobalConst.CONTROLS_STYLES.SEG_MAXICONSZ, Math.max(dim, GlobalConst.CONTROLS_STYLES.SEG_MINICONSZ));
+			spacing = boxw / 150.0;
+			spacing = Math.min(GlobalConst.CONTROLS_STYLES.SEG_MAXICONSEP, Math.max(spacing, GlobalConst.CONTROLS_STYLES.SEG_MINICONSEP))
+
 			if (4*this.datafontsz < limh) {
 				if (mxw1 < limw) {
 					// Normal horizontal label
@@ -294,6 +315,37 @@ export class SlicingPanel {
 					} else {
 						cota = gr[3]+2*this.datafontsz;
 					}
+
+					if (iconFuncDict[this.active_key] !== undefined) {
+
+						imgpath = iconFuncDict[this.active_key](gr[0]);
+						// console.log(imgpath);
+						imge = await p_mapctx.imgbuffer.syncFetchImage(imgpath, gr[0]);
+						if (imge.complete) {
+
+							const r = imge.width / imge.height;
+							let w, h;
+							if (r > 1.5) {
+								w = 1.5 * dim;
+								h = w / r;
+							} else if (r > 1) { 
+								h = dim;
+								w = h * r;
+							} else if (r < 0.67) { 
+								h = 1.5 * dim;
+								w = h * r;
+							} else {
+								w = dim;
+								h = w / r;
+							}
+	
+							p_ctx.drawImage(imge, gr[2]+ost+boxw-w-spacing*this.datafontsz, gr[3]+gr[5]-ost-spacing*this.datafontsz-h, w, h);
+						};							
+					}
+
+					// imge = await p_mapctx.imgbuffer.syncFetchImage(src, spl);
+
+
 					p_ctx.fillText(gr[0], gr[2]+this.datafontsz, cota);
 					if (largeh) {
 						p_ctx.restore();
@@ -317,7 +369,7 @@ export class SlicingPanel {
 			} else {
 				// Horizontal but height-constrained label
 				p_ctx.fillText(gr[0], gr[2]+this.datafontsz, gr[3]+2*this.datafontsz);
-				console.log(gr[0], 3*this.datafontsz, limh);
+				//console.log(gr[0], 3*this.datafontsz, limh);
 				if (3*this.datafontsz < limh) {
 					p_ctx.fillText(gr[1], gr[2]+this.datafontsz, gr[3]+3*this.datafontsz);
 				}
@@ -346,7 +398,7 @@ export class SlicingPanel {
 
 	// p_data_dict.response.push([varvalue, count, orig[0], orig[1], p_data_dict.outer_flex_dim, flex_dim, p_dump_count]);
 
-	fetchGraphdata(p_mapctx, p_ctx) {
+	fetchGraphdata(p_mapctx, p_ctx, p_minarea) {
 
 		if (!this.active_key) {
 			return;
@@ -383,7 +435,7 @@ export class SlicingPanel {
 					return second[1] - first[1];
 				});
 
-				that.fillMostFrequentTreemap(p_ctx, dict['sumofclasscounts'], items);
+				that.fillMostFrequentTreemap(p_mapctx, p_ctx, dict['sumofclasscounts'], items, p_minarea);
 				
 				// Create a new array with only the first 5 items
 				// console.log("Sort:", items.slice(0, 5));
@@ -451,10 +503,10 @@ export class SlicingPanel {
 			let txtdims = ctx.measureText(slicekeystxt);
 			const lang = (new I18n(p_mapctx.cfgvar["basic"]["msgs"])).getLang();
 
-			if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(itemdict[this.active_key]) >= 0) {
-				lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][itemdict[this.active_key]];
+			if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(itemdict[this.active_key].label) >= 0) {
+				lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][itemdict[this.active_key].label];
 			} else {
-				lbl = itemdict[itemdict[this.active_key]];
+				lbl = itemdict[this.active_key].label;
 			}	
 			indent = indent+txtdims.width+2*this.margin_offset;
 			ctx.fillText(lbl, indent, cota);
@@ -496,7 +548,7 @@ export class SlicingPanel {
 			ctx.strokeStyle = "purple"
 			ctx.strokeRect(...graphbox);	
 
-			this.fetchGraphdata(p_mapctx, ctx);
+			this.fetchGraphdata(p_mapctx, ctx,  itemdict[this.active_key].minarea);
 		}
 
 		ctx.restore();
@@ -570,10 +622,10 @@ export class SlicingPanel {
 					}
 																			
 					for (let k of itemkeys) {
-						if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(itemdict[k]) >= 0) {
-							lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][itemdict[k]];
+						if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(itemdict[k].label) >= 0) {
+							lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][itemdict[k].label];
 						} else {
-							lbl = itemdict[k];
+							lbl = itemdict[k].label;
 						}	
 						seldict[k] = lbl;	
 					}

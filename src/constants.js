@@ -230,8 +230,11 @@ var GlobalConst = {
 		SEG_INACTIVECOLOR: "grey",
 		SEG_DATAFONTFAMILY: "sans-serif",
 		SEG_DATACAPTIONFONTSIZE_PX: 13,
-		SEG_DATAFONTSIZE_PX: 10
-
+		SEG_DATAFONTSIZE_PX: 10,
+		SEG_MAXICONSZ: 60,
+		SEG_MINICONSZ: 20,
+		SEG_MAXICONSEP: 2,
+		SEG_MINICONSEP: 1
 	},
 
 	DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB: { // Symbolize spatial index features selected on mouse position
