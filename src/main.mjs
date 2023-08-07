@@ -181,7 +181,7 @@ export class RiscoMapCtx {
 		this.tocmgr = new TOCManager(this, p_mode);
 		this.i18n = new I18n(p_config_var["text"]);
 		this.touchevtctrlr = new TouchController();
-		this.imgbuffer = new ImgLRUCache(128);
+		this.imgbuffer = new ImgLRUCache(GlobalConst.IMAGE_LRUCACHE_SZ);
 
 		this.query_box = new I18n(p_config_var["text"]);
 

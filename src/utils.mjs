@@ -453,7 +453,7 @@ export class ImgLRUCache {
 				ret = img;		
 	
 			} catch(e) {
-				console.error(`[WARN] ImgLRUCache syncFetchImage: error '${e}'.`);
+				console.error(`[WARN] ImgLRUCache syncFetchImage on '${p_name}': error '${e}'.`);
 			}
 		}
 

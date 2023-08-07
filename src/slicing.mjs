@@ -145,12 +145,73 @@ export class SlicingPanel {
 
 	}
 
-	async fillMostFrequentTreemap(p_mapctx, p_ctx, p_total_count, p_sorted_pairs, p_minarea) {
-
-		const dataDict = {};
+	genTreeMaps(p_mapctx, p_ctx, p_total_count, p_sorted_pairs, p_minarea) {
 
 		const iconFuncDict = {};
 		fillIconFuncDict(p_mapctx, iconFuncDict);
+
+		const rs = this.interaction_boxes["graphbox"];
+		let area_factor = rs[2] * rs[3] / p_total_count;
+		let prevmincount = Number.MAX_SAFE_INTEGER, mincount = Math.ceil(p_minarea / area_factor);
+
+		let filtered_total_count = 0;
+		let rest_total_count = p_total_count;
+		const sorted_pairs_collection = [];
+
+		let i = 10
+		while (mincount > 0 && rest_total_count > 0) {
+
+			console.log("A", mincount);
+
+			i--;
+			if (i <= 0) {
+				break;
+			}
+			sorted_pairs_collection.push({
+				"af": area_factor,
+				"sp": p_sorted_pairs.filter((p_pair) => {
+					return p_pair[1] < prevmincount && p_pair[1] >=  mincount;
+				})
+			});
+			filtered_total_count = 0;
+			for (let sp of sorted_pairs_collection[sorted_pairs_collection.length-1]["sp"]) {
+				filtered_total_count += sp[1];
+			}
+			sorted_pairs_collection[sorted_pairs_collection.length-1]["cnt"] = filtered_total_count;
+
+			console.log(rest_total_count, "-", filtered_total_count);
+
+			rest_total_count = rest_total_count - filtered_total_count;
+			console.log("rest_total_count:", rest_total_count);
+
+			area_factor = rs[2] * rs[3] / rest_total_count;
+			prevmincount = mincount;
+			mincount = Math.ceil(p_minarea / area_factor);
+
+			console.log("len", sorted_pairs_collection[sorted_pairs_collection.length-1]["sp"].length);
+
+		}
+
+		console.log(sorted_pairs_collection);
+
+		let j=0;
+		for (const spobj of sorted_pairs_collection) {
+			j++;
+			if (j==4) {
+				this.fillTreemap(p_mapctx, p_ctx, iconFuncDict, spobj.cnt, spobj.sp, p_minarea);
+				break;
+			}
+		}
+
+
+
+
+	}
+
+
+	async fillTreemap(p_mapctx, p_ctx, p_icon_func_dict, p_total_count, p_sorted_pairs, p_minarea) {
+
+		const dataDict = {};
 
 		dataDict.restspace = [...this.interaction_boxes["graphbox"]];
 		dataDict.area_factor = (dataDict.restspace[2] * dataDict.restspace[3]) / p_total_count;
@@ -161,16 +222,18 @@ export class SlicingPanel {
 		console.log("mincount", mincount);
 		console.log("pre pairs:", p_sorted_pairs.length);
 
-		const sorted_pairs = p_sorted_pairs.filter((p_pair) => {
+		const sorted_pairs = p_sorted_pairs;
+		/*const sorted_pairs = p_sorted_pairs.filter((p_pair) => {
 			return p_pair[1] >=  mincount;
-		});
+		});*/
 
 		console.log("post pairs:", sorted_pairs.length);
 
-		let filtered_total_count = 0;
+		let filtered_total_count = p_total_count;
+		/*let filtered_total_count = 0;
 		for (let sp of sorted_pairs) {
 			filtered_total_count += sp[1];
-		}
+		} */
 		dataDict.area_factor = (dataDict.restspace[2] * dataDict.restspace[3]) / filtered_total_count;
 
 		console.log("area_factor 2", dataDict.area_factor, filtered_total_count);
@@ -316,12 +379,12 @@ export class SlicingPanel {
 						cota = gr[3]+2*this.datafontsz;
 					}
 
-					if (iconFuncDict[this.active_key] !== undefined) {
+					if (p_icon_func_dict[this.active_key] !== undefined) {
 
-						imgpath = iconFuncDict[this.active_key](gr[0]);
+						imgpath = p_icon_func_dict[this.active_key](gr[0]);
 						// console.log(imgpath);
 						imge = await p_mapctx.imgbuffer.syncFetchImage(imgpath, gr[0]);
-						if (imge.complete) {
+						if (imge!=null && imge.complete) {
 
 							const r = imge.width / imge.height;
 							let w, h;
@@ -435,7 +498,7 @@ export class SlicingPanel {
 					return second[1] - first[1];
 				});
 
-				that.fillMostFrequentTreemap(p_mapctx, p_ctx, dict['sumofclasscounts'], items, p_minarea);
+				that.genTreeMaps(p_mapctx, p_ctx, dict['sumofclasscounts'], items, p_minarea);
 				
 				// Create a new array with only the first 5 items
 				// console.log("Sort:", items.slice(0, 5));
@@ -607,43 +670,47 @@ export class SlicingPanel {
 				case "touchend":
 				case "mouseup":
 
-					let lbl, constraintitems=null, that = this;
-					const seldict = {};
-					const lang = (new I18n(p_mapctx.cfgvar["basic"]["msgs"])).getLang();
+					if (interact_box_key) {
+		
+						let lbl, constraintitems=null, that = this;
+						const seldict = {};
+						const lang = (new I18n(p_mapctx.cfgvar["basic"]["msgs"])).getLang();
 
-					let itemkeys=[], itemdict={};
-					if (p_mapctx.cfgvar["basic"]["slicing"] !== undefined && p_mapctx.cfgvar["basic"]["slicing"]["keys"] !== undefined) {
-						for (let k in p_mapctx.cfgvar["basic"]["slicing"]["keys"]) {
-							for (let fld in p_mapctx.cfgvar["basic"]["slicing"]["keys"][k]) {
-								itemkeys.push(`${k}#${fld}`);
-								itemdict[`${k}#${fld}`] = p_mapctx.cfgvar["basic"]["slicing"]["keys"][k][fld];
+						let itemkeys=[], itemdict={};
+						if (p_mapctx.cfgvar["basic"]["slicing"] !== undefined && p_mapctx.cfgvar["basic"]["slicing"]["keys"] !== undefined) {
+							for (let k in p_mapctx.cfgvar["basic"]["slicing"]["keys"]) {
+								for (let fld in p_mapctx.cfgvar["basic"]["slicing"]["keys"][k]) {
+									itemkeys.push(`${k}#${fld}`);
+									itemdict[`${k}#${fld}`] = p_mapctx.cfgvar["basic"]["slicing"]["keys"][k][fld];
+								}
 							}
 						}
-					}
-																			
-					for (let k of itemkeys) {
-						if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(itemdict[k].label) >= 0) {
-							lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][itemdict[k].label];
-						} else {
-							lbl = itemdict[k].label;
-						}	
-						seldict[k] = lbl;	
+																				
+						for (let k of itemkeys) {
+							if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(itemdict[k].label) >= 0) {
+								lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][itemdict[k].label];
+							} else {
+								lbl = itemdict[k].label;
+							}	
+							seldict[k] = lbl;	
+						}
+
+						if (this.active_item) {
+							constraintitems = {'selected': `${this.active_item[0]}#${this.active_item[1]}` };
+						}
+						p_mapctx.getCustomizationObject().messaging_ctrlr.selectInputMessage(
+							p_mapctx.i18n.msg('SELSEGMBY', true), 
+							seldict,
+							(evt, p_result, p_value) => { 
+								if (p_value) {
+									that.active_key = p_value;
+									that.print(p_mapctx);
+								}
+							},
+							constraintitems
+						);
 					}
 
-					if (this.active_item) {
-						constraintitems = {'selected': `${this.active_item[0]}#${this.active_item[1]}` };
-					}
-					p_mapctx.getCustomizationObject().messaging_ctrlr.selectInputMessage(
-						p_mapctx.i18n.msg('SELSEGMBY', true), 
-						seldict,
-						(evt, p_result, p_value) => { 
-							if (p_value) {
-								that.active_key = p_value;
-								that.print(p_mapctx);
-							}
-						},
-						constraintitems
-					);
 					break;
 
 				case "mousemove":

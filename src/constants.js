@@ -80,6 +80,7 @@ var GlobalConst = {
 	GEOLOCATION_SPEED_THRESHOLD: 1.7, // m/s
 	GEOLOCATION_HIGHSPEED_SCALE: 1200,
 	GEOLOCATION_LOWSPEED_SCALE: 700,
+	IMAGE_LRUCACHE_SZ: 200,
 
 	// ------------------------------------------------------------------------
 	// END of internal constants 
