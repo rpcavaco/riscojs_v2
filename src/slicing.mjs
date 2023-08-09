@@ -82,6 +82,36 @@ function fillIconFuncDict(p_mapctx, p_ifdict) {
 
 }
 
+async function genImage(p_mapctx, p_ctx, p_icon_func_dict, p_graphicbox_entry, p_datafontsz, p_dim, p_ost, p_boxw, p_spacing, p_activekey) {
+
+	if (p_icon_func_dict[p_activekey] !== undefined) {
+
+		const imgpath = p_icon_func_dict[p_activekey](p_graphicbox_entry[0]);
+		const imge = await p_mapctx.imgbuffer.syncFetchImage(imgpath, p_graphicbox_entry[0]);
+		if (imge!=null && imge.complete) {
+
+			const r = imge.width / imge.height;
+			let w, h;
+			if (r > 1.5) {
+				w = 1.5 * p_dim;
+				h = w / r;
+			} else if (r > 1) { 
+				h = p_dim;
+				w = h * r;
+			} else if (r < 0.67) { 
+				h = 1.5 * p_dim;
+				w = h * r;
+			} else {
+				w = p_dim;
+				h = w / r;
+			}
+
+			p_ctx.drawImage(imge, p_graphicbox_entry[2]+p_ost+p_boxw-w-p_spacing*p_datafontsz, p_graphicbox_entry[3]+p_graphicbox_entry[5]-p_ost-p_spacing*p_datafontsz-h, w, h);
+		};							
+	}
+
+}
+
 export class SlicingPanel {
 
 	top;
@@ -479,7 +509,9 @@ export class SlicingPanel {
 
 			if (4*this.datafontsz < limh) {
 				if (mxw1 < limw) {
+
 					// Normal horizontal label
+
 					if (largeh) {
 						ctx.save();
 						ctx.font = captionfont;
@@ -488,37 +520,10 @@ export class SlicingPanel {
 						cota = gr[3]+2*this.datafontsz;
 					}
 
-					if (p_icon_func_dict[this.active_key] !== undefined) {
-
-						imgpath = p_icon_func_dict[this.active_key](gr[0]);
-						// console.log(imgpath);
-						imge = await p_mapctx.imgbuffer.syncFetchImage(imgpath, gr[0]);
-						if (imge!=null && imge.complete) {
-
-							const r = imge.width / imge.height;
-							let w, h;
-							if (r > 1.5) {
-								w = 1.5 * dim;
-								h = w / r;
-							} else if (r > 1) { 
-								h = dim;
-								w = h * r;
-							} else if (r < 0.67) { 
-								h = 1.5 * dim;
-								w = h * r;
-							} else {
-								w = dim;
-								h = w / r;
-							}
-	
-							ctx.drawImage(imge, gr[2]+ost+boxw-w-spacing*this.datafontsz, gr[3]+gr[5]-ost-spacing*this.datafontsz-h, w, h);
-						};							
-					}
-
-					// imge = await p_mapctx.imgbuffer.syncFetchImage(src, spl);
-
+					await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, dim, ost, boxw, spacing, this.active_key);
 
 					ctx.fillText(gr[0], gr[2]+this.datafontsz, cota);
+					
 					if (largeh) {
 						ctx.restore();
 						cota += this.datacaptionfontsz; 
@@ -528,8 +533,12 @@ export class SlicingPanel {
 					ctx.fillText(gr[1], gr[2]+this.datafontsz, cota);
 					cota += this.datafontsz; 
 					ctx.fillText(`${perc}%`, gr[2]+this.datafontsz, cota);	
+
+
 				} else {
+
 					// Vertical label
+					ctx.save();
 					ctx.translate(gr[2]+this.datafontsz, gr[3]+this.datafontsz);
 					ctx.rotate(-Math.PI/2);
 					ctx.textAlign = "right";
@@ -537,6 +546,10 @@ export class SlicingPanel {
 					if (3*this.datafontsz < limh) {
 						ctx.fillText(gr[1], 0, 2*this.datafontsz);
 					}
+					ctx.restore();
+
+					await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, Math.min(limh, limw), ost, boxw, 0.5, this.active_key);
+
 				}
 			} else {
 				// Horizontal but height-constrained label
@@ -549,7 +562,39 @@ export class SlicingPanel {
 					ctx.fillText(`${perc}%`, gr[2]+this.datafontsz, gr[3]+4*this.datafontsz);
 				}
 
+				await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, Math.min(limh, limw), ost, boxw, 0.5, this.active_key);
+
 			}
+
+			/* if (genimage) {
+
+				if (p_icon_func_dict[this.active_key] !== undefined) {
+
+					imgpath = p_icon_func_dict[this.active_key](gr[0]);
+					imge = await p_mapctx.imgbuffer.syncFetchImage(imgpath, gr[0]);
+					if (imge!=null && imge.complete) {
+
+						const r = imge.width / imge.height;
+						let w, h;
+						if (r > 1.5) {
+							w = 1.5 * dim;
+							h = w / r;
+						} else if (r > 1) { 
+							h = dim;
+							w = h * r;
+						} else if (r < 0.67) { 
+							h = 1.5 * dim;
+							w = h * r;
+						} else {
+							w = dim;
+							h = w / r;
+						}
+
+						ctx.drawImage(imge, gr[2]+ost+boxw-w-spacing*this.datafontsz, gr[3]+gr[5]-ost-spacing*this.datafontsz-h, w, h);
+					};							
+				}
+
+			} */
 
 			ctx.restore();
 		}
