@@ -129,6 +129,7 @@ export class SlicingPanel {
 		this.itemdict = null;
 		this.itemkeys = [];
 		this.activepageidx = null;
+		this.sorted_pairs_collection = [];
 		this.iconfuncs = {};
 
 	}
@@ -232,70 +233,91 @@ export class SlicingPanel {
 		const iconFuncDict = {};
 		fillIconFuncDict(p_mapctx, iconFuncDict);
 
-		console.log(p_total_count, p_sorted_pairs, p_topcota, p_minarea);
+		//console.log("INICIO", p_total_count, p_sorted_pairs, p_topcota, p_minarea);
 
 		const rs = this.interaction_boxes["graphbox"];
-		let area_factor = rs[2] * rs[3] / p_total_count;
-		let prevmincount = Number.MAX_SAFE_INTEGER, mincount = Math.ceil(p_minarea / area_factor);
+		let area_factor;
 
-		let filtered_total_count = 0;
-		let rest_total_count = p_total_count;
-		this.sorted_pairs_collection = [];
+		this.sorted_pairs_collection.length = 0;
 
-		let i = 10
-		while (mincount > 0 && rest_total_count > 0) {
+		let remaining_sorted_pairs = [...p_sorted_pairs];
+		let area, sumcount, current_sorted_pairs = [], j, prev_spairs_count=0, current_total_count=0;
+		let i = 0, k = 10;
 
-			i--;
-			if (i <= 0) {
-				break;
+		while (remaining_sorted_pairs.length > 0 && i < 10) {
+
+			if (i==0) {
+				current_total_count = p_total_count;
+			} else {
+				current_total_count = 0;
+				for (let sp of remaining_sorted_pairs) {
+					current_total_count += sp[1];
+				}
 			}
-			this.sorted_pairs_collection.push({
-				"af": area_factor,
-				"sp": p_sorted_pairs.filter((p_pair) => {
-					return p_pair[1] < prevmincount && p_pair[1] >=  mincount;
-				})
-			});
-			filtered_total_count = 0;
-			for (let sp of this.sorted_pairs_collection[this.sorted_pairs_collection.length-1]["sp"]) {
-				filtered_total_count += sp[1];
+
+			i++;
+
+			// console.log("remaining_sorted_pairs len:", remaining_sorted_pairs.length);
+
+			area_factor = rs[2] * rs[3] / current_total_count;
+			// console.log("area_factor ini:", area_factor);
+	
+			k = 10;
+			while (k > 0) {
+
+				k--;
+			
+				current_sorted_pairs.length = 0;
+				sumcount = 0;
+				j = 0;
+				while (remaining_sorted_pairs[j] !== undefined) {
+					area = remaining_sorted_pairs[j][1] * area_factor;
+					//console.log(remaining_sorted_pairs[j], "area:", area, ">=", p_minarea);
+					if (area >= p_minarea) {
+						sumcount += remaining_sorted_pairs[j][1];
+						current_sorted_pairs.push(remaining_sorted_pairs[j]);
+					} else {
+						break;
+					}
+					j++;
+				}
+
+				area_factor = rs[2] * rs[3] / sumcount;
+				// console.log("k:", k, "prevcnt:", prev_spairs_count, "current_sorted_pairs:", current_sorted_pairs, "novo area_factor:", area_factor);
+
+				if (prev_spairs_count >= current_sorted_pairs.length) {
+					break;
+				}
+				prev_spairs_count = current_sorted_pairs.length;
+
+			};
+
+
+			remaining_sorted_pairs.splice(0, current_sorted_pairs.length);
+
+			let cnt = 0;
+			for (let sp of current_sorted_pairs) {
+				cnt += sp[1];
 			}
-			this.sorted_pairs_collection[this.sorted_pairs_collection.length-1]["cnt"] = filtered_total_count;
-			this.sorted_pairs_collection[this.sorted_pairs_collection.length-1]["minarea"] = p_minarea;
-
-			console.log(rest_total_count, "-", filtered_total_count);
-
-			rest_total_count = rest_total_count - filtered_total_count;
-			console.log("rest_total_count:", rest_total_count);
-
-			area_factor = rs[2] * rs[3] / rest_total_count;
-			prevmincount = mincount;
-			mincount = Math.ceil(p_minarea / area_factor);
-
-			console.log("len", this.sorted_pairs_collection[this.sorted_pairs_collection.length-1]["sp"].length);
-
+			if (current_sorted_pairs.length > 0) {
+				this.sorted_pairs_collection.push({
+					"sp": [...current_sorted_pairs],
+					"cnt": cnt
+				});
+			}
 		}
 
-		console.log(this.sorted_pairs_collection);
-
-		// generate page navigation
 
 		this.drawTreemapPagenavItems(p_mapctx);
 
-		let j=0;
-		for (const spobj of this.sorted_pairs_collection) {
-			j++;
-			if (j==1) {
-				this.fillTreemap(p_mapctx, iconFuncDict, spobj.cnt, spobj.sp, p_minarea);
-				break;
-			}
+		let spobj = this.sorted_pairs_collection[this.activepageidx];
+		if (spobj) {
+			this.fillTreemap(p_mapctx, iconFuncDict, spobj.cnt, spobj.sp);
 		}
-
-
-
 
 	}
 
-	async fillTreemap(p_mapctx, p_icon_func_dict, p_total_count, p_sorted_pairs, p_minarea) {
+	async fillTreemap(p_mapctx, p_icon_func_dict, p_total_count, p_sorted_pairs) {
 
 		const dataDict = {};
 
@@ -303,18 +325,10 @@ export class SlicingPanel {
 		dataDict.area_factor = (dataDict.restspace[2] * dataDict.restspace[3]) / p_total_count;
 		dataDict.response=[];
 
-		console.log("area", dataDict.restspace[2], "x", dataDict.restspace[3], "area_factor 1", dataDict.area_factor, p_total_count);
-		const mincount = p_minarea / dataDict.area_factor;
-		console.log("mincount", mincount);
-		console.log("pre pairs:", p_sorted_pairs.length);
+		// console.log("area", dataDict.restspace[2], "x", dataDict.restspace[3], "area_factor 1", dataDict.area_factor, p_total_count);
+		// console.log("pre pairs:", p_sorted_pairs.length);
 
 		const sorted_pairs = [...p_sorted_pairs];
-		/*const sorted_pairs = p_sorted_pairs.filter((p_pair) => {
-			return p_pair[1] >=  mincount;
-		});*/
-
-		console.log("post pairs:", sorted_pairs.length);
-
 		let filtered_total_count = p_total_count;
 		/*let filtered_total_count = 0;
 		for (let sp of sorted_pairs) {
@@ -322,7 +336,7 @@ export class SlicingPanel {
 		} */
 		dataDict.area_factor = (dataDict.restspace[2] * dataDict.restspace[3]) / filtered_total_count;
 
-		console.log("area_factor 2", dataDict.area_factor, filtered_total_count);
+		// console.log("area_factor 2", dataDict.area_factor, filtered_total_count);
 
 		//let sorted_pairs = [...p_sorted_pairs];
 		dataDict.current_orient = null;
@@ -582,13 +596,12 @@ export class SlicingPanel {
 
 				const dict = responsejson[splits[1]];
 
-				console.log(dict);
-
 				// Create items array
-				const varvalues = Object.keys(dict['classcounts']);
+				const varvalues = Object.keys(dict['classes']);
 				const items = varvalues.map(function(key) {
-					return [key, dict['classcounts'][key]];
+					return [key, dict['classes'][key].cnt];
 				});
+
 				
 				// Sort the array based on the second element
 				items.sort(function(first, second) {
@@ -784,24 +797,12 @@ export class SlicingPanel {
 
 					if (interact_box_key) {
 
-						console.log("end:", interact_box_key);
-		
 						if (interact_box_key == "segmattr") {
 
 							let lbl, constraintitems=null, that = this;
 							const seldict = {};
 							const lang = (new I18n(p_mapctx.cfgvar["basic"]["msgs"])).getLang();
 	
-							/*let itemkeys=[], itemdict={};
-							if (p_mapctx.cfgvar["basic"]["slicing"] !== undefined && p_mapctx.cfgvar["basic"]["slicing"]["keys"] !== undefined) {
-								for (let k in p_mapctx.cfgvar["basic"]["slicing"]["keys"]) {
-									for (let fld in p_mapctx.cfgvar["basic"]["slicing"]["keys"][k]) {
-										itemkeys.push(`${k}#${fld}`);
-										itemdict[`${k}#${fld}`] = p_mapctx.cfgvar["basic"]["slicing"]["keys"][k][fld];
-									}
-								}
-							} */
-																					
 							for (let k of this.itemkeys) {
 								if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(this.itemdict[k].label) >= 0) {
 									lbl = p_mapctx.cfgvar["basic"]["msgs"][lang][this.itemdict[k].label];
@@ -830,7 +831,7 @@ export class SlicingPanel {
 
 							let page = parseInt(interact_box_key.replace("slicerpage", ""));
 
-							console.log(page, this.activepageidx, this.sorted_pairs_collection.length);
+							// console.log(page, this.activepageidx, this.sorted_pairs_collection.length);
 
 							if (page-1 != this.activepageidx) {
 
@@ -839,13 +840,13 @@ export class SlicingPanel {
 								this.activepageidx = page-1;
 
 								const spobj = this.sorted_pairs_collection[this.activepageidx];
-								console.log(spobj);
+//								console.log(spobj);
 
 								const iconFuncDict = {};
 								fillIconFuncDict(p_mapctx, iconFuncDict);
 
 								this.drawTreemapPagenavItems(p_mapctx)								
-								this.fillTreemap(p_mapctx, iconFuncDict, spobj.cnt, spobj.sp, spobj.minarea);
+								this.fillTreemap(p_mapctx, iconFuncDict, spobj.cnt, spobj.sp);
 							}
 						}
 						
