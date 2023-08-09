@@ -258,12 +258,12 @@ export class SlicingPanel {
 
 	}
 
-	genTreeMaps(p_mapctx, p_total_count, p_sorted_pairs, p_topcota, p_minarea) {
+	genTreeMaps(p_mapctx, p_total_count, p_sorted_pairs, p_minarea) {
 
 		const iconFuncDict = {};
 		fillIconFuncDict(p_mapctx, iconFuncDict);
 
-		//console.log("INICIO", p_total_count, p_sorted_pairs, p_topcota, p_minarea);
+		this.total_count = p_total_count;
 
 		const rs = this.interaction_boxes["graphbox"];
 		let area_factor;
@@ -277,7 +277,7 @@ export class SlicingPanel {
 		while (remaining_sorted_pairs.length > 0 && i < 10) {
 
 			if (i==0) {
-				current_total_count = p_total_count;
+				current_total_count = this.total_count;
 			} else {
 				current_total_count = 0;
 				for (let sp of remaining_sorted_pairs) {
@@ -347,19 +347,21 @@ export class SlicingPanel {
 
 	}
 
-	async fillTreemap(p_mapctx, p_icon_func_dict, p_total_count, p_sorted_pairs) {
+	async fillTreemap(p_mapctx, p_icon_func_dict, p_grp_total_count, p_sorted_pairs) {
 
 		const dataDict = {};
 
 		dataDict.restspace = [...this.interaction_boxes["graphbox"]];
-		dataDict.area_factor = (dataDict.restspace[2] * dataDict.restspace[3]) / p_total_count;
+		dataDict.area_factor = (dataDict.restspace[2] * dataDict.restspace[3]) / p_grp_total_count;
 		dataDict.response=[];
 
 		// console.log("area", dataDict.restspace[2], "x", dataDict.restspace[3], "area_factor 1", dataDict.area_factor, p_total_count);
 		// console.log("pre pairs:", p_sorted_pairs.length);
 
+		console.log(">>>> p_total_count", this.total_count);
+
 		const sorted_pairs = [...p_sorted_pairs];
-		let filtered_total_count = p_total_count;
+		let filtered_total_count = p_grp_total_count;
 		/*let filtered_total_count = 0;
 		for (let sp of sorted_pairs) {
 			filtered_total_count += sp[1];
@@ -484,9 +486,14 @@ export class SlicingPanel {
 			limw = boxw-tol*2*this.datafontsz;
 
 			largeh = (boxh / this.datafontsz) > 5.0;
-
-			perc = (Math.round((gr[1]/filtered_total_count) * 1000) / 10).toFixed(1);
-			proptxt = `${gr[1]} (${perc}%)`;
+			const pwr = Math.pow(10,GlobalConst.CONTROLS_STYLES.SEG_PERCDECPLACES);
+			const lowest = Math.pow(10, -GlobalConst.CONTROLS_STYLES.SEG_PERCDECPLACES);
+			perc = (Math.round((gr[1]/this.total_count) * 100 * pwr) / pwr).toFixed(GlobalConst.CONTROLS_STYLES.SEG_PERCDECPLACES);
+			if (perc >= lowest) {
+				proptxt = `${gr[1]} (${perc}%)`;
+			} else {
+				proptxt = `${gr[1]} (<${lowest}%)`;
+			}
 
 			if (largeh) {
 				ctx.font = captionfont;
@@ -496,7 +503,11 @@ export class SlicingPanel {
 				ctx.font = normalfont;
 			}
 			tm1 = ctx.measureText(gr[1]);
-			tm2 = ctx.measureText(`${perc}%`);
+			if (perc >= lowest) {
+				tm2 = ctx.measureText(`${perc}%`);
+			} else {
+				tm2 = ctx.measureText(`< ${lowest}%`);
+			}
 			tm3 = ctx.measureText(proptxt);
 
 			mxw1 = Math.max(tm0.width, tm1.width, tm2.width);
@@ -521,7 +532,6 @@ export class SlicingPanel {
 					}
 
 					await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, dim, ost, boxw, spacing, this.active_key);
-
 					ctx.fillText(gr[0], gr[2]+this.datafontsz, cota);
 					
 					if (largeh) {
@@ -532,8 +542,11 @@ export class SlicingPanel {
 					}					
 					ctx.fillText(gr[1], gr[2]+this.datafontsz, cota);
 					cota += this.datafontsz; 
-					ctx.fillText(`${perc}%`, gr[2]+this.datafontsz, cota);	
-
+					if (perc >= lowest) {
+						ctx.fillText(`${perc}%`, gr[2]+this.datafontsz, cota);	
+					} else {
+						ctx.fillText(`< ${lowest}%`, gr[2]+this.datafontsz, cota);	
+					}
 
 				} else {
 
@@ -559,42 +572,17 @@ export class SlicingPanel {
 					ctx.fillText(gr[1], gr[2]+this.datafontsz, gr[3]+3*this.datafontsz);
 				}
 				if (4*this.datafontsz < limh) {
-					ctx.fillText(`${perc}%`, gr[2]+this.datafontsz, gr[3]+4*this.datafontsz);
+					if (perc >= lowest) {
+						ctx.fillText(`${perc}%`, gr[2]+this.datafontsz, gr[3]+4*this.datafontsz);
+					} else {
+						ctx.fillText(`< ${lowest}%`, gr[2]+this.datafontsz, gr[3]+4*this.datafontsz);
+					}
+
 				}
 
 				await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, Math.min(limh, limw), ost, boxw, 0.5, this.active_key);
 
 			}
-
-			/* if (genimage) {
-
-				if (p_icon_func_dict[this.active_key] !== undefined) {
-
-					imgpath = p_icon_func_dict[this.active_key](gr[0]);
-					imge = await p_mapctx.imgbuffer.syncFetchImage(imgpath, gr[0]);
-					if (imge!=null && imge.complete) {
-
-						const r = imge.width / imge.height;
-						let w, h;
-						if (r > 1.5) {
-							w = 1.5 * dim;
-							h = w / r;
-						} else if (r > 1) { 
-							h = dim;
-							w = h * r;
-						} else if (r < 0.67) { 
-							h = 1.5 * dim;
-							w = h * r;
-						} else {
-							w = dim;
-							h = w / r;
-						}
-
-						ctx.drawImage(imge, gr[2]+ost+boxw-w-spacing*this.datafontsz, gr[3]+gr[5]-ost-spacing*this.datafontsz-h, w, h);
-					};							
-				}
-
-			} */
 
 			ctx.restore();
 		}
@@ -642,7 +630,7 @@ export class SlicingPanel {
 					return second[1] - first[1];
 				});
 
-				that.genTreeMaps(p_mapctx, dict['sumofclasscounts'], items, cota, p_minarea);
+				that.genTreeMaps(p_mapctx, dict['sumofclasscounts'], items, p_minarea);
 				
 				// Create a new array with only the first 5 items
 				// console.log("Sort:", items.slice(0, 5));
