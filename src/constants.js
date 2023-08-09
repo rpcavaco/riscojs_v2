@@ -235,7 +235,8 @@ var GlobalConst = {
 		SEG_MAXICONSZ: 60,
 		SEG_MINICONSZ: 20,
 		SEG_MAXICONSEP: 2,
-		SEG_MINICONSEP: 1
+		SEG_MINICONSEP: 1,
+		SEG_BOX2ICON_RATIO: 3.5
 	},
 
 	DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB: { // Symbolize spatial index features selected on mouse position

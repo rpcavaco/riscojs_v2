@@ -472,7 +472,7 @@ export class SlicingPanel {
 			mxw1 = Math.max(tm0.width, tm1.width, tm2.width);
 			mxw2 = tm3.width;
 
-			dim = boxw / 5.0;
+			dim = boxw / GlobalConst.CONTROLS_STYLES.SEG_BOX2ICON_RATIO;
 			dim = Math.min(GlobalConst.CONTROLS_STYLES.SEG_MAXICONSZ, Math.max(dim, GlobalConst.CONTROLS_STYLES.SEG_MINICONSZ));
 			spacing = boxw / 150.0;
 			spacing = Math.min(GlobalConst.CONTROLS_STYLES.SEG_MAXICONSEP, Math.max(spacing, GlobalConst.CONTROLS_STYLES.SEG_MINICONSEP))
@@ -550,17 +550,6 @@ export class SlicingPanel {
 				}
 
 			}
-
-			/*if (Math.max(tm0.width, tm1.width) < limw) {
-				p_ctx.fillText(gr[0], gr[2]+this.datafontsz, gr[3]+2*this.datafontsz);
-				p_ctx.fillText(proptxt, gr[2]+this.datafontsz, gr[3]+3*this.datafontsz);
-			} else {
-				p_ctx.translate(gr[2]+2*this.datafontsz, gr[3]+this.datafontsz+tm0.width);
-				p_ctx.rotate(-Math.PI/2);
-				p_ctx.fillText(gr[0], 0, 0);
-				p_ctx.fillText(proptxt, 0, 10);
-			}*/
-
 
 			ctx.restore();
 		}
