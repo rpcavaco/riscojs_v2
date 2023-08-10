@@ -82,29 +82,58 @@ function fillIconFuncDict(p_mapctx, p_ifdict) {
 
 }
 
-async function genImage(p_mapctx, p_ctx, p_icon_func_dict, p_graphicbox_entry, p_datafontsz, p_dim, p_ost, p_boxw, p_spacing, p_activekey) {
+// dims can be one generic dimension or a [width, height] pair
+async function genImage(p_mapctx, p_ctx, p_icon_func_dict, p_graphicbox_entry, p_datafontsz, p_dims, p_ost, p_boxw, p_spacing, p_activekey) {
 
 	if (p_icon_func_dict[p_activekey] !== undefined) {
 
 		const imgpath = p_icon_func_dict[p_activekey](p_graphicbox_entry[0]);
 		const imge = await p_mapctx.imgbuffer.syncFetchImage(imgpath, p_graphicbox_entry[0]);
+		let dim;
 		if (imge!=null && imge.complete) {
 
 			const r = imge.width / imge.height;
 			let w, h;
-			if (r > 1.5) {
-				w = 1.5 * p_dim;
-				h = w / r;
-			} else if (r > 1) { 
-				h = p_dim;
-				w = h * r;
-			} else if (r < 0.67) { 
-				h = 1.5 * p_dim;
-				w = h * r;
+
+			if (typeof p_dims == 'number') {
+
+				dim = Math.min(GlobalConst.CONTROLS_STYLES.SEG_MAXICONSZ, Math.max(p_dims, GlobalConst.CONTROLS_STYLES.SEG_MINICONSZ));
+				if (r > 1.5) {
+					w = 1.5 * dim;
+					h = w / r;
+				} else if (r > 1) { 
+					h = dim;
+					w = h * r;
+				} else if (r < 0.67) { 
+					h = 1.5 * dim;
+					w = h * r;
+				} else {
+					w = dim;
+					h = w / r;
+				}
+
 			} else {
-				w = p_dim;
-				h = w / r;
+
+				if (p_dims[0] < p_dims[1]) {
+					dim = Math.min(GlobalConst.CONTROLS_STYLES.SEG_MAXICONSZ, Math.max(p_dims[0], GlobalConst.CONTROLS_STYLES.SEG_MINICONSZ));
+					w = dim;
+					h = w / r;
+					if (h > p_dims[1]) {
+						h = p_dims[1];
+						w = h * r;
+					}
+				} else {
+					dim = Math.min(GlobalConst.CONTROLS_STYLES.SEG_MAXICONSZ, Math.max(p_dims[1], GlobalConst.CONTROLS_STYLES.SEG_MINICONSZ));
+					h = dim;
+					w = h * r;
+					if (w > p_dims[0]) {
+						w = p_dims[0];
+						h = w / r;
+					}					
+				}
 			}
+
+			console.log(p_graphicbox_entry[0], typeof p_dims, w, h, p_spacing)
 
 			p_ctx.drawImage(imge, p_graphicbox_entry[2]+p_ost+p_boxw-w-p_spacing*p_datafontsz, p_graphicbox_entry[3]+p_graphicbox_entry[5]-p_ost-p_spacing*p_datafontsz-h, w, h);
 		};							
@@ -134,6 +163,7 @@ export class SlicingPanel {
 	itemkeys;
 	activepageidx;
 	sorted_pairs_collection;
+	classes_data;
 
 	constructor() {
 
@@ -161,6 +191,7 @@ export class SlicingPanel {
 		this.activepageidx = null;
 		this.sorted_pairs_collection = [];
 		this.iconfuncs = {};
+		this.classes_data = null;
 
 	}
 
@@ -219,12 +250,15 @@ export class SlicingPanel {
 		ctx.font = '10px sans-serif';
 		ctx.textAlign = "left";
 
+		if (this.activepageidx > (this.sorted_pairs_collection.length-1)) {
+			this.activepageidx = 0;
+		}
+
 		for (let tx, ox, i = (this.sorted_pairs_collection.length-1); i>=0; i--) {
 
 			if (this.activepageidx == null) {
 				this.activepageidx = 0;
 			}
-
 			
 			// console.log(i, (1 + (p_sorted_pairs_collection.length-1-i)), (p_sorted_pairs_collection.length-1-i));
 			
@@ -358,7 +392,7 @@ export class SlicingPanel {
 		// console.log("area", dataDict.restspace[2], "x", dataDict.restspace[3], "area_factor 1", dataDict.area_factor, p_total_count);
 		// console.log("pre pairs:", p_sorted_pairs.length);
 
-		console.log(">>>> p_total_count", this.total_count);
+		// console.log(">>>> p_total_count", this.total_count);
 
 		const sorted_pairs = [...p_sorted_pairs];
 		let filtered_total_count = p_grp_total_count;
@@ -443,8 +477,8 @@ export class SlicingPanel {
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 
 		const ost = 2;
-		let color, boxw, boxh, tm0, tm1, tm2, tm3, perc, proptxt, limh, limw, largeh=false;
-		let spacing, mxw1, mxw2, cota, imgpath, imge, dim;
+		let color, boxw, boxh, tm0, tm1, tm2, tm3, tm4, perc, proptxt, limh, limw, largeh=false;
+		let spacing, mxw1, mxw2, cota, dim;
 
 		if (dataDict.response.length > 0) {
 			ctx.clearRect(...this.interaction_boxes["graphbox"]);
@@ -514,7 +548,7 @@ export class SlicingPanel {
 			mxw2 = tm3.width;
 
 			dim = boxw / GlobalConst.CONTROLS_STYLES.SEG_BOX2ICON_RATIO;
-			dim = Math.min(GlobalConst.CONTROLS_STYLES.SEG_MAXICONSZ, Math.max(dim, GlobalConst.CONTROLS_STYLES.SEG_MINICONSZ));
+			// dim = Math.min(GlobalConst.CONTROLS_STYLES.SEG_MAXICONSZ, Math.max(dim, GlobalConst.CONTROLS_STYLES.SEG_MINICONSZ));
 			spacing = boxw / 150.0;
 			spacing = Math.min(GlobalConst.CONTROLS_STYLES.SEG_MAXICONSEP, Math.max(spacing, GlobalConst.CONTROLS_STYLES.SEG_MINICONSEP))
 
@@ -531,7 +565,17 @@ export class SlicingPanel {
 						cota = gr[3]+2*this.datafontsz;
 					}
 
-					await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, dim, ost, boxw, spacing, this.active_key);
+					console.log("::559::", gr[0], dim, limw, limh);
+
+					if (Math.min(limh, limw) < GlobalConst.CONTROLS_STYLES.SEG_SMALLBOXLIMIT_PX) {
+						spacing = 0.5;
+					}
+
+					if (Math.abs(dim - limw) < 10 || Math.abs(dim - limh) < 10) {
+						await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, [limw, limh], ost, boxw, 0.5, this.active_key);
+					} else {
+						await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, dim, ost, boxw, spacing, this.active_key);
+					}
 					ctx.fillText(gr[0], gr[2]+this.datafontsz, cota);
 					
 					if (largeh) {
@@ -539,7 +583,15 @@ export class SlicingPanel {
 						cota += this.datacaptionfontsz; 
 					} else {
 						cota += this.datafontsz; 
-					}					
+					}	
+					
+					if (this.classes_data != null && this.classes_data[gr[0]] !== undefined && this.classes_data[gr[0]].lbl !== null) {
+						tm4 = ctx.measureText(this.classes_data[gr[0]].lbl);
+						if (tm4.width < limw) {
+							ctx.fillText(this.classes_data[gr[0]].lbl, gr[2]+this.datafontsz, cota);
+							cota += this.datafontsz; 
+						}
+					}
 					ctx.fillText(gr[1], gr[2]+this.datafontsz, cota);
 					cota += this.datafontsz; 
 					if (perc >= lowest) {
@@ -559,9 +611,9 @@ export class SlicingPanel {
 					if (3*this.datafontsz < limh) {
 						ctx.fillText(gr[1], 0, 2*this.datafontsz);
 					}
-					ctx.restore();
+					ctx.restore();				
 
-					await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, Math.min(limh, limw), ost, boxw, 0.5, this.active_key);
+					await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, [Math.min(limw, dim), limh], ost, boxw, 0.5, this.active_key);
 
 				}
 			} else {
@@ -580,7 +632,7 @@ export class SlicingPanel {
 
 				}
 
-				await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, Math.min(limh, limw), ost, boxw, 0.5, this.active_key);
+				await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, [limw, limh], ost, boxw, 0.5, this.active_key);
 
 			}
 
@@ -592,7 +644,7 @@ export class SlicingPanel {
 
 	// p_data_dict.response.push([varvalue, count, orig[0], orig[1], p_data_dict.outer_flex_dim, flex_dim, p_dump_count]);
 
-	fetchGraphdata(p_mapctx, p_minarea) {
+	fetchChartData(p_mapctx, p_minarea) {
 
 		if (!this.active_key) {
 			return;
@@ -629,6 +681,8 @@ export class SlicingPanel {
 				items.sort(function(first, second) {
 					return second[1] - first[1];
 				});
+
+				that.classes_data = dict['classes'];
 
 				that.genTreeMaps(p_mapctx, dict['sumofclasscounts'], items, p_minarea);
 				
@@ -749,13 +803,13 @@ export class SlicingPanel {
 
 			ctx.strokeRect(...selbox);	
 
-
-			ctx.strokeStyle = "purple"
-			ctx.strokeRect(...graphbox);	
+			// draw graphbox for debugging purposes
+			// ctx.strokeStyle = "purple"
+			// ctx.strokeRect(...graphbox);	
 			
-			ctx.restore(); // fetchGraphdata and children funcs have their own autonomous invocations of graphic context
-
-			this.fetchGraphdata(p_mapctx, this.itemdict[this.active_key].minarea);
+			ctx.restore(); // fetchChartData and children funcs have their own autonomous invocations of graphic context
+			
+			this.fetchChartData(p_mapctx, this.itemdict[this.active_key].minarea);
 		
 		} else {
 
@@ -775,10 +829,28 @@ export class SlicingPanel {
 	}
 
 	setState(p_mapctx, p_activeflag) {
+
+		const ci = p_mapctx.getCustomizationObject();
+		if (ci == null) {
+			throw new Error("Slicing, map context customization instance is missing")
+		}
+		const toc = ci.instances["toc"];
+
 		this.is_active = p_activeflag;
 		if (this.is_active) {
 			this.print(p_mapctx);
+
+			// collapse TOC
+			if (toc) {
+				toc.collapse(p_mapctx);
+			}
+
 		} else {
+
+			// collapse TOC
+			if (toc) {
+				toc.inflate(p_mapctx);
+			}
 			this.clear(p_mapctx);
 		}
 	}
