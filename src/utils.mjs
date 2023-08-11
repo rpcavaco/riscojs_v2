@@ -469,3 +469,161 @@ export function genRainbowColor(p_max, p_value) {
 
 
 }
+
+export function portuguese_syllables(p_input_text) {
+
+	const vogais = ['a', 'e', 'i', 'o', 'u'];
+
+	const input = p_input_text.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+
+	const result = [];
+	let oc, done, testsyl = '';
+
+	function isVog(p_char) {
+		return vogais.indexOf(p_char) >= 0;
+	}
+
+	function isVocalic(p_test_str, p_char) {
+		let ret = false;
+		if (['i', 'u'].indexOf(p_char) >= 0) {
+			ret = lastIsVog(p_test_str);
+		}
+		return ret;
+	}	
+
+	function isEq2Last(p_test_str, p_char) {
+		return p_test_str[p_test_str.length-1] == p_char;
+	}	
+
+	function lastIsVog(p_test_str) {
+		return isVog(p_test_str[p_test_str.length-1]);
+	}	
+
+	function lastIsVocalic(p_test_str) {
+		return isVocalic(p_test_str[p_test_str.length-1]);
+	}	
+
+		// next is end of string
+	function nextIsEOL(p_test_str, p_char_idx) {
+		return p_test_str.length == (p_char_idx+1);
+	}
+
+	function onlyCons(p_octest_str) {
+		let ret = 0;
+		for (let i=0; i<p_octest_str.length; i++) {
+			if (isVog(p_octest_str[i])) {
+				ret = 0;
+				break;
+			} else {
+				ret++;
+			}
+		}
+		return ret;
+	}
+
+	// let startcv, endcv;	
+	for (let i=0; i<input.length; i++) {
+
+		if (testsyl.length == 0) {
+
+			testsyl = testsyl+input[i];
+			
+		} else {
+
+			oc = onlyCons(testsyl);
+			if (oc > 0) {
+				if (isVog(input[i])) {
+					testsyl = testsyl+input[i];
+				} else if (oc >= 2){
+					console.error(`portuguese_syllables, CCC error on '${testsyl+input[i]}' in '${p_input_text}'`)
+					testsyl = testsyl+input[i];
+				} else {
+					testsyl = testsyl+input[i];
+				}
+			} else {
+				if (!isVog(input[i])) {
+					if (nextIsEOL(input, i)) {
+						result.push(testsyl+input[i]);
+						testsyl = "";
+					} else {
+						if (i==1 && input.length > 2 && !isVog(input[2])) {
+							testsyl = testsyl+input[i];
+							result.push(testsyl);
+							testsyl = '';	
+						} else {
+							result.push(testsyl);
+							testsyl = input[i];
+						}
+					}
+				} else {
+					done = false;
+					if (isVocalic(testsyl, input[i])) {
+						if (result.length == 0) {
+							result.push(testsyl);
+							testsyl = input[i];								
+							done = true;
+						}
+					} else {
+						if (lastIsVocalic(testsyl)) {
+							result.push(testsyl);
+							testsyl = input[i];								
+							done = true;
+						}
+					}
+					if (!done) {
+						if (isEq2Last(testsyl, input[i])) {
+							result.push(testsyl);
+							testsyl = input[i];								
+							done = true;
+						}
+					}					
+					if (!done) {
+						testsyl = testsyl+input[i];
+					}
+				}
+			}
+		}
+	}
+
+	if (testsyl.length > 0) {
+		result.push(testsyl);
+	}
+
+	let completeresult = [];
+	let startidx = 0;
+	for (let r of result) {
+		completeresult.push(p_input_text.slice(startidx, startidx+r.length));
+		startidx += r.length;
+	}
+
+	return completeresult;
+}
+
+function arrayEquals(a, b) {
+    return Array.isArray(a) &&
+        Array.isArray(b) &&
+        a.length === b.length &&
+        a.every((val, index) => val === b[index]);
+}
+
+let testl = [
+	["saguão", ['sa', 'guão']],
+	["sabão", ['sa', 'bão']],
+	["Álcool", ['Ál', 'co', 'ol']],
+	["Saída", ['Sa', 'í', 'da']],
+	["Patrocínio", ['Pa', 'tro', 'cí', 'nio']],
+	["Navio", ['Na', 'vio']],
+	["Iguais", ['I', 'guais']],
+	["Uruguaio", ['U', 'ru', 'guaio']],
+	["Algo", ['Al', 'go']]	
+]
+
+let s;
+for (let t of testl) {
+	s = portuguese_syllables(t[0]);
+	if (!arrayEquals(s, t[1])) {
+		console.log("Erro:", t[0], t[1], s)
+	}
+}
+
+

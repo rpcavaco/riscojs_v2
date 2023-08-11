@@ -1,7 +1,7 @@
 
 import {GlobalConst} from './constants.js';
 import {I18n} from './i18n.mjs';
-import {genRainbowColor} from './utils.mjs';
+import {genRainbowColor, portuguese_syllables} from './utils.mjs';
 
 function aspect(p_dim1, p_dim2) {
 	return Math.max(p_dim1, p_dim2) / Math.min(p_dim1, p_dim2);
