@@ -599,6 +599,46 @@ export function portuguese_syllables(p_input_text) {
 	return completeresult;
 }
 
+export function canvas_text_wrap(p_input_txt, p_canvas_ctx, p_width) {
+	
+	let tm, pretest, teststr, result=[], all = [];
+	
+	const words = p_input_txt.split("[\s\-\,\.]+").filter((p_wrdsplit) => {
+		return p_wrdsplit.length > 0;
+	});
+	for (let w of words) {
+		all.push(portuguese_syllables(w));
+	}
+
+	pretest='';
+	teststr = '';
+	for (let word of all) {
+		for (let syl, s=0; s<word.length; s++) {
+			syl = word[s];
+			teststr += syl;
+			tm = p_canvas_ctx.measureText(teststr);
+			if (tm.width > p_width) {
+				if (s < word.length-1) {
+					result.push(pretest+'-');
+				} else {
+					result.push(pretest);
+				}
+				teststr = syl;
+			}
+
+			pretest = teststr;
+		}
+		if (teststr.length > 0) {
+			teststr += " ";
+		}
+	}
+	if (teststr.length > 0) {
+		result.push(teststr);
+	}
+
+	return result;
+}
+
 function arrayEquals(a, b) {
     return Array.isArray(a) &&
         Array.isArray(b) &&
