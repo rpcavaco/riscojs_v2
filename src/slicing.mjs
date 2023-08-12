@@ -1,7 +1,7 @@
 
 import {GlobalConst} from './constants.js';
 import {I18n} from './i18n.mjs';
-import {genRainbowColor, portuguese_syllables} from './utils.mjs';
+import {genRainbowColor, canvas_text_wrap} from './utils.mjs';
 
 function aspect(p_dim1, p_dim2) {
 	return Math.max(p_dim1, p_dim2) / Math.min(p_dim1, p_dim2);
@@ -133,7 +133,7 @@ async function genImage(p_mapctx, p_ctx, p_icon_func_dict, p_graphicbox_entry, p
 				}
 			}
 
-			console.log(p_graphicbox_entry[0], typeof p_dims, w, h, p_spacing)
+			// console.log(p_graphicbox_entry[0], typeof p_dims, w, h, p_spacing)
 
 			p_ctx.drawImage(imge, p_graphicbox_entry[2]+p_ost+p_boxw-w-p_spacing*p_datafontsz, p_graphicbox_entry[3]+p_graphicbox_entry[5]-p_ost-p_spacing*p_datafontsz-h, w, h);
 		};							
@@ -477,7 +477,7 @@ export class SlicingPanel {
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 
 		const ost = 2;
-		let color, boxw, boxh, tm0, tm1, tm2, tm3, tm4, perc, proptxt, limh, limw, largeh=false;
+		let color, boxw, boxh, tm0, tm1, tm2, tm3, tm4, perc, proptxt, top, limh, limw, largeh=false, allowed_lines, lbl;
 		let spacing, mxw1, mxw2, cota, dim;
 
 		if (dataDict.response.length > 0) {
@@ -500,12 +500,13 @@ export class SlicingPanel {
 			// filtered_total_count
 
 			ctx.globalAlpha = 0.2;
+			top = gr[3]+ost;
 			ctx.fillStyle = color;	
-			ctx.fillRect(gr[2]+ost, gr[3]+ost, boxw, gr[5]-2*ost);
+			ctx.fillRect(gr[2]+ost, top, boxw, boxh);
 	
 			ctx.globalAlpha = 1.0;
 			ctx.strokeStyle = color;
-			ctx.strokeRect(gr[2]+ost, gr[3]+ost, boxw, gr[5]-2*ost);
+			ctx.strokeRect(gr[2]+ost, top, boxw, boxh);
 
 			ctx.restore();
 
@@ -565,8 +566,6 @@ export class SlicingPanel {
 						cota = gr[3]+2*this.datafontsz;
 					}
 
-					console.log("::559::", gr[0], dim, limw, limh);
-
 					if (Math.min(limh, limw) < GlobalConst.CONTROLS_STYLES.SEG_SMALLBOXLIMIT_PX) {
 						spacing = 0.5;
 					}
@@ -585,11 +584,33 @@ export class SlicingPanel {
 						cota += this.datafontsz; 
 					}	
 					
-					if (this.classes_data != null && this.classes_data[gr[0]] !== undefined && this.classes_data[gr[0]].lbl !== null) {
-						tm4 = ctx.measureText(this.classes_data[gr[0]].lbl);
+					if (this.classes_data != null && this.classes_data[gr[0]] !== undefined && lbl !== null) {
+						lbl = I18n.constructor.capitalize(lbl);
+						tm4 = ctx.measureText();
 						if (tm4.width < limw) {
-							ctx.fillText(this.classes_data[gr[0]].lbl, gr[2]+this.datafontsz, cota);
+							ctx.fillText(lbl, gr[2]+this.datafontsz, cota);
 							cota += this.datafontsz; 
+						} else {
+
+							// available graphic text lines allowing to print label lines
+							allowed_lines = Math.round((limh-cota+top) / this.datafontsz);
+							allowed_lines = allowed_lines - 2; // discount class value and percentage lines
+
+							if (allowed_lines > 0) {
+								const lines = canvas_text_wrap(lbl, ctx, limw);
+								for (let line, li=0; li<lines.length; li++) {
+									line = lines[li];
+									if (allowed_lines < lines.length && li == allowed_lines-1) {
+										line = line.substring(0,line.length-3) + '...';
+									}
+									ctx.fillText(line, gr[2]+this.datafontsz, cota);
+									cota += this.datafontsz; 
+									if (li == allowed_lines-1) {
+										break;
+									}
+								}
+							}
+
 						}
 					}
 					ctx.fillText(gr[1], gr[2]+this.datafontsz, cota);

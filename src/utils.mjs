@@ -532,14 +532,7 @@ export function portuguese_syllables(p_input_text) {
 
 			oc = onlyCons(testsyl);
 			if (oc > 0) {
-				if (isVog(input[i])) {
-					testsyl = testsyl+input[i];
-				} else if (oc >= 2){
-					console.error(`portuguese_syllables, CCC error on '${testsyl+input[i]}' in '${p_input_text}'`)
-					testsyl = testsyl+input[i];
-				} else {
-					testsyl = testsyl+input[i];
-				}
+				testsyl = testsyl+input[i];
 			} else {
 				if (!isVog(input[i])) {
 					if (nextIsEOL(input, i)) {
@@ -603,11 +596,12 @@ export function canvas_text_wrap(p_input_txt, p_canvas_ctx, p_width) {
 	
 	let tm, pretest, teststr, result=[], all = [];
 	
-	const words = p_input_txt.split("[\s\-\,\.]+").filter((p_wrdsplit) => {
-		return p_wrdsplit.length > 0;
-	});
+	const words = p_input_txt.split(/[\s\-\,\.]+/g);
+	console.log(words);
 	for (let w of words) {
-		all.push(portuguese_syllables(w));
+		if (w.length > 0) {
+			all.push(portuguese_syllables(w));
+		}
 	}
 
 	pretest='';
@@ -618,7 +612,7 @@ export function canvas_text_wrap(p_input_txt, p_canvas_ctx, p_width) {
 			teststr += syl;
 			tm = p_canvas_ctx.measureText(teststr);
 			if (tm.width > p_width) {
-				if (s < word.length-1) {
+				if (word.length > 1 && s >0 && s <= word.length-1) {
 					result.push(pretest+'-');
 				} else {
 					result.push(pretest);
@@ -630,7 +624,7 @@ export function canvas_text_wrap(p_input_txt, p_canvas_ctx, p_width) {
 		}
 		if (teststr.length > 0) {
 			teststr += " ";
-		}
+		}		
 	}
 	if (teststr.length > 0) {
 		result.push(teststr);
