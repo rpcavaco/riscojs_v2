@@ -584,9 +584,10 @@ export class SlicingPanel {
 						cota += this.datafontsz; 
 					}	
 					
-					if (this.classes_data != null && this.classes_data[gr[0]] !== undefined && lbl !== null) {
-						lbl = I18n.constructor.capitalize(lbl);
-						tm4 = ctx.measureText();
+					if (this.classes_data != null && this.classes_data[gr[0]] !== undefined && this.classes_data[gr[0]]["lbl"] !== undefined && this.classes_data[gr[0]].lbl !== null) {
+						
+						lbl = I18n.capitalize(this.classes_data[gr[0]].lbl);
+						tm4 = ctx.measureText(lbl);
 						if (tm4.width < limw) {
 							ctx.fillText(lbl, gr[2]+this.datafontsz, cota);
 							cota += this.datafontsz; 
@@ -700,8 +701,17 @@ export class SlicingPanel {
 				
 				// Sort the array based on the second element
 				items.sort(function(first, second) {
-					return second[1] - first[1];
+					let ret;
+					if (second[1] == first[1]) {
+						// force second[0] to string
+						ret = ('' + first[0]).localeCompare(second[0]);
+					} else {
+						ret = second[1] - first[1];
+					}
+					return ret;
 				});
+
+
 
 				that.classes_data = dict['classes'];
 

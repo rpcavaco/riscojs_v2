@@ -597,7 +597,6 @@ export function canvas_text_wrap(p_input_txt, p_canvas_ctx, p_width) {
 	let tm, pretest, teststr, result=[], all = [];
 	
 	const words = p_input_txt.split(/[\s\-\,\.]+/g);
-	console.log(words);
 	for (let w of words) {
 		if (w.length > 0) {
 			all.push(portuguese_syllables(w));
