@@ -140,7 +140,6 @@ export class AnalysisMgr extends MapPrintInRect {
 			this.top = this.bottom - this.boxh[this.collapsedstate];
 
 			if (this.prevboxenv) {
-				console.warn("CR 1:", this.prevboxenv);
 				//ctx.clearRect(...this.prevboxenv); 	
 				this.prevboxenv = null;
 			} else {
@@ -392,6 +391,15 @@ export class AnalysisMgr extends MapPrintInRect {
 
 		return (this.collapsedstate == "OPEN");
 	}	
+
+	deactivateSegmentation(p_mapctx) {
+
+		if (this.active_mode == "SEG") {
+			this.active_mode = 'NONE';
+			this.print(p_mapctx);
+		}
+
+	}
 }
 
 export class SelectionsNavigator extends MapPrintInRect {

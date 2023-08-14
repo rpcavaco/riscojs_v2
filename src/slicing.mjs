@@ -149,10 +149,10 @@ function classHover(p_mapctx, p_box) {
 		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 		gfctx.clearRect(0, 0, ...canvas_dims); 
 
-		gfctx.strokeStyle = "white";
+		gfctx.strokeStyle = GlobalConst.CONTROLS_STYLES.SEG_ACTIVECOLOR;
 		gfctx.lineWidth = slack;
 
-		gfctx.fillStyle = "#80808040";
+		gfctx.fillStyle = GlobalConst.CONTROLS_STYLES.SEG_SELBCKGRD;
 
 		realbox = [p_box[0]+slack, p_box[1]+slack, p_box[2]-2*slack, p_box[3]-2*slack ]
 
@@ -166,7 +166,28 @@ function classHover(p_mapctx, p_box) {
 	}	
 }
 
-function clearClassHover(p_mapctx) {
+function cmdHover(p_mapctx, p_box) {
+	
+	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transientviz", '2d');
+	gfctx.save();
+
+	const canvas_dims = [];		
+	try {
+		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+		gfctx.clearRect(0, 0, ...canvas_dims); 
+
+		gfctx.fillStyle = GlobalConst.CONTROLS_STYLES.SEG_SELBCKGRD;
+
+		gfctx.fillRect(...p_box);
+
+	} catch(e) {
+		throw e;
+	} finally {
+		gfctx.restore();
+	}	
+}
+
+function clearHover(p_mapctx) {
 	
 	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transientviz", '2d');
 	const canvas_dims = [];		
@@ -201,6 +222,7 @@ export class SlicingPanel {
 	classes_data;
 	graphbox;
 	selected_classes;
+	ctrlarea_box;
 
 	constructor() {
 
@@ -263,7 +285,7 @@ export class SlicingPanel {
 
 		const pagekeys = [];
 		for (let k in this.interaction_boxes) {
-			if (k.startsWith("slicerpage")) {
+			if (k.startsWith("slicerpage_")) {
 				pagekeys.push(k);
 			}
 		}
@@ -306,7 +328,7 @@ export class SlicingPanel {
 			// console.log(p_rightmost, "==", origx+size);
 
 
-			this.interaction_boxes[`slicerpage${(i+1)}`] = [origx, origy, size, size];
+			this.interaction_boxes[`slicerpage_${(i+1)}`] = [origx, origy, size, size];
 			tx = (i+1).toString();
 			ox = Math.round(origx+texthoffset+(size/4));
 
@@ -330,6 +352,87 @@ export class SlicingPanel {
 		ctx.restore();
 
 	}
+
+	drawCtrlButtons(p_mapctx, p_ctx) {
+
+		try {
+			p_ctx.save();
+
+			const msgskeys = ["SEGMACT","CLEAN", "CANC"];
+			const msgs = [];
+			const tms = [];
+
+			for (let mk of msgskeys) {
+				msgs.push(p_mapctx.i18n.msg(mk, true));
+			}
+
+			let w, h, msg, tm, asc = 0, desc = 0, boxindent=null, selbox, cmdisactive;
+
+			p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
+			for (msg of msgs) {
+				tms.push(p_ctx.measureText(msg));
+			}
+
+			for (tm of tms) {
+				asc = Math.max(asc, tm.actualBoundingBoxAscent);
+				desc = Math.max(desc, tm.actualBoundingBoxDescent);
+			}
+
+			p_ctx.clearRect(...this.ctrlarea_box); 
+			p_ctx.fillStyle = this.fillStyleBack;
+			p_ctx.fillRect(...this.ctrlarea_box);
+
+			p_ctx.fillStyle = this.fillTextStyle;
+			p_ctx.strokeStyle = this.fillTextStyle;
+			p_ctx.lineWidth = 1;
+
+			let slack = GlobalConst.CONTROLS_STYLES.TEXTBOXSLACK;
+			const cota = this.ctrlarea_box[1] + 2*this.normalszPX;
+
+			let msgidx = msgskeys.length - 1;
+			cmdisactive = false;
+			while (msgs.length > 0) {
+
+				msg = msgs.pop();
+				tm = tms.pop();
+
+				w = tm.width+2*slack;
+				h = 2*slack + asc + desc;
+
+				if (boxindent) {
+					boxindent = boxindent - w - this.margin_offset;
+				} else {
+					boxindent = this.ctrlarea_box[0] + this.ctrlarea_box[2] - w;
+				}
+
+				cmdisactive = ["CLEAN", "SEGMACT"].indexOf(msgskeys[msgidx]) < 0 || this.selected_classes.size > 0;
+
+				if (!cmdisactive) {
+					p_ctx.save();
+					p_ctx.fillStyle = GlobalConst.CONTROLS_STYLES.SEG_INACTIVECOLOR;
+				}
+				p_ctx.fillText(msg, boxindent+slack, cota);
+				if (!cmdisactive) {
+					p_ctx.restore();
+				}
+
+				selbox = [boxindent, cota - slack - asc, w, h];
+				p_ctx.strokeRect(...selbox);
+					
+				if (cmdisactive) {
+					this.interaction_boxes[`cmd_${msgskeys[msgidx]}`] = selbox;
+				}
+
+				msgidx--;
+			}
+				
+		} catch(e) {
+			throw e;
+		} finally {
+			p_ctx.restore();
+		}		
+	
+	}	
 
 	genTreeMaps(p_mapctx, p_total_count, p_sorted_pairs, p_minarea, b_showvalue) {
 
@@ -562,7 +665,7 @@ export class SlicingPanel {
 			ctx.restore();
 
 			ctx.save();
-			ctx.fillStyle = "white";	
+			ctx.fillStyle = this.fillTextStyle;	
 			ctx.textAlign = "left";
 			ctx.font = normalfont;
 
@@ -781,6 +884,8 @@ export class SlicingPanel {
 		}
 
 
+		this.drawCtrlButtons(p_mapctx, ctx);
+
 	}
 
 	// p_data_dict.response.push([varvalue, count, orig[0], orig[1], p_data_dict.outer_flex_dim, flex_dim, p_dump_count]);
@@ -794,8 +899,6 @@ export class SlicingPanel {
 		const url = p_mapctx.cfgvar["basic"]["slicing"]["url"];
 		const splits = this.active_key.split("#");
 		const that  = this;
-
-		const cota = this.graphbox[0] + this.graphbox[2];
 
 		fetch(url + "/astats", {
 			method: "POST",
@@ -939,9 +1042,11 @@ export class SlicingPanel {
 				this.interaction_boxes["segmattr"] = [...selbox]; 
 			}
 
+			const ctrlbox_height = 3*this.normalszPX;
 			indent = this.left+2*this.margin_offset;
-			cota += 4 * this.normalszPX;
-			this.graphbox = [indent, cota-this.margin_offset, this.width-4*this.margin_offset, this.height+this.top-cota-this.margin_offset]; 
+			cota += 3 * this.normalszPX - this.margin_offset;
+			this.graphbox = [indent, cota, this.width-4*this.margin_offset, this.height+this.top-cota - 2*this.margin_offset - ctrlbox_height]; 
+			this.ctrlarea_box = [indent, Math.round(this.height+this.top - 2*this.margin_offset -ctrlbox_height), this.width-4*this.margin_offset, ctrlbox_height];
 
 			ctx.strokeRect(...selbox);	
 
@@ -955,7 +1060,7 @@ export class SlicingPanel {
 			if (this.itemdict[this.active_key]['showvalue'] !== undefined) {
 				showvalue = this.itemdict[this.active_key]['showvalue'];
 			}
-			
+
 			this.fetchChartData(p_mapctx, this.itemdict[this.active_key].minarea, showvalue);
 		
 		} else {
@@ -1068,9 +1173,9 @@ export class SlicingPanel {
 								constraintitems
 							);
 
-						} else if (interact_box_key.startsWith("slicerpage")) {
+						} else if (interact_box_key.startsWith("slicerpage_")) {
 
-							let page = parseInt(interact_box_key.replace("slicerpage", ""));
+							let page = parseInt(interact_box_key.replace("slicerpage_", ""));
 
 							// console.log(page, this.activepageidx, this.sorted_pairs_collection.length);
 
@@ -1114,6 +1219,50 @@ export class SlicingPanel {
 
 							this.fillTreemap(p_mapctx, iconFuncDict, spobj.cnt, spobj.sp, showvalue);
 
+						} else if (interact_box_key.startsWith("cmd_")) {
+
+							let cmdvalue = interact_box_key.replace("cmd_", "");
+
+							let refill = false;
+							switch (cmdvalue) {
+
+								case "SEGMACT":
+									// segmentar
+									break;
+
+								case "CLEAN":
+									this.selected_classes.clear();
+									refill = true;
+									break;
+										
+								case "CANC":
+									const ci = p_mapctx.getCustomizationObject();
+									if (ci == null) {
+										throw new Error("Slicing, interaction, map context customization instance is missing")
+									}
+									const analysispanel = ci.instances["analysis"];
+									if (analysispanel) {
+										analysispanel.deactivateSegmentation(p_mapctx);
+									}
+									this.setState(p_mapctx, false);								
+	
+									break;
+	
+							}
+
+							if (refill) {
+								const spobj = this.sorted_pairs_collection[this.activepageidx];
+								const iconFuncDict = {};
+								fillIconFuncDict(p_mapctx, iconFuncDict);
+
+								let showvalue = false;
+								if (this.itemdict[this.active_key]['showvalue'] !== undefined) {
+									showvalue = this.itemdict[this.active_key]['showvalue'];
+								}
+
+								this.fillTreemap(p_mapctx, iconFuncDict, spobj.cnt, spobj.sp, showvalue);
+							}
+
 						}
 						
 
@@ -1130,9 +1279,14 @@ export class SlicingPanel {
 							//let classvalue = interact_box_key.replace("classbox_", "");
 							classHover(p_mapctx, this.interaction_boxes[interact_box_key]);
 						}
+						if (interact_box_key.startsWith("cmd_")) {
+							//let classvalue = interact_box_key.replace("classbox_", "");
+							cmdHover(p_mapctx, this.interaction_boxes[interact_box_key]);
+						}
+						
 					} else {
 						topcnv.style.cursor = "default";
-						clearClassHover(p_mapctx);
+						clearHover(p_mapctx);
 					}
 					break;
 
