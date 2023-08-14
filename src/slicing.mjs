@@ -83,7 +83,7 @@ function fillIconFuncDict(p_mapctx, p_ifdict) {
 }
 
 // dims can be one generic dimension or a [width, height] pair
-async function genImage(p_mapctx, p_ctx, p_icon_func_dict, p_graphicbox_entry, p_datafontsz, p_dims, p_ost, p_boxw, p_spacing, p_activekey) {
+async function genImage(p_mapctx, p_ctx, p_icon_func_dict, p_graphicbox_entry, p_datafontsz, p_limw, p_limh, p_ost, p_boxw, p_spacing, p_activekey, opt_dim) {
 
 	function normaliz(p_sz) {
 		return Math.min(GlobalConst.CONTROLS_STYLES.SEG_MAXICONSZ, Math.max(p_sz, GlobalConst.CONTROLS_STYLES.SEG_MINICONSZ));
@@ -95,30 +95,40 @@ async function genImage(p_mapctx, p_ctx, p_icon_func_dict, p_graphicbox_entry, p
 		const imge = await p_mapctx.imgbuffer.syncFetchImage(imgpath, p_graphicbox_entry[0]);
 		if (imge!=null && imge.complete) {
 
-			const r = imge.width / imge.height;
+			const r1 = imge.width / imge.height;
 			let w, h, dimw, dimh;
 
-			if (typeof p_dims == 'number') {
-				dimw = p_dims;
-				dimh = p_dims;
+			const k = 0.85;
+
+			if (opt_dim != null) {
+				dimw = opt_dim;
+				dimh = opt_dim;
 			} else {
-				dimw = p_dims[0];
-				dimh = p_dims[1];
+				dimw = p_limw;
+				dimh = p_limh;
 
 			}
 
-			if (r > 1.5) {
+			if (r1 > 1.5) {
 				w = 1.5 * normaliz(dimw);
-				h = w / r;
-			} else if (r > 1) { 
+				h = w / r1;
+			} else if (r1 > k) { 
 				h = normaliz(dimh);
-				w = h * r;
-			} else if (r < 0.67) { 
+				w = h * r1;
+			} else if (r1 < 0.67) { 
 				h = 1.5 * normaliz(dimh);
-				w = h * r;
+				w = h * r1;
 			} else {
 				w = normaliz(dimw);
-				h = w / r;
+				h = w / r1;
+			}
+
+			if (p_limw < p_limh && w > k * p_limw) {
+				w = k * p_limw;
+				h = w / r1;
+			} else if (p_limh < p_limw && h > k * p_limh) {
+				h = k * p_limh;
+				w = h * r1;
 			}
 
 			p_ctx.drawImage(imge, p_graphicbox_entry[2]+p_ost+p_boxw-w-p_spacing*p_datafontsz, p_graphicbox_entry[3]+p_graphicbox_entry[5]-p_ost-p_spacing*p_datafontsz-h, w, h);
@@ -463,7 +473,7 @@ export class SlicingPanel {
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 
 		const ost = 2;
-		let color, boxw, boxh, tm0=null, tm1, tm2, tm3, tm4, perc, proptxt, top, limh, limw, largeh=false, allowed_lines, lbl;
+		let color, boxw, boxh, tm0=null, tm1, tm2, tm3, tm4, perc, proptxt, origx, top, limh, limw, largeh=false, allowed_lines, lbl;
 		let spacing, mxw1, mxw2, cota, dim, firsttextline_printed = false;
 
 		if (dataDict.response.length > 0) {
@@ -472,14 +482,31 @@ export class SlicingPanel {
 			ctx.fillRect(...this.interaction_boxes["graphbox"]);
 		}
 
+		const classboxkeys = [];
+		for (let k in this.interaction_boxes) {
+			if (k.startsWith("classbox")) {
+				classboxkeys.push(k);
+			}
+		}
+		for (let k of classboxkeys) {
+			delete this.interaction_boxes[k];
+		}		
+
 		// for each graphic element detail ...
+		let grcnt = 0;
 		for (let gr of dataDict.response) {
+
+			grcnt++;
 
 			// generate adequate color from chosen color ramp (only 'rainbow' for now)
 			// TODO - allow config of other color ramps, when available
 			color = genRainbowColor(2.2*dump_count, gr[6]+1);
 			boxw = gr[4]-2*ost;
 			boxh = gr[5]-2*ost;
+
+			origx = gr[2]+ost;
+
+			this.interaction_boxes[`classbox${(grcnt)}`] = [origx, top, boxw, boxh];
 
 			const captionfont = `${this.datacaptionfontsz}px ${this.captionfontfamily}`;
 			const normalfont = `${this.datafontsz}px ${this.datafontfamily}`;
@@ -565,7 +592,7 @@ export class SlicingPanel {
 						spacing = 0.5;
 					}
 
-					await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, dim, ost, boxw, spacing, this.active_key);
+					await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, limw, limh, ost, boxw, spacing, this.active_key, dim);
 
 					// if class value is to be shown ...
 					if (b_showvalue) {
@@ -666,6 +693,9 @@ export class SlicingPanel {
 				} else {
 
 					// Vertical label
+
+					await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, limw/GlobalConst.CONTROLS_STYLES.SEG_BOX2ICON_RATIO, limh/GlobalConst.CONTROLS_STYLES.SEG_BOX2ICON_RATIO, ost, boxw, 0.5, this.active_key);
+
 					ctx.save();
 					ctx.translate(gr[2]+this.datafontsz, gr[3]+this.datafontsz);
 					ctx.rotate(-Math.PI/2);
@@ -679,8 +709,6 @@ export class SlicingPanel {
 						}
 					}
 					ctx.restore();				
-
-					await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, [limw/GlobalConst.CONTROLS_STYLES.SEG_BOX2ICON_RATIO, limh], ost, boxw, 0.5, this.active_key);
 
 				}
 
@@ -708,7 +736,9 @@ export class SlicingPanel {
 					}					
 				}
 
-				await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, [limw/GlobalConst.CONTROLS_STYLES.SEG_BOX2ICON_RATIO, limh/GlobalConst.CONTROLS_STYLES.SEG_BOX2ICON_RATIO], ost, boxw, 0.5, this.active_key);
+				dim = limh/GlobalConst.CONTROLS_STYLES.SEG_BOX2ICON_RATIO;
+
+				await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, limw, limh, ost, boxw, 0.5, this.active_key, dim);
 
 			}
 
