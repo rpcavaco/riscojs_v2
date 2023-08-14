@@ -137,6 +137,45 @@ async function genImage(p_mapctx, p_ctx, p_icon_func_dict, p_graphicbox_entry, p
 
 }
 
+function classHover(p_mapctx, p_box) {
+	
+	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transientviz", '2d');
+	gfctx.save();
+	const slack = GlobalConst.CONTROLS_STYLES.SEG_SEPSELBOXFROMCLASSBOX;
+	let realbox;
+
+	const canvas_dims = [];		
+	try {
+		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+		gfctx.clearRect(0, 0, ...canvas_dims); 
+
+		gfctx.strokeStyle = "white";
+		gfctx.lineWidth = slack;
+
+		gfctx.fillStyle = "#80808040";
+
+		realbox = [p_box[0]+slack, p_box[1]+slack, p_box[2]-2*slack, p_box[3]-2*slack ]
+
+		gfctx.fillRect(...realbox);
+		gfctx.strokeRect(...realbox);
+
+	} catch(e) {
+		throw e;
+	} finally {
+		gfctx.restore();
+	}	
+}
+
+function clearClassHover(p_mapctx) {
+	
+	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transientviz", '2d');
+	const canvas_dims = [];		
+
+	p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+	gfctx.clearRect(0, 0, ...canvas_dims); 
+
+}
+
 export class SlicingPanel {
 
 	top;
@@ -160,6 +199,8 @@ export class SlicingPanel {
 	activepageidx;
 	sorted_pairs_collection;
 	classes_data;
+	graphbox;
+	selected_classes;
 
 	constructor() {
 
@@ -189,6 +230,8 @@ export class SlicingPanel {
 		this.iconfuncs = {};
 		this.classes_data = null;
 
+		this.graphbox = null;
+		this.selected_classes = new Set();
 	}
 
 	calcDims(p_mapctx) {
@@ -234,7 +277,7 @@ export class SlicingPanel {
 		const texthoffset = 1;
 		const textvoffset = 4;
 		//const rightmost = this.left + this.width - this.margin_offset; 
-		const rs = this.interaction_boxes["graphbox"];
+		const rs = this.graphbox;
 		const rightmost = rs[0] + rs[2];
 
 		let origx;
@@ -295,7 +338,7 @@ export class SlicingPanel {
 
 		this.total_count = p_total_count;
 
-		const rs = this.interaction_boxes["graphbox"];
+		const rs = this.graphbox;
 		let area_factor;
 
 		this.sorted_pairs_collection.length = 0;
@@ -367,6 +410,7 @@ export class SlicingPanel {
 			}
 		}
 
+		this.selected_classes.clear();
 
 		this.drawTreemapPagenavItems(p_mapctx);
 
@@ -381,24 +425,15 @@ export class SlicingPanel {
 
 		const dataDict = {};
 
-		dataDict.restspace = [...this.interaction_boxes["graphbox"]];
+		console.assert(this.graphbox != null, "fillTreemap, graphbox is null");
+
+		dataDict.restspace = [...this.graphbox];
 		dataDict.area_factor = (dataDict.restspace[2] * dataDict.restspace[3]) / p_grp_total_count;
 		dataDict.response=[];
 
-		// console.log("area", dataDict.restspace[2], "x", dataDict.restspace[3], "area_factor 1", dataDict.area_factor, p_total_count);
-		// console.log("pre pairs:", p_sorted_pairs.length);
-
-		// console.log(">>>> p_total_count", this.total_count);
-
 		const sorted_pairs = [...p_sorted_pairs];
 		let filtered_total_count = p_grp_total_count;
-		/*let filtered_total_count = 0;
-		for (let sp of sorted_pairs) {
-			filtered_total_count += sp[1];
-		} */
 		dataDict.area_factor = (dataDict.restspace[2] * dataDict.restspace[3]) / filtered_total_count;
-
-		// console.log("area_factor 2", dataDict.area_factor, filtered_total_count);
 
 		//let sorted_pairs = [...p_sorted_pairs];
 		dataDict.current_orient = null;
@@ -412,9 +447,6 @@ export class SlicingPanel {
 			dataDict.constrained_dim = dataDict.restspace[2];
 		}
 		dataDict.current_orig = [dataDict.restspace[0], dataDict.restspace[1]];
-
-		// console.log("A restspace:", dataDict.restspace);
-		// console.log("A current_orig:", dataDict.current_orig, "current_orient", dataDict.current_orient, "constrained_dim", dataDict.constrained_dim);
 
 		const local_accum_queue = [];
 		let accum_count=0, local_flex_dim = 0, local_outer_flex_dim= 0;
@@ -440,12 +472,8 @@ export class SlicingPanel {
 				local_flex_dim = area / local_outer_flex_dim;
 			}
 			
-			// console.log("dims:", local_flex_dim, local_outer_flex_dim);
 			r1 = aspect(local_flex_dim, local_outer_flex_dim);
 			
-			//console.log(varvalue, "r1:", r1, "prev r:",prev_r,'<', "ref_r", k * reference_r);
-			//console.log("       > acclen:", local_accum_queue.length, "flexdim:", local_flex_dim, "outer:", local_outer_flex_dim);
-			// if (r1 <= k * reference_r) {
 			if (r1 > prev_r) {
 				accum_count = 0;
 				local_accum_queue.length = 0;
@@ -472,19 +500,19 @@ export class SlicingPanel {
 
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 
-		const ost = 2;
+		const ost = GlobalConst.CONTROLS_STYLES.SEG_SEPFROMCLASSBOUNDARY;
 		let color, boxw, boxh, tm0=null, tm1, tm2, tm3, tm4, perc, proptxt, origx, top, limh, limw, largeh=false, allowed_lines, lbl;
-		let spacing, mxw1, mxw2, cota, dim, firsttextline_printed = false;
+		let spacing, mxw1, mxw2, cota, dim, strk_offset, firsttextline_printed = false;
 
 		if (dataDict.response.length > 0) {
-			ctx.clearRect(...this.interaction_boxes["graphbox"]);
+			ctx.clearRect(...this.graphbox);
 			ctx.fillStyle = this.fillStyleBack;
-			ctx.fillRect(...this.interaction_boxes["graphbox"]);
+			ctx.fillRect(...this.graphbox);
 		}
 
 		const classboxkeys = [];
 		for (let k in this.interaction_boxes) {
-			if (k.startsWith("classbox")) {
+			if (k.startsWith("classbox_")) {
 				classboxkeys.push(k);
 			}
 		}
@@ -493,10 +521,7 @@ export class SlicingPanel {
 		}		
 
 		// for each graphic element detail ...
-		let grcnt = 0;
 		for (let gr of dataDict.response) {
-
-			grcnt++;
 
 			// generate adequate color from chosen color ramp (only 'rainbow' for now)
 			// TODO - allow config of other color ramps, when available
@@ -505,8 +530,6 @@ export class SlicingPanel {
 			boxh = gr[5]-2*ost;
 
 			origx = gr[2]+ost;
-
-			this.interaction_boxes[`classbox${(grcnt)}`] = [origx, top, boxw, boxh];
 
 			const captionfont = `${this.datacaptionfontsz}px ${this.captionfontfamily}`;
 			const normalfont = `${this.datafontsz}px ${this.datafontfamily}`;
@@ -517,12 +540,24 @@ export class SlicingPanel {
 
 			ctx.globalAlpha = 0.2;
 			top = gr[3]+ost;
+
 			ctx.fillStyle = color;	
 			ctx.fillRect(gr[2]+ost, top, boxw, boxh);
 	
 			ctx.globalAlpha = 1.0;
-			ctx.strokeStyle = color;
-			ctx.strokeRect(gr[2]+ost, top, boxw, boxh);
+
+			if (this.selected_classes.has(gr[0])) {
+				strk_offset = 3;
+				ctx.lineWidth =	6;			
+				ctx.strokeStyle = "rgba(255, 246, 246, 0.86)";	
+			} else {
+				strk_offset = 0;
+				ctx.strokeStyle = color;	
+			}
+			ctx.strokeRect(gr[2]+ost+strk_offset, top+strk_offset, boxw-2*strk_offset, boxh-2*strk_offset);
+			ctx.lineWidth = 1;
+
+			this.interaction_boxes[`classbox_${(gr[0])}`] = [origx, top, boxw, boxh];
 
 			ctx.restore();
 
@@ -760,7 +795,7 @@ export class SlicingPanel {
 		const splits = this.active_key.split("#");
 		const that  = this;
 
-		const cota = this.interaction_boxes["graphbox"][0] + this.interaction_boxes["graphbox"][2];
+		const cota = this.graphbox[0] + this.graphbox[2];
 
 		fetch(url + "/astats", {
 			method: "POST",
@@ -885,12 +920,6 @@ export class SlicingPanel {
 				w = txtdims.width+2*slack;
 			}
 
-			//cota + txtdims.actualBoundingBoxDescent + slack - (2*slack + txtdims.actualBoundingBoxAscent + txtdims.actualBoundingBoxDescent)
-
-			// cota - slack - txtdims.actualBoundingBoxAscent
-
-			// antigo: cota + txtdims.actualBoundingBoxDescent + slack
-
 			h = 2*slack + txtdims.actualBoundingBoxAscent + txtdims.actualBoundingBoxDescent;
 			const selbox = [indent - txtdims.actualBoundingBoxLeft - slack, cota - slack - txtdims.actualBoundingBoxAscent, w, h];
 
@@ -912,9 +941,7 @@ export class SlicingPanel {
 
 			indent = this.left+2*this.margin_offset;
 			cota += 4 * this.normalszPX;
-			const graphbox = [indent, cota, this.width-4*this.margin_offset, this.height+this.top-cota-2*this.margin_offset];
-
-			this.interaction_boxes["graphbox"] = [...graphbox]; 
+			this.graphbox = [indent, cota-this.margin_offset, this.width-4*this.margin_offset, this.height+this.top-cota-this.margin_offset]; 
 
 			ctx.strokeRect(...selbox);	
 
@@ -1054,8 +1081,6 @@ export class SlicingPanel {
 								this.activepageidx = page-1;
 
 								const spobj = this.sorted_pairs_collection[this.activepageidx];
-//								console.log(spobj);
-
 								const iconFuncDict = {};
 								fillIconFuncDict(p_mapctx, iconFuncDict);
 
@@ -1067,6 +1092,28 @@ export class SlicingPanel {
 								this.drawTreemapPagenavItems(p_mapctx)								
 								this.fillTreemap(p_mapctx, iconFuncDict, spobj.cnt, spobj.sp, showvalue);
 							}
+
+						} else if (interact_box_key.startsWith("classbox_")) {
+
+							let classvalue = interact_box_key.replace("classbox_", "");
+
+							if (this.selected_classes.has(classvalue)) {
+								this.selected_classes.delete(classvalue);
+							} else {
+								this.selected_classes.add(classvalue);
+							}
+
+							const spobj = this.sorted_pairs_collection[this.activepageidx];
+							const iconFuncDict = {};
+							fillIconFuncDict(p_mapctx, iconFuncDict);
+
+							let showvalue = false;
+							if (this.itemdict[this.active_key]['showvalue'] !== undefined) {
+								showvalue = this.itemdict[this.active_key]['showvalue'];
+							}
+
+							this.fillTreemap(p_mapctx, iconFuncDict, spobj.cnt, spobj.sp, showvalue);
+
 						}
 						
 
@@ -1075,11 +1122,17 @@ export class SlicingPanel {
 					break;
 
 				case "mousemove":
+
 					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 					if (interact_box_key) {
 						topcnv.style.cursor = "pointer";
+						if (interact_box_key.startsWith("classbox_")) {
+							//let classvalue = interact_box_key.replace("classbox_", "");
+							classHover(p_mapctx, this.interaction_boxes[interact_box_key]);
+						}
 					} else {
 						topcnv.style.cursor = "default";
+						clearClassHover(p_mapctx);
 					}
 					break;
 
