@@ -67,16 +67,15 @@
 - OK - limitar tamanho máximo símbolo marker a p_vert_step
 - OK - versão de código RISCOJS acessível via risco_js_version.txt
 - OK - 'attribution'
-
-- >> debug geral Localizador
-
-- info scrollable
+- OK - info scrollable -> INFO PAGEABLE
+- OK - max largura info nas basic configs
 
 - permitir seleção múltipla
 	- highlight com simbolo diferenciado de conjunto / individuo selecionado
 	- tabela atributos da seleção
 
-
+- geração de color ramps adicionais, além do 'rainbow' 
+- config de color ramps -- TODO slicing / source de charting, na geração de treemap
 
 
 - >> invocação de mapctx nos variados paineis 
@@ -86,9 +85,9 @@
 
 - symbolo de linha na TOC - validar
 
-- controles disabled
+- controles disabled -- TODO em default_customizations, 819
 
-- max largura info nas basic configs
+
 
 - Edição
 

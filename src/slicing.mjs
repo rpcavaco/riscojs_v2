@@ -85,55 +85,41 @@ function fillIconFuncDict(p_mapctx, p_ifdict) {
 // dims can be one generic dimension or a [width, height] pair
 async function genImage(p_mapctx, p_ctx, p_icon_func_dict, p_graphicbox_entry, p_datafontsz, p_dims, p_ost, p_boxw, p_spacing, p_activekey) {
 
+	function minimiz(p_sz) {
+		return Math.min(GlobalConst.CONTROLS_STYLES.SEG_MAXICONSZ, Math.max(p_sz, GlobalConst.CONTROLS_STYLES.SEG_MINICONSZ));
+	}
+	
 	if (p_icon_func_dict[p_activekey] !== undefined) {
 
 		const imgpath = p_icon_func_dict[p_activekey](p_graphicbox_entry[0]);
 		const imge = await p_mapctx.imgbuffer.syncFetchImage(imgpath, p_graphicbox_entry[0]);
-		let dim;
 		if (imge!=null && imge.complete) {
 
 			const r = imge.width / imge.height;
-			let w, h;
+			let w, h, dimw, dimh;
 
 			if (typeof p_dims == 'number') {
-
-				dim = Math.min(GlobalConst.CONTROLS_STYLES.SEG_MAXICONSZ, Math.max(p_dims, GlobalConst.CONTROLS_STYLES.SEG_MINICONSZ));
-				if (r > 1.5) {
-					w = 1.5 * dim;
-					h = w / r;
-				} else if (r > 1) { 
-					h = dim;
-					w = h * r;
-				} else if (r < 0.67) { 
-					h = 1.5 * dim;
-					w = h * r;
-				} else {
-					w = dim;
-					h = w / r;
-				}
-
+				dimw = p_dims;
+				dimh = p_dims;
 			} else {
+				dimw = p_dims[0];
+				dimh = p_dims[1];
 
-				if (p_dims[0] < p_dims[1]) {
-					dim = Math.min(GlobalConst.CONTROLS_STYLES.SEG_MAXICONSZ, Math.max(p_dims[0], GlobalConst.CONTROLS_STYLES.SEG_MINICONSZ));
-					w = dim;
-					h = w / r;
-					if (h > p_dims[1]) {
-						h = p_dims[1];
-						w = h * r;
-					}
-				} else {
-					dim = Math.min(GlobalConst.CONTROLS_STYLES.SEG_MAXICONSZ, Math.max(p_dims[1], GlobalConst.CONTROLS_STYLES.SEG_MINICONSZ));
-					h = dim;
-					w = h * r;
-					if (w > p_dims[0]) {
-						w = p_dims[0];
-						h = w / r;
-					}					
-				}
 			}
 
-			// console.log(p_graphicbox_entry[0], typeof p_dims, w, h, p_spacing)
+			if (r > 1.5) {
+				w = 1.5 * minimiz(dimw);
+				h = w / r;
+			} else if (r > 1) { 
+				h = minimiz(dimh);
+				w = h * r;
+			} else if (r < 0.67) { 
+				h = 1.5 * minimiz(dimh);
+				w = h * r;
+			} else {
+				w = minimiz(dimw);
+				h = w / r;
+			}
 
 			p_ctx.drawImage(imge, p_graphicbox_entry[2]+p_ost+p_boxw-w-p_spacing*p_datafontsz, p_graphicbox_entry[3]+p_graphicbox_entry[5]-p_ost-p_spacing*p_datafontsz-h, w, h);
 		};							
@@ -292,7 +278,7 @@ export class SlicingPanel {
 
 	}
 
-	genTreeMaps(p_mapctx, p_total_count, p_sorted_pairs, p_minarea) {
+	genTreeMaps(p_mapctx, p_total_count, p_sorted_pairs, p_minarea, b_showvalue) {
 
 		const iconFuncDict = {};
 		fillIconFuncDict(p_mapctx, iconFuncDict);
@@ -376,12 +362,12 @@ export class SlicingPanel {
 
 		let spobj = this.sorted_pairs_collection[this.activepageidx];
 		if (spobj) {
-			this.fillTreemap(p_mapctx, iconFuncDict, spobj.cnt, spobj.sp);
+			this.fillTreemap(p_mapctx, iconFuncDict, spobj.cnt, spobj.sp, b_showvalue);
 		}
 
 	}
 
-	async fillTreemap(p_mapctx, p_icon_func_dict, p_grp_total_count, p_sorted_pairs) {
+	async fillTreemap(p_mapctx, p_icon_func_dict, p_grp_total_count, p_sorted_pairs, b_showvalue) {
 
 		const dataDict = {};
 
@@ -477,8 +463,8 @@ export class SlicingPanel {
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 
 		const ost = 2;
-		let color, boxw, boxh, tm0, tm1, tm2, tm3, tm4, perc, proptxt, top, limh, limw, largeh=false, allowed_lines, lbl;
-		let spacing, mxw1, mxw2, cota, dim;
+		let color, boxw, boxh, tm0=null, tm1, tm2, tm3, tm4, perc, proptxt, top, limh, limw, largeh=false, allowed_lines, lbl;
+		let spacing, mxw1, mxw2, cota, dim, firsttextline_printed = false;
 
 		if (dataDict.response.length > 0) {
 			ctx.clearRect(...this.interaction_boxes["graphbox"]);
@@ -486,8 +472,11 @@ export class SlicingPanel {
 			ctx.fillRect(...this.interaction_boxes["graphbox"]);
 		}
 
+		// for each graphic element detail ...
 		for (let gr of dataDict.response) {
 
+			// generate adequate color from chosen color ramp (only 'rainbow' for now)
+			// TODO - allow config of other color ramps, when available
 			color = genRainbowColor(2.2*dump_count, gr[6]+1);
 			boxw = gr[4]-2*ost;
 			boxh = gr[5]-2*ost;
@@ -517,8 +506,8 @@ export class SlicingPanel {
 
 			const tol = 0.7;
 
-			limh = boxh-tol*1.5*this.datafontsz;
-			limw = boxw-tol*2*this.datafontsz;
+			limh = Math.floor(boxh-tol*1.5*this.datafontsz);
+			limw = Math.floor(boxw-tol*2*this.datafontsz);
 
 			largeh = (boxh / this.datafontsz) > 5.0;
 			const pwr = Math.pow(10,GlobalConst.CONTROLS_STYLES.SEG_PERCDECPLACES);
@@ -530,22 +519,31 @@ export class SlicingPanel {
 				proptxt = `${gr[1]} (<${lowest}%)`;
 			}
 
-			if (largeh) {
-				ctx.font = captionfont;
+			// class value
+			if (b_showvalue) {
+				if (largeh) {
+					ctx.font = captionfont;
+				}
+				tm0 = ctx.measureText(gr[0]);
+				if (largeh) {
+					ctx.font = normalfont;
+				}
 			}
-			tm0 = ctx.measureText(gr[0]);
-			if (largeh) {
-				ctx.font = normalfont;
-			}
+
+			// class count 
 			tm1 = ctx.measureText(gr[1]);
+
+			// class count percentage
 			if (perc >= lowest) {
 				tm2 = ctx.measureText(`${perc}%`);
 			} else {
 				tm2 = ctx.measureText(`< ${lowest}%`);
 			}
+
+			// count and percentage, same line
 			tm3 = ctx.measureText(proptxt);
 
-			mxw1 = Math.max(tm0.width, tm1.width, tm2.width);
+			mxw1 = Math.max((tm0!=null ? tm0.width : 0), tm1.width, tm2.width);
 			mxw2 = tm3.width;
 
 			dim = boxw / GlobalConst.CONTROLS_STYLES.SEG_BOX2ICON_RATIO;
@@ -553,45 +551,81 @@ export class SlicingPanel {
 			spacing = boxw / 150.0;
 			spacing = Math.min(GlobalConst.CONTROLS_STYLES.SEG_MAXICONSEP, Math.max(spacing, GlobalConst.CONTROLS_STYLES.SEG_MINICONSEP))
 
-			if (4*this.datafontsz < limh) {
+			// if available vertical space may contain at least 4 line sof text ...
+			if (3*this.datafontsz + this.datacaptionfontsz < limh) {
+							
 				if (mxw1 < limw) {
 
 					// Normal horizontal label
 
-					if (largeh) {
-						ctx.save();
-						ctx.font = captionfont;
-						cota = gr[3]+this.datafontsz+this.datacaptionfontsz;
-					} else {
-						cota = gr[3]+2*this.datafontsz;
-					}
+					firsttextline_printed = false;	
 
+					// if this is a smallbox, lets reduce spacing between icon and boundary
 					if (Math.min(limh, limw) < GlobalConst.CONTROLS_STYLES.SEG_SMALLBOXLIMIT_PX) {
 						spacing = 0.5;
 					}
 
-					if (Math.abs(dim - limw) < 10 || Math.abs(dim - limh) < 10) {
-						await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, [limw, limh], ost, boxw, 0.5, this.active_key);
-					} else {
-						await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, dim, ost, boxw, spacing, this.active_key);
+					await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, dim, ost, boxw, spacing, this.active_key);
+
+					// if class value is to be shown ...
+					if (b_showvalue) {
+
+						if (largeh) {
+							ctx.save();
+							ctx.font = captionfont;
+							cota = gr[3]+this.datafontsz+this.datacaptionfontsz;
+						} else {
+							cota = gr[3]+2*this.datafontsz;
+						}
+		
+						ctx.fillText(gr[0], gr[2]+this.datafontsz, cota);			
+						firsttextline_printed = true;	
+
+						if (largeh) {
+							ctx.restore();
+							cota += this.datacaptionfontsz; 
+						} else {
+							cota += this.datafontsz; 
+						}	
+
 					}
-					ctx.fillText(gr[0], gr[2]+this.datafontsz, cota);
-					
-					if (largeh) {
-						ctx.restore();
-						cota += this.datacaptionfontsz; 
-					} else {
-						cota += this.datafontsz; 
-					}	
-					
+
+					// if class label exists ...
 					if (this.classes_data != null && this.classes_data[gr[0]] !== undefined && this.classes_data[gr[0]]["lbl"] !== undefined && this.classes_data[gr[0]].lbl !== null) {
 						
 						lbl = I18n.capitalize(this.classes_data[gr[0]].lbl);
 						tm4 = ctx.measureText(lbl);
 						if (tm4.width < limw) {
+
+							if (!b_showvalue) {
+								if (largeh) {
+									ctx.save();
+									ctx.font = captionfont;
+									cota = gr[3]+this.datafontsz+this.datacaptionfontsz;
+								} else {
+									cota = gr[3]+2*this.datafontsz;
+								}
+							}
+				
 							ctx.fillText(lbl, gr[2]+this.datafontsz, cota);
-							cota += this.datafontsz; 
+							firsttextline_printed = true;	
+
+							if (!b_showvalue) {
+								if (largeh) {
+									ctx.restore();
+									cota += this.datacaptionfontsz; 
+								} else {
+									cota += this.datafontsz; 
+								}		
+							} else {
+								cota += this.datafontsz; 
+							}
+
 						} else {
+
+							if (!b_showvalue) {
+								cota = gr[3]+2*this.datafontsz;
+							}
 
 							// available graphic text lines allowing to print label lines
 							allowed_lines = Math.round((limh-cota+top) / this.datafontsz);
@@ -610,10 +644,17 @@ export class SlicingPanel {
 										break;
 									}
 								}
+								firsttextline_printed = true;	
 							}
 
 						}
 					}
+
+					// if first text line wasn't yet printed, lets set y value
+					if (!firsttextline_printed) {
+						cota = gr[3]+2*this.datafontsz;
+					}
+
 					ctx.fillText(gr[1], gr[2]+this.datafontsz, cota);
 					cota += this.datafontsz; 
 					if (perc >= lowest) {
@@ -631,30 +672,43 @@ export class SlicingPanel {
 					ctx.textAlign = "right";
 					ctx.fillText(gr[0], 0, this.datafontsz);
 					if (3*this.datafontsz < limh) {
-						ctx.fillText(gr[1], 0, 2*this.datafontsz);
+						if (mxw2 < limh) {
+							ctx.fillText(proptxt, 0, 2*this.datafontsz);
+						} else {
+							ctx.fillText(gr[0], 0, 2*this.datafontsz);
+						}
 					}
 					ctx.restore();				
 
-					await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, [Math.min(limw, dim), limh], ost, boxw, 0.5, this.active_key);
+					await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, [limw/GlobalConst.CONTROLS_STYLES.SEG_BOX2ICON_RATIO, limh], ost, boxw, 0.5, this.active_key);
 
 				}
+
 			} else {
+
 				// Horizontal but height-constrained label
-				ctx.fillText(gr[0], gr[2]+this.datafontsz, gr[3]+2*this.datafontsz);
-				//console.log(gr[0], 3*this.datafontsz, limh);
+
+				cota = gr[3]+2*this.datafontsz;
+				if (b_showvalue) {
+					ctx.fillText(gr[0], gr[2]+this.datafontsz, cota);
+					cota += this.datafontsz;
+				}
+
 				if (3*this.datafontsz < limh) {
-					ctx.fillText(gr[1], gr[2]+this.datafontsz, gr[3]+3*this.datafontsz);
+					if (4*this.datafontsz < limh) {
+						ctx.fillText(gr[1], gr[2]+this.datafontsz, cota);
+						cota += this.datafontsz;
+						if (perc >= lowest) {
+							ctx.fillText(`${perc}%`, gr[2]+this.datafontsz, cota);
+						} else {
+							ctx.fillText(`${lowest}%`, gr[2]+this.datafontsz, cota);
+						}	
+					} else { 
+						ctx.fillText(proptxt, gr[2]+this.datafontsz, cota);
+					}					
 				}
-				if (4*this.datafontsz < limh) {
-					if (perc >= lowest) {
-						ctx.fillText(`${perc}%`, gr[2]+this.datafontsz, gr[3]+4*this.datafontsz);
-					} else {
-						ctx.fillText(`< ${lowest}%`, gr[2]+this.datafontsz, gr[3]+4*this.datafontsz);
-					}
 
-				}
-
-				await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, [limw, limh], ost, boxw, 0.5, this.active_key);
+				await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, [limw/GlobalConst.CONTROLS_STYLES.SEG_BOX2ICON_RATIO, limh/GlobalConst.CONTROLS_STYLES.SEG_BOX2ICON_RATIO], ost, boxw, 0.5, this.active_key);
 
 			}
 
@@ -666,7 +720,7 @@ export class SlicingPanel {
 
 	// p_data_dict.response.push([varvalue, count, orig[0], orig[1], p_data_dict.outer_flex_dim, flex_dim, p_dump_count]);
 
-	fetchChartData(p_mapctx, p_minarea) {
+	fetchChartData(p_mapctx, p_minarea, b_showvalue) {
 
 		if (!this.active_key) {
 			return;
@@ -715,7 +769,7 @@ export class SlicingPanel {
 
 				that.classes_data = dict['classes'];
 
-				that.genTreeMaps(p_mapctx, dict['sumofclasscounts'], items, p_minarea);
+				that.genTreeMaps(p_mapctx, dict['sumofclasscounts'], items, p_minarea, b_showvalue);
 				
 				// Create a new array with only the first 5 items
 				// console.log("Sort:", items.slice(0, 5));
@@ -839,8 +893,13 @@ export class SlicingPanel {
 			// ctx.strokeRect(...graphbox);	
 			
 			ctx.restore(); // fetchChartData and children funcs have their own autonomous invocations of graphic context
+
+			let showvalue = false;
+			if (this.itemdict[this.active_key]['showvalue'] !== undefined) {
+				showvalue = this.itemdict[this.active_key]['showvalue'];
+			}
 			
-			this.fetchChartData(p_mapctx, this.itemdict[this.active_key].minarea);
+			this.fetchChartData(p_mapctx, this.itemdict[this.active_key].minarea, showvalue);
 		
 		} else {
 
@@ -970,8 +1029,13 @@ export class SlicingPanel {
 								const iconFuncDict = {};
 								fillIconFuncDict(p_mapctx, iconFuncDict);
 
+								let showvalue = false;
+								if (this.itemdict[this.active_key]['showvalue'] !== undefined) {
+									showvalue = this.itemdict[this.active_key]['showvalue'];
+								}
+					
 								this.drawTreemapPagenavItems(p_mapctx)								
-								this.fillTreemap(p_mapctx, iconFuncDict, spobj.cnt, spobj.sp);
+								this.fillTreemap(p_mapctx, iconFuncDict, spobj.cnt, spobj.sp, showvalue);
 							}
 						}
 						
