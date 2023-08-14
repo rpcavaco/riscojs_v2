@@ -85,7 +85,7 @@ function fillIconFuncDict(p_mapctx, p_ifdict) {
 // dims can be one generic dimension or a [width, height] pair
 async function genImage(p_mapctx, p_ctx, p_icon_func_dict, p_graphicbox_entry, p_datafontsz, p_dims, p_ost, p_boxw, p_spacing, p_activekey) {
 
-	function minimiz(p_sz) {
+	function normaliz(p_sz) {
 		return Math.min(GlobalConst.CONTROLS_STYLES.SEG_MAXICONSZ, Math.max(p_sz, GlobalConst.CONTROLS_STYLES.SEG_MINICONSZ));
 	}
 	
@@ -108,16 +108,16 @@ async function genImage(p_mapctx, p_ctx, p_icon_func_dict, p_graphicbox_entry, p
 			}
 
 			if (r > 1.5) {
-				w = 1.5 * minimiz(dimw);
+				w = 1.5 * normaliz(dimw);
 				h = w / r;
 			} else if (r > 1) { 
-				h = minimiz(dimh);
+				h = normaliz(dimh);
 				w = h * r;
 			} else if (r < 0.67) { 
-				h = 1.5 * minimiz(dimh);
+				h = 1.5 * normaliz(dimh);
 				w = h * r;
 			} else {
-				w = minimiz(dimw);
+				w = normaliz(dimw);
 				h = w / r;
 			}
 
