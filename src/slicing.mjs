@@ -1,7 +1,7 @@
 
 import {GlobalConst} from './constants.js';
 import {I18n} from './i18n.mjs';
-import {genRainbowColor, canvas_text_wrap} from './utils.mjs';
+import {genRainbowColor, canvas_text_wrap, symmetricDifference} from './utils.mjs';
 
 function aspect(p_dim1, p_dim2) {
 	return Math.max(p_dim1, p_dim2) / Math.min(p_dim1, p_dim2);
@@ -222,7 +222,10 @@ export class SlicingPanel {
 	classes_data;
 	graphbox;
 	selected_classes;
+	temp_selected_classes; // classes mouse/touch picked by user, temporary selection which may 
+						   // become permanent (in 'selected_classes') as user commits his/her choice 
 	ctrlarea_box;
+	is_maprefresh_pending;
 
 	constructor() {
 
@@ -254,6 +257,9 @@ export class SlicingPanel {
 
 		this.graphbox = null;
 		this.selected_classes = new Set();
+		this.temp_selected_classes = new Set();
+
+		this.is_maprefresh_pending = false;
 	}
 
 	calcDims(p_mapctx) {
@@ -353,12 +359,14 @@ export class SlicingPanel {
 
 	}
 
-	drawCtrlButtons(p_mapctx, p_ctx) {
+	drawCtrlButtons(p_mapctx) {
+
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 
 		try {
-			p_ctx.save();
+			ctx.save();
 
-			const msgskeys = ["SEGMACT","CLEAN", "CANC"];
+			const msgskeys = ["SEGMACT","CLEAN", "CLOSE"];
 			const msgs = [];
 			const tms = [];
 
@@ -368,9 +376,9 @@ export class SlicingPanel {
 
 			let w, h, msg, tm, asc = 0, desc = 0, boxindent=null, selbox, cmdisactive;
 
-			p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
+			ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
 			for (msg of msgs) {
-				tms.push(p_ctx.measureText(msg));
+				tms.push(ctx.measureText(msg));
 			}
 
 			for (tm of tms) {
@@ -378,19 +386,19 @@ export class SlicingPanel {
 				desc = Math.max(desc, tm.actualBoundingBoxDescent);
 			}
 
-			p_ctx.clearRect(...this.ctrlarea_box); 
-			p_ctx.fillStyle = this.fillStyleBack;
-			p_ctx.fillRect(...this.ctrlarea_box);
+			ctx.clearRect(...this.ctrlarea_box); 
+			ctx.fillStyle = this.fillStyleBack;
+			ctx.fillRect(...this.ctrlarea_box);
 
-			p_ctx.fillStyle = this.fillTextStyle;
-			p_ctx.strokeStyle = this.fillTextStyle;
-			p_ctx.lineWidth = 1;
+			ctx.fillStyle = this.fillTextStyle;
+			ctx.strokeStyle = this.fillTextStyle;
+			ctx.lineWidth = 1;
 
 			let slack = GlobalConst.CONTROLS_STYLES.TEXTBOXSLACK;
 			const cota = this.ctrlarea_box[1] + 2*this.normalszPX;
 
 			let msgidx = msgskeys.length - 1;
-			cmdisactive = false;
+			cmdisactive = true;
 			while (msgs.length > 0) {
 
 				msg = msgs.pop();
@@ -405,19 +413,23 @@ export class SlicingPanel {
 					boxindent = this.ctrlarea_box[0] + this.ctrlarea_box[2] - w;
 				}
 
-				cmdisactive = ["CLEAN", "SEGMACT"].indexOf(msgskeys[msgidx]) < 0 || this.selected_classes.size > 0;
+				if (msgskeys[msgidx] == "CLEAN") {
+					cmdisactive = this.temp_selected_classes.size > 0;
+				} else if (msgskeys[msgidx] == "SEGMACT") {
+					cmdisactive = this.classesSelectionHasChanged();
+				}
 
 				if (!cmdisactive) {
-					p_ctx.save();
-					p_ctx.fillStyle = GlobalConst.CONTROLS_STYLES.SEG_INACTIVECOLOR;
+					ctx.save();
+					ctx.fillStyle = GlobalConst.CONTROLS_STYLES.SEG_INACTIVECOLOR;
 				}
-				p_ctx.fillText(msg, boxindent+slack, cota);
+				ctx.fillText(msg, boxindent+slack, cota);
 				if (!cmdisactive) {
-					p_ctx.restore();
+					ctx.restore();
 				}
 
 				selbox = [boxindent, cota - slack - asc, w, h];
-				p_ctx.strokeRect(...selbox);
+				ctx.strokeRect(...selbox);
 					
 				if (cmdisactive) {
 					this.interaction_boxes[`cmd_${msgskeys[msgidx]}`] = selbox;
@@ -429,7 +441,7 @@ export class SlicingPanel {
 		} catch(e) {
 			throw e;
 		} finally {
-			p_ctx.restore();
+			ctx.restore();
 		}		
 	
 	}	
@@ -513,13 +525,14 @@ export class SlicingPanel {
 			}
 		}
 
-		this.selected_classes.clear();
+		this._copyClassesSelectionToTemp();
 
 		this.drawTreemapPagenavItems(p_mapctx);
 
 		let spobj = this.sorted_pairs_collection[this.activepageidx];
 		if (spobj) {
 			this.fillTreemap(p_mapctx, iconFuncDict, spobj.cnt, spobj.sp, b_showvalue);
+			this.drawCtrlButtons(p_mapctx);
 		}
 
 	}
@@ -649,7 +662,7 @@ export class SlicingPanel {
 	
 			ctx.globalAlpha = 1.0;
 
-			if (this.selected_classes.has(gr[0])) {
+			if (this.temp_selected_classes.has(gr[0])) {
 				strk_offset = 3;
 				ctx.lineWidth =	6;			
 				ctx.strokeStyle = "rgba(255, 246, 246, 0.86)";	
@@ -883,9 +896,6 @@ export class SlicingPanel {
 			ctx.restore();
 		}
 
-
-		this.drawCtrlButtons(p_mapctx, ctx);
-
 	}
 
 	// p_data_dict.response.push([varvalue, count, orig[0], orig[1], p_data_dict.outer_flex_dim, flex_dim, p_dump_count]);
@@ -1080,6 +1090,24 @@ export class SlicingPanel {
 		ctx.clearRect(0, 0, ...dims); 
 	}
 
+	_copyClassesSelectionToTemp() {
+		this.temp_selected_classes.clear();
+		for (const e of this.selected_classes) {
+			this.temp_selected_classes.add(e);
+		}
+	}
+
+	_copyClassesSelectionFromTemp() {
+		this.selected_classes.clear();
+		for (const e of this.temp_selected_classes) {
+			this.selected_classes.add(e);
+		}
+	}	
+
+	classesSelectionHasChanged() {
+		return symmetricDifference(this.selected_classes, this.temp_selected_classes).size > 0;
+	}
+
 	setState(p_mapctx, p_activeflag) {
 
 		const ci = p_mapctx.getCustomizationObject();
@@ -1105,6 +1133,14 @@ export class SlicingPanel {
 			}
 			this.clear(p_mapctx);
 		}
+	}
+
+	closeAction(p_mapctx) {
+		this.setState(p_mapctx, false);		
+		if (this.is_maprefresh_pending) {
+			this.is_maprefresh_pending = false;
+			p_mapctx.maprefresh();
+		}						
 	}
 
 	interact(p_mapctx, p_evt) {
@@ -1202,10 +1238,11 @@ export class SlicingPanel {
 
 							let classvalue = interact_box_key.replace("classbox_", "");
 
-							if (this.selected_classes.has(classvalue)) {
-								this.selected_classes.delete(classvalue);
+							// toggle class selection
+							if (this.temp_selected_classes.has(classvalue)) {
+								this.temp_selected_classes.delete(classvalue);
 							} else {
-								this.selected_classes.add(classvalue);
+								this.temp_selected_classes.add(classvalue);
 							}
 
 							const spobj = this.sorted_pairs_collection[this.activepageidx];
@@ -1219,6 +1256,8 @@ export class SlicingPanel {
 
 							this.fillTreemap(p_mapctx, iconFuncDict, spobj.cnt, spobj.sp, showvalue);
 
+							this.drawCtrlButtons(p_mapctx);
+
 						} else if (interact_box_key.startsWith("cmd_")) {
 
 							let cmdvalue = interact_box_key.replace("cmd_", "");
@@ -1227,15 +1266,43 @@ export class SlicingPanel {
 							switch (cmdvalue) {
 
 								case "SEGMACT":
-									// segmentar
+									if (this.classesSelectionHasChanged()) {
+										
+										this._copyClassesSelectionFromTemp();
+
+										let lyr;
+										const apto = this.itemdict[this.active_key]['applyto'];
+										if (apto) {
+											for (const lyrkey in apto) {
+												lyr = p_mapctx.tocmgr.getLayer(lyrkey);
+												console.assert(lyr["setFilterFunc"] !== undefined, `Slicing action: layer '${lyrkey}' has no setFilterFunc`);
+												if (this.selected_classes.size > 0) {
+													if (apto[lyrkey]["func"] !== undefined) {
+														lyr.setFilterFunc(apto[lyrkey]["func"](this.selected_classes));
+													} else if (apto[lyrkey]["field"] !== undefined) {
+														lyr.setFilterFunc((rec_attributes) => {
+																return this.selected_classes.has(rec_attributes[apto[lyrkey]["field"]]);
+														});
+													}
+												} else {
+													lyr.setFilterFunc(null);
+												}
+											}										
+										}
+
+										this.is_maprefresh_pending = true;
+										this.drawCtrlButtons(p_mapctx);
+
+									}
 									break;
 
 								case "CLEAN":
-									this.selected_classes.clear();
+									this.temp_selected_classes.clear();
+									this.drawCtrlButtons(p_mapctx);
 									refill = true;
 									break;
 										
-								case "CANC":
+								case "CLOSE":
 									const ci = p_mapctx.getCustomizationObject();
 									if (ci == null) {
 										throw new Error("Slicing, interaction, map context customization instance is missing")
@@ -1244,7 +1311,7 @@ export class SlicingPanel {
 									if (analysispanel) {
 										analysispanel.deactivateSegmentation(p_mapctx);
 									}
-									this.setState(p_mapctx, false);								
+									this.closeAction(p_mapctx);					
 	
 									break;
 	

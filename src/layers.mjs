@@ -199,6 +199,12 @@ export class Layer {
 const vectorLayersMixin = (Base) => class extends Base {
 	
 	geomtype;
+	_filterfunc = null;
+
+	setFilterFunc(p_function) {
+		// console.log("layer", this.key, "func:", p_function);
+		this._filterfunc = p_function;
+	}
 
 	refresh(p_mapctx, p_prep_data) {
 

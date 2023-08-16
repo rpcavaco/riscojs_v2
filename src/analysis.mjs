@@ -321,7 +321,7 @@ export class AnalysisMgr extends MapPrintInRect {
 
 								const segpanel = ci.instances["slicing"];
 								this.print(p_mapctx);
-								segpanel.setState(p_mapctx, false);								
+								segpanel.closeAction(p_mapctx);								
 
 							} else {
 								this.active_mode = 'SEG';

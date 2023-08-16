@@ -755,7 +755,11 @@ export class AGSQryLayer extends RemoteVectorLayer {
 
 							if (esriGeomtype == "esriGeometryPolygon") {
 								if (feat.geometry.rings.length > 0) {
-										
+
+									if (that._filterfunc != null && !that._filterfunc(feat.a)) {
+										continue;
+									}
+																		
 									id = that._currFeatures.add(that.key, feat.geometry.rings, feat.attributes, that.geomtype, 2, null, that.oidfldname);
 									// If feature still exists  between cleanups that's because it might not have been properly garbage collected
 									// If exists, let's not try to draw it, id is null

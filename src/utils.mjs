@@ -470,6 +470,18 @@ export function genRainbowColor(p_max, p_value) {
 
 }
 
+export function symmetricDifference(setA, setB) {
+	const _difference = new Set(setA);
+	for (const elem of setB) {
+	  if (_difference.has(elem)) {
+		_difference.delete(elem);
+	  } else {
+		_difference.add(elem);
+	  }
+	}
+	return _difference;
+}
+
 export function portuguese_syllables(p_input_text) {
 
 	const vogais = ['a', 'e', 'i', 'o', 'u'];
