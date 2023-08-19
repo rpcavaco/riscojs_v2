@@ -1281,7 +1281,7 @@ export class SlicingPanel {
 														lyr.setFilterFunc(apto[lyrkey]["func"](this.selected_classes));
 													} else if (apto[lyrkey]["field"] !== undefined) {
 														lyr.setFilterFunc((rec_attributes) => {
-																return this.selected_classes.has(rec_attributes[apto[lyrkey]["field"]]);
+															return this.selected_classes.has(rec_attributes[apto[lyrkey]["field"]]);
 														});
 													}
 												} else {

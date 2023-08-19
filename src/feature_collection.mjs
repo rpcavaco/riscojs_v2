@@ -4,12 +4,23 @@ import {Layer} from './layers.mjs'
 
 export class FeatureCollection {
 
+	mapctx;
+	featList;
+	layers;
+	indexes;
+
 	constructor(p_mapctx) {
+
 		this.mapctx = p_mapctx;
 		this.featList = {};
 		this.layers = {};
+		this.indexes = {};
 		//this.labelfield = null;
+
+		this.relationscfg = p_mapctx.cfgvar["layers"]["relations"];	
+		
 	}
+
 
 	setLayer(p_layerkey, p_layerobj) {
 
@@ -122,7 +133,52 @@ export class FeatureCollection {
 					g: p_geom.slice(0),
 					a: {...p_attrs},
 					bb: bbox.slice(0)
-				};				
+				};		
+				
+				for (const relentry of this.relationscfg) {
+					
+					let ptr;
+					if (relentry.op == "attrjoin" && relentry.from == p_layerkey) {
+						
+						if (this.indexes[p_layerkey] === undefined) {
+							this.indexes[p_layerkey] = {};
+						}
+
+						if (this.indexes[p_layerkey]["fields"] === undefined) {
+							if (relentry['using'] !== undefined) {
+								this.indexes[p_layerkey]["fields"] = [...relentry['using']];
+							} else if (relentry['fromfields'] !== undefined) {
+								this.indexes[p_layerkey]["fields"] = [...relentry['fromfields']];
+							}
+						}
+
+						if (this.indexes[p_layerkey]["content"] === undefined) {
+							this.indexes[p_layerkey]["content"] = {};
+						}
+
+						ptr = this.indexes[p_layerkey]["content"];
+						for (let fld, fldix=0; fldix<this.indexes[p_layerkey]["fields"].length; fldix++) {
+
+							fld = this.indexes[p_layerkey]["fields"][fldix];
+							if (ptr[p_attrs[fld]] === undefined) {
+								if (fldix == (this.indexes[p_layerkey]["fields"].length-1)) {
+									ptr[p_attrs[fld]] = [];
+								} else {
+									ptr[p_attrs[fld]] = {};
+								}	
+							}
+							ptr = ptr[p_attrs[fld]];
+
+						}	
+
+						// testar se ptr evoluiu ou não e ptr é lista
+						console.assert(Array.isArray(ptr), `ptr is not array, dict root:${JSON.stringify(this.indexes[p_layerkey]["content"])}, flds:${JSON.stringify(this.indexes[p_layerkey]["fields"])}, rec:${JSON.stringify(p_attrs)}`);
+
+						if (ptr.indexOf(id) < 0) {
+							ptr.push(id);				
+						}
+					}
+				}	
 			}	
 		}
 
@@ -200,10 +256,17 @@ export class FeatureCollection {
 		for (let layerkey in this.featList) {
 			this.emptyLayer(layerkey);
 		}
-	}	
+	}
+	
+	clearIndexes() {
+		for (let key in this.indexes){
+			delete this.indexes[key];
+		}
+	}
 
 	invalidate() {
 		this.emptyAll();
+		this.clearIndexes();
 		//this.spIndex.invalidate();
 	}
 	
@@ -291,7 +354,7 @@ export class FeatureCollection {
 
 	relateall() {
 		
-		let relcfgvar, fr_lyk, to_lyk;
+		let relcfgvar, fr_lyk, to_lyk, bidir;
 
 		const t0 = new Date().getTime();
 			
@@ -310,6 +373,11 @@ export class FeatureCollection {
 
 				fr_lyk = rel["from"];
 				to_lyk = rel["to"];
+
+				bidir = false;
+				if (rel["bidir"] !== undefined && rel["bidir"]) {
+					bidir = true;
+				}
 
 				if (this.featList[fr_lyk] === undefined) {
 					throw new Error(`relations, no 'from' layer '${fr_lyk}' loaded in current feature collection`);
@@ -338,8 +406,38 @@ export class FeatureCollection {
 										ff["r"][to_lyk] = [];
 									} 						
 									ff.r[to_lyk].push(idto);
+									if (bidir) {
+										if (tf["r"] === undefined) {
+											tf["r"] = {};
+										} 
+										if (tf["r"][fr_lyk] === undefined) {
+											tf["r"][fr_lyk] = [];
+										} 						
+										tf.r[fr_lyk].push(idfrom);										
+									}
 								}
 								break;
+
+							// case "attrjoin":
+							// 	if (bbTouch(ff.bb, tf.bb)) {
+							// 		if (ff["r"] === undefined) {
+							// 			ff["r"] = {};
+							// 		} 
+							// 		if (ff["r"][to_lyk] === undefined) {
+							// 			ff["r"][to_lyk] = [];
+							// 		} 						
+							// 		ff.r[to_lyk].push(idto);
+							// 		if (bidir) {
+							// 			if (tf["r"] === undefined) {
+							// 				tf["r"] = {};
+							// 			} 
+							// 			if (tf["r"][fr_lyk] === undefined) {
+							// 				tf["r"][fr_lyk] = [];
+							// 			} 						
+							// 			tf.r[fr_lyk].push(idfrom);										
+							// 		}
+							// 	}
+							// 	break;								
 			
 						}
 						//console.log("bb:", ff.bb, tf.bb);

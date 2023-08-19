@@ -1,0 +1,60 @@
+
+Relation "attrjoin"
+{
+	"from": "layerx",
+	"to": "layery",
+	"op": "attrjoin",
+	"join": {
+		"from_fld1": "to_fld1",
+		"from_fld2": "to_fld2"
+	}
+	"cmd": for now, just "skipunmatched_tolyrfeats"
+}
+
+creates index (in feature collection) in 'indexes' attribute:
+
+
+index: {
+	"from_layer_key": {
+		"fields": ["from_field_name_1", "from_field_name_2"],
+		"content": {
+				"from_field_name_1_value1": {
+					"from_field_name_2_value1": {
+						[ ... id list of "from layer" objects ]
+					}
+				},
+				"from_field_name_1_value2": { "from_field_name_2_value2": {...}  },
+				...
+		}
+	}
+}
+
+For "skipunmatched_tolyrfeats", for each 'to' layer feature, a match with a 'from' feature is searched , using join field values.
+Case this match is not found, the 'to' feature is discarded
+
+
+
+
+
+------ Relation bbtouch --------------------------------
+
+{
+	"from": "SPATIALIDX_GRID",
+	"to": lyk,
+	"op": "bbtouch",
+	(optional) "bidir": boolean (default false)
+}
+
+
+Related features (from side) aquire attribute "r":
+
+	fromlayer_feat.r["to_layer_key"] = [... id list of "to layer" objects]
+
+	if has "bidir" true:
+
+	tolayer_feat.r["from_layer_key"] = [... id list of "from layer" objects]
+
+
+
+
+

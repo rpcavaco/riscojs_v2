@@ -417,6 +417,9 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 							// console.log("terrain_coords:", terrain_coords, "key:", that.key);
 
 							if (that._filterfunc != null && !that._filterfunc(feat.a)) {
+								if (GlobalConst.getDebug("RISCOFEATS")) {
+									console.log(`[DBG:RISCOFEATS] feat removed by filter func, id:${id} layer:${that.key}, skipping ...`);
+								}
 								skipped++;
 								continue;
 							}
