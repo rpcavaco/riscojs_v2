@@ -1,6 +1,7 @@
 import {GlobalConst} from './constants.js';
 import {distanceToPoly, distanceToLine, dist2D, bbTouch} from './geom.mjs'
 import {Layer} from './layers.mjs'
+import {isSuperset, setEquality} from './utils.mjs'
 
 export class FeatureCollection {
 
@@ -131,31 +132,37 @@ export class FeatureCollection {
 				
 				for (const relentry of this.relationscfg) {
 					
-					let ptr;
+					let ptr, thisindex=null, ixlen, fldlist;
 					if (relentry.op == "attrjoin" && relentry.from == p_layerkey) {
+
+						if (relentry['using'] !== undefined) {
+							fldlist = [...relentry['using']];
+						} else if (relentry['fromfields'] !== undefined) {
+							fldlist = [...relentry['fromfields']];
+						}
 						
 						if (this.indexes[p_layerkey] === undefined) {
-							this.indexes[p_layerkey] = {};
+							this.indexes[p_layerkey] = [];
 						}
 
-						if (this.indexes[p_layerkey]["fields"] === undefined) {
-							if (relentry['using'] !== undefined) {
-								this.indexes[p_layerkey]["fields"] = [...relentry['using']];
-							} else if (relentry['fromfields'] !== undefined) {
-								this.indexes[p_layerkey]["fields"] = [...relentry['fromfields']];
+						for (const idx of this.indexes[p_layerkey]) {
+							if (setEquality(new Set(idx.fields), new Set(fldlist))) {
+								thisindex = idx;
+								break;
 							}
 						}
 
-						if (this.indexes[p_layerkey]["content"] === undefined) {
-							this.indexes[p_layerkey]["content"] = {};
+						if (thisindex == null) {
+							ixlen = this.indexes[p_layerkey].push({"fields": [...fldlist], "content": {}});
+							thisindex = this.indexes[p_layerkey][ixlen-1];
 						}
 
-						ptr = this.indexes[p_layerkey]["content"];
-						for (let fld, fldix=0; fldix<this.indexes[p_layerkey]["fields"].length; fldix++) {
+						ptr = thisindex["content"];
+						for (let fld, fldix=0; fldix<thisindex["fields"].length; fldix++) {
 
-							fld = this.indexes[p_layerkey]["fields"][fldix];
+							fld = thisindex["fields"][fldix];
 							if (ptr[p_attrs[fld]] === undefined) {
-								if (fldix == (this.indexes[p_layerkey]["fields"].length-1)) {
+								if (fldix == (thisindex["fields"].length-1)) {
 									ptr[p_attrs[fld]] = [];
 								} else {
 									ptr[p_attrs[fld]] = {};
@@ -166,7 +173,7 @@ export class FeatureCollection {
 						}	
 
 						// testar se ptr evoluiu ou não e ptr é lista
-						console.assert(Array.isArray(ptr), `ptr is not array, dict root:${JSON.stringify(this.indexes[p_layerkey]["content"])}, flds:${JSON.stringify(this.indexes[p_layerkey]["fields"])}, rec:${JSON.stringify(p_attrs)}`);
+						console.assert(Array.isArray(ptr), `ptr is not array, dict root:${JSON.stringify(thisindex["content"])}, flds:${JSON.stringify(thisindex["fields"])}, rec:${JSON.stringify(p_attrs)}`);
 
 						if (ptr.indexOf(id) < 0) {
 							ptr.push(id);				
@@ -385,60 +392,46 @@ export class FeatureCollection {
 				
 				let ff, tf;
 				//let cnt = 20;
-				for (let idfrom in this.featList[fr_lyk]) {
 
-					ff = this.featList[fr_lyk][idfrom];
-					for (let idto in this.featList[to_lyk]) {
+				if (rel["op"] ==  "bbtouch") {
+					for (let idfrom in this.featList[fr_lyk]) {
 
-						tf = this.featList[to_lyk][idto];
-						switch(rel["op"]) {
+						ff = this.featList[fr_lyk][idfrom];
+						for (let idto in this.featList[to_lyk]) {
+	
+							tf = this.featList[to_lyk][idto];
 
-							case "bbtouch":
-								if (bbTouch(ff.bb, tf.bb)) {
-									if (ff["r"] === undefined) {
-										ff["r"] = {};
+							if (bbTouch(ff.bb, tf.bb)) {
+								if (ff["r"] === undefined) {
+									ff["r"] = {};
+								} 
+								if (ff["r"][to_lyk] === undefined) {
+									ff["r"][to_lyk] = [];
+								} 						
+								ff.r[to_lyk].push(idto);
+								if (bidir) {
+									if (tf["r"] === undefined) {
+										tf["r"] = {};
 									} 
-									if (ff["r"][to_lyk] === undefined) {
-										ff["r"][to_lyk] = [];
+									if (tf["r"][fr_lyk] === undefined) {
+										tf["r"][fr_lyk] = [];
 									} 						
-									ff.r[to_lyk].push(idto);
-									if (bidir) {
-										if (tf["r"] === undefined) {
-											tf["r"] = {};
-										} 
-										if (tf["r"][fr_lyk] === undefined) {
-											tf["r"][fr_lyk] = [];
-										} 						
-										tf.r[fr_lyk].push(idfrom);										
-									}
+									tf.r[fr_lyk].push(idfrom);										
 								}
-								break;
-
-							// case "attrjoin":
-							// 	if (bbTouch(ff.bb, tf.bb)) {
-							// 		if (ff["r"] === undefined) {
-							// 			ff["r"] = {};
-							// 		} 
-							// 		if (ff["r"][to_lyk] === undefined) {
-							// 			ff["r"][to_lyk] = [];
-							// 		} 						
-							// 		ff.r[to_lyk].push(idto);
-							// 		if (bidir) {
-							// 			if (tf["r"] === undefined) {
-							// 				tf["r"] = {};
-							// 			} 
-							// 			if (tf["r"][fr_lyk] === undefined) {
-							// 				tf["r"][fr_lyk] = [];
-							// 			} 						
-							// 			tf.r[fr_lyk].push(idfrom);										
-							// 		}
-							// 	}
-							// 	break;								
-			
+							}
 						}
-						//console.log("bb:", ff.bb, tf.bb);
+					}	
+				} else if (rel["op"] ==  "attrjoin") {
+
+					for (let idto in this.featList[to_lyk]) {
+						tf = this.featList[to_lyk][idto];
+						new Set(Object.keys(tf.a)), 
+						console.log(tf.a, this.indexes[fr_lyk]);
+						break;
 					}
+
 				}
+
 			}
 
 			const t1 = new Date().getTime();

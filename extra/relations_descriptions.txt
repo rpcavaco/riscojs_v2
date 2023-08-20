@@ -13,20 +13,24 @@ Relation "attrjoin"
 
 creates index (in feature collection) in 'indexes' attribute:
 
+"From" index:
 
 index: {
-	"from_layer_key": {
-		"fields": ["from_field_name_1", "from_field_name_2"],
-		"content": {
-				"from_field_name_1_value1": {
-					"from_field_name_2_value1": {
-						[ ... id list of "from layer" objects ]
-					}
-				},
-				"from_field_name_1_value2": { "from_field_name_2_value2": {...}  },
-				...
-		}
-	}
+	"from_layer_key": [
+		{
+			"fields": ["from_field_name_1", "from_field_name_2"],
+			"content": {
+					"from_field_name_1_value1": {
+						"from_field_name_2_value1": {
+							[ ... id list of "from layer" objects ]
+						}
+					},
+					"from_field_name_1_value2": { "from_field_name_2_value2": {...}  },
+					...
+			}
+		},
+		....
+	]
 }
 
 For "skipunmatched_tolyrfeats", for each 'to' layer feature, a match with a 'from' feature is searched , using join field values.

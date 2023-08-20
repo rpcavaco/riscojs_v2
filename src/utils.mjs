@@ -466,8 +466,6 @@ export function genRainbowColor(p_max, p_value) {
 	const h = Math.round(360 * (p_value / p_max));
 	
 	return `hsl(${h} 100% 50%)`;
-
-
 }
 
 export function symmetricDifference(setA, setB) {
@@ -480,6 +478,34 @@ export function symmetricDifference(setA, setB) {
 	  }
 	}
 	return _difference;
+}
+
+export function isSuperset(set, subset) {
+	for (const elem of subset) {
+		if (!set.has(elem)) {
+			return false;
+		}
+	}
+	return true;
+}
+
+export function setEquality(setA, setB) {
+	let ret = true;
+	for (const el of setA) {
+		if (!setB.has(el)) {
+			ret = false;
+			break;
+		}
+	}
+	if (ret) {
+		for (const el of setB) {
+			if (!setA.has(el)) {
+				ret = false;
+				break;
+			}
+		}
+	}
+	return ret;
 }
 
 export function portuguese_syllables(p_input_text) {
