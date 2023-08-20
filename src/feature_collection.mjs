@@ -9,6 +9,7 @@ export class FeatureCollection {
 	featList;
 	layers;
 	indexes;
+	lyrkeys_exclude_from_redraw;
 
 	constructor(p_mapctx) {
 
@@ -16,6 +17,7 @@ export class FeatureCollection {
 		this.featList = {};
 		this.layers = {};
 		this.indexes = {};
+		this.lyrkeys_exclude_from_redraw = [];
 		//this.labelfield = null;
 
 		this.relationscfg = p_mapctx.cfgvar["layers"]["relations"];	
@@ -23,10 +25,16 @@ export class FeatureCollection {
 	}
 
 
-	setLayer(p_layerkey, p_layerobj) {
+	setLayer(p_layerkey, p_layerobj, opt_exclude_from_redraw) {
 
 		if (!(p_layerobj instanceof Layer)) {
 			throw new Error(`layer '${p_layerkey}' is not instance of Layer`);
+		}
+
+		if (opt_exclude_from_redraw) {
+			if (this.lyrkeys_exclude_from_redraw.indexOf(p_layerkey) < 0) {
+				this.lyrkeys_exclude_from_redraw.push(p_layerkey);
+			}
 		}
 
 		if (this.featList[p_layerkey] === undefined) {
@@ -271,7 +279,7 @@ export class FeatureCollection {
 		//this.spIndex.invalidate();
 	}
 	
-	draw(p_layerkey, opt_featid, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
+	featdraw(p_layerkey, opt_featid, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
 
 		let ret = null;
 		let feat = null;
@@ -305,6 +313,19 @@ export class FeatureCollection {
 		}
 
 		return ret;
+	}
+
+	redrawAllVectorLayers() {
+
+		let lyrkey, canvases_keys = [...this.mapctx.renderingsmgr.featdraw_canvaskeys];
+
+		this.mapctx.renderingsmgr.clearAll(canvases_keys);
+		for (lyrkey in this.featList) {
+			if (this.lyrkeys_exclude_from_redraw.indexOf(lyrkey) >= 0) {
+				continue;
+			}
+			this.featdraw(lyrkey);
+		}
 	}
 
 	get(p_layerkey, p_id) {
@@ -372,7 +393,10 @@ export class FeatureCollection {
 
 		if (relcfgvar.length > 0) {
 
+			let count  = 0;
 			for (const rel of relcfgvar) {
+
+				count++;
 
 				fr_lyk = rel["from"];
 				to_lyk = rel["to"];
@@ -423,15 +447,54 @@ export class FeatureCollection {
 					}	
 				} else if (rel["op"] ==  "attrjoin") {
 
-					for (let idto in this.featList[to_lyk]) {
+					let ptr, idto, tfattrset, foundidx = null;
+					let tokeys = Object.keys(this.featList[to_lyk]);
+
+					if (tokeys.length > 0) {
+						idto = tokeys[0];
 						tf = this.featList[to_lyk][idto];
-						new Set(Object.keys(tf.a)), 
-						console.log(tf.a, this.indexes[fr_lyk]);
-						break;
+						tfattrset = new Set(Object.keys(tf.a));
+						for (const idx of  this.indexes[fr_lyk]) {
+							if (isSuperset(tfattrset, idx.fields)) {
+								foundidx = idx;
+								break;
+							}
+						}						
 					}
 
-				}
+					if (foundidx) {
 
+						let removed_count = 0;
+						for (idto in this.featList[to_lyk]) {
+
+							tf = this.featList[to_lyk][idto];
+							ptr = foundidx.content;
+							for (let fldname of foundidx.fields) {
+								if (ptr[tf.a[fldname]] !== undefined) {
+									ptr = ptr[tf.a[fldname]];
+								} else {
+									ptr = null;
+									break;
+								}
+							}
+
+							if (rel["cmd"] ==  "skipunmatched_tolyrfeats") {
+								if (ptr == null || !Array.isArray(ptr)) {
+									removed_count++;
+									this.remove(to_lyk, idto);
+								}	
+							}
+
+						
+						}
+
+						console.info(`[INFO] relation ${count}, 'attrjoin',  removed ${removed_count} features from layer '${to_lyk}'`);
+						if (removed_count > 0) {
+							this.redrawAllVectorLayers();
+						}
+	
+					}
+				}
 			}
 
 			const t1 = new Date().getTime();

@@ -19,6 +19,9 @@
  export class HTML5CanvasMgr {
 
 	max_zindex;
+	canvases;
+	canvaskeys;
+	featdraw_canvaskeys;
 
 	constructor(p_mapctx, opt_base_zindex) {
 
@@ -41,6 +44,7 @@
 		this.max_zindex = 0;
 
 		this.canvaskeys = ['base', 'normal', 'label', 'temporary', 'transientmap', 'data_viz', 'interactive_viz',  'service_canvas', 'transientviz', 'overlay_canvas'];
+		this.featdraw_canvaskeys = ['normal', 'label'];
 		for (let i=0; i<this.canvaskeys.length; i++) {
 
 			this.canvases[this.canvaskeys[i]] = document.createElement('canvas');

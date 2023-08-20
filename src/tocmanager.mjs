@@ -115,7 +115,7 @@ export class TOCManager {
 		return ret;
 	}
 
-	addLayer(p_layerkey, p_layercfg_entry, opt_crafted_layerclass) {
+	addLayer(p_layerkey, p_layercfg_entry, opt_crafted_layerclass, opt_exclude_from_redraw) {
 
 		const lidx = this.layers.push(null) - 1;
 		let currentLayer;
@@ -287,7 +287,7 @@ export class TOCManager {
 			// connects feature collection to this layer, if applicable
 			// (if it implements featureLayersMixin)
 			if (currentLayer.setCurrFeatures !== undefined) {
-				currentLayer.setCurrFeatures(this.mapctx.featureCollection, p_layerkey, currentLayer);
+				currentLayer.setCurrFeatures(this.mapctx.featureCollection, p_layerkey, currentLayer, opt_exclude_from_redraw);
 			}
 
 
@@ -310,6 +310,7 @@ export class TOCManager {
 		];
 
 		let addedtospidx = [];
+		let exclude_from_redraw = false;
 
 		const cfgvar = this.mapctx.cfgvar;
 		const layerscfg = cfgvar["layers"];
@@ -328,9 +329,11 @@ export class TOCManager {
 				// loading spatial grid layer as overlay over all others
 				lyk = "SPATIALIDX_GRID";
 				lyentry = GlobalConst.SPATIALIDX_GRID;
+				exclude_from_redraw = true;
 
 			} else {
 
+				exclude_from_redraw = false;
 				lyk = layerscfg.lorder[i];
 
 				if (layerscfg.layers[lyk] === undefined) {
@@ -354,7 +357,7 @@ export class TOCManager {
 
 			if (lyentry !== undefined) {
 
-				this.addLayer(lyk, lyentry);
+				this.addLayer(lyk, lyentry, null, exclude_from_redraw);
 
 			} else {
 				console.error(`TOCManager, no layer with key '${lyk}' found in config.`);

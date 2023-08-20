@@ -428,7 +428,7 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 							// If feature still exists  between cleanups that's because it might not have been properly garbage collected
 							// If exists, let's not try to draw it, id is null
 							if (id2) {
-								that._currFeatures.draw(that.key, id2, null, null, p_terrain_env);
+								that._currFeatures.featdraw(that.key, id2, null, null, p_terrain_env);
 							}
 
 							cnt++;

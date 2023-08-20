@@ -301,9 +301,9 @@ const featureLayersMixin = (Base) => class extends Base {
 	_currFeatures;
 	fields = "";
 
-	setCurrFeatures(p_curr_feats, p_layer_key, p_layerobj) {
+	setCurrFeatures(p_curr_feats, p_layer_key, p_layerobj, opt_exclude_from_redraw) {
 		this._currFeatures = p_curr_feats;
-		this._currFeatures.setLayer(p_layer_key, p_layerobj);
+		this._currFeatures.setLayer(p_layer_key, p_layerobj, opt_exclude_from_redraw);
 	}
 
 	featCount() {

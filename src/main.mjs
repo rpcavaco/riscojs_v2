@@ -433,7 +433,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				Object.assign(lsymb, p_geomtype_keyed_symbdict['label']);
 			}
 
-			ret = this.featureCollection.draw(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict, { "graphic": symb, 'label': lsymb } );
+			ret = this.featureCollection.featdraw(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict, { "graphic": symb, 'label': lsymb } );
 			
 		} else {
 			if (ly == null) {
