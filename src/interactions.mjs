@@ -257,9 +257,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 				if (feat!=null) {
 					if (opt_actonselfeat) {
 						ret_dir_interact = opt_actonselfeat(nearestlyk, feat, p_scrx, p_scry);
-						if (ret_dir_interact === undefined) {
-							console.log("interactions 257:", opt_actonselfeat);
-						}
+						console.assert(ret_dir_interact === undefined, `optional action on selected feat failed, nearest layer:${nearestlyk}, feat id:${nearestid}`)
 					}
 				}
 			}
