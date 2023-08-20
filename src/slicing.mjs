@@ -1127,7 +1127,9 @@ export class SlicingPanel {
 
 		} else {
 
-			// collapse TOC
+			// console.log("INFLATING TOC")
+
+			// inflate TOC
 			if (toc) {
 				toc.inflate(p_mapctx);
 			}
@@ -1291,7 +1293,17 @@ export class SlicingPanel {
 										}
 
 										this.is_maprefresh_pending = true;
-										this.drawCtrlButtons(p_mapctx);
+										const ci = p_mapctx.getCustomizationObject();
+										if (ci == null) {
+											throw new Error("Slicing, SEGMACT interaction, map context customization instance is missing")
+										}
+										const analysispanel = ci.instances["analysis"];
+										if (analysispanel) {
+											analysispanel.deactivateSegmentation(p_mapctx);
+										}
+										this.closeAction(p_mapctx);					
+
+										// this.drawCtrlButtons(p_mapctx);
 
 									}
 									break;
@@ -1305,7 +1317,7 @@ export class SlicingPanel {
 								case "CLOSE":
 									const ci = p_mapctx.getCustomizationObject();
 									if (ci == null) {
-										throw new Error("Slicing, interaction, map context customization instance is missing")
+										throw new Error("Slicing, CLOSE interaction, map context customization instance is missing")
 									}
 									const analysispanel = ci.instances["analysis"];
 									if (analysispanel) {

@@ -1,3 +1,4 @@
+PASSAR PARA OS ISSUES DO GITHUB
 
 -------------------------------- Features -------------------------------
 
@@ -69,23 +70,22 @@
 - OK - 'attribution'
 - OK - info scrollable -> INFO PAGEABLE
 - OK - max largura info nas basic configs
-
-- permitir seleção múltipla
-	- highlight com simbolo diferenciado de conjunto / individuo selecionado
-	- tabela atributos da seleção
+- OK permitir seleção múltipla
+	- XXX / SUBSTITUÍDO - highlight com simbolo diferenciado de conjunto / individuo selecionado - substituído por segmentação com filtragem de elementos
+	- XXX - tabela atributos da seleção
 
 - geração de color ramps adicionais, além do 'rainbow' 
 - config de color ramps -- TODO slicing / source de charting, na geração de treemap
 
 
-- >> invocação de mapctx nos variados paineis 
+- PASSADO GH - invocação de mapctx nos variados paineis 
 
 
 
 
 - symbolo de linha na TOC - validar
 
-- controles disabled -- TODO em default_customizations, 819
+- PASSADO GH -controles disabled -- TODO em default_customizations, 819
 
 
 
@@ -159,7 +159,7 @@
 ------------------------------ RISCO SERVER -----------------------------------
 
 
--- pedido de stats comum a várias layers
+-- OK - pedido de stats comum a várias layers
 -- getStatsURL opt_filter
 
 

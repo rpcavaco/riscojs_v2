@@ -307,7 +307,9 @@ export class FeatureCollection {
 			for (let id in this.featList[p_layerkey]) {
 				if (this.featList[p_layerkey].hasOwnProperty(id)) {
 					feat = this.featList[p_layerkey][id];
-					this.layers[p_layerkey].refreshitem(this.mapctx, feat.g, feat.a, feat.l, id, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
+					if (this.layers[p_layerkey].isFeatureInsideFilter(feat.a)) {
+						this.layers[p_layerkey].refreshitem(this.mapctx, feat.g, feat.a, feat.l, id, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
+					}
 				}
 			}
 		}

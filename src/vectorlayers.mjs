@@ -756,7 +756,7 @@ export class AGSQryLayer extends RemoteVectorLayer {
 							if (esriGeomtype == "esriGeometryPolygon") {
 								if (feat.geometry.rings.length > 0) {
 
-									if (that._filterfunc != null && !that._filterfunc(feat.a)) {
+									if (!that.isFeatureInsideFilter(feat.attributes)) {
 										continue;
 									}
 																		

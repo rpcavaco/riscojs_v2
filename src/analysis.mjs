@@ -207,7 +207,7 @@ export class AnalysisMgr extends MapPrintInRect {
 
 
 			} else {
-				// collapsed TOC
+
 				const leftx = this.left + this.margin_offset;
 				const rightx = this.left + this.boxw["COLLAPSED"] - this.margin_offset;
 
@@ -528,12 +528,10 @@ export class SelectionsNavigator extends MapPrintInRect {
 			ctx.lineWidth = this.strokeWidth;
 			ctx.strokeRect(this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]);
 
-			if (this.collapsedstate == "OPEN") {
-						
-				// blah
+			if (this.collapsedstate != "OPEN") {
 
-			} else {
-				// collapsed TOC
+				// stripes pattern
+
 				const leftx = this.left + this.margin_offset;
 				const rightx = this.left + this.boxw["COLLAPSED"] - this.margin_offset;
 

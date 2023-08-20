@@ -206,6 +206,14 @@ const vectorLayersMixin = (Base) => class extends Base {
 		this._filterfunc = p_function;
 	}
 
+	isFeatureInsideFilter(p_feat_atts) {
+		let ret = true;
+		if (this._filterfunc != null && !this._filterfunc(p_feat_atts)) {
+			ret = false;
+		}
+		return ret;
+	}
+
 	refresh(p_mapctx, p_prep_data) {
 
 		let cancel = false;
