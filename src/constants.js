@@ -107,9 +107,10 @@ var GlobalConst = {
 			"lineWidth": 2
 		},
 		"point" : { 
-			"fillStyle": "#11fbff7f",
+			"fillStyle": "#11fbff2f",
 			"strokeStyle": "#62efff",
-			"lineWidth": 3
+			"lineWidth": 3,
+			"markersize": 4
 		}
 	},
 

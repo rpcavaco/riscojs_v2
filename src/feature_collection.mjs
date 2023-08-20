@@ -28,10 +28,6 @@ export class FeatureCollection {
 			throw new Error(`layer '${p_layerkey}' is not instance of Layer`);
 		}
 
-		/*if (p_layerkey == "EV") {
-			console.log("+++", p_layerobj);
-		}*/
-
 		if (this.featList[p_layerkey] === undefined) {
 			this.featList[p_layerkey] = {};
 			this.layers[p_layerkey] = p_layerobj;
@@ -124,8 +120,6 @@ export class FeatureCollection {
 				const bbox = [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER]
 
 				innerCycle(this, bbox, p_geom, 0, p_path_levels, id);
-
-				//console.log(p_layerkey, bbox, p_geom)
 
 				this.featList[p_layerkey][id] = {
 					gt: p_geom_type,
@@ -286,11 +280,13 @@ export class FeatureCollection {
 			if (feat == null) {
 				throw new Error(`layer '${p_layerkey}' no feature for id ${opt_featid}`);
 			}
+
 			refreshresult = this.layers[p_layerkey].refreshitem(this.mapctx, feat.g, feat.a, feat.l, opt_featid, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
 			// feature is returned ONLY if feature was drawn
 			if (refreshresult) {
 				ret = feat;
 			}
+
 		} else {
 
 			for (let id in this.featList[p_layerkey]) {

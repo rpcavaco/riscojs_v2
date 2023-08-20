@@ -22,7 +22,9 @@ function isObject(item) {
    * https://stackoverflow.com/questions/27936772/how-to-deep-merge-instead-of-shallow-merge 
    */
 function mergeDeep(target, ...sources) {
+
 	if (!sources.length) return target;
+
 	const source = sources.shift();
   
 	if (isObject(target) && isObject(source)) {
@@ -394,7 +396,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		}
 	}
 
-	drawSingleFeature(p_layer_key, p_obj_id, p_geomtype_keyed_symbdict, opt_alt_canvaskeys_dict) {
+	drawSingleFeature(p_layer_key, p_obj_id, p_geomtype_keyed_symbdict, b_is_sel, opt_alt_canvaskeys_dict) {
 
 		// opt_alt_canvaskeys_dict  example: {'normal': 'temporary', 'label': 'temporary' }
 
@@ -406,10 +408,24 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		if (ly != null && ly.layervisible) {
 
-			Object.assign(symb, ly.default_symbol);
+			let thissymb;
+			if (b_is_sel && ly.default_sel_symbol!='none') {
+				thissymb = ly.default_sel_symbol;
+			} else {
+				thissymb = ly.default_symbol;
+			}
+			if (thissymb != null && thissymb != "none") {
+				Object.assign(symb, thissymb);
+			}
+
 			Object.assign(symb, p_geomtype_keyed_symbdict[ly.geomtype]);
+
 			if (ly.default_symbol['drawsymb'] !== undefined) {
-				symb.drawsymb = ly.default_symbol.drawsymb;
+				if (b_is_sel && ly.default_sel_symbol != "none") {
+					symb.drawsymb = ly.default_sel_symbol.drawsymb;
+				} else {
+					symb.drawsymb = ly.default_symbol.drawsymb;
+				}				
 			}
 
 			Object.assign(lsymb, ly.default_symbol);
@@ -440,7 +456,15 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			hlStyles = GlobalConst.FEATMOUSESEL_HIGHLIGHT;
 		}
 
-		return this.drawSingleFeature(p_layer_key, p_obj_id, hlStyles, opt_alt_canvaskeys_dict);
+		const ly = this.tocmgr.getLayer(p_layer_key);
+
+		if (ly["selectionsymbol"] !== undefined) {
+			const d = {};
+			d[ly.geomtype] = ly.selectionsymbol;
+			hlStyles = mergeDeep(hlStyles, d);
+		}
+
+		return this.drawSingleFeature(p_layer_key, p_obj_id, hlStyles, true, opt_alt_canvaskeys_dict);
 	}
 
 	transformsChanged(b_dodraw) {

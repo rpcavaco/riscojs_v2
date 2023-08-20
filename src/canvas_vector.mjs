@@ -146,6 +146,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	canvasKey = 'normal';
 	canvasKeyLabels = 'label';
 	default_symbol;	
+	default_sel_symbol = "none";	
 	varstyles_symbols = [];
 	msgsdict = {};
 	maptipfields = {}; // 'add' and 'remove'
@@ -197,15 +198,12 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		if (opt_symbs) {
 			this._currentsymb = opt_symbs;
-			// console.log("set _currentsymb A:", this.key, opt_symbs);
 		} else {
 			this._currentsymb = this.default_symbol;
-			//console.log("set _currentsymb B:", this.key, this.default_symbol);
 			if (this["varstyles_symbols"]!==undefined && opt_attrs) {
 				for (let vi=0; vi<this.varstyles_symbols.length; vi++) {										
 					if (this.varstyles_symbols[vi]["func"] !== undefined && this.varstyles_symbols[vi].func(p_mapctx.getScale(), opt_attrs)) {
 						this._currentsymb = this.varstyles_symbols[vi];
-						//console.log("set _currentsymb C:", this.key, this._currentsymb);
 						break;
 					}
 				}
@@ -221,7 +219,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				//this.fillflag = true;
 			}	
 
-			let fontface='Helvetica', fntsz = 14;
+			let fontface='sans-serif', fntsz = 14;
 			if (this._currentsymb.labelFontSizePX !== undefined) {
 				fntsz = this._currentsymb.labelFontSizePX;
 			}
@@ -269,7 +267,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	
 	}	
 
-	drawMarker(p_mapctxt, p_coords, p_iconname, opt_feat_id) {
+	drawMarker(p_mapctxt, p_coords, opt_iconname, opt_feat_id, opt_symb) {
 
 		if (this._gfctx == null) {
 			throw new Error(`graphics context was not previously grabbed for layer '${this.key}'`);
@@ -283,11 +281,18 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		const pt = [];
 		p_mapctxt.transformmgr.getRenderingCoordsPt(p_coords, pt);
 
-		//const symblabel = p_mapctxt.i18n.msg(this._currentsymb.key, true);
-		//console.log(this.key, symblabel, this.varstyles_symbols);
-
 		try {
-			this._currentsymb.drawsymb(p_mapctxt, this, pt, p_iconname, opt_feat_id);
+			if (opt_symb) {
+				try {
+					this._gfctx.save();
+					opt_symb.setStyle(this._gfctx);
+					opt_symb.drawsymb(p_mapctxt, this, pt, opt_iconname, opt_feat_id);
+				} finally {
+					this._gfctx.restore();
+				}	
+			} else {
+				this._currentsymb.drawsymb(p_mapctxt, this, pt, opt_iconname, opt_feat_id);
+			}
 		} catch(e) {
 			console.error(this,  pt, opt_feat_id);
 			console.error(this._currentsymb);
@@ -309,8 +314,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 	// must this.grabGf2DCtx first !
 	drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id) {
-
-		// console.log("pl:", p_path_levels);
 
 		if (this._gfctx == null) {
 			throw new Error(`graphics context was not previously grabbed for layer '${this.key}'`);
@@ -458,8 +461,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 					this._gfctxlbl.rotate(ang);
 					this._gfctxlbl.translate(-pt[0], -pt[1]);
 
-					// console.log(pt, w, h);
-
 					if (count == 0) {
 						this._gfctxlbl.fillRect(pt[0]-(w/2)-3, pt[1]-(h/2)-1, w+4, h+2);
 					} else if (count == textDrawData.length - 1) {
@@ -467,7 +468,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 					} else {
 						this._gfctxlbl.fillRect(pt[0]-(w/2)-1, pt[1]-(h/2)-1, w+4, h+2);
 					}
-					//console.log("..", char, pt)
+
 					this._gfctxlbl.restore();
 
 					count++;
@@ -484,7 +485,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				this._gfctxlbl.translate(-pt[0], -pt[1]);
 
 				this._gfctxlbl.fillText(char, ...pt)
-				//console.log("..", char, pt)
+
 				this._gfctxlbl.restore();
 
 			}
@@ -495,8 +496,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			let minarea = p_mapctxt.getScale() / 100.0;
 			const lpt = getFeatureCenterPoint(this.geomtype, p_path_levels, p_coords, minarea);
 
-			// console.log(`p_coords: ${p_coords}, p_path_levels: ${p_path_levels}`, p_coords);
-			// console.log(`lpt: ${lpt}`, lpt);
 			let pt=[], finalpt=[], rot=null;
 
 			if (lpt.length < 1) {
@@ -682,13 +681,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			}
 		}
 
-		const protectCanvasFromAsyncUse = (iconnamefield != null);
-
-		/*if (opt_feat_id == 34517 ) {
-			console.log(":: canvas_vector 703 :: refreshitem:", pathoptsymbs, lbloptsymbs);
-		} */
-
-		//console.log(">>", this.key, this.default_symbol, pathoptsymbs);
+		const protectCanvasFromAsyncUse = (iconnamefield != null && (groptsymbs==null || groptsymbs['drawsymb']===undefined));
 
 		if (this.grabGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, groptsymbs, protectCanvasFromAsyncUse)) {
 			try {
@@ -706,12 +699,15 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				}
 
 				if (doit) {
+
 					if (this.geomtype == "point") {
+
 						iconname = null;
 						if (iconnamefield && p_attrs[iconnamefield] !== undefined) {
 							iconname = p_attrs[iconnamefield];
 						}
-						ret = this.drawMarker( p_mapctxt, p_coords[0], iconname, opt_feat_id);
+
+						ret = this.drawMarker( p_mapctxt, p_coords[0], iconname, opt_feat_id, (groptsymbs!=null && groptsymbs['drawsymb']!==undefined ? groptsymbs : null));
 					} else {
 						ret = this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
 					}

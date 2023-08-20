@@ -174,6 +174,8 @@ export class TOCManager {
 				}
 			}
 
+			currentLayer.selectionsymbol = {};
+
 			const scaneables = [currentLayer];
 			currentLayer.key = p_layerkey;
 
@@ -197,6 +199,18 @@ export class TOCManager {
 					}
 					currentLayer.default_symbol = new DynamicSymbol(this.mode, classkey);
 					scaneables.push(currentLayer.default_symbol);	
+
+					if (p_layercfg_entry["selectionsymbol"] !== undefined) {
+
+						if (p_layercfg_entry["selectionsymbol"]["marker"] !== undefined && p_layercfg_entry["selectionsymbol"]["marker"] != "none") { 
+							classkey = p_layercfg_entry["selectionsymbol"]["marker"];
+						} else {
+							classkey = currentLayer.geomtype;
+						}
+
+						currentLayer.default_sel_symbol = new DynamicSymbol(this.mode, classkey);
+						scaneables.push(currentLayer.selectionsymbol);		
+					}
 					
 					if (p_layercfg_entry.varstyles) {
 						for (let vi=0; vi<p_layercfg_entry.varstyles.length; vi++) {	
@@ -275,6 +289,7 @@ export class TOCManager {
 			if (currentLayer.setCurrFeatures !== undefined) {
 				currentLayer.setCurrFeatures(this.mapctx.featureCollection, p_layerkey, currentLayer);
 			}
+
 
 			console.info(`[init RISCO] TOCManager, layer '${p_layerkey}' (${currentLayer.constructor.name}) prepared`);
 

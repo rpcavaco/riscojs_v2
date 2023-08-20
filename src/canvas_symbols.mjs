@@ -183,7 +183,7 @@ class MarkerSymbol extends labelSymbolMixin(GrSymbol) {
 	get variablesymb_idx() {
 		return this._variablesymb_idx;
 	}	
-	drawsymb(p_mapctxt, p_layer, p_coords, p_iconname, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords, opt_iconname, opt_feat_id) {
 		// asbtract, to be implemented by subclasses
 	}
 }
@@ -195,7 +195,7 @@ export class CanvasVertCross extends strokeSymbolMixin(MarkerSymbol) {
 		super(opt_variablesymb_idx);
 		this.symbname = "VertCross";
 	}
-	drawsymb(p_mapctxt, p_layer, p_coords, p_iconname, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords, opt_iconname, opt_feat_id) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = this.markersize * GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval);
@@ -224,7 +224,7 @@ export class CanvasCircle extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol
 		super(opt_variablesymb_idx);
 		this.symbname = "Circle";
 	}
-	drawsymb(p_mapctxt, p_layer, p_coords, p_iconname, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords, opt_iconname, opt_feat_id) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
@@ -269,7 +269,7 @@ export class CanvasDiamond extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbo
 		super(opt_variablesymb_idx);
 		this.symbname = "Diamond";
 	}
-	drawsymb(p_mapctxt, p_layer, p_coords, p_iconname, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords, opt_iconname, opt_feat_id) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
@@ -291,7 +291,7 @@ export class CanvasDiamond extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbo
 	}
 }
 		
-export class CanvasIcon extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol)) { 
+export class CanvasIcon extends MarkerSymbol { 
 
 	symbname;
 	constructor(opt_variablesymb_idx) {
