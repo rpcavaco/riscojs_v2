@@ -4,6 +4,7 @@ testbed/js/riscojs_v2
 testbed/js/_*
 testbed/media/
 dist/
+dados/
 src/_*.*js
 docs/build/
 fonts/
