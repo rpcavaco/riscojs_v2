@@ -533,6 +533,8 @@ export class SlicingPanel {
 		if (spobj) {
 			this.fillTreemap(p_mapctx, iconFuncDict, spobj.cnt, spobj.sp, b_showvalue);
 			this.drawCtrlButtons(p_mapctx);
+		} else {
+			console.error("slicing genTreeMaps: no sorted pairs in collection for idx", this.activepageidx);
 		}
 
 	}
@@ -663,9 +665,9 @@ export class SlicingPanel {
 			ctx.globalAlpha = 1.0;
 
 			if (this.temp_selected_classes.has(gr[0])) {
-				strk_offset = 3;
-				ctx.lineWidth =	6;			
-				ctx.strokeStyle = "rgba(255, 246, 246, 0.86)";	
+				strk_offset = GlobalConst.CONTROLS_STYLES.SEG_SELECTEDCLASSBOUNDARY;
+				ctx.lineWidth =	GlobalConst.CONTROLS_STYLES.SEG_SELECTEDCLASSBOUNDARY;			
+				ctx.strokeStyle = GlobalConst.CONTROLS_STYLES.SEG_SELECTEDCLASSBOUNDARY_CLR;	
 			} else {
 				strk_offset = 0;
 				ctx.strokeStyle = color;	
@@ -930,7 +932,6 @@ export class SlicingPanel {
 					return [key, dict['classes'][key].cnt];
 				});
 
-				
 				// Sort the array based on the second element
 				items.sort(function(first, second) {
 					let ret;
@@ -943,6 +944,7 @@ export class SlicingPanel {
 					return ret;
 				});
 
+				console.assert(items[0][1] > items[items.length-1][1], "slicing: classes sort impossible, all classes have same counts");
 
 
 				that.classes_data = dict['classes'];
