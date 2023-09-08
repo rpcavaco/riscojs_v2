@@ -752,11 +752,26 @@ export function getFeatureCenterPoint(p_geomtype, p_path_levels, p_coords, p_min
 
 }
 
+export function genOrigEnv() {
+	return [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER];			
+}
+
 export function addEnv(p_this_env, p_other_env) {
 	p_this_env[0] = Math.min(p_this_env[0], p_other_env[0]);
 	p_this_env[1] = Math.min(p_this_env[1], p_other_env[1]);
 	p_this_env[2] = Math.max(p_this_env[2], p_other_env[2]);
 	p_this_env[3] = Math.max(p_this_env[3], p_other_env[3]);			
+}
+
+export function envArea(p_env) {
+	const ret = (p_env[2] - p_env[0]) * (p_env[3] - p_env[1]);
+	console.assert(ret >= 0, `envArea: negative area value = ${ret}`);
+	return ret;
+}
+
+export function envInteriorOverlap(p_enva, p_envb, p_tol_percentage) {
+	
+	return p_envb[0] < p_enva[2] && p_envb[1] < p_enva[3];
 }
 
 export function geomTest() {

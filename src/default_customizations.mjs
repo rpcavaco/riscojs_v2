@@ -1219,7 +1219,12 @@ export class MapCustomizations {
 
 		// widget which presence impacts others, at least through display area occupied
 		const ap = new AttributionPrint();
-		const nav = new SelectionsNavigator(this.mapctx, [ap]);
+		// const nav = new SelectionsNavigator(this.mapctx, [ap]);
+
+		let has_slicing = false;
+		if (this.mapctx.cfgvar["basic"]["slicing"] !== undefined && this.mapctx.cfgvar["basic"]["slicing"]["keys"] !== undefined && Object.keys(this.mapctx.cfgvar["basic"]["slicing"]["keys"]) > 0) {
+			has_slicing = true;
+		}
 		
 		this.instances = {
 			"basiccontrolsbox": new BasicCtrlBox(),
@@ -1230,11 +1235,15 @@ export class MapCustomizations {
 			"mapscaleprint": new MapScalePrint(),
 			"loadingmsgprint": new LoadingPrint(),
 			"attributionprint": ap,
-			"overlay": new OverlayMgr(this.mapctx),
-			// "analysis": new AnalysisMgr(this.mapctx, [ap, nav]),
-			"analysis": new AnalysisMgr([ap]),
-			"navigator": nav,
-			"slicing": new SlicingPanel()
+			"overlay": new OverlayMgr(this.mapctx)
+			// "analysis": new AnalysisMgr([ap]),
+			// "navigator": nav,
+			// "slicing": new SlicingPanel()
+		}
+
+		if (has_slicing) {
+			this.instances["analysis"] = new AnalysisMgr([ap]);
+			this.instances["slicing"] = new SlicingPanel();
 		}
 
 		// Temporariamente sem navigator

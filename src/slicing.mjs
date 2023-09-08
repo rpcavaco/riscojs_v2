@@ -2,6 +2,7 @@
 import {GlobalConst} from './constants.js';
 import {I18n} from './i18n.mjs';
 import {genRainbowColor, canvas_text_wrap, symmetricDifference} from './utils.mjs';
+import {addEnv, genOrigEnv, envArea, envInteriorOverlap} from './geom.mjs';
 
 function aspect(p_dim1, p_dim2) {
 	return Math.max(p_dim1, p_dim2) / Math.min(p_dim1, p_dim2);
@@ -1099,11 +1100,31 @@ export class SlicingPanel {
 		}
 	}
 
-	_copyClassesSelectionFromTemp() {
+	_copyClassesSelectionFromTemp(p_mapctx) {
+
 		this.selected_classes.clear();
+		let cls;
+		const env = genOrigEnv();
+		const bounds = [];
+		
 		for (const e of this.temp_selected_classes) {
 			this.selected_classes.add(e);
+			cls = this.classes_data[e];
+			addEnv(env, [cls.xmin, cls.ymin, cls.xmax, cls.ymax]);
 		}
+
+		/*p_mapctx.getMapBounds(bounds);
+
+		!envInteriorOverlap(env, bounds)
+
+		envArea(env) < 1.2 * envArea(bounds) && 
+
+		if (envArea(env) < 1.2 * envArea(bounds)) {
+
+		}
+		*/
+
+		
 	}	
 
 	classesSelectionHasChanged() {
@@ -1139,11 +1160,15 @@ export class SlicingPanel {
 		}
 	}
 
-	closeAction(p_mapctx) {
+	closeAction(p_mapctx, p_env) {
 		this.setState(p_mapctx, false);		
 		if (this.is_maprefresh_pending) {
 			this.is_maprefresh_pending = false;
-			p_mapctx.maprefresh();
+			if (p_env) {
+				p_mapctx.transformmgr.zoomToRect(...p_env);		
+			} else {
+				p_mapctx.maprefresh();
+			}
 		}						
 	}
 
@@ -1272,7 +1297,8 @@ export class SlicingPanel {
 								case "SEGMACT":
 									if (this.classesSelectionHasChanged()) {
 										
-										this._copyClassesSelectionFromTemp();
+										let env = [];
+										this._copyClassesSelectionFromTemp(p_mapctx, env);
 
 										let lyr;
 										const apto = this.itemdict[this.active_key]['applyto'];
@@ -1284,9 +1310,12 @@ export class SlicingPanel {
 													if (apto[lyrkey]["func"] !== undefined) {
 														lyr.setFilterFunc(apto[lyrkey]["func"](this.selected_classes));
 													} else if (apto[lyrkey]["field"] !== undefined) {
+														const sel_classes = this.selected_classes;
 														lyr.setFilterFunc((rec_attributes) => {
-															return this.selected_classes.has(rec_attributes[apto[lyrkey]["field"]]);
+															return sel_classes.has(rec_attributes[apto[lyrkey]["field"]]);
 														});
+													} else {
+														console.error(`Slicing, SEGMACT interaction, slicing config (risco_basic_config.js) 'apply' for layer '${lyrkey}' has no 'field' or 'func' entry`);
 													}
 												} else {
 													lyr.setFilterFunc(null);
