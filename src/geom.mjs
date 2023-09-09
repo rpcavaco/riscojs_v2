@@ -774,7 +774,7 @@ export function envInteriorOverlap(p_enva, p_envb, p_tol_fraction) {
 	const tolw = (p_enva[2] - p_enva[0]) * p_tol_fraction;
 	const tolh = (p_enva[3] - p_enva[1]) * p_tol_fraction;
 
-	const ret = (p_envb[0] < (p_enva[2] - tolw)) && (p_envb[2] < (p_enva[0] + tolw)) && (p_envb[1] < (p_enva[3] - tolh)) && (p_envb[3] < (p_enva[1] + tolw));
+	const ret = (p_envb[0] < (p_enva[2] - tolw)) && (p_envb[2] > (p_enva[0] + tolw)) && (p_envb[1] < (p_enva[3] - tolh)) && (p_envb[3] > (p_enva[1] + tolw));
 
 	return ret;
 }

@@ -456,18 +456,20 @@ export class FeatureCollection {
 						idto = tokeys[0];
 						tf = this.featList[to_lyk][idto];
 						tfattrset = new Set(Object.keys(tf.a));
-						for (const idx of  this.indexes[fr_lyk]) {
-							if (isSuperset(tfattrset, idx.fields)) {
-								foundidx = idx;
-								break;
-							}
-						}						
+						if (this.indexes[fr_lyk] !== undefined) {
+							for (const idx of  this.indexes[fr_lyk]) {
+								if (isSuperset(tfattrset, idx.fields)) {
+									foundidx = idx;
+									break;
+								}
+							}							
+						}
 					}
 
+					let removed_count = 0;
 					if (foundidx) {
 
-						let removed_count = 0;
-						for (idto in this.featList[to_lyk]) {
+						for (idto of tokeys) {
 
 							tf = this.featList[to_lyk][idto];
 							ptr = foundidx.content;
@@ -480,6 +482,7 @@ export class FeatureCollection {
 								}
 							}
 
+
 							if (rel["cmd"] ==  "skipunmatched_tolyrfeats") {
 								if (ptr == null || !Array.isArray(ptr)) {
 									removed_count++;
@@ -490,12 +493,24 @@ export class FeatureCollection {
 						
 						}
 
-						console.info(`[INFO] relation ${count}, 'attrjoin',  removed ${removed_count} features from layer '${to_lyk}'`);
-						if (removed_count > 0) {
-							this.redrawAllVectorLayers();
+					} else {
+
+						if (tokeys.length > 0 && rel["cmd"] ==  "skipunmatched_tolyrfeats") {
+							for (idto of tokeys) {
+								removed_count++;
+								this.remove(to_lyk, idto);
+							}
 						}
-	
 					}
+
+					if (removed_count > 0) {
+
+						console.assert(rel["cmd"] ==  "skipunmatched_tolyrfeats", `FeatureCollection relateall, features removed from layer '${to_lyk}', but active relationship '${rel["cmd"]}' is not of 'remove' type like 'skipunmatched_tolyrfeats'`);
+
+						console.info(`[INFO] relation ${count}, 'attrjoin',  removed ${removed_count} features from layer '${to_lyk}'`);
+						this.redrawAllVectorLayers();
+					}
+
 				}
 			}
 
