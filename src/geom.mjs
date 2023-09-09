@@ -769,9 +769,34 @@ export function envArea(p_env) {
 	return ret;
 }
 
-export function envInteriorOverlap(p_enva, p_envb, p_tol_percentage) {
-	
-	return p_envb[0] < p_enva[2] && p_envb[1] < p_enva[3];
+export function envInteriorOverlap(p_enva, p_envb, p_tol_fraction) {
+
+	const tolw = (p_enva[2] - p_enva[0]) * p_tol_fraction;
+	const tolh = (p_enva[3] - p_enva[1]) * p_tol_fraction;
+
+	const ret = (p_envb[0] < (p_enva[2] - tolw)) && (p_envb[2] < (p_enva[0] + tolw)) && (p_envb[1] < (p_enva[3] - tolh)) && (p_envb[3] < (p_enva[1] + tolw));
+
+	return ret;
+}
+
+export function ensureMinDimEnv(p_env, p_mindim) {
+
+	const w = p_env[2] - p_env[0];
+	const h = p_env[3] - p_env[1];
+	const cw = (p_env[2] + p_env[0]) / 2.0;
+	const ch = (p_env[3] + p_env[1]) / 2.0;
+	const hmd = p_mindim / 2.0;
+
+	if (w < p_mindim) {
+		p_env[0] = cw - hmd;
+		p_env[2] = cw + hmd;
+	}
+
+	if (h < p_mindim) {
+		p_env[1] = ch - hmd;
+		p_env[3] = ch + hmd;
+	}	
+
 }
 
 export function geomTest() {

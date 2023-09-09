@@ -2,7 +2,7 @@
 import {GlobalConst} from './constants.js';
 import {I18n} from './i18n.mjs';
 import {genRainbowColor, canvas_text_wrap, symmetricDifference} from './utils.mjs';
-import {addEnv, genOrigEnv, envArea, envInteriorOverlap} from './geom.mjs';
+import {addEnv, genOrigEnv, envArea, envInteriorOverlap, ensureMinDimEnv} from './geom.mjs';
 
 function aspect(p_dim1, p_dim2) {
 	return Math.max(p_dim1, p_dim2) / Math.min(p_dim1, p_dim2);
@@ -1103,28 +1103,26 @@ export class SlicingPanel {
 	_copyClassesSelectionFromTemp(p_mapctx) {
 
 		this.selected_classes.clear();
-		let cls;
+		let cls, cenv, retenv = null, changed = false;
 		const env = genOrigEnv();
 		const bounds = [];
 		
 		for (const e of this.temp_selected_classes) {
 			this.selected_classes.add(e);
 			cls = this.classes_data[e];
-			addEnv(env, [cls.xmin, cls.ymin, cls.xmax, cls.ymax]);
+			cenv = [cls.xmin, cls.ymin, cls.xmax, cls.ymax];
+			ensureMinDimEnv(cenv, 150);
+			addEnv(env, cenv);
+			changed = true;
 		}
 
-		/*p_mapctx.getMapBounds(bounds);
-
-		!envInteriorOverlap(env, bounds)
-
-		envArea(env) < 1.2 * envArea(bounds) && 
-
-		if (envArea(env) < 1.2 * envArea(bounds)) {
-
+		p_mapctx.getMapBounds(bounds);
+		if (changed && !envInteriorOverlap(bounds, env, 0.15)) {
+			retenv = env;
 		}
-		*/
 
-		
+		return retenv;
+
 	}	
 
 	classesSelectionHasChanged() {
@@ -1297,8 +1295,7 @@ export class SlicingPanel {
 								case "SEGMACT":
 									if (this.classesSelectionHasChanged()) {
 										
-										let env = [];
-										this._copyClassesSelectionFromTemp(p_mapctx, env);
+										const env = this._copyClassesSelectionFromTemp(p_mapctx);
 
 										let lyr;
 										const apto = this.itemdict[this.active_key]['applyto'];
@@ -1332,7 +1329,10 @@ export class SlicingPanel {
 										if (analysispanel) {
 											analysispanel.deactivateSegmentation(p_mapctx);
 										}
-										this.closeAction(p_mapctx);					
+
+										console.log("ENV:", env);
+
+										this.closeAction(p_mapctx, env);					
 
 										// this.drawCtrlButtons(p_mapctx);
 
