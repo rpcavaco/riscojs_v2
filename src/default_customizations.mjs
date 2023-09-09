@@ -1222,7 +1222,7 @@ export class MapCustomizations {
 		// const nav = new SelectionsNavigator(this.mapctx, [ap]);
 
 		let has_slicing = false;
-		if (this.mapctx.cfgvar["basic"]["slicing"] !== undefined && this.mapctx.cfgvar["basic"]["slicing"]["keys"] !== undefined && Object.keys(this.mapctx.cfgvar["basic"]["slicing"]["keys"]) > 0) {
+		if (this.mapctx.cfgvar["basic"]["slicing"] !== undefined && this.mapctx.cfgvar["basic"]["slicing"]["keys"] !== undefined && Object.keys(this.mapctx.cfgvar["basic"]["slicing"]["keys"]).length > 0) {
 			has_slicing = true;
 		}
 		
