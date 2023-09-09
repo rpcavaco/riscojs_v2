@@ -587,7 +587,6 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				lastk = k;
 			}
 
-			//NUP/13736/2020/CMP
 			if (lastk !== null && lastid != null) {
 
 				const ci = this.getCustomizationObject();

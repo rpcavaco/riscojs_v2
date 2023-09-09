@@ -297,7 +297,9 @@ class TransformsQueue {
 			this.transformsQueue.store();
 		}
 
-		setCookie("risco_mapscale", vscale.toString());
+		if (this.mapctx_config_var['set_mapenv_cookies'] === undefined || this.mapctx_config_var['set_mapenv_cookies']) {
+			setCookie("risco_mapscale", vscale.toString());
+		}		
 		
 	}	
 
@@ -361,7 +363,9 @@ class TransformsQueue {
 			this.transformsQueue.store();
 		}
 
-		setCookie("risco_terrain_center", `${p_cx}_${p_cy}`);
+		if (this.mapctx_config_var['set_mapenv_cookies'] === undefined || this.mapctx_config_var['set_mapenv_cookies']) {
+			setCookie("risco_terrain_center", `${p_cx}_${p_cy}`);
+		}
 	}	
 
 	getCenter(out_ret) {
@@ -535,7 +539,10 @@ class TransformsQueue {
 		}
 
 		this.getCenter(cen_pt);
-		setCookie("risco_terrain_center", `${cen_pt[0]}_${cen_pt[1]}`);
+
+		if (this.mapctx_config_var['set_mapenv_cookies'] === undefined || this.mapctx_config_var['set_mapenv_cookies']) {
+			setCookie("risco_terrain_center", `${cen_pt[0]}_${cen_pt[1]}`);
+		}		
 	}
 
 	/**

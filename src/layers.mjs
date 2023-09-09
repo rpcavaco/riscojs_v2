@@ -1,7 +1,7 @@
 
 import {GlobalConst} from './constants.js';
 
-export function genSingleEnv(p_mapctxt) {
+function genSingleEnv(p_mapctxt) {
 
 	const terrain_bounds = [], out_pt=[], dims=[], scr_bounds=[];
 	p_mapctxt.getMapBounds(terrain_bounds);
@@ -20,7 +20,7 @@ export function genSingleEnv(p_mapctxt) {
 	return [terrain_bounds, scr_bounds, dims, key];
 }
 
-export function* genMultipleEnv(p_mapctxt, p_envsplit_cfg, p_scale) {
+function* genMultipleEnv(p_mapctxt, p_envsplit_cfg, p_scale) {
 
 	let envsplit_scales, found_gte_scale, the_splits, mult, v;
 
