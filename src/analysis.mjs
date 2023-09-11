@@ -20,6 +20,7 @@ export class AnalysisMgr extends MapPrintInRect {
 	other_widgets;
 	std_boxdims;
 	active_mode;
+	slicing_filter_active;
 
 	constructor(p_other_widgets) {
 
@@ -34,6 +35,7 @@ export class AnalysisMgr extends MapPrintInRect {
 
 		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.AM_BCKGRD;  // **
 		this.activeStyleFront = GlobalConst.CONTROLS_STYLES.AM_ACTIVECOLOR;
+		this.enabledFillStyleFront = GlobalConst.CONTROLS_STYLES.AM_INACTIVECOLOR;
 		this.inactiveStyleFront = GlobalConst.CONTROLS_STYLES.AM_INACTIVECOLOR;
 		this.margin_offset = GlobalConst.CONTROLS_STYLES.OFFSET;
 		this.normalszPX = GlobalConst.CONTROLS_STYLES.AM_NORMALSZ_PX;
@@ -41,6 +43,7 @@ export class AnalysisMgr extends MapPrintInRect {
 		this.std_boxdims = GlobalConst.CONTROLS_STYLES.AM_BOXDIMS;
 		this.inUseStyle = GlobalConst.CONTROLS_STYLES.AM_INUSE;
 		this.canvaslayer = 'service_canvas'; 
+		this.slicing_filter_active = false;
 
 		this.dashboard_available = false;
 
@@ -124,7 +127,7 @@ export class AnalysisMgr extends MapPrintInRect {
 					ow.setdims(p_mapctx, mapdims);
 				}		
 				otherboxesheight += ow.getHeight();
-				console.warn("AM boxesheight:", otherboxesheight, this.other_widgets.length);
+				// console.warn("AM boxesheight:", otherboxesheight, this.other_widgets.length);
 			}
 			this.bottom = mapdims[1] - otherboxesheight - this.margin_offset;
 		
@@ -167,6 +170,10 @@ export class AnalysisMgr extends MapPrintInRect {
 					vstyle = this.activeStyleFront;
 				}
 				let imgfltsrc = p_mapctx.cfgvar["basic"]["filtericon"].replace(/stroke:%23fff;/g, `stroke:${encodeURIComponent(vstyle)};`);
+
+				if (this.slicing_filter_active) {
+					imgfltsrc = imgfltsrc.replace(/fill:none;/g, `fill:${encodeURIComponent(this.enabledFillStyleFront)};`);
+				}
 
 				const imgchart = new Image();
 				imgchart.decoding = "sync";
@@ -312,7 +319,7 @@ export class AnalysisMgr extends MapPrintInRect {
 							// BRIR PAINEL SEGM
 							const ci = p_mapctx.getCustomizationObject();
 							if (ci == null) {
-								throw new Error("Segmentation panel opening, map context customization instance is missing")
+								throw new Error("Slicing panel opening, map context customization instance is missing")
 							}
 					
 							if (this.active_mode == 'SEG') {
@@ -392,14 +399,25 @@ export class AnalysisMgr extends MapPrintInRect {
 		return (this.collapsedstate == "OPEN");
 	}	
 
-	deactivateSegmentation(p_mapctx) {
+	deactivateSlicingPanelOpenedSign(p_mapctx, p_slicing_is_enabled) {
 
+		let changed = false;
 		if (this.active_mode == "SEG") {
 			this.active_mode = 'NONE';
+			changed = true;
+		}
+
+		if (this.slicing_filter_active != p_slicing_is_enabled) {
+			this.slicing_filter_active = p_slicing_is_enabled;
+			changed = true;
+		}
+
+		if (changed) {
 			this.print(p_mapctx);
 		}
 
 	}
+
 }
 
 export class SelectionsNavigator extends MapPrintInRect {

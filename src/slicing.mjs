@@ -367,7 +367,7 @@ export class SlicingPanel {
 		try {
 			ctx.save();
 
-			const msgskeys = ["SEGMACT","CLEAN", "CLOSE"];
+			const msgskeys = ["SLICINGACT","CLEAN", "CLOSE"];
 			const msgs = [];
 			const tms = [];
 
@@ -416,7 +416,7 @@ export class SlicingPanel {
 
 				if (msgskeys[msgidx] == "CLEAN") {
 					cmdisactive = this.temp_selected_classes.size > 0;
-				} else if (msgskeys[msgidx] == "SEGMACT") {
+				} else if (msgskeys[msgidx] == "SLICINGACT") {
 					cmdisactive = this.classesSelectionHasChanged();
 				}
 
@@ -1005,7 +1005,7 @@ export class SlicingPanel {
 				}
 			}
 			if (this.itemkeys.length > 0) {
-				slicekeystxt = p_mapctx.i18n.msg('SEGMBY', true) + ":";
+				slicekeystxt = p_mapctx.i18n.msg('SLICINGMBY', true) + ":";
 			}
 		}
 
@@ -1253,7 +1253,7 @@ export class SlicingPanel {
 								constraintitems = {'selected': `${this.active_item[0]}#${this.active_item[1]}` };
 							}
 							p_mapctx.getCustomizationObject().messaging_ctrlr.selectInputMessage(
-								p_mapctx.i18n.msg('SELSEGMBY', true), 
+								p_mapctx.i18n.msg('SELSLICINGMBY', true), 
 								seldict,
 								(evt, p_result, p_value) => { 
 									if (p_value) {
@@ -1320,13 +1320,14 @@ export class SlicingPanel {
 							let refill = false;
 							switch (cmdvalue) {
 
-								case "SEGMACT":
+								case "SLICINGACT":
 									if (this.classesSelectionHasChanged()) {
 										
 										const env = this._copyClassesSelectionFromTemp(p_mapctx);
 
-										let lyr;
+										let lyr, x;
 										const apto = this.itemdict[this.active_key]['applyto'];
+
 										if (apto) {
 											for (const lyrkey in apto) {
 												lyr = p_mapctx.tocmgr.getLayer(lyrkey);
@@ -1340,7 +1341,7 @@ export class SlicingPanel {
 															return sel_classes.has(rec_attributes[apto[lyrkey]["field"]]);
 														});
 													} else {
-														console.error(`Slicing, SEGMACT interaction, slicing config (risco_basic_config.js) 'apply' for layer '${lyrkey}' has no 'field' or 'func' entry`);
+														console.error(`Slicing, SLICINGACT interaction, slicing config (risco_basic_config.js) 'apply' for layer '${lyrkey}' has no 'field' or 'func' entry`);
 													}
 												} else {
 													lyr.setFilterFunc(null);
@@ -1351,11 +1352,11 @@ export class SlicingPanel {
 										this.is_maprefresh_pending = true;
 										const ci = p_mapctx.getCustomizationObject();
 										if (ci == null) {
-											throw new Error("Slicing, SEGMACT interaction, map context customization instance is missing")
+											throw new Error("Slicing, SLICINGACT interaction, map context customization instance is missing")
 										}
 										const analysispanel = ci.instances["analysis"];
 										if (analysispanel) {
-											analysispanel.deactivateSegmentation(p_mapctx);
+											analysispanel.deactivateSlicingPanelOpenedSign(p_mapctx, (this.selected_classes.size > 0));
 										}
 
 										this.closeAction(p_mapctx, env);					
@@ -1378,7 +1379,7 @@ export class SlicingPanel {
 									}
 									const analysispanel = ci.instances["analysis"];
 									if (analysispanel) {
-										analysispanel.deactivateSegmentation(p_mapctx);
+										analysispanel.deactivateSlicingPanelOpenedSign(p_mapctx);
 									}
 									this.closeAction(p_mapctx);					
 	
