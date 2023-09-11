@@ -2,7 +2,7 @@
 import {GlobalConst} from './constants.js';
 import {I18n} from './i18n.mjs';
 import {genRainbowColor, canvas_text_wrap, symmetricDifference} from './utils.mjs';
-import {addEnv, genOrigEnv, envArea, envInteriorOverlap, ensureMinDimEnv} from './geom.mjs';
+import {addEnv, genOrigEnv, envArea, envInteriorOverlap, ensureMinDimEnv, distSquared2D} from './geom.mjs';
 
 function aspect(p_dim1, p_dim2) {
 	return Math.max(p_dim1, p_dim2) / Math.min(p_dim1, p_dim2);
@@ -657,7 +657,7 @@ export class SlicingPanel {
 
 			// filtered_total_count
 
-			ctx.globalAlpha = 0.2;
+			ctx.globalAlpha = GlobalConst.CONTROLS_STYLES.SEG_CLASSFILL_ALPHA;
 			top = gr[3]+ost;
 
 			ctx.fillStyle = color;	
@@ -669,6 +669,10 @@ export class SlicingPanel {
 				strk_offset = GlobalConst.CONTROLS_STYLES.SEG_SELECTEDCLASSBOUNDARY;
 				ctx.lineWidth =	GlobalConst.CONTROLS_STYLES.SEG_SELECTEDCLASSBOUNDARY;			
 				ctx.strokeStyle = GlobalConst.CONTROLS_STYLES.SEG_SELECTEDCLASSBOUNDARY_CLR;	
+
+				ctx.fillStyle = GlobalConst.CONTROLS_STYLES.SEG_SELECTEDCLASSFILL_CLR ;	
+				ctx.fillRect(gr[2]+ost, top, boxw, boxh);
+	
 			} else {
 				strk_offset = 0;
 				ctx.strokeStyle = color;	
@@ -915,7 +919,7 @@ export class SlicingPanel {
 
 		fetch(url + "/astats", {
 			method: "POST",
-			body: JSON.stringify({"key":splits[0],"options":{}})
+			body: JSON.stringify({"key":splits[0],"options":{"col": splits[1], "clustersize": GlobalConst.CONTROLS_STYLES.SEG_CLUSTERSIZE}})
 		})
 		.then(response => response.json())
 		.then(
@@ -1107,18 +1111,42 @@ export class SlicingPanel {
 		const env = genOrigEnv();
 		const bounds = [];
 		
+		let centroids = null, refcnt = Number.MAX_SAFE_INTEGER;
 		for (const e of this.temp_selected_classes) {
 			this.selected_classes.add(e);
 			cls = this.classes_data[e];
 			cenv = [cls.xmin, cls.ymin, cls.xmax, cls.ymax];
 			ensureMinDimEnv(cenv, 150);
 			addEnv(env, cenv);
+
+			if (cls.cnt < refcnt) {
+				refcnt = cls.cnt;
+				centroids = cls.centroids;
+			}
+
 			changed = true;
 		}
 
 		p_mapctx.getMapBounds(bounds);
-		if (changed && !envInteriorOverlap(bounds, env, 0.15)) {
-			retenv = env;
+		if (changed) {
+			if (!envInteriorOverlap(bounds, env, 0.15) && envArea(env) < 0.75 * envArea(bounds)) {
+				retenv = env;
+			} else {
+				let d, chosen_centroid=null, ztenv=[], maxdist = Number.MAX_SAFE_INTEGER;
+				const center_point = [(bounds[0]+bounds[2]) / 2.0, (bounds[1]+bounds[3]) / 2.0];
+				for (const pt of centroids) {
+					d = distSquared2D(pt, center_point);
+					if (d < maxdist) {
+						maxdist = d;
+						chosen_centroid = pt;
+					}
+				}
+
+				ztenv = [chosen_centroid[0], chosen_centroid[1], chosen_centroid[0], chosen_centroid[1]];
+				ensureMinDimEnv(ztenv, GlobalConst.CONTROLS_STYLES.SEG_CLUSTERSIZE);
+
+				p_mapctx.transformmgr.zoomToRect(...ztenv);		
+			}
 		}
 
 		return retenv;
@@ -1329,8 +1357,6 @@ export class SlicingPanel {
 										if (analysispanel) {
 											analysispanel.deactivateSegmentation(p_mapctx);
 										}
-
-										console.log("ENV:", env);
 
 										this.closeAction(p_mapctx, env);					
 
