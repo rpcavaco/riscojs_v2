@@ -227,6 +227,7 @@ export class SlicingPanel {
 						   // become permanent (in 'selected_classes') as user commits his/her choice 
 	ctrlarea_box;
 	is_maprefresh_pending;
+	total_count;
 
 	constructor() {
 
@@ -261,6 +262,7 @@ export class SlicingPanel {
 		this.temp_selected_classes = new Set();
 
 		this.is_maprefresh_pending = false;
+		this.total_count = 0;
 	}
 
 	calcDims(p_mapctx) {
@@ -989,7 +991,7 @@ export class SlicingPanel {
 		ctx.fillStyle = this.fillTextStyle;
 		ctx.textAlign = "left";
 
-		let cota  = this.top+this.margin_offset+this.captionszPX;
+		let txtlinecota, cota  = this.top+this.margin_offset+this.captionszPX;
 		let indent = this.left+2*this.margin_offset;
 		ctx.font = `${this.captionszPX}px ${this.captionfontfamily}`;
 		ctx.fillText(msg, indent, cota);
@@ -1030,7 +1032,8 @@ export class SlicingPanel {
 				lbl = this.itemdict[this.active_key].label;
 			}	
 			indent = indent+txtdims.width+2*this.margin_offset;
-			ctx.fillText(lbl, indent, cota);
+			txtlinecota = cota;
+			ctx.fillText(lbl, indent, txtlinecota);
 
 			txtdims = ctx.measureText(lbl);
 
@@ -1056,7 +1059,7 @@ export class SlicingPanel {
 				ctx.closePath();
 				ctx.fill();
 
-				this.interaction_boxes["segmattr"] = [...selbox]; 
+				this.interaction_boxes["slicingattr"] = [...selbox]; 
 			}
 
 			const ctrlbox_height = 3*this.normalszPX;
@@ -1070,6 +1073,14 @@ export class SlicingPanel {
 			// draw graphbox for debugging purposes
 			// ctx.strokeStyle = "purple"
 			// ctx.strokeRect(...graphbox);	
+
+			if (this.classes_data) {
+
+				const classes = Object.keys(this.classes_data);
+
+				ctx.fillText(`${this.selected_classes.size}/${classes.length} ${p_mapctx.i18n.msg('SLICESELCLASSES', false)}`, selbox[0]+w+2*this.margin_offset, txtlinecota);
+	
+			}
 			
 			ctx.restore(); // fetchChartData and children funcs have their own autonomous invocations of graphic context
 
@@ -1079,7 +1090,7 @@ export class SlicingPanel {
 			}
 
 			this.fetchChartData(p_mapctx, this.itemdict[this.active_key].minarea, showvalue);
-		
+			
 		} else {
 
 			ctx.restore();
@@ -1234,7 +1245,7 @@ export class SlicingPanel {
 
 					if (interact_box_key) {
 
-						if (interact_box_key == "segmattr") {
+						if (interact_box_key == "slicingattr") {
 
 							let lbl, constraintitems=null, that = this;
 							const seldict = {};
