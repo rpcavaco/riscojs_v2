@@ -293,7 +293,8 @@ export class FeatureCollection {
 
 			feat = this.featList[p_layerkey][opt_featid];
 			if (feat == null) {
-				throw new Error(`layer '${p_layerkey}' no feature for id ${opt_featid}`);
+				console.error(`FeatureCollection.featdraw: layer '${p_layerkey}', no feature found for id ${opt_featid}`);
+				return ret;
 			}
 
 			refreshresult = this.layers[p_layerkey].refreshitem(this.mapctx, feat.g, feat.a, feat.l, opt_featid, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
