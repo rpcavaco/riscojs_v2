@@ -651,6 +651,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		let lbloptsymbs = null;
 		let lblcontent = null;
 		let labelfield = null;
+		let labelscaleinterval = null;
 		let iconnamefield = null;
 		let labelfunc = null;
 		let iconsrcfunc = null;
@@ -660,6 +661,13 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		if (this['labelfield'] !== undefined && this['labelfield'] != "none") {
 			labelfield = this['labelfield'];
+		}
+
+		if (this['labelscaleinterval'] !== undefined && this['labelscaleinterval'] != "none") {
+			labelscaleinterval = this['labelscaleinterval'];
+		}
+		else {
+			labelscaleinterval = [-Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER];
 		}
 		if (this['labelfunc'] !== undefined && this['labelfunc'] != "none") {
 			labelfunc = this['labelfunc'];
@@ -720,7 +728,8 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			}				
 		}
 
-		if (ret && labelfield != null) {
+		const sv = p_mapctxt.transformmgr.getReadableCartoScale();
+		if (ret && labelfield != null && sv >= labelscaleinterval[0] && sv <= labelscaleinterval[1]) {
 
 			lblcontent = null;
 			if (p_attrs[labelfield] !== undefined) {

@@ -116,6 +116,7 @@ export class Layer {
 	mouseinteraction = false;
 	label = "none";
 	labelfield = "none";
+	labelscaleinterval = "none";
 	iconnamefield = "none";
 	iconsrcfunc = "none";
 	icondefsymb = "none";

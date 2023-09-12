@@ -78,6 +78,7 @@ const strokeSymbolMixin = (Base) => class extends Base {
 }
 
 const labelSymbolMixin = (Base) => class extends Base {
+	
 	labelplacement = "centroid";
 	labelFillStyle = "white";
 	labelFontFace = "Helvetica"
