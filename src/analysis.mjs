@@ -79,7 +79,7 @@ export class AnalysisMgr extends MapPrintInRect {
 
 	}
 
-	_preCalcDims(p_mapctx) {
+	preCalcDims(p_mapctx) {
 
 		const dims=[];
 		p_mapctx.getCanvasDims(dims);
@@ -107,7 +107,7 @@ export class AnalysisMgr extends MapPrintInRect {
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		ctx.save();
 
-		this._preCalcDims(p_mapctx)
+		this.preCalcDims(p_mapctx)
 
 		// cal width
 		this.boxw["OPEN"] = this.std_boxdims[0];
@@ -133,7 +133,7 @@ export class AnalysisMgr extends MapPrintInRect {
 		
 			// background
 			
-			// ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
+			// BASIC_CONFIG_DEFAULTS_OVERRRIDE ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
 			if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["am_bckgrd"] !== undefined) {
 				ctx.fillStyle = p_mapctx.cfgvar["basic"]["style_override"]["am_bckgrd"];
 			} else {
@@ -436,6 +436,7 @@ export class SelectionsNavigator extends MapPrintInRect {
 	prevboxenv;
 	bottom;
 	other_widgets;
+	std_boxdims;
 
 	constructor(p_mapctx, p_other_widgets) {
 
@@ -444,25 +445,27 @@ export class SelectionsNavigator extends MapPrintInRect {
 
 		this.other_widgets = p_other_widgets;
 
+		// BASIC_CONFIG_DEFAULTS_OVERRRIDE
 		// ** - can be overrriden in basic config, at 'style_override' group, 
 		//      creating a key with same property name in CONTROLS_STYLES, but in lower case
 
-		this.fillStyleBack = "red"; //GlobalConst.CONTROLS_STYLES.AM_BCKGRD;  // **
-		this.activeStyleFront = GlobalConst.CONTROLS_STYLES.AM_ACTIVECOLOR;
-		this.inactiveStyleFront = GlobalConst.CONTROLS_STYLES.AM_INACTIVECOLOR;
+		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.SN_BCKGRD; // **
+		this.activeStyleFront = GlobalConst.CONTROLS_STYLES.SN_ACTIVECOLOR;
+		this.inactiveStyleFront = GlobalConst.CONTROLS_STYLES.SN_INACTIVECOLOR;
 		this.margin_offset = GlobalConst.CONTROLS_STYLES.OFFSET;
-		this.normalszPX = GlobalConst.CONTROLS_STYLES.AM_NORMALSZ_PX;
+		this.normalszPX = GlobalConst.CONTROLS_STYLES.SN_NORMALSZ_PX;
 		this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
 		this.canvaslayer = 'service_canvas'; 
+		this.std_boxdims = GlobalConst.CONTROLS_STYLES.SN_BOXDIMS;
 
 		this.left = 600;
 		this.top = 600;
 		this.boxh = {
-			"OPEN": 120,
+			"OPEN": this.std_boxdims[1],
 			"COLLAPSED": 60
 		};
 		this.boxw = {
-			"OPEN": 300,
+			"OPEN": this.std_boxdims[0],
 			"COLLAPSED": 60
 		};
 
@@ -491,23 +494,34 @@ export class SelectionsNavigator extends MapPrintInRect {
 		return this.boxh[this.collapsedstate];
 	}
 
+	preCalcDims(p_mapctx) {
+
+		const dims=[];
+		p_mapctx.getCanvasDims(dims);
+
+		if (dims[0] <  GlobalConst.CONTROLS_STYLES.AM_START_COLLAPSED_CANVAS_MAXWIDTH) {
+			this.collapsedstate = "COLLAPSED";
+		} else {
+			this.collapsedstate = "OPEN";
+		}
+
+		this.bottom = dims[1];
+
+		this.top = this.bottom - this.boxh[this.collapsedstate];
+
+	}
+
 	_print(p_mapctx) {
 
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		ctx.save();
 
-		if (this.prevboxenv) {
-			// console.warn("CR 1:", this.prevboxenv);
-			ctx.clearRect(...this.prevboxenv); 	
-			this.prevboxenv = null;
-		} else {
-			const dee = 2 * this.expandenv;
-			// console.warn("CR 2:", this.left-this.expandenv, this.top-this.expandenv, this.boxw[this.collapsedstate]+dee, this.boxh[this.collapsedstate]+dee);
-			ctx.clearRect(this.left-this.expandenv, this.top-this.expandenv, this.boxw[this.collapsedstate]+dee, this.boxh[this.collapsedstate]+dee); 	
-		}
+		this.preCalcDims(p_mapctx)
+
+		console.log("OPENED", );
 
 		// cal width
-		this.boxw["OPEN"] = 400 + 2 * this.margin_offset;
+		this.boxw["OPEN"] = this.std_boxdims[1];
 
 		let mapdims = [];
 		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
@@ -516,7 +530,7 @@ export class SelectionsNavigator extends MapPrintInRect {
 
 		try {
 
-			this.boxh["OPEN"] = 120;
+			this.boxh["OPEN"] = this.std_boxdims[0];
 
 			let boxesheight = 0;
 			for (let ow of this.other_widgets) {
@@ -524,20 +538,31 @@ export class SelectionsNavigator extends MapPrintInRect {
 					ow.setdims(p_mapctx, mapdims);
 				}		
 				boxesheight += ow.getHeight();
-				console.warn("SN boxesheight:", boxesheight, this.other_widgets.length);
+				//console.warn("SN boxesheight:", boxesheight, this.other_widgets.length);
 			}
 			this.bottom = mapdims[1] - boxesheight - this.margin_offset;
 		
 			// background
 			
 			// ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
-			if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["am_bckgrd"] !== undefined) {
-				ctx.fillStyle = p_mapctx.cfgvar["basic"]["style_override"]["am_bckgrd"];
+			// BASIC_CONFIG_DEFAULTS_OVERRRIDE set_mapenv_cookies
+			if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["sn_bckgrd"] !== undefined) {
+				ctx.fillStyle = p_mapctx.cfgvar["basic"]["style_override"]["sn_bckgrd"];
 			} else {
 				ctx.fillStyle = this.fillStyleBack;
 			}
 
 			this.top = this.bottom - this.boxh[this.collapsedstate];
+
+			if (this.prevboxenv) {
+				// console.warn("CR 1:", this.prevboxenv);
+				// ctx.clearRect(...this.prevboxenv); 	
+				this.prevboxenv = null;
+			} else {
+				const dee = 2 * this.expandenv;
+				// console.warn("CR 2:", this.left-this.expandenv, this.top-this.expandenv, this.boxw[this.collapsedstate]+dee, this.boxh[this.collapsedstate]+dee);
+				ctx.clearRect(this.left-this.expandenv, this.top-this.expandenv, this.boxw[this.collapsedstate]+dee, this.boxh[this.collapsedstate]+dee); 	
+			}
 
 			//console.log(this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]);
 			ctx.fillRect(this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]);
@@ -546,7 +571,10 @@ export class SelectionsNavigator extends MapPrintInRect {
 			ctx.lineWidth = this.strokeWidth;
 			ctx.strokeRect(this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]);
 
-			if (this.collapsedstate != "OPEN") {
+
+			if (this.collapsedstate == "OPEN") {
+
+			} else {
 
 				// stripes pattern
 

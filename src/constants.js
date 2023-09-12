@@ -224,6 +224,13 @@ var GlobalConst = {
 		AM_BOXDIMS: [150, 50],
 		AM_ICONDIM: 30,
 
+		// Selection navigator
+		SN_BCKGRD: "#0b1d1fe0",
+		SN_BOXDIMS: [150, 50],
+		SN_ACTIVECOLOR: "white",
+		SN_INACTIVECOLOR: "grey",
+		SN_NORMALSZ_PX: 16,
+
 		SEG_TEXTFILL: "white",
 		SEG_WIDTHS: [400, 1200], // min, max
 		SEG_WIDTH_PERC: 0.8,

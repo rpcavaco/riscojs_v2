@@ -1219,7 +1219,6 @@ export class MapCustomizations {
 
 		// widget which presence impacts others, at least through display area occupied
 		const ap = new AttributionPrint();
-		// const nav = new SelectionsNavigator(this.mapctx, [ap]);
 
 		let has_slicing = false;
 		if (this.mapctx.cfgvar["basic"]["slicing"] !== undefined && this.mapctx.cfgvar["basic"]["slicing"]["keys"] !== undefined && Object.keys(this.mapctx.cfgvar["basic"]["slicing"]["keys"]).length > 0) {
@@ -1244,6 +1243,9 @@ export class MapCustomizations {
 		if (has_slicing) {
 			this.instances["analysis"] = new AnalysisMgr([ap]);
 			this.instances["slicing"] = new SlicingPanel();
+
+			this.instances["analysis"].preCalcDims(p_mapctx);
+			this.instances["navigator"] = new SelectionsNavigator(this.mapctx, [ap, this.instances["analysis"]]);
 		}
 
 		// Temporariamente sem navigator
