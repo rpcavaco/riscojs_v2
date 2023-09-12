@@ -176,3 +176,11 @@ ANTIGO - Notas sobre 'Integração geral' riscojs + riscomaps / riscowidgets
 	Localizador tb. integrado, apesar de ser HTML
 
 
+--
+
+
+BASIC_CONFIG_DEFAULTS_OVERRRIDE
+
+set_mapenv_cookies - bool - false ou inexistente - cookies de env do mapa não são alterados; para não serem usados caso existam, terão de ser apagados
+
+

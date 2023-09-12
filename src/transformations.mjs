@@ -297,6 +297,7 @@ class TransformsQueue {
 			this.transformsQueue.store();
 		}
 
+		// BASIC_CONFIG_DEFAULTS_OVERRRIDE
 		if (this.mapctx_config_var['set_mapenv_cookies'] === undefined || this.mapctx_config_var['set_mapenv_cookies']) {
 			setCookie("risco_mapscale", vscale.toString());
 		}		
@@ -363,6 +364,7 @@ class TransformsQueue {
 			this.transformsQueue.store();
 		}
 
+		// BASIC_CONFIG_DEFAULTS_OVERRRIDE
 		if (this.mapctx_config_var['set_mapenv_cookies'] === undefined || this.mapctx_config_var['set_mapenv_cookies']) {
 			setCookie("risco_terrain_center", `${p_cx}_${p_cy}`);
 		}
@@ -540,6 +542,7 @@ class TransformsQueue {
 
 		this.getCenter(cen_pt);
 
+		// BASIC_CONFIG_DEFAULTS_OVERRRIDE
 		if (this.mapctx_config_var['set_mapenv_cookies'] === undefined || this.mapctx_config_var['set_mapenv_cookies']) {
 			setCookie("risco_terrain_center", `${cen_pt[0]}_${cen_pt[1]}`);
 		}		

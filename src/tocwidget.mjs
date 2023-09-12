@@ -24,6 +24,7 @@ export class TOC  extends MapPrintInRect {
 
 		super();
 
+		// BASIC_CONFIG_DEFAULTS_OVERRRIDE
 		// ** - can be overrriden in basic config, at 'style_override' group, 
 		//      creating a key with same property name in CONTROLS_STYLES, but in lower case
 		this.name = "TOC";
@@ -193,7 +194,7 @@ export class TOC  extends MapPrintInRect {
 
 			// background
 			
-			// ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
+			// BASIC_CONFIG_DEFAULTS_OVERRRIDE ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
 			if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["toc_bckgrd"] !== undefined) {
 				ctx.fillStyle = p_mapctx.cfgvar["basic"]["style_override"]["toc_bckgrd"];
 			} else {
