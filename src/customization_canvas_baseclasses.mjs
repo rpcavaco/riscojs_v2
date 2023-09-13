@@ -336,10 +336,9 @@ export class Info {
 		this.mapctx.showImageOnOverlay(p_image_obj);
 	}
 
-	hover(p_layerkey, p_feature, p_scrx, p_scry) {
+	hover(p_feature_dict, p_scrx, p_scry) {
 
-		const currlayer = this.mapctx.tocmgr.getLayer(p_layerkey);
-		this.callout = new MaptipBox(this.mapctx, this.mapctx.imgbuffer, currlayer, p_feature, this.styles, p_scrx, p_scry, true);
+		this.callout = new MaptipBox(this.mapctx, this.mapctx.imgbuffer, p_feature_dict, this.styles, p_scrx, p_scry, true);
 		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		this.callout.clear(ctx);
 		this.callout.draw(ctx);

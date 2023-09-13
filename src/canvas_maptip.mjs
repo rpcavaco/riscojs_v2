@@ -29,11 +29,10 @@ export class PopupBox {
 	mapctx;
 	imgbuffer;
 
-	constructor(p_mapctx, p_imgbuffer, p_layer, p_styles, p_scrx, p_scry, b_callout) {
+	constructor(p_mapctx, p_imgbuffer, p_styles, p_scrx, p_scry, b_callout) {
 
 		this.origin = [20,20];
 		this.anchorpt = [20,20];
-		this.layer = p_layer;
 		this.leftpad = GlobalConst.INFO_MAPTIPS_BOXSTYLE["leftpad"];
 		this.rightpad = GlobalConst.INFO_MAPTIPS_BOXSTYLE["rightpad"];
 		this.betweencols = GlobalConst.INFO_MAPTIPS_BOXSTYLE["betweencols"];
@@ -217,22 +216,15 @@ export class PopupBox {
 
 export class MaptipBox extends PopupBox {
 
+	feature_dict;
 	feature;
 
-	constructor(p_mapctx, p_imgbuffer, p_layer, p_feature, p_styles, p_scrx, p_scry, b_callout) {
-		super(p_mapctx, p_imgbuffer, p_layer, p_styles, p_scrx, p_scry, b_callout);
-		this.feature = p_feature;
+	constructor(p_mapctx, p_imgbuffer, p_feature_dict, p_styles, p_scrx, p_scry, b_callout) {
+		super(p_mapctx, p_imgbuffer, p_styles, p_scrx, p_scry, b_callout);
+		this.feature_dict = p_feature_dict;
 	}
 
 	async draw(p_ctx) {
-
-		const ifkeys = Object.keys(this.layer.maptipfields);
-		if (ifkeys.length < 1) {
-			console.warn(`[WARN] Missing 'maptipfields' config for layer '${this.layer.key}`);
-			return;
-		}
-
-		const lang = (new I18n(this.layer.msgsdict)).getLang();
 
 		p_ctx.save();
 		this.rows.length = 0;
@@ -245,20 +237,49 @@ export class MaptipBox extends PopupBox {
 		const valuetextwidth = (1 - GlobalConst.INFO_MAPTIPS_BOXSTYLE["caption2value_widthfraction"]) * maxboxwidth;
 		const lineheightfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["lineheightfactor"];
 
-		if (ifkeys.indexOf("add") >= 0) {
-			for (let fld of this.layer.maptipfields["add"]) {
-				await canvasWrtField(this, p_ctx, this.feature.a, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows);
-			}	
-		} else if (ifkeys.indexOf("remove") >= 0) {
-			for (let fld in this.feature.a) {
-				if (this.layer.maptipfields["remove"].indexOf(fld) < 0) {
-					await canvasWrtField(this, p_ctx, this.feature.a, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows);
+		let lang = null;
+		let ordered_layers = [];
+		let lorder = this.mapctx.cfgvar["layers"].lorder;
+
+		for (let lang, layer, ifkeys, lyrk, lidx = lorder.length-1; lidx>=0; lidx--) {
+
+			lyrk = lorder[lidx];
+			if (this.feature_dict[lyrk] === undefined) {
+				continue;
+			}
+
+			layer = this.mapctx.tocmgr.getLayer(lyrk);
+			if (lang == null) {
+				lang = (new I18n(layer.msgsdict)).getLang();
+			}
+			ordered_layers.push(layer);
+
+			ifkeys = Object.keys(layer.maptipfields);
+			if (ifkeys.length < 1) {
+				console.warn(`[WARN] Missing 'maptipfields' config for layer '${layer.key}`);
+				return;
+			}
+	
+			for (let feat of this.feature_dict[lyrk]) {
+
+				if (ifkeys.indexOf("add") >= 0) {
+					for (let fld of layer.maptipfields["add"]) {
+						await canvasWrtField(this, p_ctx, feat.a, fld, lang, layer, capttextwidth, valuetextwidth, this.rows);
+					}	
+				} else if (ifkeys.indexOf("remove") >= 0) {
+					for (let fld in feat.a) {
+						if (layer.maptipfields["remove"].indexOf(fld) < 0) {
+							await canvasWrtField(this, p_ctx, feat.a, fld, lang, layer, capttextwidth, valuetextwidth, this.rows);
+						}
+					} 
+				} else {
+					for (let fld in feat.a) {
+						await canvasWrtField(this, p_ctx, feat.a, fld, lang, layer, capttextwidth, valuetextwidth, this.rows);
+					}	
 				}
-			} 
-		} else {
-			for (let fld in this.feature.a) {
-				await canvasWrtField(this, p_ctx, this.feature.a, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows);
-			}	
+					
+			}
+
 		}
 
 		// console.log("rows:", this.rows, this.rows.length);
@@ -289,11 +310,15 @@ export class MaptipBox extends PopupBox {
 		p_ctx.font = `${this.layercaptionszPX}px ${this.layercaptionfontfamily}`;
 
 		let lbl;
-		if (this.layer["label"] !== undefined && this.layer["label"] != "none") {
-			if (this.layer['msgsdict'] !== undefined && this.layer.msgsdict[lang] !== undefined && Object.keys(this.layer.msgsdict[lang]).indexOf(this.layer["label"]) >= 0) {
-				lbl = I18n.capitalize(this.layer.msgsdict[lang][this.layer["label"]]);
+		
+		// Só está a representar a PRIMEIRA layer!!
+		let layer = ordered_layers[0];
+
+		if (layer["label"] !== undefined && layer["label"] != "none") {
+			if (layer['msgsdict'] !== undefined && layer.msgsdict[lang] !== undefined && Object.keys(layer.msgsdict[lang]).indexOf(layer["label"]) >= 0) {
+				lbl = I18n.capitalize(layer.msgsdict[lang][layer["label"]]);
 			} else {
-				lbl = I18n.capitalize(this.layer["label"]);
+				lbl = I18n.capitalize(layer["label"]);
 			}	
 		} else {
 			lbl = "(void label)";	

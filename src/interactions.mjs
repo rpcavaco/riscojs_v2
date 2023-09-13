@@ -176,7 +176,8 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 			}
 		}
 
-		let tmpd, nearestid=-1, nearestlyk=null, dist = Number.MAX_SAFE_INTEGER;
+		let tmpd, findings={}; //= Number.MAX_SAFE_INTEGER;
+		const eps = GlobalConst.MOUSEINTERACTION_NEARESTFEATURES_COINCIDENCE_TOLERANCE;
 		for (let from_lyrk in related_ids) {
 
 			for (let to_lyrk in related_ids[from_lyrk]) {
@@ -195,15 +196,25 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 
 				if (related_ids[from_lyrk][to_lyrk].size > 0) {
 
+					if (findings[to_lyrk] === undefined) {
+						findings[to_lyrk] = { "dist": Number.MAX_VALUE, "ids": [] };
+					}
+
 					for (let r of related_ids[from_lyrk][to_lyrk]) {
 
 						tmpd = p_mapctx.featureCollection.distanceTo(terr_pt, to_lyrk, r, minarea);
-						if (tmpd < dist) {
-							nearestlyk = to_lyrk;
-							nearestid = r;
-							dist = tmpd;
+
+						if (tmpd < findings[to_lyrk].dist) {
+							findings[to_lyrk].ids = [r];
+							findings[to_lyrk].dist = tmpd;
+						} else if (tmpd < findings[to_lyrk].dist + eps) {
+							if (findings[to_lyrk].ids.indexOf(r) < 0) {
+								findings[to_lyrk].ids.push(r);
+							}
 						}
+
 						if (GlobalConst.getDebug("FEATMOUSESEL")) {
+
 							console.log(`[DBG:FEATMOUSESEL] interact with lyr:${to_lyrk}, dist:${tmpd} (max: ${p_maxdist}) to id:${r}`);
 
 							let canvas_layers;
@@ -221,53 +232,67 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 			}
 		}
 
-		feat = null;
-		if (nearestid >= 0) {
+		let feats = {};
+		if (Object.keys(findings).length > 0) {
 
 			p_mapctx.renderingsmgr.clearAll(['temporary']);
 
-			if (GlobalConst.getDebug("FEATMOUSESEL")) {
-				console.log(`[DBG:FEATMOUSESEL] interact with NEAREST: ${nearestlyk}, dist:${dist} (max: ${p_maxdist}) to id:${nearestid}`);
-			}
+			for (let lyrk in findings) {
 
-			foundly = null;
-			for (let ly of p_mapctx.tocmgr.layers) {
-				if (ly.key == nearestlyk) {
-					foundly = ly;
-					break;
-				}
-			}
-
-			if (foundly == null) {
-				throw new Error(`to layer '${nearestlyk}' not found`);
-			}
-
-			if (foundly.layervisible && (p_maxdist == null || p_maxdist >=  dist)) {
-
-				p_mapctx.renderingsmgr.clearAll(['temporary','transientmap']);
-
-				let canvas_layers;
-				if (p_is_end_event) {
-					canvas_layers = {'normal': 'temporary', 'label': 'temporary' };
-				} else {
-					canvas_layers = {'normal': 'transientmap', 'label': 'transientmap' };
-				}
-							
-				feat = p_mapctx.drawFeatureAsMouseSelected(nearestlyk, nearestid, canvas_layers);
-				if (feat!=null) {
-					if (opt_actonselfeat) {
-						ret_dir_interact = opt_actonselfeat(nearestlyk, feat, p_scrx, p_scry);
-						//console.assert(ret_dir_interact === undefined, `optional action on selected feat failed, nearest layer:${nearestlyk}, feat id:${nearestid}`)
+				foundly = null;
+				for (let ly of p_mapctx.tocmgr.layers) {
+					if (ly.key == lyrk) {
+						foundly = ly;
+						break;
 					}
+				}
+
+				if (foundly == null) {
+					throw new Error(`interactWithSpindexLayer: to layer '${lyrk}' not found`);
+				}
+
+				if (GlobalConst.getDebug("FEATMOUSESEL")) {
+					console.log(`[DBG:FEATMOUSESEL] interact with NEAREST: ${lyrk}, dist:${findings[lyrk].dist} (max: ${p_maxdist}) to ids:${findings[lyrk].ids}`);
+				}
+	
+				if (foundly.layervisible && (p_maxdist == null || p_maxdist >=  findings[lyrk].dist)) {
+
+					p_mapctx.renderingsmgr.clearAll(['temporary','transientmap']);
+
+					let canvas_layers;
+					if (p_is_end_event) {
+						canvas_layers = {'normal': 'temporary', 'label': 'temporary' };
+					} else {
+						canvas_layers = {'normal': 'transientmap', 'label': 'transientmap' };
+					}
+
+					// console.log(">> found k:", lyrk, "ids:", findings[lyrk].ids, "dist:", findings[lyrk].dist);
+
+					for (let id of findings[lyrk].ids) {
+						feat = p_mapctx.drawFeatureAsMouseSelected(lyrk, id, canvas_layers);
+						if (feat!=null && opt_actonselfeat != null) {
+							if (feats[lyrk] === undefined) {
+								feats[lyrk] = [];
+							}
+							feats[lyrk].push(feat);
+						}
+					}	
+
 				}
 			}
 		}
 
-		if (feat==null || (!ret_dir_interact && p_is_end_event)) {
-			if (opt_clearafterselfeat) {
-				opt_clearafterselfeat('INTERACTSRVLYR');
-			}			
-		} 
+		if (opt_actonselfeat != null && Object.keys(feats).length > 0) {
+			
+			ret_dir_interact = opt_actonselfeat(feats, p_scrx, p_scry);
+			//console.assert(ret_dir_interact === undefined, `optional action on selected feat failed, nearest layer:${nearestlyk}, feat id:${nearestid}`)
+
+			if (!ret_dir_interact && p_is_end_event) {
+				if (opt_clearafterselfeat) {
+					opt_clearafterselfeat('INTERACTSRVLYR');
+				}			
+			} 
+		}
 
 	}
 

@@ -300,6 +300,8 @@ export class InfoBox extends PopupBox {
 
 		for (let fld of this.ordered_fldnames) {
 
+			// ciclar layers
+
 			this.field_textlines_count[fld] = await canvasWrtField(this, p_ctx, recdata, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows, this.urls);
 
 			if (this.layer.infocfg.fields["formats"][fld] !== undefined) {
