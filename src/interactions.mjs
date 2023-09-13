@@ -169,7 +169,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 						}
 						p_mapctx.drawSingleFeature(foundly.key, sqrid, GlobalConst.DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB, false, canvas_layers);
 					} catch (e) {
-						console.log(`[DBG:FEATMOUSESEL] feature error '${e}'`);
+						console.error(`[DBG:FEATMOUSESEL] feature error '${e}'`);
 					}
 				}
 
@@ -235,8 +235,6 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 		let feats = {};
 		if (Object.keys(findings).length > 0) {
 
-			p_mapctx.renderingsmgr.clearAll(['temporary']);
-
 			for (let lyrk in findings) {
 
 				foundly = null;
@@ -283,7 +281,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 		}
 
 		if (opt_actonselfeat != null && Object.keys(feats).length > 0) {
-			
+
 			ret_dir_interact = opt_actonselfeat(feats, p_scrx, p_scry);
 			//console.assert(ret_dir_interact === undefined, `optional action on selected feat failed, nearest layer:${nearestlyk}, feat id:${nearestid}`)
 
@@ -718,9 +716,14 @@ class InfoTool extends BaseTool {
 					}						
 					break;
 
+				case 'mouseout':
+					p_mapctx.renderingsmgr.clearAll(['transientmap', 'temporary', ic.canvaslayer]);
+					break;
+
 				case 'mousemove':
 					if (!this.getPanelActive()) {
 						if (ic.hover !== undefined) {
+							p_mapctx.renderingsmgr.clearAll(['transientmap', 'temporary', ic.canvaslayer]);
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
 							ret = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, false, ic.hover.bind(ic), ic.clear.bind(ic));
 						} else {
