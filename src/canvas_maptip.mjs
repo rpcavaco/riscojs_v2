@@ -150,8 +150,21 @@ export class PopupBox {
 			this.anchorpt[1] = this.origin[1];
 		}
 	}
-	
-	_drawBackground(p_ctx, p_width, p_height, p_lnheight, p_label) {
+
+	_drawLayerCaption(p_ctx, p_lnheight, p_label) {
+
+		p_ctx.save();
+
+		p_ctx.fillStyle = this.fillTextStyle;
+		p_ctx.textAlign = "left";
+
+		p_ctx.fillText(p_label, this.origin[0]+this.leftpad, this.origin[1]+1.2*p_lnheight);
+
+		p_ctx.restore();
+
+	}
+
+	_drawBackground(p_ctx, p_width, p_height, p_lnheight) {
 
 		if (this.drawcount == 0) {
 			this._setorigin(p_width, p_height);  
@@ -160,8 +173,6 @@ export class PopupBox {
 		this.box = [...this.origin, p_width, p_height];
 
 		const headerlimy = 1.5 * p_lnheight;
-
-		//console.log("<<<< 162 >>>>", headerlimy, p_lnheight);
 
 		this.headerbox = [...this.origin, p_width, headerlimy];
 
@@ -198,20 +209,26 @@ export class PopupBox {
 			p_ctx.restore();
 		}
 
-		p_ctx.fillStyle = this.fillTextStyle;
-		p_ctx.textAlign = "left";
-		p_ctx.fillText(p_label, this.origin[0]+this.leftpad, this.origin[1]+1.2*p_lnheight);
+		p_ctx.restore();
+	}	
+
+	_drawCallout(p_ctx) {
 
 		if (this.callout) {
+
+			p_ctx.save();
+
+			p_ctx.strokeStyle = this.innerStrokeStyle;
+
 			p_ctx.beginPath();
 			p_ctx.moveTo(...this.userpt);
 			p_ctx.lineTo(...this.anchorpt);
 			this.defaultstroke(p_ctx, 2);
+
+			p_ctx.restore();
 		}
 
-		p_ctx.restore();
-
-	}	
+	}
 }
 
 export class MaptipBox extends PopupBox {
@@ -241,7 +258,7 @@ export class MaptipBox extends PopupBox {
 		let ordered_layers = [];
 		let lorder = this.mapctx.cfgvar["layers"].lorder;
 
-		for (let lang, layer, ifkeys, lyrk, lidx = lorder.length-1; lidx>=0; lidx--) {
+		for (let firstrow = true, layer, ifkeys, lyrk, lidx = lorder.length-1; lidx>=0; lidx--) {
 
 			lyrk = lorder[lidx];
 			if (this.feature_dict[lyrk] === undefined) {
@@ -259,8 +276,20 @@ export class MaptipBox extends PopupBox {
 				console.warn(`[WARN] Missing 'maptipfields' config for layer '${layer.key}`);
 				return;
 			}
+
+			console.log("            ");
 	
 			for (let feat of this.feature_dict[lyrk]) {
+
+				/*
+				if (!firstrow) {
+					p_ctx.moveTo(0,0);
+					p_ctx.lineTo(100,0);
+					p_ctx.stroke();
+				}
+				*/
+
+				firstrow = false;
 
 				if (ifkeys.indexOf("add") >= 0) {
 					for (let fld of layer.maptipfields["add"]) {
@@ -277,6 +306,8 @@ export class MaptipBox extends PopupBox {
 						await canvasWrtField(this, p_ctx, feat.a, fld, lang, layer, capttextwidth, valuetextwidth, this.rows);
 					}	
 				}
+
+				console.log("lyrk:", lyrk, "rws:", this.rows.length);
 					
 			}
 
@@ -357,7 +388,13 @@ export class MaptipBox extends PopupBox {
 		
 		height = height + 0.5 * txtlnheight;
 
-		this._drawBackground(p_ctx, realwidth, height, txtlnheight, lbl);
+		this._drawBackground(p_ctx, realwidth, height, txtlnheight);
+
+		this._drawLayerCaption(p_ctx, txtlnheight, lbl)
+
+		this._drawCallout(p_ctx);
+
+
 
 		p_ctx.fillStyle = this.fillTextStyle;
 
