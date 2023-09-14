@@ -611,7 +611,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				// abrir info
 				const ic = ci.instances["infoclass"];
 				if (ic) {
-					ic.pick(lastk, the_feat, ...spt);
+					ic.pickfeature(lastk, the_feat, ...spt);
 				}
 		
 			}

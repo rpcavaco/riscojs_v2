@@ -664,10 +664,12 @@ class InfoTool extends BaseTool {
 
 	name = 'InfoTool';
 	pickpanel_active;
+	fixedtippanel_active;
 	toc_collapsed;
 	constructor() {
 		super(true, true); // part of general toggle group, default in toogle
 		this.pickpanel_active = false;
+		this.fixedtippanel_active = false;
 		this.toc_collapsed = false;
 	}
 
@@ -692,29 +694,29 @@ class InfoTool extends BaseTool {
 
 		try {
 
-			let insideactivepanel = false;
+			let insideactivepickpanel = false;
 
 			if (ic.ibox != null && ic.pick !== undefined && ic.ibox['box'] !== undefined) {
-				if (this.getPanelActive()) {
+				if (this.getPickPanelActive()) {
 					if (p_evt.clientX >= ic.ibox.box[0] && p_evt.clientX <= ic.ibox.box[0] + ic.ibox.box[2] && 
 						p_evt.clientY >= ic.ibox.box[1] && p_evt.clientY <= ic.ibox.box[1] + ic.ibox.box[3]) {
-							insideactivepanel = true;
+							insideactivepickpanel = true;
 					}
 				}
 			}
 	
 			if (GlobalConst.getDebug("INTERACTION")) {
-				console.log("[DBG:INTERACTION] INFOTOOL onEvent evt.type:", p_evt.type, "insideactivepanel:", insideactivepanel);
+				console.log("[DBG:INTERACTION] INFOTOOL onEvent evt.type:", p_evt.type, "insideactivepanel:", insideactivepickpanel);
 			}
 			if (GlobalConst.getDebug("INTERACTIONCLICKEND") && ["touchstart", "touchend", "mousedown", "mouseup", "mouseleave", "mouseout"].indexOf(p_evt.type) >= 0) {
-				console.log("[DBG:INTERACTIONCLICKEND] INFOTOOL onEvent evt.type:", p_evt.type, "insideactivepanel:", insideactivepanel);
+				console.log("[DBG:INTERACTIONCLICKEND] INFOTOOL onEvent evt.type:", p_evt.type, "insideactivepanel:", insideactivepickpanel);
 			}
 
 			switch(p_evt.type) {
 
 				case 'touchstart':
 				case 'mousedown':
-					if (insideactivepanel) {
+					if (insideactivepickpanel) {
 						ret = true; 
 					}
 					break;
@@ -724,14 +726,14 @@ class InfoTool extends BaseTool {
 					// console.log("mup INFOtool");
 					if (ic.pick !== undefined) {
 
-						if (insideactivepanel) {
+						if (insideactivepickpanel) {
 							ic.interact(p_evt);
 							ret = true; 
 						} else {
-							this.setPanelActive(false);
+							this.setPickPanelActive(false);
 						}
 
-						if (!this.getPanelActive()) {
+						if (!this.getAnyPanelActive()) {
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
 							ret = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, true, ic.pick.bind(ic), ic.clear.bind(ic));
 						}
@@ -745,7 +747,7 @@ class InfoTool extends BaseTool {
 					break;
 
 				case 'mousemove':
-					if (!this.getPanelActive()) {
+					if (!this.getAnyPanelActive()) {
 						if (ic.hover !== undefined) {
 							p_mapctx.renderingsmgr.clearAll(['transientmap', 'temporary', ic.canvaslayer]);
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
@@ -754,7 +756,7 @@ class InfoTool extends BaseTool {
 							console.warn(`infoclass customization unavailable, cannot hover / maptip feature`);			
 						}	
 					} else {
-						if (insideactivepanel) {
+						if (insideactivepickpanel) {
 							ic.interact(p_evt);
 							ret = true; 
 						}						
@@ -771,13 +773,26 @@ class InfoTool extends BaseTool {
 		
 	}	
 
-	setPanelActive(b_panel_is_active) {
+	setPickPanelActive(b_panel_is_active) {
 		this.pickpanel_active = b_panel_is_active;
 	}
 
-	getPanelActive() {
-		return this.pickpanel_active;
+	setFixedtipPanelActive(b_panel_is_active) {
+		this.fixedtippanel_active = b_panel_is_active;
 	}
+
+	setAllPanelsInactive() {
+		this.pickpanel_active = false;
+		this.fixedtippanel_active = false;
+	}
+	
+	getAnyPanelActive() {
+		return this.fixedtippanel_active || this.pickpanel_active;
+	}
+
+	getPickPanelActive() {
+		return this.pickpanel_active;
+	}	
 
 }
 

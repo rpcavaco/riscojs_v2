@@ -336,16 +336,28 @@ export class Info {
 		this.mapctx.showImageOnOverlay(p_image_obj);
 	}
 
-	hover(p_feature_dict, p_scrx, p_scry) {
+	_showCallout(p_feature_dict, p_scrx, p_scry, b_noline) {
 
 		this.callout = new MaptipBox(this.mapctx, this.mapctx.imgbuffer, p_feature_dict, this.styles, p_scrx, p_scry, true);
 		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		this.callout.clear(ctx);
-		this.callout.tipdraw(ctx);
+		this.callout.tipdraw(ctx, b_noline);
 
 		return true;
 	}
-	pick(p_layerkey, p_feature, p_scrx, p_scry) {
+
+	hover(p_feature_dict, p_scrx, p_scry) {
+		return this._showCallout(p_feature_dict, p_scrx, p_scry);
+	}
+
+	pick(p_feature_dict, p_scrx, p_scry) {
+
+		// setFixedtipPanelActive
+
+		let callout_ret = this._showCallout(p_feature_dict, p_scrx, p_scry, true);
+	}
+
+	pickfeature(p_layerkey, p_feature, p_scrx, p_scry) {
 
 		const currlayer = this.mapctx.tocmgr.getLayer(p_layerkey);
 		if (currlayer["infocfg"] === undefined) {
@@ -398,7 +410,7 @@ export class Info {
 					const toc = ci.instances["toc"];
 					const itool = that.mapctx.toolmgr.findTool("InfoTool");
 					if (itool) {
-						itool.setPanelActive(true);					
+						itool.setPickPanelActive(true);					
 						itool.setTocCollapsed(toc.collapse(that.mapctx));
 						for (let wdgk of ci.mapcustom_controlsmgrs_keys) {
 							if ( ci.instances[wdgk] !== undefined && ci.instances[wdgk]['collapse'] !== undefined) {
@@ -440,8 +452,8 @@ export class Info {
 			const toc = ci.instances["toc"];
 			const itool = this.mapctx.toolmgr.findTool("InfoTool");
 			if (itool) {
-				if (itool.getPanelActive()) {
-					itool.setPanelActive(false);					
+				if (itool.getAnyPanelActive()) {
+					itool.setAllPanelsInactive();					
 				}
 				if (toc.isCollapsed()) {
 					itool.setTocCollapsed(toc.inflate(this.mapctx));

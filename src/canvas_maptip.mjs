@@ -231,7 +231,7 @@ export class PopupBox {
 		p_ctx.restore();
 	}	
 
-	_drawCallout(p_ctx) {
+	_drawCalloutLine(p_ctx) {
 
 		if (this.callout) {
 
@@ -260,7 +260,7 @@ export class MaptipBox extends PopupBox {
 		this.feature_dict = p_feature_dict;
 	}
 
-	async tipdraw(p_ctx) {
+	async tipdraw(p_ctx, b_noline) {
 
 		p_ctx.save();
 		this.rows = {};
@@ -443,7 +443,10 @@ export class MaptipBox extends PopupBox {
 
 		this._drawBackground(p_ctx, realwidth, height, txtlnheight);
 		this._drawLayerCaption(p_ctx, this.origin[1]+1.2*txtlnheight, lbls[0])
-		this._drawCallout(p_ctx);
+
+		if (!b_noline) {
+			this._drawCalloutLine(p_ctx);
+		}
 
 		p_ctx.fillStyle = this.fillTextStyle;
 
