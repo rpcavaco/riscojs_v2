@@ -233,6 +233,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 		}
 
 		let feats = {};
+
 		if (Object.keys(findings).length > 0) {
 
 			for (let lyrk in findings) {
@@ -249,13 +250,36 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 					throw new Error(`interactWithSpindexLayer: to layer '${lyrk}' not found`);
 				}
 
+				if (foundly.layervisible && (p_maxdist == null || p_maxdist >=  findings[lyrk].dist)) {
+					p_mapctx.renderingsmgr.clearAll(['temporary','transientmap']);
+					break;
+				}
+			}
+		}
+
+		if (Object.keys(findings).length > 0) {
+
+			for (let lyrk in findings) {
+
+				foundly = null;
+				for (let ly of p_mapctx.tocmgr.layers) {
+					if (ly.key == lyrk) {
+						foundly = ly;
+						break;
+					}
+				}
+
+				/* if (foundly == null) {
+					throw new Error(`interactWithSpindexLayer: to layer '${lyrk}' not found`);
+				} */
+
 				if (GlobalConst.getDebug("FEATMOUSESEL")) {
 					console.log(`[DBG:FEATMOUSESEL] interact with NEAREST: ${lyrk}, dist:${findings[lyrk].dist} (max: ${p_maxdist}) to ids:${findings[lyrk].ids}`);
 				}
 	
 				if (foundly.layervisible && (p_maxdist == null || p_maxdist >=  findings[lyrk].dist)) {
 
-					p_mapctx.renderingsmgr.clearAll(['temporary','transientmap']);
+					//p_mapctx.renderingsmgr.clearAll(['temporary','transientmap']);
 
 					let canvas_layers;
 					if (p_is_end_event) {

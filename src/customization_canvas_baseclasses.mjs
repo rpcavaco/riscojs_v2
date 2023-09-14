@@ -341,7 +341,7 @@ export class Info {
 		this.callout = new MaptipBox(this.mapctx, this.mapctx.imgbuffer, p_feature_dict, this.styles, p_scrx, p_scry, true);
 		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		this.callout.clear(ctx);
-		this.callout.draw(ctx);
+		this.callout.tipdraw(ctx);
 
 		return true;
 	}
