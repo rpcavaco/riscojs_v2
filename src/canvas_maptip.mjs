@@ -40,7 +40,7 @@ export class PopupBox {
 		this.captionfontfamily = "sans-serif";
 		this.fontfamily = "sans-serif";
 		this.drawcount = 0;
-		this.rows = [];
+		this.rows = {};
 		this.mapctx = p_mapctx;
 		this.imgbuffer = p_imgbuffer;
 
@@ -244,7 +244,7 @@ export class MaptipBox extends PopupBox {
 	async draw(p_ctx) {
 
 		p_ctx.save();
-		this.rows.length = 0;
+		this.rows = {};
 		const numcols = 2;
 
 		const tipsboxfrac = GlobalConst.INFO_MAPTIPS_BOXSTYLE["tipsbox2map_widthfraction"];
@@ -258,12 +258,14 @@ export class MaptipBox extends PopupBox {
 		let ordered_layers = [];
 		let lorder = this.mapctx.cfgvar["layers"].lorder;
 
-		for (let firstrow = true, layer, ifkeys, lyrk, lidx = lorder.length-1; lidx>=0; lidx--) {
+		for (let layer, ifkeys, lyrk, lidx = lorder.length-1; lidx>=0; lidx--) {
 
 			lyrk = lorder[lidx];
 			if (this.feature_dict[lyrk] === undefined) {
 				continue;
 			}
+
+			this.rows[lyrk] = [];
 
 			layer = this.mapctx.tocmgr.getLayer(lyrk);
 			if (lang == null) {
@@ -277,110 +279,126 @@ export class MaptipBox extends PopupBox {
 				return;
 			}
 
-			console.log("            ");
-	
-			for (let feat of this.feature_dict[lyrk]) {
+			for (let feat, featrows, featidx=0; featidx < this.feature_dict[lyrk].length; featidx++) {
 
-				/*
-				if (!firstrow) {
-					p_ctx.moveTo(0,0);
-					p_ctx.lineTo(100,0);
-					p_ctx.stroke();
-				}
-				*/
-
-				firstrow = false;
+				feat = this.feature_dict[lyrk][featidx];
+				featrows = [];
 
 				if (ifkeys.indexOf("add") >= 0) {
 					for (let fld of layer.maptipfields["add"]) {
-						await canvasWrtField(this, p_ctx, feat.a, fld, lang, layer, capttextwidth, valuetextwidth, this.rows);
+						await canvasWrtField(this, p_ctx, feat.a, fld, lang, layer, capttextwidth, valuetextwidth, featrows);
 					}	
 				} else if (ifkeys.indexOf("remove") >= 0) {
 					for (let fld in feat.a) {
 						if (layer.maptipfields["remove"].indexOf(fld) < 0) {
-							await canvasWrtField(this, p_ctx, feat.a, fld, lang, layer, capttextwidth, valuetextwidth, this.rows);
+							await canvasWrtField(this, p_ctx, feat.a, fld, lang, layer, capttextwidth, valuetextwidth, featrows);
 						}
 					} 
 				} else {
 					for (let fld in feat.a) {
-						await canvasWrtField(this, p_ctx, feat.a, fld, lang, layer, capttextwidth, valuetextwidth, this.rows);
+						await canvasWrtField(this, p_ctx, feat.a, fld, lang, layer, capttextwidth, valuetextwidth, featrows);
 					}	
 				}
 
-				console.log("lyrk:", lyrk, "rws:", this.rows.length);
-					
+				this.rows[lyrk].push([...featrows]);
+
 			}
 
 		}
 
 		// console.log("rows:", this.rows, this.rows.length);
 
-		// Calc text dims
+		// Calc text dims and two column sizes field caption col and data col
 		let height, cota, lnidx, celltxt, changed_found, colsizes=[0,0];
-		for (let row of this.rows) {
-			if (row["c"] !== undefined) {
-				for (let i=0; i<numcols; i++) {
+		for (let lyrk of lorder) {
 
-					if (row["err"] !== undefined && row["err"]) {
-						colsizes[i] = 0;
+			if (this.rows[lyrk] === undefined) {
+				continue;
+			}
+
+			for (let featrows of this.rows[lyrk]) {
+
+				for (let row of featrows) {
+
+					if (row["c"] !== undefined) {
+						for (let i=0; i<numcols; i++) {
+		
+							if (row["err"] !== undefined && row["err"]) {
+								colsizes[i] = 0;
+							}
+		
+							if (i % 2 ==0) {
+								p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
+							} else {
+								p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
+							}
+							for (let rowln of row["c"][i]) {
+								colsizes[i] = Math.max(p_ctx.measureText(rowln).width, colsizes[i]);
+							}
+						}
 					}
 
-					if (i % 2 ==0) {
-						p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
-					} else {
-						p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
-					}
-					for (let rowln of row["c"][i]) {
-						colsizes[i] = Math.max(p_ctx.measureText(rowln).width, colsizes[i]);
-					}
-				}
+				}		
 			}
 		}
 
 		// calculate global height of text line - from layer caption font - e
 		p_ctx.font = `${this.layercaptionszPX}px ${this.layercaptionfontfamily}`;
 
-		let lbl;
+		let lbl, lblm=0, lbls = [];
 		
-		// Só está a representar a PRIMEIRA layer!!
-		let layer = ordered_layers[0];
+		for (let layer of ordered_layers) {
 
-		if (layer["label"] !== undefined && layer["label"] != "none") {
-			if (layer['msgsdict'] !== undefined && layer.msgsdict[lang] !== undefined && Object.keys(layer.msgsdict[lang]).indexOf(layer["label"]) >= 0) {
-				lbl = I18n.capitalize(layer.msgsdict[lang][layer["label"]]);
+			if (layer["label"] !== undefined && layer["label"] != "none") {
+				if (layer['msgsdict'] !== undefined && layer.msgsdict[lang] !== undefined && Object.keys(layer.msgsdict[lang]).indexOf(layer["label"]) >= 0) {
+					lbl = I18n.capitalize(layer.msgsdict[lang][layer["label"]]);
+				} else {
+					lbl = I18n.capitalize(layer["label"]);
+				}	
 			} else {
-				lbl = I18n.capitalize(layer["label"]);
+				lbl = "(void label)";	
 			}	
-		} else {
-			lbl = "(void label)";	
-		}	
+			lbls.push(lbl);
+			lblm = Math.max(lblm, p_ctx.measureText(lbl).width);
 
+		}
+
+		const realwidth = Math.max(this.leftpad+lblm+this.rightpad, this.leftpad+colsizes[0]+this.betweencols+colsizes[1]+this.rightpad);
 		const txtlnheight = this.layercaptionszPX;
-		const realwidth = Math.max(this.leftpad+p_ctx.measureText(lbl).width+this.rightpad, this.leftpad+colsizes[0]+this.betweencols+colsizes[1]+this.rightpad);
 		const imgpadding = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_imgpadding"];
 
 
 		// calculate height of all rows
 		let maxrowlen, textlinescnt=0;
 		height = 2.5*txtlnheight;
-		for (let row, ri=0; ri<this.rows.length; ri++) {
 
-			row = this.rows[ri];
-			if (row["c"] === undefined) {
-			
-				// 0.75 = 0.25 spacing + 0.5 (caption height)
-				height = height + calcNonTextRowHeight(row, realwidth, imgpadding, this.leftpad, this.rightpad) + 0.75 * txtlnheight;
-			
-			} else { 
+		for (let lyrk of lorder) {
 
-				maxrowlen=0;
-				for (let colidx=0; colidx<numcols; colidx++) {
-					maxrowlen = Math.max(maxrowlen, row["c"][colidx].length);
+			if (this.rows[lyrk] === undefined) {
+				continue;
+			}
+			
+			for (let featrows of this.rows[lyrk]) {
+
+				for (let row of featrows) {
+
+					if (row["c"] === undefined) {
+					
+						// 0.75 = 0.25 spacing + 0.5 (caption height)
+						height = height + calcNonTextRowHeight(row, realwidth, imgpadding, this.leftpad, this.rightpad) + 0.75 * txtlnheight;
+					
+					} else { 
+
+						maxrowlen=0;
+						for (let colidx=0; colidx<numcols; colidx++) {
+							maxrowlen = Math.max(maxrowlen, row["c"][colidx].length);
+						}
+						textlinescnt += maxrowlen;
+						
+						height = height + maxrowlen * lineheightfactor * txtlnheight + 0.25 * txtlnheight;
+
+					}
 				}
-				textlinescnt += maxrowlen;
-				
-				height = height + maxrowlen * lineheightfactor * txtlnheight + 0.25 * txtlnheight;
-
 			}
 		}
 
@@ -390,7 +408,7 @@ export class MaptipBox extends PopupBox {
 
 		this._drawBackground(p_ctx, realwidth, height, txtlnheight);
 
-		this._drawLayerCaption(p_ctx, txtlnheight, lbl)
+		this._drawLayerCaption(p_ctx, txtlnheight, lbls[0])
 
 		this._drawCallout(p_ctx);
 
@@ -401,116 +419,138 @@ export class MaptipBox extends PopupBox {
 		// console.log(this.rows);
 
 		cota = this.origin[1]+2.5*txtlnheight;
-		for (let row of this.rows) {
+		for (let lyrk of lorder) {
 
-			if (row["c"] === undefined) {
+			if (this.rows[lyrk] === undefined) {
 				continue;
 			}
+			
+			for (let featrows of this.rows[lyrk]) {
 
-			lnidx = 0;
-			do {
-				changed_found = false;
+				for (let row of featrows) {
 
-				for (let colidx=0; colidx<2; colidx++) {
+					if (row["c"] === undefined) {
+						continue;
+					}
 
-					if (row["c"][colidx].length > lnidx) {
-						
-						celltxt = row["c"][colidx][lnidx];
-						if (colidx == 0) {
-							p_ctx.textAlign = "right";
-							p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
-							p_ctx.fillText(celltxt, this.origin[0]+this.leftpad+colsizes[0], cota);		
-						} else { 
-							p_ctx.textAlign = "left";
-							p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
-							p_ctx.fillText(celltxt, this.origin[0]+this.leftpad+colsizes[colidx-1]+colidx*this.betweencols, cota);		
+					lnidx = 0;
+					do {
+						changed_found = false;
+
+						for (let colidx=0; colidx<2; colidx++) {
+
+							if (row["c"][colidx].length > lnidx) {
+								
+								celltxt = row["c"][colidx][lnidx];
+								if (colidx == 0) {
+									p_ctx.textAlign = "right";
+									p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
+									p_ctx.fillText(celltxt, this.origin[0]+this.leftpad+colsizes[0], cota);		
+								} else { 
+									p_ctx.textAlign = "left";
+									p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
+									p_ctx.fillText(celltxt, this.origin[0]+this.leftpad+colsizes[colidx-1]+colidx*this.betweencols, cota);		
+								}
+								changed_found = true;
+							}	
 						}
-						changed_found = true;
-					}	
+
+						if (changed_found) {
+							cota += lineheightfactor * txtlnheight;
+							lnidx++;
+						}
+
+					} while (changed_found);
+
+					cota = cota + 0.25 *txtlnheight;
 				}
 
-				if (changed_found) {
-					cota += lineheightfactor * txtlnheight;
-					lnidx++;
-				}
-
-			} while (changed_found);
-
-			cota = cota + 0.25 *txtlnheight;
+			}
 		}
 
 		// Non-text items
 		const left_caption = this.origin[0] + realwidth / 2.0;
 
 		let left_symbs = 0;
-		for (let row of this.rows) {
 
-			// console.log(row);
+		for (let lyrk of lorder) {
 
-			if (row["c"] !== undefined || (row["err"] !== undefined && row["err"])) {
+			if (this.rows[lyrk] === undefined) {
 				continue;
-			}			
+			}
+			
+			for (let featrows of this.rows[lyrk]) {
 
-			// Field caption
-			p_ctx.textAlign = "center";
-			p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
-			p_ctx.fillText(row["cap"], left_caption, cota);	
-			cota = cota + 0.5 * txtlnheight;
+				for (let row of featrows) {
 
-			if (row["thumbcoll"] !== undefined) {
+					// console.log(row);
 
-				let acumw = 0, prevrowi=-1, acumwidths = {};
-				for (let imge, rii=0; rii < row["thumbcoll"].length; rii++) {
-					if (row["thumbcoll"][rii] !== undefined) {
-						imge = row["thumbcoll"][rii];
-						const [w, h, rowi, coli] = row["dims_pos"][rii];
-						if (imge.complete) {
+					if (row["c"] !== undefined || (row["err"] !== undefined && row["err"])) {
+						continue;
+					}			
 
-							if (rowi == prevrowi) {
-								acumw += w + imgpadding;
-							} else {
-								if (prevrowi >= 0) {
-									acumwidths[prevrowi] = acumw;
+					// Field caption
+					p_ctx.textAlign = "center";
+					p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
+					p_ctx.fillText(row["cap"], left_caption, cota);	
+					cota = cota + 0.5 * txtlnheight;
+
+					if (row["thumbcoll"] !== undefined) {
+
+						let acumw = 0, prevrowi=-1, acumwidths = {};
+						for (let imge, rii=0; rii < row["thumbcoll"].length; rii++) {
+							if (row["thumbcoll"][rii] !== undefined) {
+								imge = row["thumbcoll"][rii];
+								const [w, h, rowi, coli] = row["dims_pos"][rii];
+								if (imge.complete) {
+
+									if (rowi == prevrowi) {
+										acumw += w + imgpadding;
+									} else {
+										if (prevrowi >= 0) {
+											acumwidths[prevrowi] = acumw;
+										}
+										acumw = w;
+									}
+									prevrowi = rowi;
 								}
-								acumw = w;
 							}
-							prevrowi = rowi;
+						}
+						if (acumw > 0 && prevrowi >= 0) {
+							acumwidths[prevrowi] = acumw;
+						}	
+						
+						// console.log("realw:", realwidth, "acumwidths:", acumwidths);
+
+						for (let imge, currh=0, rii=0; rii < row["thumbcoll"].length; rii++) {
+							if (row["thumbcoll"][rii] !== undefined) {
+								imge = row["thumbcoll"][rii];
+
+								const [w, h, rowi, coli] = row["dims_pos"][rii];
+
+								// console.log("---->", w, h, rowi, coli);
+								if (imge.complete) {
+									if (coli == 0) {
+										//console.log("::492::", rowi, coli, w, realwidth, acumwidths[rowi], "currh:", currh);
+										left_symbs = this.origin[0] + (realwidth - acumwidths[rowi]) / 2.0;
+										if (rowi > 0) {
+											//console.log("     ::502 draw::", coli, rowi, "cota:", cota, "currh:", currh);
+											cota += currh + imgpadding;
+											currh = 0;
+										}
+									}
+									//console.log("::506 draw::", coli, rowi, "h:", h, "cota:", cota, "currh:", currh);
+									p_ctx.drawImage(imge, left_symbs, cota, w, h);
+									currh = Math.max(currh, h);
+								};	
+
+								left_symbs = left_symbs + w + imgpadding;	
+							}				
 						}
 					}
-				}
-				if (acumw > 0 && prevrowi >= 0) {
-					acumwidths[prevrowi] = acumw;
-				}	
-				
-				// console.log("realw:", realwidth, "acumwidths:", acumwidths);
-
-				for (let imge, currh=0, rii=0; rii < row["thumbcoll"].length; rii++) {
-					if (row["thumbcoll"][rii] !== undefined) {
-						imge = row["thumbcoll"][rii];
-
-						const [w, h, rowi, coli] = row["dims_pos"][rii];
-
-						// console.log("---->", w, h, rowi, coli);
-						if (imge.complete) {
-							if (coli == 0) {
-								//console.log("::492::", rowi, coli, w, realwidth, acumwidths[rowi], "currh:", currh);
-								left_symbs = this.origin[0] + (realwidth - acumwidths[rowi]) / 2.0;
-								if (rowi > 0) {
-									//console.log("     ::502 draw::", coli, rowi, "cota:", cota, "currh:", currh);
-									cota += currh + imgpadding;
-									currh = 0;
-								}
-							}
-							//console.log("::506 draw::", coli, rowi, "h:", h, "cota:", cota, "currh:", currh);
-							p_ctx.drawImage(imge, left_symbs, cota, w, h);
-							currh = Math.max(currh, h);
-						};	
-
-						left_symbs = left_symbs + w + imgpadding;	
-					}				
+					cota = cota + 0.25 * txtlnheight;
 				}
 			}
-			cota = cota + 0.25 * txtlnheight;
 		}
 
 		// console.log(this.rows.length);
