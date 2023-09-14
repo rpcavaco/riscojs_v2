@@ -354,7 +354,38 @@ export class Info {
 
 		// setFixedtipPanelActive
 
-		let callout_ret = this._showCallout(p_feature_dict, p_scrx, p_scry, true);
+		let ret = false, opentippanel = false, layerklist = Object.keys(p_feature_dict);
+
+		if (layerklist.length > 1) {
+			opentippanel = true;
+		} else {
+			opentippanel = p_feature_dict[layerklist[0]].length > 1;
+		}
+
+		if (opentippanel) {
+
+			if (this._showCallout(p_feature_dict, p_scrx, p_scry, true)) {
+		
+				const ci = this.mapctx.getCustomizationObject();
+				if (ci == null) {
+					throw new Error("Info.pick, map context customization instance is missing")
+				}
+	
+				const itool = this.mapctx.toolmgr.findTool("InfoTool");
+				if (itool) {
+					itool.setFixedtipPanelActive(true);					
+				}
+
+				ret = true;
+
+			}
+
+		} else {
+			ret = this.pickfeature(layerklist[0], p_feature_dict[layerklist[0]][0], p_scrx, p_scry)
+		}
+
+		return ret;
+
 	}
 
 	pickfeature(p_layerkey, p_feature, p_scrx, p_scry) {
@@ -404,7 +435,7 @@ export class Info {
 
 					const ci = that.mapctx.getCustomizationObject();
 					if (ci == null) {
-						throw new Error("Info.pick, map context customization instance is missing")
+						throw new Error("Info.pickfeature, map context customization instance is missing")
 					}
 			
 					const toc = ci.instances["toc"];

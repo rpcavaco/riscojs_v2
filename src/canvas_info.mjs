@@ -26,12 +26,15 @@ export class InfoBox extends PopupBox {
 	nontext_formats;
 	infobox_static_pick_method;
 	infobox_static_expandimage_method;
+	layer;
+	rows;
 
 	constructor(p_mapctx, p_imgbuffer, p_layer, p_data, p_styles, p_scrx, p_scry, p_infobox_pick_method, p_expandimage_method, b_callout, opt_max_rows_height) {
 
-		super(p_mapctx, p_imgbuffer, p_layer, p_styles, p_scrx, p_scry, b_callout);
+		super(p_mapctx, p_imgbuffer, p_styles, p_scrx, p_scry, b_callout);
 
 		this.data = p_data;
+		this.layer = p_layer;
 		this.recordidx = -1;
 		this.urls = {};
 		this.formats = {};
@@ -49,6 +52,7 @@ export class InfoBox extends PopupBox {
 
 		this.pagecount = 0;
 		this.activepageidx = -1;
+		this.rows = [];
 
 		this.rowboundaries = []; // for each page
 		this.nontext_formats = ["singleimg", "thumbcoll"];
@@ -301,8 +305,7 @@ export class InfoBox extends PopupBox {
 		for (let fld of this.ordered_fldnames) {
 
 			// ciclar layers
-
-			this.field_textlines_count[fld] = await canvasWrtField(this, p_ctx, recdata, fld, lang, this.layer.msgsdict, capttextwidth, valuetextwidth, this.rows, this.urls);
+			this.field_textlines_count[fld] = await canvasWrtField(this, p_ctx, recdata, fld, lang, this.layer, capttextwidth, valuetextwidth, this.rows, this.urls);
 
 			if (this.layer.infocfg.fields["formats"][fld] !== undefined) {
 				if (this.nontext_formats.indexOf(this.layer.infocfg.fields["formats"][fld]["type"]) >= 0) {
@@ -445,7 +448,9 @@ export class InfoBox extends PopupBox {
 			lbl = "(void label)";	
 		}
 	
-		this._drawBackground(p_ctx, bwidth, height, this.txtlnheight, lbl);
+		this._drawBackground(p_ctx, bwidth, height, this.txtlnheight);
+		this._drawLayerCaption(p_ctx, this.origin[1]+1.2*this.txtlnheight, lbl);
+
 
 		p_ctx.fillStyle = this.fillTextStyle;
 		p_ctx.strokeStyle = this.URLStyle;
