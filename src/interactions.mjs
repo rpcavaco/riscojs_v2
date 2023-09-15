@@ -307,16 +307,20 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 			}
 		}
 
-		if (opt_actonselfeat != null && Object.keys(feats).length > 0) {
+		if (opt_actonselfeat != null) {
 
-			ret_dir_interact = opt_actonselfeat(feats, p_scrx, p_scry);
-			//console.assert(ret_dir_interact === undefined, `optional action on selected feat failed, nearest layer:${nearestlyk}, feat id:${nearestid}`)
+			ret_dir_interact = false;
+			if (Object.keys(feats).length > 0) {
+				ret_dir_interact = opt_actonselfeat(feats, p_scrx, p_scry);
+			}
+				//console.assert(ret_dir_interact === undefined, `optional action on selected feat failed, nearest layer:${nearestlyk}, feat id:${nearestid}`)
 
 			if (!ret_dir_interact && p_is_end_event) {
 				if (opt_clearafterselfeat) {
 					opt_clearafterselfeat('INTERACTSRVLYR');
 				}			
 			} 
+
 		}
 
 	}
@@ -738,7 +742,7 @@ class InfoTool extends BaseTool {
 
 				case 'touchend':
 				case 'mouseup':
-					if (ic.pick !== undefined) {
+					if (ic.pick !== undefined || ic.callout !== undefined) {
 
 						if (insidefixedtippanel) {
 							ic.interact_fixedtip(p_evt);
@@ -753,12 +757,12 @@ class InfoTool extends BaseTool {
 
 						if (!this.getAnyPanelActive()) {
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-							ret = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, true, ic.pick.bind(ic), ic.clear.bind(ic));
+							ret = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, true, ic.pick.bind(ic), ic.clearinfo.bind(ic));
 						}
 					} else {
 						console.warn(`infoclass customization unavailable, cannot pick feature`);			
 					}	
-					
+				
 					break;
 
 				case 'mouseout':
@@ -770,7 +774,7 @@ class InfoTool extends BaseTool {
 						if (ic.hover !== undefined) {
 							p_mapctx.renderingsmgr.clearAll(['transientmap', 'temporary', ic.canvaslayer]);
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-							ret = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, false, ic.hover.bind(ic), ic.clear.bind(ic));
+							ret = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, false, ic.hover.bind(ic), ic.clearinfo.bind(ic));
 						} else {
 							console.warn(`infoclass customization unavailable, cannot hover / maptip feature`);			
 						}	

@@ -638,7 +638,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		const ic = ci.instances["infoclass"];
 		if (ic) {
-			ic.clear(opt_source_id);
+			ic.clearinfo(opt_source_id);
 		}
 
 		if (opt_clear_temp_also) {

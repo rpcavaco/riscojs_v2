@@ -463,7 +463,7 @@ export class Info {
 
 	} 
 
-	clear(p_source_id) {
+	clearinfo(p_source_id) {
 
 		if (p_source_id == 'TOC' || p_source_id == 'TOCMGR') {
 			return;
@@ -471,9 +471,22 @@ export class Info {
 
 		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 
-		if (this.ibox) {
+		
+		let panels_exist = false;
+
+		if (this.callout) {
+
+			this.callout.clear(ctx);
+			panels_exist = true;
+			
+		} else if (this.ibox) {
 
 			this.ibox.clear(ctx);
+			panels_exist = true;
+
+		}
+
+		if (panels_exist) {
 
 			const ci = this.mapctx.getCustomizationObject();
 			if (ci == null) {
@@ -498,14 +511,10 @@ export class Info {
 			//console.trace("clear all temporary");
 			this.mapctx.renderingsmgr.clearAll(['temporary']);
 
+
 		}
 
 		// console.log("clear:", this.ibox!=null, this.callout!=null);
-
-		if (this.callout) {
-			this.callout.clear(ctx);
-			this.mapctx.renderingsmgr.clearAll(['transientmap']);
-		}
 
 	}
 
