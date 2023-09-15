@@ -497,7 +497,7 @@ export class MaptipBox extends PopupBox {
 
 		// vars for Non-text items
 		const left_caption = this.origin[0] + realwidth / 2.0;
-		let left_symbs = 0, featcount = 0, lyrcount = 0;
+		let left_symbs = 0, lyrcount = 0;
 
 		cota = this.origin[1]+2.5*txtlnheight;
 		let doDrawLayerCaption = false;
@@ -510,9 +510,14 @@ export class MaptipBox extends PopupBox {
 
 				featrows = this.rows[lyrk][featidx];
 
-				y = cota-txtlnheight;
 				boxdims = [realwidth, (featrows.length+0.7) * txtlnheight];
 
+				if (featidx==0 && doDrawLayerCaption) {
+					this._drawLayerCaption(p_ctx, cota+0.25*this.layercaptionszPX, lbls[lyrcount-1], realwidth, deltah_caption);
+					cota = cota+deltah_caption;
+				} 
+
+				y = cota-txtlnheight;
 				this.clickboxes[`feature_tip_${featidx}`] = {
 					"box": [this.origin[0], y, ...boxdims],
 					"layerk": lyrk,
@@ -520,17 +525,10 @@ export class MaptipBox extends PopupBox {
 					"featidx": featidx
 				}
 
-				if (featidx==0 && doDrawLayerCaption) {
-					this._drawLayerCaption(p_ctx, cota+0.25*this.layercaptionszPX, lbls[lyrcount-1], realwidth, deltah_caption);
-					cota = cota+deltah_caption;
-				} else {
-					// draw background on even features
-					if (featcount % 2 == 1) {
-						this._drawFeatrowsAltBackground(p_ctx, y, ...boxdims);
-					}
+				// draw background on even features
+				if (featidx % 2 == 1) {
+					this._drawFeatrowsAltBackground(p_ctx, y, ...boxdims);
 				}
-
-				featcount++;
 
 				for (let row of featrows) {
 
