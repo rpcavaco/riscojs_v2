@@ -508,10 +508,19 @@ export class Info {
 		}
 
 	}
-	interact(p_evt) {
+
+	interact_fixedtip(p_evt) {
+		if (this.callout) {
+			const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+			this.callout.interact_fixedtip(this, ctx, p_evt);
+		}
+
+	}
+
+	interact_infobox(p_evt) {
 		if (this.ibox) {
 			const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
-			this.ibox.interact(ctx, p_evt);
+			this.ibox.interact_infobox(ctx, p_evt);
 		}
 
 	}

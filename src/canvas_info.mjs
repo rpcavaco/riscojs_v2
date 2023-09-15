@@ -13,7 +13,6 @@ export class InfoBox extends PopupBox {
 	box;
 	recordidx;
 	navFillStyle;
-	clickboxes;
 	urls;
 	formats;
 	field_textlines_count;
@@ -76,8 +75,6 @@ export class InfoBox extends PopupBox {
 		} else {
 			this.navFillStyle = "grey";
 		}		
-
-		this.clickboxes = {};
 	}
 
 	drawnavitems(p_ctx, p_recnum, p_totalrecs) {
@@ -451,7 +448,6 @@ export class InfoBox extends PopupBox {
 		this._drawBackground(p_ctx, bwidth, height, this.txtlnheight);
 		this._drawLayerCaption(p_ctx, this.origin[1]+1.2*this.txtlnheight, lbl);
 
-
 		p_ctx.fillStyle = this.fillTextStyle;
 		p_ctx.strokeStyle = this.URLStyle;
 
@@ -677,7 +673,7 @@ export class InfoBox extends PopupBox {
 		topcnv.style.cursor = "default";
 	}	
 
-	interact(p_ctx, p_evt) {
+	interact_infobox(p_ctx, p_evt) {
 
 		const lineheightfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["lineheightfactor"];
 		const rowsintervalfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["rowsintervalfactor"];
@@ -693,6 +689,7 @@ export class InfoBox extends PopupBox {
 
 				let cb;
 				for (let k in this.clickboxes) {
+
 					cb = this.clickboxes[k];
 
 					if (p_evt.clientX >= cb[0] && p_evt.clientX <= cb[2] && 
@@ -751,9 +748,11 @@ export class InfoBox extends PopupBox {
 
 			let cb, alreadycaptured = false;
 			for (let k in this.clickboxes) {
+
 				if (!k.startsWith("page")) {
 					continue;
 				}
+
 				cb = this.clickboxes[k];
 
 				if (p_evt.clientX >= cb[0] && p_evt.clientX <= cb[2] && 

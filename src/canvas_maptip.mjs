@@ -28,6 +28,7 @@ export class PopupBox {
 	rows;
 	mapctx;
 	imgbuffer;
+	clickboxes;
 
 	constructor(p_mapctx, p_imgbuffer, p_styles, p_scrx, p_scry, b_callout) {
 
@@ -111,6 +112,9 @@ export class PopupBox {
 
 		this.userpt = [p_scrx, p_scry];
 		this.callout = b_callout;
+
+		this.clickboxes = {};
+
 	}
 
 	defaultstroke(p_ctx, opt_lwidth) {
@@ -254,10 +258,12 @@ export class MaptipBox extends PopupBox {
 
 	feature_dict;
 	feature;
+	is_drawn;
 
 	constructor(p_mapctx, p_imgbuffer, p_feature_dict, p_styles, p_scrx, p_scry, b_callout) {
 		super(p_mapctx, p_imgbuffer, p_styles, p_scrx, p_scry, b_callout);
 		this.feature_dict = p_feature_dict;
+		this.is_drawn = false;
 	}
 
 	async tipdraw(p_ctx, b_noline) {
@@ -274,7 +280,7 @@ export class MaptipBox extends PopupBox {
 		const lineheightfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["lineheightfactor"];
 
 		let lang = null;
-		let ordered_layers = [];
+		let ordered_layers = [], featids = [];
 		let lorder = this.mapctx.cfgvar["layers"].lorder;
 
 		for (let layer, ifkeys, lyrk, lidx = lorder.length-1; lidx>=0; lidx--) {
@@ -301,6 +307,7 @@ export class MaptipBox extends PopupBox {
 			for (let feat, featrows, featidx=0; featidx < this.feature_dict[lyrk].length; featidx++) {
 
 				feat = this.feature_dict[lyrk][featidx];
+				featids.push(feat.id);
 				featrows = [];
 
 				if (ifkeys.indexOf("add") >= 0) {
@@ -320,7 +327,6 @@ export class MaptipBox extends PopupBox {
 				}
 
 				this.rows[lyrk].push([...featrows]);
-
 			}
 
 		}
@@ -461,9 +467,19 @@ export class MaptipBox extends PopupBox {
 			doDrawLayerCaption = (lyrcount > 0);
 			lyrcount++;
 
-			for (let featrows, featidx=0; featidx < this.rows[lyrk].length; featidx++) {
+			for (let y, boxdims, featrows, featidx=0; featidx < this.rows[lyrk].length; featidx++) {
 
 				featrows = this.rows[lyrk][featidx];
+
+				y = cota-txtlnheight;
+				boxdims = [realwidth, (featrows.length+0.7) * txtlnheight];
+
+				this.clickboxes[`feature_tip_${featidx}`] = {
+					"box": [this.origin[0], y, ...boxdims],
+					"layerk": lyrk,
+					"featid": featids[featidx],
+					"featidx": featidx
+				}
 
 				if (featidx==0 && doDrawLayerCaption) {
 					this._drawLayerCaption(p_ctx, cota+0.25*this.layercaptionszPX, lbls[lyrcount-1], realwidth, deltah_caption);
@@ -471,7 +487,7 @@ export class MaptipBox extends PopupBox {
 				} else {
 					// draw background on even features
 					if (featcount % 2 == 1) {
-						this._drawFeatrowsAltBackground(p_ctx, cota-txtlnheight, realwidth, (featrows.length+0.7) * txtlnheight);
+						this._drawFeatrowsAltBackground(p_ctx, y, ...boxdims);
 					}
 				}
 
@@ -584,11 +600,51 @@ export class MaptipBox extends PopupBox {
 		}
 
 		// console.log(this.rows.length);
+		this.is_drawn = true;
 
 		p_ctx.restore();
 	}
 
 	clear(p_ctx) {
 		p_ctx.clearRect(0, 0, ...this.mapdims); 
+		this.is_drawn = false;
 	}	
+
+	interact_fixedtip(p_info_instance, p_ctx, p_evt) {
+
+		const topcnv = this.mapctx.renderingsmgr.getTopCanvas();
+		topcnv.style.cursor = "default";
+
+		// no header interaction 
+		if (p_evt.clientY >= this.headerbox[1] + this.headerbox[3]) {
+
+			let cb; //, alreadycaptured = false;
+			for (let k in this.clickboxes) {
+
+				if (!k.startsWith("feature_tip_")) {
+					continue;
+				}
+				cb = this.clickboxes[k];
+
+				if (p_evt.clientX >= cb.box[0] && p_evt.clientX <= cb.box[0] + cb.box[2] && 
+					p_evt.clientY >= cb.box[1] && p_evt.clientY <= cb.box[1] + cb.box[3]) {
+
+						if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
+							this.clear(p_ctx);
+							p_info_instance.pickfeature(cb.layerk, this.feature_dict[cb.layerk][cb.featidx], p_evt.clientX, p_evt.clientY)
+						} else {
+							topcnv.style.cursor = "pointer";
+						}
+						break;
+				}
+			}
+		} 
+
+		
+		if (p_evt['preventDefault'] !== undefined) {
+			p_evt.preventDefault();
+		} 
+	}
+	
+
 }

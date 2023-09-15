@@ -290,13 +290,16 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 
 					// console.log(">> found k:", lyrk, "ids:", findings[lyrk].ids, "dist:", findings[lyrk].dist);
 
+					let f;
 					for (let id of findings[lyrk].ids) {
 						feat = p_mapctx.drawFeatureAsMouseSelected(lyrk, id, canvas_layers);
 						if (feat!=null && opt_actonselfeat != null) {
 							if (feats[lyrk] === undefined) {
 								feats[lyrk] = [];
 							}
-							feats[lyrk].push(feat);
+							f = JSON.parse(JSON.stringify(feat));
+							f['id'] = id;
+							feats[lyrk].push(JSON.parse(JSON.stringify(f)));
 						}
 					}	
 
@@ -694,43 +697,58 @@ class InfoTool extends BaseTool {
 
 		try {
 
-			let insideactivepickpanel = false;
+			let insidefixedtippanel = false;
+			let insideainfoboxpanel = false;
 
-			if (ic.ibox != null && ic.pick !== undefined && ic.ibox['box'] !== undefined) {
-				if (this.getPickPanelActive()) {
-					if (p_evt.clientX >= ic.ibox.box[0] && p_evt.clientX <= ic.ibox.box[0] + ic.ibox.box[2] && 
-						p_evt.clientY >= ic.ibox.box[1] && p_evt.clientY <= ic.ibox.box[1] + ic.ibox.box[3]) {
-							insideactivepickpanel = true;
+			if (ic.callout != null && ic.callout !== undefined && ic.callout['box'] !== undefined) {
+				if (this.getFixedtipPanelActive()) {
+					if (p_evt.clientX >= ic.callout.box[0] && p_evt.clientX <= ic.callout.box[0] + ic.callout.box[2] && 
+						p_evt.clientY >= ic.callout.box[1] && p_evt.clientY <= ic.callout.box[1] + ic.callout.box[3]) {
+							insidefixedtippanel = true;
 					}
 				}
 			}
+
+			if (!insidefixedtippanel) {
+				if (ic.ibox != null && ic.pick !== undefined && ic.ibox['box'] !== undefined) {
+					if (this.getPickPanelActive()) {
+						if (p_evt.clientX >= ic.ibox.box[0] && p_evt.clientX <= ic.ibox.box[0] + ic.ibox.box[2] && 
+							p_evt.clientY >= ic.ibox.box[1] && p_evt.clientY <= ic.ibox.box[1] + ic.ibox.box[3]) {
+								insideainfoboxpanel = true;
+						}
+					}
+				}	
+			}
 	
 			if (GlobalConst.getDebug("INTERACTION")) {
-				console.log("[DBG:INTERACTION] INFOTOOL onEvent evt.type:", p_evt.type, "insideactivepanel:", insideactivepickpanel);
+				console.log("[DBG:INTERACTION] INFOTOOL onEvent evt.type:", p_evt.type, "insideactivepanel:", insideainfoboxpanel, "insidefixedtippanel:", insidefixedtippanel);
 			}
 			if (GlobalConst.getDebug("INTERACTIONCLICKEND") && ["touchstart", "touchend", "mousedown", "mouseup", "mouseleave", "mouseout"].indexOf(p_evt.type) >= 0) {
-				console.log("[DBG:INTERACTIONCLICKEND] INFOTOOL onEvent evt.type:", p_evt.type, "insideactivepanel:", insideactivepickpanel);
+				console.log("[DBG:INTERACTIONCLICKEND] INFOTOOL onEvent evt.type:", p_evt.type, "insideactivepanel:", insideainfoboxpanel, "insidefixedtippanel:", insidefixedtippanel);
 			}
 
 			switch(p_evt.type) {
 
 				case 'touchstart':
 				case 'mousedown':
-					if (insideactivepickpanel) {
+					if (insidefixedtippanel || insideainfoboxpanel) {
 						ret = true; 
 					}
 					break;
 
 				case 'touchend':
 				case 'mouseup':
-					// console.log("mup INFOtool");
 					if (ic.pick !== undefined) {
 
-						if (insideactivepickpanel) {
-							ic.interact(p_evt);
+						if (insidefixedtippanel) {
+							ic.interact_fixedtip(p_evt);
+							this.setFixedtipPanelActive(ic.callout.is_drawn);
+							ret = true;
+						} else if (insideainfoboxpanel) {
+							ic.interact_infobox(p_evt);
 							ret = true; 
 						} else {
-							this.setPickPanelActive(false);
+							this.setPanelsInactive();
 						}
 
 						if (!this.getAnyPanelActive()) {
@@ -739,7 +757,8 @@ class InfoTool extends BaseTool {
 						}
 					} else {
 						console.warn(`infoclass customization unavailable, cannot pick feature`);			
-					}						
+					}	
+					
 					break;
 
 				case 'mouseout':
@@ -756,8 +775,11 @@ class InfoTool extends BaseTool {
 							console.warn(`infoclass customization unavailable, cannot hover / maptip feature`);			
 						}	
 					} else {
-						if (insideactivepickpanel) {
-							ic.interact(p_evt);
+						if (insidefixedtippanel) {
+							ic.interact_fixedtip(p_evt);
+							ret = true; 
+						} else if (insideainfoboxpanel) {
+							ic.interact_infobox(p_evt);
 							ret = true; 
 						}						
 					}
@@ -772,6 +794,11 @@ class InfoTool extends BaseTool {
 		return ret;
 		
 	}	
+
+	setPanelsInactive() {
+		this.fixedtippanel_active = false;
+		this.pickpanel_active = false;
+	}
 
 	setPickPanelActive(b_panel_is_active) {
 		this.pickpanel_active = b_panel_is_active;
@@ -789,6 +816,10 @@ class InfoTool extends BaseTool {
 	getAnyPanelActive() {
 		return this.fixedtippanel_active || this.pickpanel_active;
 	}
+
+	getFixedtipPanelActive() {
+		return this.fixedtippanel_active;
+	}	
 
 	getPickPanelActive() {
 		return this.pickpanel_active;
