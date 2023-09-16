@@ -726,7 +726,8 @@ export class InfoBox extends PopupBox {
 										this.activepageidx = 0;
 										this.clear(p_ctx);
 										this.draw(p_ctx);
-										break;												
+										break;			
+																			
 								}
 							} else {
 								topcnv.style.cursor = "pointer";	

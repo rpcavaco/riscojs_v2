@@ -551,6 +551,7 @@ class MultiTool extends BaseTool {
 	}	
 
 	onEvent(p_mapctx, p_evt) {
+
 		let orig, ret = false;
 
 		if (GlobalConst.getDebug("INTERACTION")) {
@@ -742,6 +743,7 @@ class InfoTool extends BaseTool {
 
 				case 'touchend':
 				case 'mouseup':
+
 					if (ic.pick !== undefined || ic.callout !== undefined) {
 
 						if (insidefixedtippanel) {
@@ -755,7 +757,7 @@ class InfoTool extends BaseTool {
 							this.setAllPanelsInactive();
 						}
 
-						if (!this.getAnyPanelActive()) {
+						if (!ret && !this.getAnyPanelActive()) {
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
 							ret = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, true, ic.pick.bind(ic), ic.clearinfo.bind(ic));
 						}
