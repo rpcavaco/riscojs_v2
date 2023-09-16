@@ -264,7 +264,7 @@ function clearFeatureHover(p_mapctx) {
 
 }
 
-function featureHover(p_mapctx, p_box) {
+function featureHover(p_mapctx, p_box, p_layer_key, p_feat_id) {
 	
 	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transientviz", '2d');
 	gfctx.save();
@@ -273,6 +273,7 @@ function featureHover(p_mapctx, p_box) {
 
 	const canvas_dims = [];		
 	try {
+		
 		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 		gfctx.clearRect(0, 0, ...canvas_dims); 
 
@@ -285,6 +286,10 @@ function featureHover(p_mapctx, p_box) {
 
 		gfctx.fillRect(...realbox);
 		gfctx.strokeRect(...realbox);
+
+
+		p_mapctx.renderingsmgr.clearAll(['temporary', 'transientmap']);
+		p_mapctx.drawFeatureAsMouseSelected(p_layer_key, p_feat_id, {'normal': 'transientmap', 'label': 'transientmap' });
 
 	} catch(e) {
 		throw e;
@@ -319,7 +324,7 @@ export class MaptipBox extends PopupBox {
 		const lineheightfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["lineheightfactor"];
 
 		let lang = null;
-		let ordered_layers = [], featids = [];
+		let ordered_layers = [], featids = {};
 		let lorder = [];
 		
 		for (let lki=this.mapctx.cfgvar["layers"].lorder.length-1; lki>0; lki--) {
@@ -350,7 +355,10 @@ export class MaptipBox extends PopupBox {
 			for (let feat, featrows, featidx=0; featidx < this.feature_dict[lyrk].length; featidx++) {
 
 				feat = this.feature_dict[lyrk][featidx];
-				featids.push(feat.id);
+				if (featids[lyrk] === undefined) {
+					featids[lyrk] = [];
+				}
+				featids[lyrk].push(feat.id);
 				featrows = [];
 
 				if (ifkeys.indexOf("add") >= 0) {
@@ -525,7 +533,7 @@ export class MaptipBox extends PopupBox {
 				this.clickboxes[`feature_tip_${globalfeatidx}`] = {
 					"box": [this.origin[0], y, ...boxdims],
 					"layerk": lyrk,
-					"featid": featids[featidx],
+					"featid": featids[lyrk][featidx],
 					"featidx": featidx
 				}
 
@@ -649,6 +657,8 @@ export class MaptipBox extends PopupBox {
 	clear(p_ctx) {
 		p_ctx.clearRect(0, 0, ...this.mapdims); 
 		this.is_drawn = false;
+		this.clickboxes = {};
+		this.callout = null;
 	}	
 
 	interact_fixedtip(p_info_instance, p_ctx, p_evt) {
@@ -676,7 +686,7 @@ export class MaptipBox extends PopupBox {
 							p_info_instance.pickfeature(cb.layerk, this.feature_dict[cb.layerk][cb.featidx], p_evt.clientX, p_evt.clientY)
 						} else {
 							topcnv.style.cursor = "pointer";
-							featureHover(this.mapctx, cb.box);
+							featureHover(this.mapctx, cb.box, cb.layerk, cb.featid);
 						}
 						break;
 				} else {
