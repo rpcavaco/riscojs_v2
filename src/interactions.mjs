@@ -752,7 +752,7 @@ class InfoTool extends BaseTool {
 							ic.interact_infobox(p_evt);
 							ret = true; 
 						} else {
-							this.setPanelsInactive();
+							this.setAllPanelsInactive();
 						}
 
 						if (!this.getAnyPanelActive()) {
@@ -798,11 +798,6 @@ class InfoTool extends BaseTool {
 		return ret;
 		
 	}	
-
-	setPanelsInactive() {
-		this.fixedtippanel_active = false;
-		this.pickpanel_active = false;
-	}
 
 	setPickPanelActive(b_panel_is_active) {
 		this.pickpanel_active = b_panel_is_active;
