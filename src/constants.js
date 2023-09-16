@@ -81,6 +81,7 @@ var GlobalConst = {
 	GEOLOCATION_HIGHSPEED_SCALE: 1200,
 	GEOLOCATION_LOWSPEED_SCALE: 700,
 	IMAGE_LRUCACHE_SZ: 200,
+	MOUSEINTERACTION_NEARESTFEATURES_COINCIDENCE_TOLERANCE: 0.01, // ground meters
 
 	// ------------------------------------------------------------------------
 	// END of internal constants 
@@ -121,6 +122,7 @@ var GlobalConst = {
 		"innerStrokeStyle": "none",
 		"headerFillStyle": "grey",
 		"fillTextStyle": "white",
+		"altRowsFillStyle": "rgb(255, 255, 255, 0.2)",
 		"URLStyle": "cyan",
 		"navFillStyle": "white",
 		"lineWidth": 1,		
@@ -231,6 +233,7 @@ var GlobalConst = {
 		SN_INACTIVECOLOR: "grey",
 		SN_NORMALSZ_PX: 16,
 
+		// Segmentation
 		SEG_TEXTFILL: "white",
 		SEG_WIDTHS: [400, 1200], // min, max
 		SEG_WIDTH_PERC: 0.8,
@@ -254,7 +257,13 @@ var GlobalConst = {
 		SEG_CLASSFILL_ALPHA: 0.2,
 		SEG_SELECTEDCLASSBOUNDARY_CLR: "white",
 		SEG_SELECTEDCLASSFILL_CLR: "rgb(255, 255, 255, 0.3)",
-		SEG_CLUSTERSIZE: 150
+		SEG_CLUSTERSIZE: 150,
+
+		// Feature selection fixed tooltip
+		FST_SEPSELBOXFROMCLASSBOX: 4,
+		FST_WIDSELBOXFROMCLASSBOX: 2,
+		FST_ACTIVECOLOR: "white",
+		FST_SELBCKGRD: "#80808040"
 	},
 
 	DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB: { // Symbolize spatial index features selected on mouse position

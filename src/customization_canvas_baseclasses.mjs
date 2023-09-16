@@ -336,17 +336,59 @@ export class Info {
 		this.mapctx.showImageOnOverlay(p_image_obj);
 	}
 
-	hover(p_layerkey, p_feature, p_scrx, p_scry) {
+	_showCallout(p_feature_dict, p_scrx, p_scry, b_noline) {
 
-		const currlayer = this.mapctx.tocmgr.getLayer(p_layerkey);
-		this.callout = new MaptipBox(this.mapctx, this.mapctx.imgbuffer, currlayer, p_feature, this.styles, p_scrx, p_scry, true);
+		this.callout = new MaptipBox(this.mapctx, this.mapctx.imgbuffer, p_feature_dict, this.styles, p_scrx, p_scry, true);
 		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		this.callout.clear(ctx);
-		this.callout.draw(ctx);
+		this.callout.tipdraw(ctx, b_noline);
 
 		return true;
 	}
-	pick(p_layerkey, p_feature, p_scrx, p_scry) {
+
+	hover(p_feature_dict, p_scrx, p_scry) {
+		return this._showCallout(p_feature_dict, p_scrx, p_scry);
+	}
+
+	pick(p_feature_dict, p_scrx, p_scry) {
+
+		// setFixedtipPanelActive
+
+		let ret = false, opentippanel = false, layerklist = Object.keys(p_feature_dict);
+
+		if (layerklist.length > 1) {
+			opentippanel = true;
+		} else {
+			opentippanel = p_feature_dict[layerklist[0]].length > 1;
+		}
+
+		if (opentippanel) {
+
+			if (this._showCallout(p_feature_dict, p_scrx, p_scry, true)) {
+		
+				const ci = this.mapctx.getCustomizationObject();
+				if (ci == null) {
+					throw new Error("Info.pick, map context customization instance is missing")
+				}
+	
+				const itool = this.mapctx.toolmgr.findTool("InfoTool");
+				if (itool) {
+					itool.setFixedtipPanelActive(true);					
+				}
+
+				ret = true;
+
+			}
+
+		} else {
+			ret = this.pickfeature(layerklist[0], p_feature_dict[layerklist[0]][0], p_scrx, p_scry)
+		}
+
+		return ret;
+
+	}
+
+	pickfeature(p_layerkey, p_feature, p_scrx, p_scry) {
 
 		const currlayer = this.mapctx.tocmgr.getLayer(p_layerkey);
 		if (currlayer["infocfg"] === undefined) {
@@ -393,13 +435,13 @@ export class Info {
 
 					const ci = that.mapctx.getCustomizationObject();
 					if (ci == null) {
-						throw new Error("Info.pick, map context customization instance is missing")
+						throw new Error("Info.pickfeature, map context customization instance is missing")
 					}
 			
 					const toc = ci.instances["toc"];
 					const itool = that.mapctx.toolmgr.findTool("InfoTool");
 					if (itool) {
-						itool.setPanelActive(true);					
+						itool.setPickPanelActive(true);					
 						itool.setTocCollapsed(toc.collapse(that.mapctx));
 						for (let wdgk of ci.mapcustom_controlsmgrs_keys) {
 							if ( ci.instances[wdgk] !== undefined && ci.instances[wdgk]['collapse'] !== undefined) {
@@ -421,7 +463,7 @@ export class Info {
 
 	} 
 
-	clear(p_source_id) {
+	clearinfo(p_source_id) {
 
 		if (p_source_id == 'TOC' || p_source_id == 'TOCMGR') {
 			return;
@@ -429,9 +471,22 @@ export class Info {
 
 		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 
-		if (this.ibox) {
+		
+		let panels_exist = false;
+
+		if (this.callout) {
+
+			this.callout.clear(ctx);
+			panels_exist = true;
+			
+		} else if (this.ibox) {
 
 			this.ibox.clear(ctx);
+			panels_exist = true;
+
+		}
+
+		if (panels_exist) {
 
 			const ci = this.mapctx.getCustomizationObject();
 			if (ci == null) {
@@ -441,8 +496,8 @@ export class Info {
 			const toc = ci.instances["toc"];
 			const itool = this.mapctx.toolmgr.findTool("InfoTool");
 			if (itool) {
-				if (itool.getPanelActive()) {
-					itool.setPanelActive(false);					
+				if (itool.getAnyPanelActive()) {
+					itool.setAllPanelsInactive();					
 				}
 				if (toc.isCollapsed()) {
 					itool.setTocCollapsed(toc.inflate(this.mapctx));
@@ -456,20 +511,25 @@ export class Info {
 			//console.trace("clear all temporary");
 			this.mapctx.renderingsmgr.clearAll(['temporary']);
 
+
 		}
 
 		// console.log("clear:", this.ibox!=null, this.callout!=null);
 
+	}
+
+	interact_fixedtip(p_evt) {
 		if (this.callout) {
-			this.callout.clear(ctx);
-			this.mapctx.renderingsmgr.clearAll(['transientmap']);
+			const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+			this.callout.interact_fixedtip(this, ctx, p_evt);
 		}
 
 	}
-	interact(p_evt) {
+
+	interact_infobox(p_evt) {
 		if (this.ibox) {
 			const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
-			this.ibox.interact(ctx, p_evt);
+			this.ibox.interact_infobox(ctx, p_evt);
 		}
 
 	}

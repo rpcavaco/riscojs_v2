@@ -169,14 +169,15 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 						}
 						p_mapctx.drawSingleFeature(foundly.key, sqrid, GlobalConst.DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB, false, canvas_layers);
 					} catch (e) {
-						console.log(`[DBG:FEATMOUSESEL] feature error '${e}'`);
+						console.error(`[DBG:FEATMOUSESEL] feature error '${e}'`);
 					}
 				}
 
 			}
 		}
 
-		let tmpd, nearestid=-1, nearestlyk=null, dist = Number.MAX_SAFE_INTEGER;
+		let tmpd, findings={}; //= Number.MAX_SAFE_INTEGER;
+		const eps = GlobalConst.MOUSEINTERACTION_NEARESTFEATURES_COINCIDENCE_TOLERANCE;
 		for (let from_lyrk in related_ids) {
 
 			for (let to_lyrk in related_ids[from_lyrk]) {
@@ -195,15 +196,25 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 
 				if (related_ids[from_lyrk][to_lyrk].size > 0) {
 
+					if (findings[to_lyrk] === undefined) {
+						findings[to_lyrk] = { "dist": Number.MAX_VALUE, "ids": [] };
+					}
+
 					for (let r of related_ids[from_lyrk][to_lyrk]) {
 
 						tmpd = p_mapctx.featureCollection.distanceTo(terr_pt, to_lyrk, r, minarea);
-						if (tmpd < dist) {
-							nearestlyk = to_lyrk;
-							nearestid = r;
-							dist = tmpd;
+
+						if (tmpd < findings[to_lyrk].dist) {
+							findings[to_lyrk].ids = [r];
+							findings[to_lyrk].dist = tmpd;
+						} else if (tmpd < findings[to_lyrk].dist + eps) {
+							if (findings[to_lyrk].ids.indexOf(r) < 0) {
+								findings[to_lyrk].ids.push(r);
+							}
 						}
+
 						if (GlobalConst.getDebug("FEATMOUSESEL")) {
+
 							console.log(`[DBG:FEATMOUSESEL] interact with lyr:${to_lyrk}, dist:${tmpd} (max: ${p_maxdist}) to id:${r}`);
 
 							let canvas_layers;
@@ -221,53 +232,96 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 			}
 		}
 
-		feat = null;
-		if (nearestid >= 0) {
+		let feats = {};
 
-			p_mapctx.renderingsmgr.clearAll(['temporary']);
+		if (Object.keys(findings).length > 0) {
 
-			if (GlobalConst.getDebug("FEATMOUSESEL")) {
-				console.log(`[DBG:FEATMOUSESEL] interact with NEAREST: ${nearestlyk}, dist:${dist} (max: ${p_maxdist}) to id:${nearestid}`);
-			}
+			for (let lyrk in findings) {
 
-			foundly = null;
-			for (let ly of p_mapctx.tocmgr.layers) {
-				if (ly.key == nearestlyk) {
-					foundly = ly;
-					break;
-				}
-			}
-
-			if (foundly == null) {
-				throw new Error(`to layer '${nearestlyk}' not found`);
-			}
-
-			if (foundly.layervisible && (p_maxdist == null || p_maxdist >=  dist)) {
-
-				p_mapctx.renderingsmgr.clearAll(['temporary','transientmap']);
-
-				let canvas_layers;
-				if (p_is_end_event) {
-					canvas_layers = {'normal': 'temporary', 'label': 'temporary' };
-				} else {
-					canvas_layers = {'normal': 'transientmap', 'label': 'transientmap' };
-				}
-							
-				feat = p_mapctx.drawFeatureAsMouseSelected(nearestlyk, nearestid, canvas_layers);
-				if (feat!=null) {
-					if (opt_actonselfeat) {
-						ret_dir_interact = opt_actonselfeat(nearestlyk, feat, p_scrx, p_scry);
-						//console.assert(ret_dir_interact === undefined, `optional action on selected feat failed, nearest layer:${nearestlyk}, feat id:${nearestid}`)
+				foundly = null;
+				for (let ly of p_mapctx.tocmgr.layers) {
+					if (ly.key == lyrk) {
+						foundly = ly;
+						break;
 					}
+				}
+
+				if (foundly == null) {
+					throw new Error(`interactWithSpindexLayer: to layer '${lyrk}' not found`);
+				}
+
+				if (foundly.layervisible && (p_maxdist == null || p_maxdist >=  findings[lyrk].dist)) {
+					p_mapctx.renderingsmgr.clearAll(['temporary','transientmap']);
+					break;
 				}
 			}
 		}
 
-		if (feat==null || (!ret_dir_interact && p_is_end_event)) {
-			if (opt_clearafterselfeat) {
-				opt_clearafterselfeat('INTERACTSRVLYR');
-			}			
-		} 
+		if (Object.keys(findings).length > 0) {
+
+			for (let lyrk in findings) {
+
+				foundly = null;
+				for (let ly of p_mapctx.tocmgr.layers) {
+					if (ly.key == lyrk) {
+						foundly = ly;
+						break;
+					}
+				}
+
+				/* if (foundly == null) {
+					throw new Error(`interactWithSpindexLayer: to layer '${lyrk}' not found`);
+				} */
+
+				if (GlobalConst.getDebug("FEATMOUSESEL")) {
+					console.log(`[DBG:FEATMOUSESEL] interact with NEAREST: ${lyrk}, dist:${findings[lyrk].dist} (max: ${p_maxdist}) to ids:${findings[lyrk].ids}`);
+				}
+	
+				if (foundly.layervisible && (p_maxdist == null || p_maxdist >=  findings[lyrk].dist)) {
+
+					//p_mapctx.renderingsmgr.clearAll(['temporary','transientmap']);
+
+					let canvas_layers;
+					if (p_is_end_event) {
+						canvas_layers = {'normal': 'temporary', 'label': 'temporary' };
+					} else {
+						canvas_layers = {'normal': 'transientmap', 'label': 'transientmap' };
+					}
+
+					// console.log(">> found k:", lyrk, "ids:", findings[lyrk].ids, "dist:", findings[lyrk].dist);
+
+					let f;
+					for (let id of findings[lyrk].ids) {
+						feat = p_mapctx.drawFeatureAsMouseSelected(lyrk, id, canvas_layers);
+						if (feat!=null && opt_actonselfeat != null) {
+							if (feats[lyrk] === undefined) {
+								feats[lyrk] = [];
+							}
+							f = JSON.parse(JSON.stringify(feat));
+							f['id'] = id;
+							feats[lyrk].push(JSON.parse(JSON.stringify(f)));
+						}
+					}	
+
+				}
+			}
+		}
+
+		if (opt_actonselfeat != null) {
+
+			ret_dir_interact = false;
+			if (Object.keys(feats).length > 0) {
+				ret_dir_interact = opt_actonselfeat(feats, p_scrx, p_scry);
+			}
+				//console.assert(ret_dir_interact === undefined, `optional action on selected feat failed, nearest layer:${nearestlyk}, feat id:${nearestid}`)
+
+			if (!ret_dir_interact && p_is_end_event) {
+				if (opt_clearafterselfeat) {
+					opt_clearafterselfeat('INTERACTSRVLYR');
+				}			
+			} 
+
+		}
 
 	}
 
@@ -497,6 +551,7 @@ class MultiTool extends BaseTool {
 	}	
 
 	onEvent(p_mapctx, p_evt) {
+
 		let orig, ret = false;
 
 		if (GlobalConst.getDebug("INTERACTION")) {
@@ -617,10 +672,12 @@ class InfoTool extends BaseTool {
 
 	name = 'InfoTool';
 	pickpanel_active;
+	fixedtippanel_active;
 	toc_collapsed;
 	constructor() {
 		super(true, true); // part of general toggle group, default in toogle
 		this.pickpanel_active = false;
+		this.fixedtippanel_active = false;
 		this.toc_collapsed = false;
 	}
 
@@ -645,65 +702,90 @@ class InfoTool extends BaseTool {
 
 		try {
 
-			let insideactivepanel = false;
+			let insidefixedtippanel = false;
+			let insideainfoboxpanel = false;
 
-			if (ic.ibox != null && ic.pick !== undefined && ic.ibox['box'] !== undefined) {
-				if (this.getPanelActive()) {
-					if (p_evt.clientX >= ic.ibox.box[0] && p_evt.clientX <= ic.ibox.box[0] + ic.ibox.box[2] && 
-						p_evt.clientY >= ic.ibox.box[1] && p_evt.clientY <= ic.ibox.box[1] + ic.ibox.box[3]) {
-							insideactivepanel = true;
+			if (ic.callout != null && ic.callout !== undefined && ic.callout['box'] !== undefined) {
+				if (this.getFixedtipPanelActive()) {
+					if (p_evt.clientX >= ic.callout.box[0] && p_evt.clientX <= ic.callout.box[0] + ic.callout.box[2] && 
+						p_evt.clientY >= ic.callout.box[1] && p_evt.clientY <= ic.callout.box[1] + ic.callout.box[3]) {
+							insidefixedtippanel = true;
 					}
 				}
 			}
+
+			if (!insidefixedtippanel) {
+				if (ic.ibox != null && ic.pick !== undefined && ic.ibox['box'] !== undefined) {
+					if (this.getPickPanelActive()) {
+						if (p_evt.clientX >= ic.ibox.box[0] && p_evt.clientX <= ic.ibox.box[0] + ic.ibox.box[2] && 
+							p_evt.clientY >= ic.ibox.box[1] && p_evt.clientY <= ic.ibox.box[1] + ic.ibox.box[3]) {
+								insideainfoboxpanel = true;
+						}
+					}
+				}	
+			}
 	
 			if (GlobalConst.getDebug("INTERACTION")) {
-				console.log("[DBG:INTERACTION] INFOTOOL onEvent evt.type:", p_evt.type, "insideactivepanel:", insideactivepanel);
+				console.log("[DBG:INTERACTION] INFOTOOL onEvent evt.type:", p_evt.type, "insideactivepanel:", insideainfoboxpanel, "insidefixedtippanel:", insidefixedtippanel);
 			}
 			if (GlobalConst.getDebug("INTERACTIONCLICKEND") && ["touchstart", "touchend", "mousedown", "mouseup", "mouseleave", "mouseout"].indexOf(p_evt.type) >= 0) {
-				console.log("[DBG:INTERACTIONCLICKEND] INFOTOOL onEvent evt.type:", p_evt.type, "insideactivepanel:", insideactivepanel);
+				console.log("[DBG:INTERACTIONCLICKEND] INFOTOOL onEvent evt.type:", p_evt.type, "insideactivepanel:", insideainfoboxpanel, "insidefixedtippanel:", insidefixedtippanel);
 			}
 
 			switch(p_evt.type) {
 
 				case 'touchstart':
 				case 'mousedown':
-					if (insideactivepanel) {
+					if (insidefixedtippanel || insideainfoboxpanel) {
 						ret = true; 
 					}
 					break;
 
 				case 'touchend':
 				case 'mouseup':
-					// console.log("mup INFOtool");
-					if (ic.pick !== undefined) {
 
-						if (insideactivepanel) {
-							ic.interact(p_evt);
+					if (ic.pick !== undefined || ic.callout !== undefined) {
+
+						if (insidefixedtippanel) {
+							ic.interact_fixedtip(p_evt);
+							this.setFixedtipPanelActive(ic.callout.is_drawn);
+							ret = true;
+						} else if (insideainfoboxpanel) {
+							ic.interact_infobox(p_evt);
 							ret = true; 
 						} else {
-							this.setPanelActive(false);
+							this.setAllPanelsInactive();
 						}
 
-						if (!this.getPanelActive()) {
+						if (!ret && !this.getAnyPanelActive()) {
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-							ret = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, true, ic.pick.bind(ic), ic.clear.bind(ic));
+							ret = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, true, ic.pick.bind(ic), ic.clearinfo.bind(ic));
 						}
 					} else {
 						console.warn(`infoclass customization unavailable, cannot pick feature`);			
-					}						
+					}	
+				
+					break;
+
+				case 'mouseout':
+					p_mapctx.renderingsmgr.clearAll(['transientmap', 'temporary', ic.canvaslayer]);
 					break;
 
 				case 'mousemove':
-					if (!this.getPanelActive()) {
+					if (!this.getAnyPanelActive()) {
 						if (ic.hover !== undefined) {
+							p_mapctx.renderingsmgr.clearAll(['transientmap', 'temporary', ic.canvaslayer]);
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-							ret = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, false, ic.hover.bind(ic), ic.clear.bind(ic));
+							ret = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, false, ic.hover.bind(ic), ic.clearinfo.bind(ic));
 						} else {
 							console.warn(`infoclass customization unavailable, cannot hover / maptip feature`);			
 						}	
 					} else {
-						if (insideactivepanel) {
-							ic.interact(p_evt);
+						if (insidefixedtippanel) {
+							ic.interact_fixedtip(p_evt);
+							ret = true; 
+						} else if (insideainfoboxpanel) {
+							ic.interact_infobox(p_evt);
 							ret = true; 
 						}						
 					}
@@ -719,13 +801,30 @@ class InfoTool extends BaseTool {
 		
 	}	
 
-	setPanelActive(b_panel_is_active) {
+	setPickPanelActive(b_panel_is_active) {
 		this.pickpanel_active = b_panel_is_active;
 	}
 
-	getPanelActive() {
-		return this.pickpanel_active;
+	setFixedtipPanelActive(b_panel_is_active) {
+		this.fixedtippanel_active = b_panel_is_active;
 	}
+
+	setAllPanelsInactive() {
+		this.pickpanel_active = false;
+		this.fixedtippanel_active = false;
+	}
+	
+	getAnyPanelActive() {
+		return this.fixedtippanel_active || this.pickpanel_active;
+	}
+
+	getFixedtipPanelActive() {
+		return this.fixedtippanel_active;
+	}	
+
+	getPickPanelActive() {
+		return this.pickpanel_active;
+	}	
 
 }
 

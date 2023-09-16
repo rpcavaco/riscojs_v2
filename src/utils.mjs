@@ -221,7 +221,7 @@ export function calcNonTextRowHeight(p_row, p_boxwidth, p_imgpadding, p_leftpad,
 
 // writes in data structure in p_rows, not in graphics canvas, but uses canvas functions to measure text dimensions
 // returns height of field in textline count
-export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_msgsdict, max_captwidth, max_valuewidth, o_rows, o_urls) {
+export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_layer, max_captwidth, max_valuewidth, o_rows, o_urls) {
 			
 	let caption, ret = 0;
 
@@ -229,8 +229,10 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_m
 		return ret;
 	}
 
-	if (Object.keys(p_msgsdict[p_lang]).indexOf(p_fld) >= 0) {
-		caption = I18n.capitalize(p_msgsdict[p_lang][p_fld]);
+	let msgdict = p_layer.msgsdict;
+
+	if (Object.keys(msgdict[p_lang]).indexOf(p_fld) >= 0) {
+		caption = I18n.capitalize(msgdict[p_lang][p_fld]);
 	} else {
 		caption = I18n.capitalize(p_fld);
 	}
@@ -238,11 +240,11 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_m
 	let pretext, tmp, captionlines=[], valuelines = [];
 	const lang = p_lang;
 
-	if (p_this.layer.infocfg.fields["formats"] !== undefined && p_this.layer.infocfg.fields["formats"][p_fld] !== undefined) {
-		if (p_this.layer.infocfg.fields["formats"][p_fld]["type"] !== undefined) {
+	if (p_layer.infocfg.fields["formats"] !== undefined && p_layer.infocfg.fields["formats"][p_fld] !== undefined) {
+		if (p_layer.infocfg.fields["formats"][p_fld]["type"] !== undefined) {
 
 			pretext = null;
-			switch(p_this.layer.infocfg.fields["formats"][p_fld]["type"]) {
+			switch(p_layer.infocfg.fields["formats"][p_fld]["type"]) {
 
 				case "date":
 					tmp = new Date(p_attrs[p_fld]);
@@ -267,10 +269,10 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_m
 
 				case "URL":
 					if (o_urls != null) {
-						const urlfunc = p_this.layer.infocfg.fields["formats"][p_fld]["urlbuild"];
+						const urlfunc = p_layer.infocfg.fields["formats"][p_fld]["urlbuild"];
 						o_urls[p_fld] = urlfunc(p_attrs[p_fld]);
-						if (p_this.layer.infocfg.fields["formats"][p_fld]["format"] !== undefined) {
-							pretext = p_this.layer.infocfg.fields["formats"][p_fld]["format"](p_attrs, p_fld);
+						if (p_layer.infocfg.fields["formats"][p_fld]["format"] !== undefined) {
+							pretext = p_layer.infocfg.fields["formats"][p_fld]["format"](p_attrs, p_fld);
 						}
 						if (pretext == null) {
 							pretext = p_attrs[p_fld];
@@ -281,8 +283,8 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_m
 
 			}
 		} else {
-			if (p_this.layer.infocfg.fields["formats"][p_fld]["format"] !== undefined) {
-				pretext = p_this.layer.infocfg.fields["formats"][p_fld]["format"](p_attrs, p_fld, lang);
+			if (p_layer.infocfg.fields["formats"][p_fld]["format"] !== undefined) {
+				pretext = p_layer.infocfg.fields["formats"][p_fld]["format"](p_attrs, p_fld, lang);
 			}					
 		}
 	} else {
@@ -333,9 +335,9 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_m
 	} else {
 
 		let imge, src, thumbcoll=[], re, newrow = null;
-		if (p_this.layer.infocfg.fields["formats"][p_fld] !== undefined && p_this.layer.infocfg.fields["formats"][p_fld]["type"] !== undefined) {
+		if (p_layer.infocfg.fields["formats"][p_fld] !== undefined && p_layer.infocfg.fields["formats"][p_fld]["type"] !== undefined) {
 			
-			switch(p_this.layer.infocfg.fields["formats"][p_fld]["type"]) {
+			switch(p_layer.infocfg.fields["formats"][p_fld]["type"]) {
 
 				case "thumbcoll":
 
@@ -343,10 +345,10 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_m
 					if (tmp == null) {
 						newrow = { "thumbcoll": [], "err": true, "cap": caption, "f": p_fld };
 					} else {
-						re = new RegExp(`${p_this.layer.infocfg.fields["formats"][p_fld]["splitpatt"]}`);
+						re = new RegExp(`${p_layer.infocfg.fields["formats"][p_fld]["splitpatt"]}`);
 						for (let spl of tmp.split(re)) {
 							
-							src = p_this.layer.infocfg.fields["formats"][p_fld]["srcfunc"](spl);
+							src = p_layer.infocfg.fields["formats"][p_fld]["srcfunc"](spl);
 	
 							imge = await p_this.imgbuffer.syncFetchImage(src, spl);
 							if (imge) {
@@ -362,7 +364,7 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_m
 				case "singleimg":
 
 					tmp = p_attrs[p_fld];
-					src = p_this.layer.infocfg.fields["formats"][p_fld]["srcfunc"](tmp);
+					src = p_layer.infocfg.fields["formats"][p_fld]["srcfunc"](tmp);
 					imge = await p_this.imgbuffer.syncFetchImage(src, tmp);
 
 					if (imge) {
@@ -374,8 +376,8 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_m
 
 			}
 
-			if (p_this.layer.infocfg.fields["formats"][p_fld]["hidecaption"] !== undefined) {
-				newrow["hidecaption"] = p_this.layer.infocfg.fields["formats"][p_fld]["hidecaption"];
+			if (p_layer.infocfg.fields["formats"][p_fld]["hidecaption"] !== undefined) {
+				newrow["hidecaption"] = p_layer.infocfg.fields["formats"][p_fld]["hidecaption"];
 			}
 
 			if (newrow) {
