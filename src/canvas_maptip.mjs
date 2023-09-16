@@ -320,11 +320,15 @@ export class MaptipBox extends PopupBox {
 
 		let lang = null;
 		let ordered_layers = [], featids = [];
-		let lorder = this.mapctx.cfgvar["layers"].lorder;
+		let lorder = [];
+		
+		for (let lki=this.mapctx.cfgvar["layers"].lorder.length-1; lki>0; lki--) {
+			lorder.push(this.mapctx.cfgvar["layers"].lorder[lki]);
+		}
 
-		for (let layer, ifkeys, lyrk, lidx = lorder.length-1; lidx>=0; lidx--) {
+		let layer, ifkeys;
+		for (let lyrk of lorder) {
 
-			lyrk = lorder[lidx];
 			if (this.feature_dict[lyrk] === undefined) {
 				continue;
 			}
@@ -435,7 +439,6 @@ export class MaptipBox extends PopupBox {
 		const txtlnheight = this.layercaptionszPX;
 		const imgpadding = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_imgpadding"];
 
-
 		// calculate height of all rows
 		let maxrowlen, textlinescnt=0, usedlayerkeys=[], hasnontext=false;
 		height = 2.5*txtlnheight;
@@ -500,7 +503,7 @@ export class MaptipBox extends PopupBox {
 		let left_symbs = 0, lyrcount = 0;
 
 		cota = this.origin[1]+2.5*txtlnheight;
-		let doDrawLayerCaption = false;
+		let doDrawLayerCaption = false, globalfeatidx=-1;
 		for (let lyrk of usedlayerkeys) {
 
 			doDrawLayerCaption = (lyrcount > 0);
@@ -509,6 +512,7 @@ export class MaptipBox extends PopupBox {
 			for (let y, boxdims, featrows, featidx=0; featidx < this.rows[lyrk].length; featidx++) {
 
 				featrows = this.rows[lyrk][featidx];
+				globalfeatidx++;
 
 				boxdims = [realwidth, (featrows.length+0.7) * txtlnheight];
 
@@ -518,7 +522,7 @@ export class MaptipBox extends PopupBox {
 				} 
 
 				y = cota-txtlnheight;
-				this.clickboxes[`feature_tip_${featidx}`] = {
+				this.clickboxes[`feature_tip_${globalfeatidx}`] = {
 					"box": [this.origin[0], y, ...boxdims],
 					"layerk": lyrk,
 					"featid": featids[featidx],
