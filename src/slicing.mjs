@@ -263,6 +263,10 @@ export class SlicingPanel {
 
 		this.is_maprefresh_pending = false;
 		this.total_count = 0;
+
+		this.currently_selecting_column = false;
+
+
 	}
 
 	calcDims(p_mapctx) {
@@ -283,6 +287,7 @@ export class SlicingPanel {
 
 		this.top = Math.round((dims[1] - this.height) / 2.0);
 		this.left = Math.round((dims[0] - this.width) / 2.0);
+
 
 	}
 
@@ -1106,6 +1111,10 @@ export class SlicingPanel {
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		p_mapctx.getCanvasDims(dims);
 		ctx.clearRect(0, 0, ...dims); 
+
+		this.classes_data = null;
+		this.currently_selecting_column = false;
+
 	}
 
 	_copyClassesSelectionToTemp() {
@@ -1263,6 +1272,9 @@ export class SlicingPanel {
 							if (this.active_item) {
 								constraintitems = {'selected': `${this.active_item[0]}#${this.active_item[1]}` };
 							}
+
+							this.currently_selecting_column = true;
+
 							p_mapctx.getCustomizationObject().messaging_ctrlr.selectInputMessage(
 								p_mapctx.i18n.msg('SELSLICINGMBY', true), 
 								seldict,
@@ -1421,7 +1433,7 @@ export class SlicingPanel {
 				case "mousemove":
 
 					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
-					if (interact_box_key) {
+					if (interact_box_key && !this.currently_selecting_column) {
 						topcnv.style.cursor = "pointer";
 						if (interact_box_key.startsWith("classbox_")) {
 							//let classvalue = interact_box_key.replace("classbox_", "");
