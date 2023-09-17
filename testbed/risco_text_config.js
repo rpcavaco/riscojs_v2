@@ -14,7 +14,6 @@ var RISCOJS_TEXT_CFG = {
 		"SHOWAP": "mostrar painel análise",
 		"SHOWNAV": "mostrar navegador seleção",
 		"CLKIMG2CLOSE": "clicar na imagem para a fechar",
-		"SEGM": "segmentação",
 		"SLICINGMBY": "atributo a segmentar por",
 		"SELSLICINGMBY": "escolha o atributo para segmentação"	
 	},
@@ -31,7 +30,6 @@ var RISCOJS_TEXT_CFG = {
 		"SHOWAP": "show analysis panel",
 		"SHOWNAV": "show selection set navigator",
 		"CLKIMG2CLOSE": "click on image to close it",
-		"SEGM": "data slicer",
 		"SLICINGMBY": "attribute to slice data on", 
 		"SELSLICINGMBY": "select attribute to slice data on"	
 	}
