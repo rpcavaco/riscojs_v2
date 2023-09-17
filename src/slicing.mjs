@@ -657,8 +657,23 @@ export class SlicingPanel {
 
 			origx = gr[2]+ost;
 
-			const captionfont = `${this.datacaptionfontsz}px ${this.captionfontfamily}`;
-			const normalfont = `${this.datafontsz}px ${this.datafontfamily}`;
+
+			let datacaptionfontsz = false;
+			if (this.itemdict[this.active_key]['datacaptionfontsz'] !== undefined) {
+				datacaptionfontsz = this.itemdict[this.active_key]['datacaptionfontsz'];
+			} else {
+				datacaptionfontsz = this.datacaptionfontsz;
+			}
+
+			let datafontsz = false;
+			if (this.itemdict[this.active_key]['datafontsz'] !== undefined) {
+				datafontsz = this.itemdict[this.active_key]['datafontsz'];
+			} else {
+				datafontsz = this.datafontsz;
+			}
+
+			const captionfont = `${datacaptionfontsz}px ${this.captionfontfamily}`;
+			const normalfont = `${datafontsz}px ${this.datafontfamily}`;
 
 			ctx.save();
 
@@ -698,10 +713,10 @@ export class SlicingPanel {
 
 			const tol = 0.7;
 
-			limh = Math.floor(boxh-tol*1.5*this.datafontsz);
-			limw = Math.floor(boxw-tol*2*this.datafontsz);
+			limh = Math.floor(boxh-tol*1.5*datafontsz);
+			limw = Math.floor(boxw-tol*2*datafontsz);
 
-			largeh = (boxh / this.datafontsz) > 5.0;
+			largeh = (boxh / datafontsz) > 5.0;
 			const pwr = Math.pow(10,GlobalConst.CONTROLS_STYLES.SEG_PERCDECPLACES);
 			const lowest = Math.pow(10, -GlobalConst.CONTROLS_STYLES.SEG_PERCDECPLACES);
 			perc = (Math.round((gr[1]/this.total_count) * 100 * pwr) / pwr).toFixed(GlobalConst.CONTROLS_STYLES.SEG_PERCDECPLACES);
@@ -744,7 +759,7 @@ export class SlicingPanel {
 			spacing = Math.min(GlobalConst.CONTROLS_STYLES.SEG_MAXICONSEP, Math.max(spacing, GlobalConst.CONTROLS_STYLES.SEG_MINICONSEP))
 
 			// if available vertical space may contain at least 4 line sof text ...
-			if (3*this.datafontsz + this.datacaptionfontsz < limh) {
+			if (3*datafontsz + datacaptionfontsz < limh) {
 							
 				if (mxw1 < limw) {
 
@@ -757,7 +772,7 @@ export class SlicingPanel {
 						spacing = 0.5;
 					}
 
-					await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, limw, limh, ost, boxw, spacing, this.active_key, dim);
+					await genImage(p_mapctx, ctx, p_icon_func_dict, gr, datafontsz, limw, limh, ost, boxw, spacing, this.active_key, dim);
 
 					// if class value is to be shown ...
 					if (b_showvalue) {
@@ -765,19 +780,19 @@ export class SlicingPanel {
 						if (largeh) {
 							ctx.save();
 							ctx.font = captionfont;
-							cota = gr[3]+this.datafontsz+this.datacaptionfontsz;
+							cota = gr[3]+datafontsz+datacaptionfontsz;
 						} else {
-							cota = gr[3]+2*this.datafontsz;
+							cota = gr[3]+2*datafontsz;
 						}
 		
-						ctx.fillText(gr[0], gr[2]+this.datafontsz, cota);			
+						ctx.fillText(gr[0], gr[2]+datafontsz, cota);			
 						firsttextline_printed = true;	
 
 						if (largeh) {
 							ctx.restore();
-							cota += this.datacaptionfontsz; 
+							cota += datacaptionfontsz; 
 						} else {
-							cota += this.datafontsz; 
+							cota += datafontsz; 
 						}	
 
 					}
@@ -793,34 +808,34 @@ export class SlicingPanel {
 								if (largeh) {
 									ctx.save();
 									ctx.font = captionfont;
-									cota = gr[3]+this.datafontsz+this.datacaptionfontsz;
+									cota = gr[3]+datafontsz+datacaptionfontsz;
 								} else {
-									cota = gr[3]+2*this.datafontsz;
+									cota = gr[3]+2*datafontsz;
 								}
 							}
 				
-							ctx.fillText(lbl, gr[2]+this.datafontsz, cota);
+							ctx.fillText(lbl, gr[2]+datafontsz, cota);
 							firsttextline_printed = true;	
 
 							if (!b_showvalue) {
 								if (largeh) {
 									ctx.restore();
-									cota += this.datacaptionfontsz; 
+									cota += datacaptionfontsz; 
 								} else {
-									cota += this.datafontsz; 
+									cota += datafontsz; 
 								}		
 							} else {
-								cota += this.datafontsz; 
+								cota += datafontsz; 
 							}
 
 						} else {
 
 							if (!b_showvalue) {
-								cota = gr[3]+2*this.datafontsz;
+								cota = gr[3]+2*datafontsz;
 							}
 
 							// available graphic text lines allowing to print label lines
-							allowed_lines = Math.round((limh-cota+top) / this.datafontsz);
+							allowed_lines = Math.round((limh-cota+top) / datafontsz);
 							allowed_lines = allowed_lines - 2; // discount class value and percentage lines
 
 							if (allowed_lines > 0) {
@@ -830,8 +845,8 @@ export class SlicingPanel {
 									if (allowed_lines < lines.length && li == allowed_lines-1) {
 										line = line.substring(0,line.length-3) + '...';
 									}
-									ctx.fillText(line, gr[2]+this.datafontsz, cota);
-									cota += this.datafontsz; 
+									ctx.fillText(line, gr[2]+datafontsz, cota);
+									cota += datafontsz; 
 									if (li == allowed_lines-1) {
 										break;
 									}
@@ -844,33 +859,33 @@ export class SlicingPanel {
 
 					// if first text line wasn't yet printed, lets set y value
 					if (!firsttextline_printed) {
-						cota = gr[3]+2*this.datafontsz;
+						cota = gr[3]+2*datafontsz;
 					}
 
-					ctx.fillText(gr[1], gr[2]+this.datafontsz, cota);
-					cota += this.datafontsz; 
+					ctx.fillText(gr[1], gr[2]+datafontsz, cota);
+					cota += datafontsz; 
 					if (perc >= lowest) {
-						ctx.fillText(`${perc}%`, gr[2]+this.datafontsz, cota);	
+						ctx.fillText(`${perc}%`, gr[2]+datafontsz, cota);	
 					} else {
-						ctx.fillText(`< ${lowest}%`, gr[2]+this.datafontsz, cota);	
+						ctx.fillText(`< ${lowest}%`, gr[2]+datafontsz, cota);	
 					}
 
 				} else {
 
 					// Vertical label
 
-					await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, limw/GlobalConst.CONTROLS_STYLES.SEG_BOX2ICON_RATIO, limh/GlobalConst.CONTROLS_STYLES.SEG_BOX2ICON_RATIO, ost, boxw, 0.5, this.active_key);
+					await genImage(p_mapctx, ctx, p_icon_func_dict, gr, datafontsz, limw/GlobalConst.CONTROLS_STYLES.SEG_BOX2ICON_RATIO, limh/GlobalConst.CONTROLS_STYLES.SEG_BOX2ICON_RATIO, ost, boxw, 0.5, this.active_key);
 
 					ctx.save();
-					ctx.translate(gr[2]+this.datafontsz, gr[3]+this.datafontsz);
+					ctx.translate(gr[2]+datafontsz, gr[3]+datafontsz);
 					ctx.rotate(-Math.PI/2);
 					ctx.textAlign = "right";
-					ctx.fillText(gr[0], 0, this.datafontsz);
-					if (3*this.datafontsz < limh) {
+					ctx.fillText(gr[0], 0, datafontsz);
+					if (3*datafontsz < limh) {
 						if (mxw2 < limh) {
-							ctx.fillText(proptxt, 0, 2*this.datafontsz);
+							ctx.fillText(proptxt, 0, 2*datafontsz);
 						} else {
-							ctx.fillText(gr[0], 0, 2*this.datafontsz);
+							ctx.fillText(gr[0], 0, 2*datafontsz);
 						}
 					}
 					ctx.restore();				
@@ -881,29 +896,29 @@ export class SlicingPanel {
 
 				// Horizontal but height-constrained label
 
-				cota = gr[3]+2*this.datafontsz;
+				cota = gr[3]+2*datafontsz;
 				if (b_showvalue) {
-					ctx.fillText(gr[0], gr[2]+this.datafontsz, cota);
-					cota += this.datafontsz;
+					ctx.fillText(gr[0], gr[2]+datafontsz, cota);
+					cota += datafontsz;
 				}
 
-				if (3*this.datafontsz < limh) {
-					if (4*this.datafontsz < limh) {
-						ctx.fillText(gr[1], gr[2]+this.datafontsz, cota);
-						cota += this.datafontsz;
+				if (3*datafontsz < limh) {
+					if (4*datafontsz < limh) {
+						ctx.fillText(gr[1], gr[2]+datafontsz, cota);
+						cota += datafontsz;
 						if (perc >= lowest) {
-							ctx.fillText(`${perc}%`, gr[2]+this.datafontsz, cota);
+							ctx.fillText(`${perc}%`, gr[2]+datafontsz, cota);
 						} else {
-							ctx.fillText(`${lowest}%`, gr[2]+this.datafontsz, cota);
+							ctx.fillText(`${lowest}%`, gr[2]+datafontsz, cota);
 						}	
 					} else { 
-						ctx.fillText(proptxt, gr[2]+this.datafontsz, cota);
+						ctx.fillText(proptxt, gr[2]+datafontsz, cota);
 					}					
 				}
 
 				dim = limh/GlobalConst.CONTROLS_STYLES.SEG_BOX2ICON_RATIO;
 
-				await genImage(p_mapctx, ctx, p_icon_func_dict, gr, this.datafontsz, limw, limh, ost, boxw, 0.5, this.active_key, dim);
+				await genImage(p_mapctx, ctx, p_icon_func_dict, gr, datafontsz, limw, limh, ost, boxw, 0.5, this.active_key, dim);
 
 			}
 
