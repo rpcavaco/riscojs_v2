@@ -1269,8 +1269,12 @@ export class SlicingPanel {
 								seldict[k] = lbl;	
 							}
 	
+							const left = (parseInt(p_evt.clientX) - 140) + 'px';
+							const top = (parseInt(p_evt.clientY) - 70) + 'px';
 							if (this.active_item) {
-								constraintitems = {'selected': `${this.active_item[0]}#${this.active_item[1]}` };
+								constraintitems = { 'selected': `${this.active_item[0]}#${this.active_item[1]}`, 'left': left, 'top': top };
+							} else {
+								constraintitems = { 'left': left, 'top': top  };
 							}
 
 							this.currently_selecting_column = true;

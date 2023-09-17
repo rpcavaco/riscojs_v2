@@ -107,6 +107,30 @@ let MessagesController = {
 			let contentelem = null;
 			let initialvalue = null;
 
+			let leftchange = false;
+			let topchange = false;
+			if (opt_constraintitems) {
+				if (opt_constraintitems['left'] !== undefined) {
+					msgsdiv.style.left = opt_constraintitems['left'];
+					leftchange = true;
+				}
+				if (opt_constraintitems['top'] !== undefined) {
+					msgsdiv.style.top = opt_constraintitems['top'];
+					topchange = true;
+				}				
+			}
+
+			if (!leftchange) {
+				msgsdiv.style.left = '30%';
+			}
+			if (!topchange) {
+				if (p_type == "TEXT" || p_type == "NUMBER" || p_type == "SELECT") {
+					msgsdiv.style.top = '40%';
+				} else {
+					msgsdiv.style.top = '10%';
+				}
+			}
+
 			while (msgsdiv.firstChild) {
 				msgsdiv.removeChild(msgsdiv.firstChild);
 			}	
@@ -234,12 +258,6 @@ let MessagesController = {
 			msgsdiv.style.opacity = 1;
 			msgsdiv.style.filter = 'none';
 			this.isvisible = true;
-
-			if (p_type == "TEXT" || p_type == "NUMBER" || p_type == "SELECT") {
-				msgsdiv.style.top = '40%';
-			} else {
-				msgsdiv.style.top = '10%';
-			}
 
 			let btn1 = null;
 
