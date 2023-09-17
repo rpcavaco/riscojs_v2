@@ -1380,7 +1380,8 @@ export class SlicingPanel {
 													} else if (apto[lyrkey]["field"] !== undefined) {
 														const sel_classes = this.selected_classes;
 														lyr.setFilterFunc((rec_attributes) => {
-															return sel_classes.has(rec_attributes[apto[lyrkey]["field"]]);
+															// coerce to string needed, sel_classes are dict keys, automatically converted to strings
+															return sel_classes.has(rec_attributes[apto[lyrkey]["field"]].toString());
 														});
 													} else {
 														console.error(`Slicing, SLICINGACT interaction, slicing config (risco_basic_config.js) 'apply' for layer '${lyrkey}' has no 'field' or 'func' entry`);
