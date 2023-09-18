@@ -1380,8 +1380,14 @@ export class SlicingPanel {
 													} else if (apto[lyrkey]["field"] !== undefined) {
 														const sel_classes = this.selected_classes;
 														lyr.setFilterFunc((rec_attributes) => {
-															// coerce to string needed, sel_classes are dict keys, automatically converted to strings
-															return sel_classes.has(rec_attributes[apto[lyrkey]["field"]].toString());
+
+															let ret = false;
+															if (rec_attributes[apto[lyrkey]["field"]] !== undefined && rec_attributes[apto[lyrkey]["field"]] != null) {
+																// coerce to string needed, sel_classes are dict keys, automatically converted to strings
+																ret = sel_classes.has(rec_attributes[apto[lyrkey]["field"]].toString());
+															}
+
+															return ret;
 														});
 													} else {
 														console.error(`Slicing, SLICINGACT interaction, slicing config (risco_basic_config.js) 'apply' for layer '${lyrkey}' has no 'field' or 'func' entry`);
