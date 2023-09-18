@@ -568,6 +568,9 @@ export class TOC  extends MapPrintInRect {
 	}
 
 	inflate(p_mapctx) {
+
+		// console.trace("TOC INFLATE");
+
 		this.collapsedstate = "OPEN";
 		this.print(p_mapctx);
 

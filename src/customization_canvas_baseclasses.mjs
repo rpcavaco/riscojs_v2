@@ -5,6 +5,10 @@ import {InfoBox} from './canvas_info.mjs';
 
 
 export function ctrToolTip(p_mapctx, p_evt, p_text, opt_deltas) {
+
+	if (p_text == null || p_text === 'undefined') {
+		return;
+	}
 	
 	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transientviz", '2d');
 	gfctx.save();
