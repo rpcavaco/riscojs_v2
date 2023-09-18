@@ -255,6 +255,7 @@ export class SlicingPanel {
 		this.activepageidx = null;
 		this.sorted_pairs_collection = [];
 		this.iconfuncs = {};
+
 		this.classes_data = null;
 
 		this.graphbox = null;
@@ -268,6 +269,14 @@ export class SlicingPanel {
 
 
 	}
+
+	setClassesData(p_in_dict) {
+		this.classes_data = JSON.parse(JSON.stringify(p_in_dict));
+	}
+
+	clearClassesData() {
+		this.classes_data = null;
+	}	
 
 	calcDims(p_mapctx) {
 
@@ -973,8 +982,7 @@ export class SlicingPanel {
 
 				console.assert(items[0][1] > items[items.length-1][1], "slicing: classes sort impossible, all classes have same counts");
 
-
-				that.classes_data = dict['classes'];
+				that.setClassesData(dict['classes']);
 
 				that.genTreeMaps(p_mapctx, dict['sumofclasscounts'], items, p_minarea, b_showvalue);
 				
@@ -1127,7 +1135,6 @@ export class SlicingPanel {
 		p_mapctx.getCanvasDims(dims);
 		ctx.clearRect(0, 0, ...dims); 
 
-		this.classes_data = null;
 		this.currently_selecting_column = false;
 
 	}
@@ -1148,22 +1155,29 @@ export class SlicingPanel {
 		
 		let centroids = null, refcnt = Number.MAX_SAFE_INTEGER;
 		for (const e of this.temp_selected_classes) {
-			this.selected_classes.add(e);
 			cls = this.classes_data[e];
-			cenv = [cls.xmin, cls.ymin, cls.xmax, cls.ymax];
-			ensureMinDimEnv(cenv, 150);
-			addEnv(env, cenv);
+			if (cls) {
 
-			if (cls.cnt < refcnt) {
-				refcnt = cls.cnt;
-				centroids = cls.centroids;
+				this.selected_classes.add(e);
+
+				cenv = [cls.xmin, cls.ymin, cls.xmax, cls.ymax];
+				ensureMinDimEnv(cenv, 150);
+				addEnv(env, cenv);
+
+				if (cls.cnt < refcnt) {
+					refcnt = cls.cnt;
+					centroids = cls.centroids;
+				}
+
+				changed = true;
+			} else {
+				console.error(`_copyClassesSelectionFromTemp, missing classes data for '${e}'`);
 			}
-
-			changed = true;
 		}
 
-		p_mapctx.getMapBounds(bounds);
 		if (changed) {
+
+			p_mapctx.getMapBounds(bounds);
 			if (!envInteriorOverlap(bounds, env, 0.15) && envArea(env) < 0.75 * envArea(bounds)) {
 				retenv = env;
 			} else {
@@ -1300,6 +1314,7 @@ export class SlicingPanel {
 								(evt, p_result, p_value) => { 
 									if (p_value) {
 										that.active_key = p_value;
+										that.clearClassesData();
 										that.print(p_mapctx);
 									}
 								},
