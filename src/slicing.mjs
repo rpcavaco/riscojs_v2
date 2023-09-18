@@ -1220,7 +1220,7 @@ export class SlicingPanel {
 
 			// collapse TOC
 			if (toc) {
-				toc.collapse(p_mapctx);
+				toc.collapse(p_mapctx, 'SLICING');
 			}
 
 		} else {
@@ -1229,7 +1229,7 @@ export class SlicingPanel {
 
 			// inflate TOC
 			if (toc) {
-				toc.inflate(p_mapctx);
+				toc.inflate(p_mapctx, 'SLICING');
 			}
 			this.clear(p_mapctx);
 		}

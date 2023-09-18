@@ -446,7 +446,7 @@ export class Info {
 					const itool = that.mapctx.toolmgr.findTool("InfoTool");
 					if (itool) {
 						itool.setPickPanelActive(true);					
-						itool.setTocCollapsed(toc.collapse(that.mapctx));
+						itool.setTocCollapsed(toc.collapse(that.mapctx, 'INFO'));
 						for (let wdgk of ci.mapcustom_controlsmgrs_keys) {
 							if ( ci.instances[wdgk] !== undefined && ci.instances[wdgk]['collapse'] !== undefined) {
 								ci.instances[wdgk].collapse(that.mapctx);
@@ -504,7 +504,7 @@ export class Info {
 					itool.setAllPanelsInactive();					
 				}
 				if (toc.isCollapsed()) {
-					itool.setTocCollapsed(toc.inflate(this.mapctx));
+					itool.setTocCollapsed(toc.inflate(this.mapctx, 'INFO'));
 					for (let wdgk of ci.mapcustom_controlsmgrs_keys) {
 						if ( ci.instances[wdgk] !== undefined && ci.instances[wdgk]['inflate'] !== undefined) {
 							ci.instances[wdgk].inflate(this.mapctx);

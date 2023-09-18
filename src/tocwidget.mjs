@@ -19,6 +19,7 @@ export class TOC  extends MapPrintInRect {
 	had_prev_interaction;
 	collapsedstate;
 	prevboxenv;
+	itemtypes_preventing_inflation;
 
 	constructor(p_mapctx) {
 
@@ -66,6 +67,8 @@ export class TOC  extends MapPrintInRect {
 		} else {
 			this.collapsedstate = "OPEN";
 		}
+
+		this.itemtypes_preventing_inflation = new Set();
 	}
 
 	setTOCMgr(p_tocmgr) {
@@ -548,7 +551,7 @@ export class TOC  extends MapPrintInRect {
 		return ret;
 	}	
 
-	collapse(p_mapctx) {
+	collapse(p_mapctx, p_from_itemtype) {
 
 		if (this.collapsedstate != "COLLAPSED") {
 
@@ -560,6 +563,12 @@ export class TOC  extends MapPrintInRect {
 
 		}
 
+		if (p_from_itemtype === undefined || p_from_itemtype == 'undefined') {
+			console.trace("TOC COLLAPSE ERROR, missing p_from_itemtype:", p_from_itemtype);
+		}
+
+		this.itemtypes_preventing_inflation.add(p_from_itemtype);
+
 		return (this.collapsedstate == "COLLAPSED");
 	}
 
@@ -567,12 +576,19 @@ export class TOC  extends MapPrintInRect {
 		return (this.collapsedstate == "COLLAPSED");
 	}
 
-	inflate(p_mapctx) {
+	inflate(p_mapctx, p_from_itemtype) {
 
-		// console.trace("TOC INFLATE");
+		if (p_from_itemtype) {
+			this.itemtypes_preventing_inflation.delete(p_from_itemtype);
+		} else {
+			this.itemtypes_preventing_inflation.clear();
+		}
 
-		this.collapsedstate = "OPEN";
-		this.print(p_mapctx);
+		if (this.itemtypes_preventing_inflation.size < 1) {
+
+			this.collapsedstate = "OPEN";
+			this.print(p_mapctx);
+		}
 
 		return (this.collapsedstate == "OPEN");
 	}	
