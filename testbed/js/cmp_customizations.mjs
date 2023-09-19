@@ -137,7 +137,7 @@ export class LocQuery {
 			const oqtype = this.otherqueriesmgr.test(p_qrystr);
 			// const pt_buffer_dist = 50;
 			if (oqtype != "none") {
-				this.otherqueriesmgr.query([ p_qrystr ]);
+				this.otherqueriesmgr.query([ p_qrystr ], oqtype);
 				return;
 			}
 		}
