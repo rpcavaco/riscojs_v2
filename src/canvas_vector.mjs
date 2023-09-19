@@ -281,6 +281,8 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		const pt = [];
 		p_mapctxt.transformmgr.getRenderingCoordsPt(p_coords, pt);
 
+		console.log("draw marker", this.key, opt_iconname, opt_feat_id,)
+
 		try {
 			if (opt_symb) {
 				try {
@@ -689,9 +691,10 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			}
 		}
 
-		const protectCanvasFromAsyncUse = (iconnamefield != null && (groptsymbs==null || groptsymbs['drawsymb']===undefined));
+		const protectCanvasFromAsyncUse = false; // (iconnamefield != null && (groptsymbs==null || groptsymbs['drawsymb']===undefined));
 
 		if (this.grabGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, groptsymbs, protectCanvasFromAsyncUse)) {
+			console.log("->> grabbed ctx for", this.key, opt_feat_id);
 			try {
 
 				doit = true;
@@ -715,15 +718,20 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 							iconname = p_attrs[iconnamefield];
 						}
 
+						console.log("    >> drawMarker", this.key, opt_feat_id);
 						ret = this.drawMarker( p_mapctxt, p_coords[0], iconname, opt_feat_id, (groptsymbs!=null && groptsymbs['drawsymb']!==undefined ? groptsymbs : null));
+						console.log("    << fim drawMarker", this.key, opt_feat_id);
 					} else {
+						console.log("    >> drawPath", this.key, opt_feat_id);
 						ret = this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
+						console.log("    << fim drawPath", this.key, opt_feat_id);
 					}
 				}
 			} catch(e) {
 				console.error(p_coords, p_path_levels, this.geomtype);
 				throw e;
 			} finally {
+				console.log("<<- released ctx for", this.key, opt_feat_id);
 				this.releaseGf2DCtx(protectCanvasFromAsyncUse);
 			}				
 		}

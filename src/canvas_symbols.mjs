@@ -188,6 +188,7 @@ class MarkerSymbol extends labelSymbolMixin(GrSymbol) {
 	drawsymb(p_mapctxt, p_layer, p_coords, opt_iconname, opt_feat_id) {
 		// asbtract, to be implemented by subclasses
 	}
+	
 }
 
 export class CanvasVertCross extends strokeSymbolMixin(MarkerSymbol) { 
@@ -413,12 +414,12 @@ export class CanvasIcon extends MarkerSymbol {
 		super(opt_variablesymb_idx);
 		this.symbname = "Icon";
 	}
-	async drawsymb(p_mapctxt, p_layer, p_coords, p_iconname, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords, p_iconname, opt_feat_id) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = Math.round(this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval)));
 
-		const img = await p_mapctxt.imgbuffer.syncFetchImage(p_layer.iconsrcfunc(p_iconname), p_iconname)
+		const img = p_mapctxt.imgbuffer.syncFetchImage(p_layer.iconsrcfunc(p_iconname), p_iconname)
 
 		// console.log("Icon draw", p_layer.key, "fid:", opt_feat_id);
 
@@ -437,20 +438,20 @@ export class CanvasIcon extends MarkerSymbol {
 			w = dim;
 			h = w / r;
 		}
-		// console.log("    drawimage", p_layer.key, opt_feat_id);
+		console.log("    drawimage", p_layer.key, opt_feat_id, p_layer._gfctx == null);
 		p_layer._gfctx.drawImage(img, p_coords[0]-(w/2), p_coords[1]-(h/2), w, h);
-		// console.log("    <<< drawimage end", p_layer.key, opt_feat_id);
+		console.log("    <<< drawimage end", p_layer.key, opt_feat_id);
 
 	}
 
-	async drawfreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step, p_lyr) {
+	drawfreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step, p_lyr) {
 
 		const sclval = p_mapctx.getScale();
 		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
 
 		const r0 = Math.min(dim, 2.0*p_vert_step/3.0);
 
-		const img = await p_mapctx.imgbuffer.syncFetchImage(p_lyr.iconsrcfunc(p_lyr.icondefsymb), p_lyr.icondefsymb);
+		const img = p_mapctx.imgbuffer.syncFetchImage(p_lyr.iconsrcfunc(p_lyr.icondefsymb), p_lyr.icondefsymb);
 
 		const r = img.width / img.height;
 		let w, h;
