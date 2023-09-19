@@ -323,11 +323,16 @@ export class FeatureCollection {
 		let lyrkey, canvases_keys = [...this.mapctx.renderingsmgr.featdraw_canvaskeys];
 
 		this.mapctx.renderingsmgr.clearAll(canvases_keys);
-		for (lyrkey in this.featList) {
-			if (this.lyrkeys_exclude_from_redraw.indexOf(lyrkey) >= 0) {
-				continue;
+
+		const featlyrkeys = Object.keys(this.featList);
+		for (lyrkey of this.mapctx.cfgvar["layers"].lorder) {
+			if (featlyrkeys.indexOf(lyrkey) >= 0) {
+				if (this.lyrkeys_exclude_from_redraw.indexOf(lyrkey) >= 0) {
+					continue;
+				}
+				//console.log(":: redraw", lyrkey);
+				this.featdraw(lyrkey);
 			}
-			this.featdraw(lyrkey);
 		}
 	}
 
@@ -448,6 +453,7 @@ export class FeatureCollection {
 							}
 						}
 					}	
+
 				} else if (rel["op"] ==  "attrjoin") {
 
 					let ptr, idto, tfattrset, foundidx = null;
