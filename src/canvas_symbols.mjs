@@ -172,6 +172,7 @@ export class CanvasPolygonSymbol extends labelSymbolMixin(fillSymbolMixin(stroke
 
 class MarkerSymbol extends labelSymbolMixin(GrSymbol) {
 	markersize; 
+	position_shift = [];
 	_variablesymb_idx;
 	constructor(opt_variablesymb_idx) {
 		super();
@@ -201,18 +202,27 @@ export class CanvasVertCross extends strokeSymbolMixin(MarkerSymbol) {
 		const sclval = p_mapctxt.getScale();
 		const dim = this.markersize * GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval);
 
+		let cx, cy;
+		if (this.position_shift.length >= 2) {
+			cx = this.position_shift[0] + p_coords[0];
+			cy = this.position_shift[1] + p_coords[1];
+		} else {
+			cx = p_coords[0];
+			cy = p_coords[1];
+		}
+
 		p_layer._gfctx.beginPath();
 
 		// horiz
-		p_layer._gfctx.moveTo(p_coords[0] - dim, p_coords[1]);
-		p_layer._gfctx.lineTo(p_coords[0] + dim, p_coords[1]);
+		p_layer._gfctx.moveTo(cx - dim, cy);
+		p_layer._gfctx.lineTo(cx + dim, cy);
 		p_layer._gfctx.stroke();
 
 		p_layer._gfctx.beginPath();
 
 		// vert
-		p_layer._gfctx.moveTo(p_coords[0], p_coords[1] - dim);
-		p_layer._gfctx.lineTo(p_coords[0], p_coords[1] + dim);
+		p_layer._gfctx.moveTo(cx, cy - dim);
+		p_layer._gfctx.lineTo(cx, cy + dim);
 		p_layer._gfctx.stroke();
 
 	}
@@ -230,8 +240,17 @@ export class CanvasCircle extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol
 		const sclval = p_mapctxt.getScale();
 		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
 
+		let cx, cy;
+		if (this.position_shift.length >= 2) {
+			cx = this.position_shift[0] + p_coords[0];
+			cy = this.position_shift[1] + p_coords[1];
+		} else {
+			cx = p_coords[0];
+			cy = p_coords[1];
+		}
+
 		p_layer._gfctx.beginPath();
-		p_layer._gfctx.arc(p_coords[0], p_coords[1], dim, 0, Math.PI * 2, true);
+		p_layer._gfctx.arc(cx, cy, dim, 0, Math.PI * 2, true);
 
 		
 		if (this["fillStyle"] !== undefined && this["fillStyle"].toLowerCase() !== "none") {
@@ -273,23 +292,118 @@ export class CanvasDiamond extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbo
 	drawsymb(p_mapctxt, p_layer, p_coords, opt_iconname, opt_feat_id) {
 
 		const sclval = p_mapctxt.getScale();
-		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
+		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval)) * 0.5;
+
+		let cx, cy;
+		if (this.position_shift.length >= 2) {
+			cx = this.position_shift[0] + p_coords[0];
+			cy = this.position_shift[1] + p_coords[1];
+		} else {
+			cx = p_coords[0];
+			cy = p_coords[1];
+		}
 
 		p_layer._gfctx.beginPath();
 
-		p_layer._gfctx.moveTo(p_coords[0]-dim, p_coords[1]);
-		p_layer._gfctx.lineTo(p_coords[0], p_coords[1]+dim);
-		p_layer._gfctx.lineTo(p_coords[0]+dim, p_coords[1]);
-		p_layer._gfctx.lineTo(p_coords[0], p_coords[1]-dim);
+		p_layer._gfctx.moveTo(cx-dim, cy);
+		p_layer._gfctx.lineTo(cx, cy+dim);
+		p_layer._gfctx.lineTo(cx+dim, cy);
+		p_layer._gfctx.lineTo(cx, cy-dim);
 		p_layer._gfctx.closePath();
 
-		if (this["fillStyle"] !== undefined) {
+		if (this["fillStyle"] !== undefined && this["fillStyle"].toLowerCase() !== "none") {
 			p_layer._gfctx.fill();
 		}
-
-		p_layer._gfctx.stroke();
+		if (this["strokeStyle"] !== undefined && this["strokeStyle"].toLowerCase() !== "none") {
+			p_layer._gfctx.stroke();
+		}
 
 	}
+
+	drawfreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step, p_lyr) {
+
+		const sclval = p_mapctx.getScale();
+		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval)) * 0.5;
+
+		p_ctx.beginPath();
+
+		p_ctx.moveTo(p_symbcenter[0]-dim, p_symbcenter[1]);
+		p_ctx.lineTo(p_symbcenter[0], p_symbcenter[1]+dim);
+		p_ctx.lineTo(p_symbcenter[0]+dim, p_symbcenter[1]);
+		p_ctx.lineTo(p_symbcenter[0], p_symbcenter[1]-dim);
+		p_ctx.closePath();
+
+		if (this["fillStyle"] !== undefined && this["fillStyle"].toLowerCase() !== "none") {
+			p_ctx.fill();
+		}
+		if (this["strokeStyle"] !== undefined && this["strokeStyle"].toLowerCase() !== "none") {
+			p_ctx.stroke();
+		}
+
+	}
+}
+
+export class CanvasSquare extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol)) { 
+
+	symbname;
+	constructor(opt_variablesymb_idx) {
+		super(opt_variablesymb_idx);
+		this.symbname = "Square";
+	}
+
+	drawsymb(p_mapctxt, p_layer, p_coords, opt_iconname, opt_feat_id) {
+
+		const sclval = p_mapctxt.getScale();
+		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval)) * 0.5;
+
+		// console.log("SQ draw", p_layer.key, "fid:", opt_feat_id);
+
+
+		let cx, cy;
+		if (this.position_shift.length >= 2) {
+			cx = this.position_shift[0] + p_coords[0];
+			cy = this.position_shift[1] + p_coords[1];
+		} else {
+			cx = p_coords[0];
+			cy = p_coords[1];
+		}
+
+		p_layer._gfctx.beginPath();
+
+		p_layer._gfctx.moveTo(cx-dim, cy-dim);
+		p_layer._gfctx.lineTo(cx+dim, cy-dim);
+		p_layer._gfctx.lineTo(cx+dim, cy+dim);
+		p_layer._gfctx.lineTo(cx-dim, cy+dim);
+		p_layer._gfctx.closePath();
+
+		if (this["fillStyle"] !== undefined && this["fillStyle"].toLowerCase() !== "none") {
+			p_layer._gfctx.fill();
+		}
+		if (this["strokeStyle"] !== undefined && this["strokeStyle"].toLowerCase() !== "none") {
+			p_layer._gfctx.stroke();
+		}
+
+	}
+
+	drawfreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step, p_lyr) {
+
+		const sclval = p_mapctx.getScale();
+		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval)) * 0.5;
+
+		p_ctx.beginPath();
+		p_ctx.moveTo(p_symbcenter[0]-dim, p_symbcenter[1]-dim);
+		p_ctx.lineTo(p_symbcenter[0]+dim, p_symbcenter[1]-dim);
+		p_ctx.lineTo(p_symbcenter[0]+dim, p_symbcenter[1]+dim);
+		p_ctx.lineTo(p_symbcenter[0]-dim, p_symbcenter[1]+dim);
+		p_ctx.closePath();
+
+		if (this["fillStyle"] !== undefined && this["fillStyle"].toLowerCase() !== "none") {
+			p_ctx.fill();
+		}
+		if (this["strokeStyle"] !== undefined && this["strokeStyle"].toLowerCase() !== "none") {
+			p_ctx.stroke();
+		}
+	}	
 }
 		
 export class CanvasIcon extends MarkerSymbol { 
@@ -306,6 +420,8 @@ export class CanvasIcon extends MarkerSymbol {
 
 		const img = await p_mapctxt.imgbuffer.syncFetchImage(p_layer.iconsrcfunc(p_iconname), p_iconname)
 
+		// console.log("Icon draw", p_layer.key, "fid:", opt_feat_id);
+
 		const r = img.width / img.height;
 		let w, h;
 		if (r > 1.5) {
@@ -321,8 +437,9 @@ export class CanvasIcon extends MarkerSymbol {
 			w = dim;
 			h = w / r;
 		}
-
+		// console.log("    drawimage", p_layer.key, opt_feat_id);
 		p_layer._gfctx.drawImage(img, p_coords[0]-(w/2), p_coords[1]-(h/2), w, h);
+		// console.log("    <<< drawimage end", p_layer.key, opt_feat_id);
 
 	}
 
