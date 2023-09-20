@@ -346,7 +346,11 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 
 		}
 
-	}		
+	}	
+	
+	nextlayeritem() {
+
+	}
 
 	layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_item_chunk_params) {
 
@@ -389,7 +393,7 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 					}
 
 					// verificar campos ATTRS
-					console.info(`[INFO] fetching ${responsejson.fcnt} risco feats on '${that.key}' layer`);
+					console.info(`[INFO] fetched ${responsejson.fcnt} risco feats on '${that.key}' layer from server`);
 					
 					try {
 					
@@ -427,9 +431,12 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 							id2 = that._currFeatures.add(that.key, terrain_coords, feat.a, that.geomtype, path_levels, id);
 							// If feature still exists  between cleanups that's because it might not have been properly garbage collected
 							// If exists, let's not try to draw it, id is null
-							if (id2) {
-								that._currFeatures.featdraw(that.key, id2, null, null, p_terrain_env);
+							
+							// SUSPENSO
+							/*if (id2) {
+								that._currFeatures.featuredraw(that.key, id2, null, null, p_terrain_env);
 							}
+							*/
 
 							cnt++;
 						}

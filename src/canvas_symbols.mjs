@@ -414,12 +414,12 @@ export class CanvasIcon extends MarkerSymbol {
 		super(opt_variablesymb_idx);
 		this.symbname = "Icon";
 	}
-	drawsymb(p_mapctxt, p_layer, p_coords, p_iconname, opt_feat_id) {
+	async drawsymb(p_mapctxt, p_layer, p_coords, p_iconname, opt_feat_id) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = Math.round(this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval)));
 
-		const img = p_mapctxt.imgbuffer.syncFetchImage(p_layer.iconsrcfunc(p_iconname), p_iconname)
+		const img = await p_mapctxt.imgbuffer.syncFetchImage(p_layer.iconsrcfunc(p_iconname), p_iconname);
 
 		// console.log("Icon draw", p_layer.key, "fid:", opt_feat_id);
 
@@ -438,13 +438,53 @@ export class CanvasIcon extends MarkerSymbol {
 			w = dim;
 			h = w / r;
 		}
-		console.log("    drawimage", p_layer.key, opt_feat_id, p_layer._gfctx == null);
+		console.log("    >>> drawimage", p_layer.key, opt_feat_id, p_layer._gfctx == null, img);
 		p_layer._gfctx.drawImage(img, p_coords[0]-(w/2), p_coords[1]-(h/2), w, h);
 		console.log("    <<< drawimage end", p_layer.key, opt_feat_id);
 
+
 	}
 
+	drawsymbAsync(p_mapctxt, p_layer, p_coords, p_iconname, opt_feat_id) {
+
+		const sclval = p_mapctxt.getScale();
+		const dim = Math.round(this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval)));
+
+		return new Promise((resolve, reject) =>  {
+			p_mapctxt.imgbuffer.asyncFetchImage(p_layer.iconsrcfunc(p_iconname), p_iconname).then(
+				(img) => {
+
+					const r = img.width / img.height;
+					let w, h;
+					if (r > 1.5) {
+						w = 1.5 * dim;
+						h = w / r;
+					} else if (r > 1) { 
+						h = dim;
+						w = h * r;
+					} else if (r < 0.67) { 
+						h = 1.5 * dim;
+						w = h * r;
+					} else {
+						w = dim;
+						h = w / r;
+					}
+					console.log("    >>> drawimage", p_layer.key, opt_feat_id, p_layer._gfctx == null, img);
+					p_layer._gfctx.drawImage(img, p_coords[0]-(w/2), p_coords[1]-(h/2), w, h);
+					console.log("    <<< drawimage end", p_layer.key, opt_feat_id);
+
+					resolve();
+			
+				}
+			);
+		});
+
+	}	
+
 	drawfreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step, p_lyr) {
+
+		// SUSPENSO
+		return;
 
 		const sclval = p_mapctx.getScale();
 		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));

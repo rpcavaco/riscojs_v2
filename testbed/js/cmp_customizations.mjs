@@ -191,7 +191,7 @@ export class LocQuery {
 											filter_dict[that.centerlinefeats["fieldname_topo"]] = p_cod_topo;
 											that.mapctx.featureCollection.find(that.centerlinefeats["layerkey"], 'EQ', filter_dict, foundlist);
 											for (let foundid of foundlist) {
-												that.mapctx.featureCollection.featdraw(that.centerlinefeats["layerkey"], 
+												that.mapctx.featureCollection.featuredraw(that.centerlinefeats["layerkey"], 
 												foundid, {'normal': 'temporary', 'label': 'temporary' }, 
 												{ "graphic": that.symbs["centerlinefeats"] } );
 											}
@@ -251,7 +251,7 @@ export class LocQuery {
 								that.mapctx.featureCollection.find(that.centerlinefeats["layerkey"], 'EQ', filter_dict, foundlist);
 								//console.warn("feat id:", featid, "feat:", feat, "symb:", GlobalConst.FEATMOUSESEL_HIGHLIGHT[feat.gt])
 								for (let foundid of foundlist) {
-									that.mapctx.featureCollection.featdraw(that.centerlinefeats["layerkey"], 
+									that.mapctx.featureCollection.featuredraw(that.centerlinefeats["layerkey"], 
 									foundid, {'normal': 'temporary', 'label': 'temporary' }, 
 									{ "graphic": that.symbs["centerlinefeats"] } );
 								}
@@ -330,7 +330,7 @@ export class LocQuery {
 								filter_dict[that.centerlinefeats["fieldname_topo"]] = responsejson['out']['cod_topo'];
 								that.mapctx.featureCollection.find(that.centerlinefeats["layerkey"], 'EQ', filter_dict, foundlist);
 								for (let foundid of foundlist) {
-									that.mapctx.featureCollection.featdraw(that.centerlinefeats["layerkey"], 
+									that.mapctx.featureCollection.featuredraw(that.centerlinefeats["layerkey"], 
 									foundid, {'normal': 'temporary', 'label': 'temporary' }, 
 									{ "graphic": that.symbs["centerlinefeats"] } );
 								}
@@ -341,7 +341,7 @@ export class LocQuery {
 								that.mapctx.featureCollection.find(that.npolfeats["layerkey"], 'EQ', filter_dict, foundlist);
 
 								for (let foundid of foundlist) {
-									that.mapctx.featureCollection.featdraw(that.npolfeats["layerkey"], 
+									that.mapctx.featureCollection.featuredraw(that.npolfeats["layerkey"], 
 									foundid, {'normal': 'temporary', 'label': 'temporary' }, 
 									{ "graphic": that.symbs["npolfeats"] } );
 								}

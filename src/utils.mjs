@@ -461,6 +461,37 @@ export class ImgLRUCache {
 
 		return ret;
 	}
+
+	asyncFetchImage(p_imgpath, p_name) {
+
+		// console.log("-- A a pedir:", p_name, "buffer len:", this.cache.size, Array.from(this.cache.keys()));
+		const name = p_name.toLowerCase();
+		let ret = null;
+		if (this.has(name)) {
+			return Promise.resolve(this.get(name));
+		} else {
+
+			const img = new Image();
+			img.decoding = "async";
+			img.src = p_imgpath;
+
+			return new Promise((resolve, reject) => {
+				img
+				.decode()
+				.then(() => {
+					if (img.complete) {
+						this.set(name, img);
+						resolve(img);
+					} else {
+						reject(new Error(`[WARN] ImgLRUCache syncFetchImage: img ${p_imgpath} NOT complete.`, p_imgpath));
+					}
+				})
+				.catch((e) => {
+					reject(new Error(`[WARN] ImgLRUCache syncFetchImage on '${p_name}': error '${e}'.`));
+				});
+			});
+		}
+	}
 }
 
 export function genRainbowColor(p_max, p_value) {

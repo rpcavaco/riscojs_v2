@@ -609,6 +609,12 @@ export class TOCManager {
 			dlistnames.push(this.layers[di].key);
 		}
 
+		if (this.mapctx.featureCollection.lyrkeys_exclude_from_redraw.indexOf(p_finished_key) < 0) {
+			this.mapctx.featureCollection.featuresdraw(p_finished_key);
+		}
+
+		console.log(p_finished_key)
+
 		this.nextdraw();
 	}
 

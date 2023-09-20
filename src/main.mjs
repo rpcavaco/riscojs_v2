@@ -400,6 +400,9 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		// opt_alt_canvaskeys_dict  example: {'normal': 'temporary', 'label': 'temporary' }
 
+		// SUPENSO
+		throw new Error("baah")
+
 		let symb = new GrSymbol();
 		let lsymb = new GrSymbol();
 		let ret = null;
@@ -433,7 +436,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				Object.assign(lsymb, p_geomtype_keyed_symbdict['label']);
 			}
 
-			ret = this.featureCollection.featdraw(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict, { "graphic": symb, 'label': lsymb } );
+			ret = this.featureCollection.featuredraw(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict, { "graphic": symb, 'label': lsymb } );
 			
 		} else {
 			if (ly == null) {

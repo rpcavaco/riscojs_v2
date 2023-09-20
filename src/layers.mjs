@@ -468,12 +468,7 @@ export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Laye
 					// console.log("--   >> 359 --", firstrec_order, reccount, this.constructor.name);
 					// console.log("## 360 FILLSTYLE ####", gfctx.fillStyle);
 
-					cancel = this.layeritems(p_mapctx, terrain_env, scr_env, dims, item_chunk_params);
-
-					if (cancel) {
-						cancel = true;
-						break;						
-					}
+					this.layeritems(p_mapctx, terrain_env, scr_env, dims, item_chunk_params);
 
 					if (this.isCanceled()) {
 						cancel = true;

@@ -158,14 +158,10 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 	// b_protect_from_async_use - during async use, this._gfctx should be permanent and not constantly saved and restored.
 	// To be only used for applying drawImage symbols, context state shouldn't be altered
-	_grabGf2DCtx(p_mapctx, b_forlabel, opt_attrs, opt_alt_canvaskeys, opt_symbs, b_protect_from_async_use) {
+	_grabGf2DCtx(p_mapctx, b_forlabel, opt_attrs, opt_alt_canvaskeys, opt_symbs) {
 
 		let canvaskey;
 		let canvaskeyLabels;
-
-		if (b_protect_from_async_use && this._gfctx != null) {
-			return true;
-		}
 
 		if (opt_alt_canvaskeys) {
 			canvaskey = opt_alt_canvaskeys["normal"];
@@ -178,9 +174,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		// _gfctx has underscore to protect from automatic attribute collection from config files
 		try {
 			this._gfctx = p_mapctx.renderingsmgr.getDrwCtx(canvaskey, '2d');
-			if (!b_protect_from_async_use) {
-				this._gfctx.save();
-			}
+			this._gfctx.save();
 		} catch(e) {
 			console.error("canvaskey:", canvaskey, opt_alt_canvaskeys, this.canvasKey);
 			throw e;
@@ -188,9 +182,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		try {
 			this._gfctxlbl = p_mapctx.renderingsmgr.getDrwCtx(canvaskeyLabels, '2d');
-			if (!b_protect_from_async_use) {
-				this._gfctxlbl.save();
-			}
+			this._gfctxlbl.save();
 		} catch(e) {
 			console.error("_grabGf2DCtx, canvaskeyLabels:", canvaskeyLabels, opt_alt_canvaskeys, this.canvasKeyLabels);
 			throw e;
@@ -253,11 +245,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	}	
 
 	// must this.grabGf2DCtx first !	
-	releaseGf2DCtx(b_protect_from_async_use) {
-
-		if (b_protect_from_async_use) {
-			return;
-		}
+	releaseGf2DCtx() {
 
 		if (this._gfctx == null) {
 			throw new Error(`graphics context was not previously grabbed for layer '${this.key}'`);
@@ -270,15 +258,16 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	drawMarker(p_mapctxt, p_coords, opt_iconname, opt_feat_id, opt_symb) {
 
 		if (this._gfctx == null) {
-			throw new Error(`graphics context was not previously grabbed for layer '${this.key}'`);
+			return Promise.reject(new Error(`graphics context was not previously grabbed for layer '${this.key}'`));
 		}
 
 		if (p_coords.length != 2 || typeof p_coords[0] != 'number') {
 			console.error("pc:", p_coords);
-			throw new Error(`p_coords doesn't contain point, for layer '${this.key}'`);
+			return Promise.reject(new Error(`p_coords doesn't contain point, for layer '${this.key}'`));
 		}
 
 		const pt = [];
+		let ret_promise = null;
 		p_mapctxt.transformmgr.getRenderingCoordsPt(p_coords, pt);
 
 		console.log("draw marker", this.key, opt_iconname, opt_feat_id,)
@@ -289,14 +278,31 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 					this._gfctx.save();
 					opt_symb.setStyle(this._gfctx);
 					opt_symb.drawsymb(p_mapctxt, this, pt, opt_iconname, opt_feat_id);
+					ret_promise = Promise.resolve();
 				} finally {
 					this._gfctx.restore();
 				}	
 			} else {
-				this._currentsymb.drawsymb(p_mapctxt, this, pt, opt_iconname, opt_feat_id);
+				if (this._currentsymb['drawsymbAsync'] !== undefined) {
+
+					ret_promise = new Promise((resolve, reject) => {
+						this._currentsymb.drawsymbAsync(p_mapctxt, this, pt, opt_iconname, opt_feat_id).then(
+							() => {
+								resolve();
+							}
+						).catch((e) => {
+							reject(e);
+						});
+					});
+
+				} else {
+
+					this._currentsymb.drawsymb(p_mapctxt, this, pt, opt_iconname, opt_feat_id);
+					ret_promise = Promise.resolve();
+				}
 			}
 		} catch(e) {
-			console.error(this,  pt, opt_feat_id);
+			console.error(this,  pt, opt_iconname, opt_feat_id);
 			console.error(this._currentsymb);
 			console.log("error:", e)
 			throw e;
@@ -310,7 +316,11 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			this._gfctx.stroke();
 		}
 
-		return true;	
+		if (ret_promise) {
+			return ret_promise;
+		} else {
+			return Promise.reject(new Error(`internal error, drawMarker, no promise received for layer:${this.key} icon:${opt_iconname} id:${opt_feat_id}`));
+		}
 			
 	}
 
@@ -323,7 +333,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		function innerCycle(pp_this, pp_root, pp_call_level, pp_path_level, pp_feat_id, pp_started) {
 	
-			let ptini=null, ptfim=null, ret = false, started=pp_started;
+			let ptini=null, ptfim=null, ret = false, started = pp_started;
 			let retobj;
 			const pt=[];
 
@@ -408,8 +418,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			}
 
 		}
-
-		return true;		
 	}
 
 	drawLabel(p_mapctxt, p_coords, p_path_levels, p_labeltxt, opt_terrain_env) {
@@ -646,7 +654,106 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		return true;	
 	}
 
+	_refreshitem_feature(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskeys, opt_symbs, opt_terrain_env) {
+
+		let ret_promise = null;
+		let groptsymbs = null;
+		let iconnamefield = null;
+		let iconsrcfunc = null;
+		let doit = false;
+		let return_error = null;
+
+		let iconname = null;
+
+		if (this['iconnamefield'] !== undefined && this['iconnamefield'] != "none") {
+			iconnamefield = this['iconnamefield'];
+		}
+		if (this['iconsrcfunc'] !== undefined && this['iconsrcfunc'] != "none") {
+			iconsrcfunc = this['iconsrcfunc'];
+		}
+
+		if (opt_symbs) {
+
+			if (opt_symbs['graphic'] !== undefined) {
+				groptsymbs = opt_symbs['graphic'];
+			}
+		}
+
+		let finalReleaseCtx = false; // (iconnamefield != null && (groptsymbs==null || groptsymbs['drawsymb']===undefined));
+
+		if (this.grabGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, groptsymbs)) {
+			console.log("->> grabbed ctx for", this.key, opt_feat_id);
+			try {
+
+				doit = true;
+				if (this["varstyles_symbols"]!==undefined) {
+					for (let vi=0; vi<this.varstyles_symbols.length; vi++) {										
+						if (this.varstyles_symbols[vi]["func"] !== undefined && this.varstyles_symbols[vi].func(p_mapctxt.getScale(), p_attrs)) {							
+							if (this.varstyles_symbols[vi]["hide"] !== undefined && this.varstyles_symbols[vi]["hide"]) {
+								doit = false;
+							}
+							break;
+						}
+					}
+				}
+
+				if (doit) {
+
+					if (this.geomtype == "point") {
+
+						iconname = null;
+						if (iconnamefield && p_attrs[iconnamefield] !== undefined) {
+							iconname = p_attrs[iconnamefield];
+						}
+
+						ret_promise = new Promise((resolve, reject) => {
+							console.log("    >> drawMarker", this.key, opt_feat_id);
+							this.drawMarker( p_mapctxt, p_coords[0], iconname, opt_feat_id, (groptsymbs!=null && groptsymbs['drawsymb']!==undefined ? groptsymbs : null)).then(
+								() => {
+									console.log("<<- fim drawMarker, released ctx drawMarker for", this.key, opt_feat_id);
+									this.releaseGf2DCtx();		
+									resolve();		
+								}
+							);	
+						})
+
+					} else {
+						finalReleaseCtx = true;
+						console.log("    >> drawPath", this.key, opt_feat_id);
+						this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
+						ret_promise = Promise.resolve();
+						console.log("    << fim drawPath", this.key, opt_feat_id);
+					}
+				}
+			} catch(e) {
+				console.error(p_coords, p_path_levels, this.geomtype);
+				return_error = e;
+			} finally {
+				if (finalReleaseCtx) {
+					console.log("<<- final release of ctx for", this.key, opt_feat_id);
+					this.releaseGf2DCtx();
+				}
+			}				
+		}
+
+		if (return_error) {
+			return Promise.reject(return_error);
+		} else {
+			if (ret_promise) {
+				return ret_promise;
+			} else {
+				return Promise.reject(new Error(`internal error, _refreshitem_feature, no promise received for layer:${this.key} id:${opt_feat_id}`));
+			}
+		}
+
+	}
+
 	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskeys, opt_symbs, opt_terrain_env) {
+		return this._refreshitem_feature(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskeys, opt_symbs, opt_terrain_env);
+
+	}
+
+	_refreshitem_old(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskeys, opt_symbs, opt_terrain_env) {
 
 		let ret = false;
 		let groptsymbs = null;
@@ -658,6 +765,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		let labelfunc = null;
 		let iconsrcfunc = null;
 		let doit = false;
+		let return_error = null;
 
 		let iconname = null;
 
@@ -729,7 +837,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				}
 			} catch(e) {
 				console.error(p_coords, p_path_levels, this.geomtype);
-				throw e;
+				return_error = e;
 			} finally {
 				console.log("<<- released ctx for", this.key, opt_feat_id);
 				this.releaseGf2DCtx(protectCanvasFromAsyncUse);
@@ -737,7 +845,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		}
 
 		const sv = p_mapctxt.transformmgr.getReadableCartoScale();
-		if (ret && labelfield != null && sv >= labelscaleinterval[0] && sv <= labelscaleinterval[1]) {
+		if (return_error == null && ret && labelfield != null && sv >= labelscaleinterval[0] && sv <= labelscaleinterval[1]) {
 
 			lblcontent = null;
 			if (p_attrs[labelfield] !== undefined) {
@@ -757,7 +865,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 						this.drawLabel(p_mapctxt, p_coords, p_path_levels, lblcontent, opt_terrain_env);
 					} catch(e) {
 						console.error(p_coords, labelfield, lblcontent);
-						throw e;
+						return_error =  e;
 					} finally {
 						this.releaseGf2DCtx(protectCanvasFromAsyncUse);
 					}				
@@ -766,7 +874,11 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		}
 
-		return ret;
+		if (return_error) {
+			return Promise.reject(return_error);
+		} else {
+			return Promise.resolve(ret);
+		}
 
 	}	
 }

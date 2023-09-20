@@ -10,6 +10,7 @@ export class FeatureCollection {
 	layers;
 	indexes;
 	lyrkeys_exclude_from_redraw;
+	current_featuresdraw_status;
 
 	constructor(p_mapctx) {
 
@@ -21,6 +22,7 @@ export class FeatureCollection {
 		//this.labelfield = null;
 
 		this.relationscfg = p_mapctx.cfgvar["layers"]["relations"];	
+		this.current_featuresdraw_status = null;
 		
 	}
 
@@ -278,49 +280,146 @@ export class FeatureCollection {
 		this.clearIndexes();
 		//this.spIndex.invalidate();
 	}
-	
-	featdraw(p_layerkey, opt_featid, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
 
-		let ret = null;
-		let feat = null;
-		let refreshresult = null;
+	featuredraw(p_layerkey, p_featid, p_alt_canvaskey, opt_symbs, opt_terrain_env, opt_checkfeatattrsfunc) {
+
+		if (this.featList[p_layerkey] === undefined) {
+			return Promise.reject(new Error(`featuredraw, layer '${p_layerkey}' was not set through 'setLayer' method`));
+		}
+
+		if (p_featid == null || p_featid === undefined) {
+			return Promise.reject(new Error(`featuredraw, layer '${p_layerkey}', null or undefined featid`));
+		}
+
+		let feat = this.featList[p_layerkey][p_featid];
+
+		if (feat == null) {
+			return Promise.reject(new Error(`featuredraw, layer '${p_layerkey}', no feature found for id ${p_featid}`));
+		}
+
+		const that = this;
+
+		return new Promise((resolve, reject) => {
+
+			if (opt_checkfeatattrsfunc==null || opt_checkfeatattrsfunc(feat.a)) {
+				that.layers[p_layerkey].refreshitem(that.mapctx, feat.g, feat.a, feat.l, p_featid, p_alt_canvaskey, opt_symbs, opt_terrain_env).then(
+					() => { resolve(feat); }
+				).catch(
+					(e) => { reject(e); }
+				);
+
+			} else {
+				resolve(null);
+			}
+
+		});
+
+	}	
+
+	featuresdrawNext(p_layerkey, p_featidlist, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
+
+		const feat_id = p_featidlist.shift();
+		const that = this;
+
+		return new Promise((resolve, reject) => {
+
+			if (feat_id==null || feat_id===undefined) {
+				resolve();
+			} else {
+				try {
+
+					that.featuredraw(p_layerkey, feat_id, opt_alt_canvaskey, opt_symbs, opt_terrain_env, that.layers[p_layerkey].isFeatureInsideFilter.bind(that.layers[p_layerkey])).then(
+						() => { 
+							that.featuresdrawNext(p_layerkey, p_featidlist, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
+						}
+					).catch(
+						(e) => { reject(e); }
+					);
+
+				} catch(e) {
+					reject(e);
+				}
+			}
+		});
+
+	}
+	
+	featuresdraw(p_layerkey, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
+
+		let featidlist=[];
+
+		console.log(":::: 341 featuresdraw", p_layerkey);
+
 
 		if (this.featList[p_layerkey] === undefined) {
 			throw new Error(`layer '${p_layerkey}' was not set through 'setLayer' method`);
 		}
 
-		if (opt_featid) {
-
-			feat = this.featList[p_layerkey][opt_featid];
-			if (feat == null) {
-				console.error(`FeatureCollection.featdraw: layer '${p_layerkey}', no feature found for id ${opt_featid}`);
-				return ret;
-			}
-
-			refreshresult = this.layers[p_layerkey].refreshitem(this.mapctx, feat.g, feat.a, feat.l, opt_featid, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
-			// feature is returned ONLY if feature was drawn
-			if (refreshresult) {
-				ret = feat;
-			}
-
-		} else {
-
-			for (let id in this.featList[p_layerkey]) {
-				if (this.featList[p_layerkey].hasOwnProperty(id)) {
-					feat = this.featList[p_layerkey][id];
-					if (this.layers[p_layerkey].isFeatureInsideFilter(feat.a)) {
-						this.layers[p_layerkey].refreshitem(this.mapctx, feat.g, feat.a, feat.l, id, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
-					}
-				}
+		for (let id in this.featList[p_layerkey]) {
+			if (this.featList[p_layerkey].hasOwnProperty(id)) {
+				featidlist.push(id);
+				// if (this.layers[p_layerkey].isFeatureInsideFilter(feat.a)) {
+				//	this.layers[p_layerkey].refreshitem(this.mapctx, feat.g, feat.a, feat.l, id, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
+				//}
 			}
 		}
 
-		return ret;
+		const that = this;
+
+		return new Promise((resolve, reject) => {
+			if (featidlist.length > 0) {
+
+				console.log(":::: 360 :::::", p_layerkey, "feeatcnt:", featidlist.length);
+				const p = that.featuresdrawNext(p_layerkey, featidlist, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
+
+				// console.log(":::: p ::", p);
+				p.then(
+					() => { 
+						console.log("  ::: 366 resolving", p_layerkey)
+						resolve(); 
+					}
+				).catch((e) => {
+					console.log("  ::: 370 !! rejecting", p_layerkey)
+					reject(e);
+				});
+
+			} else {
+				console.log("  ::: 374 resolving", p_layerkey)
+				resolve();
+			}
+		});
+
+
+	}
+
+	redrawAllVectorLayersNext(p_work_layerkeys) {
+
+		const lyrkey = p_work_layerkeys.shift();
+
+		const that = this;
+
+		console.log(":::: 394 :::::", lyrkey, JSON.stringify(p_work_layerkeys));
+
+
+		if (lyrkey) {
+
+			this.featuresdraw(lyrkey).then(
+				(x) => {
+					console.log(":::: 401 :::::", x, lyrkey, JSON.stringify(p_work_layerkeys));
+					that.redrawAllVectorLayersNext(p_work_layerkeys);
+				}
+			).catch((e) => {
+				console.log(":::: ERR 405 :::::", e);
+				console.error(e);
+			});
+
+		}
+
 	}
 
 	redrawAllVectorLayers() {
 
-		let lyrkey, canvases_keys = [...this.mapctx.renderingsmgr.featdraw_canvaskeys];
+		let lyrkey, canvases_keys = [...this.mapctx.renderingsmgr.featdraw_canvaskeys], work_layerkeys = [];
 
 		this.mapctx.renderingsmgr.clearAll(canvases_keys);
 
@@ -331,9 +430,14 @@ export class FeatureCollection {
 					continue;
 				}
 				//console.log(":: redraw", lyrkey);
-				this.featdraw(lyrkey);
+				work_layerkeys.push(lyrkey);
 			}
 		}
+
+		if (work_layerkeys.length > 0) {
+			this.redrawAllVectorLayersNext(work_layerkeys);
+		}
+
 	}
 
 	get(p_layerkey, p_id) {
@@ -515,7 +619,9 @@ export class FeatureCollection {
 						console.assert(rel["cmd"] ==  "skipunmatched_tolyrfeats", `FeatureCollection relateall, features removed from layer '${to_lyk}', but active relationship '${rel["cmd"]}' is not of 'remove' type like 'skipunmatched_tolyrfeats'`);
 
 						console.info(`[INFO] relation ${count}, 'attrjoin',  removed ${removed_count} features from layer '${to_lyk}'`);
-						this.redrawAllVectorLayers();
+						// SUSPENSO ou não ...
+						console.log("!!!!!!!!!!!!!!! ------ redraw all -------");
+						//this.redrawAllVectorLayers();
 					}
 
 				}
