@@ -270,8 +270,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		let ret_promise = null;
 		p_mapctxt.transformmgr.getRenderingCoordsPt(p_coords, pt);
 
-		// console.log("draw marker", this.key, opt_iconname, opt_feat_id,)
-
 		try {
 			if (opt_symb) {
 				try {
@@ -682,7 +680,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		let finalReleaseCtx = false; // (iconnamefield != null && (groptsymbs==null || groptsymbs['drawsymb']===undefined));
 
 		if (this.grabGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, groptsymbs)) {
-			// console.log("->> grabbed ctx for", this.key, opt_feat_id);
 			try {
 
 				doit = true;
@@ -707,10 +704,8 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 						}
 
 						ret_promise = new Promise((resolve, reject) => {
-							//console.log("    >> drawMarker", this.key, opt_feat_id);
 							this.drawMarker( p_mapctxt, p_coords[0], iconname, opt_feat_id, (groptsymbs!=null && groptsymbs['drawsymb']!==undefined ? groptsymbs : null)).then(
 								() => {
-									// console.log("<<- fim drawMarker, released ctx drawMarker for", this.key, opt_feat_id);
 									this.releaseGf2DCtx();		
 									resolve();		
 								}
@@ -719,10 +714,8 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 					} else {
 						finalReleaseCtx = true;
-						// console.log("    >> drawPath", this.key, opt_feat_id);
 						this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
 						ret_promise = Promise.resolve();
-						// console.log("    << fim drawPath", this.key, opt_feat_id);
 					}
 				}
 			} catch(e) {
@@ -730,7 +723,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				return_error = e;
 			} finally {
 				if (finalReleaseCtx) {
-					// console.log("<<- final release of ctx for", this.key, opt_feat_id);
 					this.releaseGf2DCtx();
 				}
 			}				
@@ -748,8 +740,79 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 	}
 
+	_refreshitem_label(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskeys, opt_symbs, opt_terrain_env) {
+
+		let lbloptsymbs = null;
+		let lblcontent = null;
+		let labelfield = null;
+		let labelscaleinterval = null;
+		let labelfunc = null;
+
+		if (this['labelfield'] !== undefined && this['labelfield'] != "none") {
+			labelfield = this['labelfield'];
+		}
+
+		if (this['labelscaleinterval'] !== undefined && this['labelscaleinterval'] != "none") {
+			labelscaleinterval = this['labelscaleinterval'];
+		}
+		else {
+			labelscaleinterval = [-Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER];
+		}
+		if (this['labelfunc'] !== undefined && this['labelfunc'] != "none") {
+			labelfunc = this['labelfunc'];
+		}
+
+		if (opt_symbs) {
+			if (opt_symbs['label'] !== undefined) {
+				lbloptsymbs = opt_symbs['label'];
+			}
+		}
+
+		const sv = p_mapctxt.transformmgr.getReadableCartoScale();
+		if (labelfield != null && sv >= labelscaleinterval[0] && sv <= labelscaleinterval[1]) {
+
+			lblcontent = null;
+			if (p_attrs[labelfield] !== undefined) {
+				lblcontent = p_attrs[labelfield];
+			} else if (opt_feat_id != null && GlobalConst.TYPICAL_OIDFLDNAMES.indexOf(labelfield.toLowerCase()) >= 0) {
+				lblcontent = opt_feat_id.toString();
+			}
+
+			if (labelfunc) {
+				lblcontent = labelfunc(lblcontent);
+			}			
+
+			if (lblcontent !== null) {
+
+				if (this.grabLabelGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, lbloptsymbs)) {
+					try {
+						this.drawLabel(p_mapctxt, p_coords, p_path_levels, lblcontent, opt_terrain_env);
+					} catch(e) {
+						console.error(p_coords, labelfield, lblcontent);
+						console.error(e);
+					} finally {
+						this.releaseGf2DCtx();
+					}				
+				}
+			}
+
+		}
+
+	}
+
 	refreshitem(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskeys, opt_symbs, opt_terrain_env) {
-		return this._refreshitem_feature(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskeys, opt_symbs, opt_terrain_env);
+
+		const that = this;
+		return new Promise((resolve, reject) => {
+			that._refreshitem_feature(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskeys, opt_symbs, opt_terrain_env).then(
+				() => {
+					that._refreshitem_label(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskeys, opt_symbs, opt_terrain_env);
+					resolve();
+				}
+			).catch((e) => {
+				reject(e);
+			});
+		});
 
 	}
 
