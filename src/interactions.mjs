@@ -71,7 +71,7 @@ class DefaultTool extends BaseTool {
 	}	
 }
 
-function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_event, opt_actonselfeat, opt_clearafterselfeat) {
+async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_event, opt_actonselfeat, opt_clearafterselfeat) {
 	
 	let foundly = null, ref_x, ref_y, max_y, col, row, maxrow, sqrid;
 
@@ -232,8 +232,6 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 			}
 		}
 
-		let feats = {};
-
 		if (Object.keys(findings).length > 0) {
 
 			for (let lyrk in findings) {
@@ -257,6 +255,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 			}
 		}
 
+		let feats = {};
 		if (Object.keys(findings).length > 0) {
 
 			for (let lyrk in findings) {
@@ -292,7 +291,7 @@ function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_
 
 					let f;
 					for (let id of findings[lyrk].ids) {
-						feat = p_mapctx.drawFeatureAsMouseSelected(lyrk, id, canvas_layers);
+						feat = await p_mapctx.drawFeatureAsMouseSelected(lyrk, id, canvas_layers);
 						if (feat!=null && opt_actonselfeat != null) {
 							if (feats[lyrk] === undefined) {
 								feats[lyrk] = [];

@@ -270,7 +270,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		let ret_promise = null;
 		p_mapctxt.transformmgr.getRenderingCoordsPt(p_coords, pt);
 
-		console.log("draw marker", this.key, opt_iconname, opt_feat_id,)
+		// console.log("draw marker", this.key, opt_iconname, opt_feat_id,)
 
 		try {
 			if (opt_symb) {
@@ -682,7 +682,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		let finalReleaseCtx = false; // (iconnamefield != null && (groptsymbs==null || groptsymbs['drawsymb']===undefined));
 
 		if (this.grabGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, groptsymbs)) {
-			console.log("->> grabbed ctx for", this.key, opt_feat_id);
+			// console.log("->> grabbed ctx for", this.key, opt_feat_id);
 			try {
 
 				doit = true;
@@ -707,10 +707,10 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 						}
 
 						ret_promise = new Promise((resolve, reject) => {
-							console.log("    >> drawMarker", this.key, opt_feat_id);
+							//console.log("    >> drawMarker", this.key, opt_feat_id);
 							this.drawMarker( p_mapctxt, p_coords[0], iconname, opt_feat_id, (groptsymbs!=null && groptsymbs['drawsymb']!==undefined ? groptsymbs : null)).then(
 								() => {
-									console.log("<<- fim drawMarker, released ctx drawMarker for", this.key, opt_feat_id);
+									// console.log("<<- fim drawMarker, released ctx drawMarker for", this.key, opt_feat_id);
 									this.releaseGf2DCtx();		
 									resolve();		
 								}
@@ -719,10 +719,10 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 					} else {
 						finalReleaseCtx = true;
-						console.log("    >> drawPath", this.key, opt_feat_id);
+						// console.log("    >> drawPath", this.key, opt_feat_id);
 						this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
 						ret_promise = Promise.resolve();
-						console.log("    << fim drawPath", this.key, opt_feat_id);
+						// console.log("    << fim drawPath", this.key, opt_feat_id);
 					}
 				}
 			} catch(e) {
@@ -730,7 +730,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				return_error = e;
 			} finally {
 				if (finalReleaseCtx) {
-					console.log("<<- final release of ctx for", this.key, opt_feat_id);
+					// console.log("<<- final release of ctx for", this.key, opt_feat_id);
 					this.releaseGf2DCtx();
 				}
 			}				

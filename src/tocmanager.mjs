@@ -610,12 +610,20 @@ export class TOCManager {
 		}
 
 		if (this.mapctx.featureCollection.lyrkeys_exclude_from_redraw.indexOf(p_finished_key) < 0) {
-			this.mapctx.featureCollection.featuresdraw(p_finished_key);
+			
+			this.mapctx.featureCollection.featuresdraw(p_finished_key).then(
+				() => { 
+					this.nextdraw(); 
+				}
+			).catch((e) => {
+				//console.log(p_finished_key)
+				console.error(e);
+			});
+
+		} else {
+			this.nextdraw(); 
 		}
 
-		console.log(p_finished_key)
-
-		this.nextdraw();
 	}
 
 	tocmOnEvent(p_mapctx, p_evt) {

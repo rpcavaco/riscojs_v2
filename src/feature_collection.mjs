@@ -329,8 +329,16 @@ export class FeatureCollection {
 				try {
 
 					that.featuredraw(p_layerkey, feat_id, opt_alt_canvaskey, opt_symbs, opt_terrain_env, that.layers[p_layerkey].isFeatureInsideFilter.bind(that.layers[p_layerkey])).then(
-						() => { 
-							that.featuresdrawNext(p_layerkey, p_featidlist, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
+						(feat) => { 
+							// console.log(":: 336 ::", feat);
+							that.featuresdrawNext(p_layerkey, p_featidlist, opt_alt_canvaskey, opt_symbs, opt_terrain_env).then(
+								() => { 
+									console.assert(p_featidlist.length == 0, `featuresdrawNext, promise resolved with non-zero worklist: ${JSON.stringify(p_featidlist)}`); 
+									resolve();
+								}
+							).catch((e) => {
+								reject(e);
+							});
 						}
 					).catch(
 						(e) => { reject(e); }
@@ -348,7 +356,7 @@ export class FeatureCollection {
 
 		let featidlist=[];
 
-		console.log(":::: 341 featuresdraw", p_layerkey);
+		// console.log(":::: 341 featuresdraw", p_layerkey);
 
 
 		if (this.featList[p_layerkey] === undefined) {
@@ -369,22 +377,15 @@ export class FeatureCollection {
 		return new Promise((resolve, reject) => {
 			if (featidlist.length > 0) {
 
-				console.log(":::: 360 :::::", p_layerkey, "feeatcnt:", featidlist.length);
-				const p = that.featuresdrawNext(p_layerkey, featidlist, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
-
-				// console.log(":::: p ::", p);
-				p.then(
+				that.featuresdrawNext(p_layerkey, featidlist, opt_alt_canvaskey, opt_symbs, opt_terrain_env).then(
 					() => { 
-						console.log("  ::: 366 resolving", p_layerkey)
 						resolve(); 
 					}
 				).catch((e) => {
-					console.log("  ::: 370 !! rejecting", p_layerkey)
 					reject(e);
 				});
 
 			} else {
-				console.log("  ::: 374 resolving", p_layerkey)
 				resolve();
 			}
 		});
@@ -398,18 +399,18 @@ export class FeatureCollection {
 
 		const that = this;
 
-		console.log(":::: 394 :::::", lyrkey, JSON.stringify(p_work_layerkeys));
+		// console.log(":::: 394 :::::", lyrkey, JSON.stringify(p_work_layerkeys));
 
 
 		if (lyrkey) {
 
 			this.featuresdraw(lyrkey).then(
 				(x) => {
-					console.log(":::: 401 :::::", x, lyrkey, JSON.stringify(p_work_layerkeys));
+					// console.log(":::: 401 :::::", x, lyrkey, JSON.stringify(p_work_layerkeys));
 					that.redrawAllVectorLayersNext(p_work_layerkeys);
 				}
 			).catch((e) => {
-				console.log(":::: ERR 405 :::::", e);
+				// console.log(":::: ERR 405 :::::", e);
 				console.error(e);
 			});
 
@@ -506,6 +507,8 @@ export class FeatureCollection {
 		if (relcfgvar.length > 0) {
 
 			let count  = 0;
+			let removed_count = 0;
+
 			for (const rel of relcfgvar) {
 
 				count++;
@@ -577,11 +580,10 @@ export class FeatureCollection {
 						}
 					}
 
-					let removed_count = 0;
+					let this_removed_count = 0;
+
 					if (foundidx) {
-
 						for (idto of tokeys) {
-
 							tf = this.featList[to_lyk][idto];
 							ptr = foundidx.content;
 							for (let fldname of foundidx.fields) {
@@ -593,19 +595,15 @@ export class FeatureCollection {
 								}
 							}
 
-
 							if (rel["cmd"] ==  "skipunmatched_tolyrfeats") {
 								if (ptr == null || !Array.isArray(ptr)) {
+									this_removed_count++;
 									removed_count++;
 									this.remove(to_lyk, idto);
 								}	
 							}
-
-						
 						}
-
 					} else {
-
 						if (tokeys.length > 0 && rel["cmd"] ==  "skipunmatched_tolyrfeats") {
 							for (idto of tokeys) {
 								removed_count++;
@@ -614,17 +612,18 @@ export class FeatureCollection {
 						}
 					}
 
-					if (removed_count > 0) {
+					if (this_removed_count > 0) {
 
 						console.assert(rel["cmd"] ==  "skipunmatched_tolyrfeats", `FeatureCollection relateall, features removed from layer '${to_lyk}', but active relationship '${rel["cmd"]}' is not of 'remove' type like 'skipunmatched_tolyrfeats'`);
 
-						console.info(`[INFO] relation ${count}, 'attrjoin',  removed ${removed_count} features from layer '${to_lyk}'`);
-						// SUSPENSO ou não ...
-						console.log("!!!!!!!!!!!!!!! ------ redraw all -------");
-						//this.redrawAllVectorLayers();
+						console.info(`[INFO] relation ${count}, 'attrjoin',  removed ${this_removed_count} features from layer '${to_lyk}'`);
 					}
 
 				}
+			}
+
+			if (removed_count > 0) {
+				this.redrawAllVectorLayers();
 			}
 
 			const t1 = new Date().getTime();

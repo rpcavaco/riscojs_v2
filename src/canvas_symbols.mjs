@@ -469,9 +469,9 @@ export class CanvasIcon extends MarkerSymbol {
 						w = dim;
 						h = w / r;
 					}
-					console.log("    >>> drawimage", p_layer.key, opt_feat_id, p_layer._gfctx == null, img);
+					//console.log("    >>> drawimage", p_layer.key, opt_feat_id, p_layer._gfctx == null, img);
 					p_layer._gfctx.drawImage(img, p_coords[0]-(w/2), p_coords[1]-(h/2), w, h);
-					console.log("    <<< drawimage end", p_layer.key, opt_feat_id);
+					//console.log("    <<< drawimage end", p_layer.key, opt_feat_id);
 
 					resolve();
 			

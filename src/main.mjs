@@ -401,8 +401,6 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		// opt_alt_canvaskeys_dict  example: {'normal': 'temporary', 'label': 'temporary' }
 
 		// SUPENSO
-		throw new Error("baah")
-
 		let symb = new GrSymbol();
 		let lsymb = new GrSymbol();
 		let ret = null;
@@ -436,17 +434,21 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				Object.assign(lsymb, p_geomtype_keyed_symbdict['label']);
 			}
 
-			ret = this.featureCollection.featuredraw(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict, { "graphic": symb, 'label': lsymb } );
-			
+			return new Promise((resolve,reject) => {
+				this.featureCollection.featuredraw(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict, { "graphic": symb, 'label': lsymb } ).then(
+					(feat) => { resolve(feat); }
+				).catch((e) => {
+					reject(e);
+				});
+			})
+
 		} else {
 			if (ly == null) {
-				console.error(`[WARN] drawSingleFeature: no layer found for id ${p_layer_key}`);
+				return Promise.reject(new Error(`[WARN] drawSingleFeature: no layer found for id ${p_layer_key}`));
 			} else {
-				console.error(`[WARN] drawSingleFeature: layer found but not visible for id ${p_layer_key}`);
+				return Promise.reject(new Error(`[WARN] drawSingleFeature: layer found but not visible for id ${p_layer_key}`));
 			}
 		}
-
-		return ret;
 	}
 
 	// opt_alt_canvaskeys_dict: {'normal': 'temporary', 'label': 'temporary' }
