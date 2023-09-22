@@ -93,6 +93,9 @@ const labelSymbolMixin = (Base) => class extends Base {
 	labelLeaderStroke = "none";
 	labelLeaderLinewidth = "none";	
 	labelLeaderRotation = "none";	
+
+	label_position_shift = [];
+
 }
 
 const fillSymbolMixin = (Base) => class extends Base {
@@ -189,6 +192,7 @@ class MarkerSymbol extends labelSymbolMixin(GrSymbol) {
 		// asbtract, to be implemented by subclasses
 	}
 	
+
 }
 
 export class CanvasVertCross extends strokeSymbolMixin(MarkerSymbol) { 

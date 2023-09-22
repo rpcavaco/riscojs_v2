@@ -548,13 +548,22 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				finalpt = pt;
 			}
 
+			let cx, cy;
+			if (this._currentsymb['label_position_shift'] !== undefined && this._currentsymb.label_position_shift.length >= 2) {
+				cx = this._currentsymb.label_position_shift[0] + finalpt[0];
+				cy = this._currentsymb.label_position_shift[1] + finalpt[1];
+			} else {
+				cx = finalpt[0];
+				cy = finalpt[1];
+			}
+
 			this._gfctxlbl.save();
 			if (rot != null) {
-				this._gfctxlbl.translate(finalpt[0], finalpt[1]);
+				this._gfctxlbl.translate(cx, cy);
 				this._gfctxlbl.rotate(rot);
-				this._gfctxlbl.translate(-finalpt[0], -finalpt[1]);	
+				this._gfctxlbl.translate(-cx, -cy);	
 			}
-			this._gfctxlbl.fillText(p_labeltxt, ...finalpt);
+			this._gfctxlbl.fillText(p_labeltxt, cx, cy);
 			this._gfctxlbl.restore();
 
 		} else if (placement == "extend") {
@@ -816,134 +825,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 	}
 
-	_refreshitem_old(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskeys, opt_symbs, opt_terrain_env) {
-
-		let ret = false;
-		let groptsymbs = null;
-		let lbloptsymbs = null;
-		let lblcontent = null;
-		let labelfield = null;
-		let labelscaleinterval = null;
-		let iconnamefield = null;
-		let labelfunc = null;
-		let iconsrcfunc = null;
-		let doit = false;
-		let return_error = null;
-
-		let iconname = null;
-
-		if (this['labelfield'] !== undefined && this['labelfield'] != "none") {
-			labelfield = this['labelfield'];
-		}
-
-		if (this['labelscaleinterval'] !== undefined && this['labelscaleinterval'] != "none") {
-			labelscaleinterval = this['labelscaleinterval'];
-		}
-		else {
-			labelscaleinterval = [-Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER];
-		}
-		if (this['labelfunc'] !== undefined && this['labelfunc'] != "none") {
-			labelfunc = this['labelfunc'];
-		}
-		if (this['iconnamefield'] !== undefined && this['iconnamefield'] != "none") {
-			iconnamefield = this['iconnamefield'];
-		}
-		if (this['iconsrcfunc'] !== undefined && this['iconsrcfunc'] != "none") {
-			iconsrcfunc = this['iconsrcfunc'];
-		}
-
-		if (opt_symbs) {
-
-			if (opt_symbs['graphic'] !== undefined) {
-				groptsymbs = opt_symbs['graphic'];
-			}
-			if (opt_symbs['label'] !== undefined) {
-				lbloptsymbs = opt_symbs['label'];
-			}
-		}
-
-		const protectCanvasFromAsyncUse = false; // (iconnamefield != null && (groptsymbs==null || groptsymbs['drawsymb']===undefined));
-
-		if (this.grabGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, groptsymbs, protectCanvasFromAsyncUse)) {
-			console.log("->> grabbed ctx for", this.key, opt_feat_id);
-			try {
-
-				doit = true;
-				if (this["varstyles_symbols"]!==undefined) {
-					for (let vi=0; vi<this.varstyles_symbols.length; vi++) {										
-						if (this.varstyles_symbols[vi]["func"] !== undefined && this.varstyles_symbols[vi].func(p_mapctxt.getScale(), p_attrs)) {							
-							if (this.varstyles_symbols[vi]["hide"] !== undefined && this.varstyles_symbols[vi]["hide"]) {
-								doit = false;
-							}
-							break;
-						}
-					}
-				}
-
-				if (doit) {
-
-					if (this.geomtype == "point") {
-
-						iconname = null;
-						if (iconnamefield && p_attrs[iconnamefield] !== undefined) {
-							iconname = p_attrs[iconnamefield];
-						}
-
-						console.log("    >> drawMarker", this.key, opt_feat_id);
-						ret = this.drawMarker( p_mapctxt, p_coords[0], iconname, opt_feat_id, (groptsymbs!=null && groptsymbs['drawsymb']!==undefined ? groptsymbs : null));
-						console.log("    << fim drawMarker", this.key, opt_feat_id);
-					} else {
-						console.log("    >> drawPath", this.key, opt_feat_id);
-						ret = this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
-						console.log("    << fim drawPath", this.key, opt_feat_id);
-					}
-				}
-			} catch(e) {
-				console.error(p_coords, p_path_levels, this.geomtype);
-				return_error = e;
-			} finally {
-				console.log("<<- released ctx for", this.key, opt_feat_id);
-				this.releaseGf2DCtx(protectCanvasFromAsyncUse);
-			}				
-		}
-
-		const sv = p_mapctxt.transformmgr.getReadableCartoScale();
-		if (return_error == null && ret && labelfield != null && sv >= labelscaleinterval[0] && sv <= labelscaleinterval[1]) {
-
-			lblcontent = null;
-			if (p_attrs[labelfield] !== undefined) {
-				lblcontent = p_attrs[labelfield];
-			} else if (opt_feat_id != null && GlobalConst.TYPICAL_OIDFLDNAMES.indexOf(labelfield.toLowerCase()) >= 0) {
-				lblcontent = opt_feat_id.toString();
-			}
-
-			if (labelfunc) {
-				lblcontent = labelfunc(lblcontent);
-			}
-
-			if (lblcontent !== null) {
-
-				if (this.grabLabelGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, lbloptsymbs, protectCanvasFromAsyncUse)) {
-					try {
-						this.drawLabel(p_mapctxt, p_coords, p_path_levels, lblcontent, opt_terrain_env);
-					} catch(e) {
-						console.error(p_coords, labelfield, lblcontent);
-						return_error =  e;
-					} finally {
-						this.releaseGf2DCtx(protectCanvasFromAsyncUse);
-					}				
-				}
-			}
-
-		}
-
-		if (return_error) {
-			return Promise.reject(return_error);
-		} else {
-			return Promise.resolve(ret);
-		}
-
-	}	
 }
 
 export class CanvasGraticuleLayer extends canvasVectorMethodsMixin(GraticuleLayer) {
