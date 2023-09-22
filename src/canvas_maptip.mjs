@@ -448,7 +448,7 @@ export class MaptipBox extends PopupBox {
 		const imgpadding = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_imgpadding"];
 
 		// calculate height of all rows
-		let maxrowlen, textlinescnt=0, usedlayerkeys=[], hasnontext=false;
+		let maxrowlen, usedlayerkeys=[], hasnontext=false;
 		height = 2.5*txtlnheight;
 
 		for (let lyrk of lorder) {
@@ -477,7 +477,7 @@ export class MaptipBox extends PopupBox {
 						for (let colidx=0; colidx<numcols; colidx++) {
 							maxrowlen = Math.max(maxrowlen, row["c"][colidx].length);
 						}
-						textlinescnt += maxrowlen;
+						//textlinescnt += maxrowlen;
 						
 						height = height + maxrowlen * lineheightfactor * txtlnheight + 0.25 * txtlnheight;
 
@@ -522,7 +522,51 @@ export class MaptipBox extends PopupBox {
 				featrows = this.rows[lyrk][featidx];
 				globalfeatidx++;
 
-				boxdims = [realwidth, (featrows.length+0.7) * txtlnheight];
+				let textlinescnt = 0;
+				for (let row of featrows) {
+
+					if (row["err"] === undefined) {
+						continue
+					}
+
+					if (row["c"] !== undefined) {
+						for (let colidx=0; colidx<numcols; colidx++) {
+							if (colidx % 2 == 1) {
+								textlinescnt += row["c"][colidx].length;
+							}
+						}
+					} else {
+
+						// calcular altura das thumbcols
+
+						if (row["thumbcoll"] !== undefined) {
+							for (let imge, currh=0, rii=0; rii < row["thumbcoll"].length; rii++) {
+
+								if (row["thumbcoll"][rii] !== undefined) {
+									imge = row["thumbcoll"][rii];
+									const [w, h, rowi, coli] = row["dims_pos"][rii];
+									if (imge.complete) {
+										if (coli == 0) {
+											//console.log("::492::", rowi, coli, w, realwidth, acumwidths[rowi], "currh:", currh);
+											if (rowi > 0) {
+												//console.log("     ::502 draw::", coli, rowi, "cota:", cota, "currh:", currh);
+												cota += currh + imgpadding;
+												currh = 0;
+											}
+										}
+										//console.log("::506 draw::", coli, rowi, "h:", h, "cota:", cota, "currh:", currh);
+										currh = Math.max(currh, h);
+									};	
+
+
+								}								
+							}
+						}
+
+					}
+				}
+
+				boxdims = [realwidth, textlinescnt * lineheightfactor * txtlnheight + 1.5 * txtlnheight];
 
 				if (featidx==0 && doDrawLayerCaption) {
 					this._drawLayerCaption(p_ctx, cota+0.25*this.layercaptionszPX, lbls[lyrcount-1], realwidth, deltah_caption);
@@ -544,13 +588,17 @@ export class MaptipBox extends PopupBox {
 
 				for (let row of featrows) {
 
+					if (row["err"] === undefined) {
+						continue
+					}
+
 					if (row["c"] !== undefined) {
 
 						lnidx = 0;
 						do {
 							changed_found = false;
 
-							for (let colidx=0; colidx<2; colidx++) {
+							for (let colidx=0; colidx<numcols; colidx++) {
 
 								if (row["c"][colidx].length > lnidx) {
 									
@@ -577,7 +625,7 @@ export class MaptipBox extends PopupBox {
 
 						cota = cota + 0.25 *txtlnheight;
 
-					} else if (row["err"] === undefined) {
+					} else  {
 
 						// Non-text fields
 
@@ -655,6 +703,7 @@ export class MaptipBox extends PopupBox {
 	}
 
 	clear(p_ctx) {
+		clearFeatureHover(this.mapctx);
 		p_ctx.clearRect(0, 0, ...this.mapdims); 
 		this.is_drawn = false;
 		this.clickboxes = {};
@@ -681,12 +730,16 @@ export class MaptipBox extends PopupBox {
 					p_evt.clientY >= cb.box[1] && p_evt.clientY <= cb.box[1] + cb.box[3]) {
 
 						if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
+
 							this.clear(p_ctx);
 							clearFeatureHover(this.mapctx);
-							p_info_instance.pickfeature(cb.layerk, this.feature_dict[cb.layerk][cb.featidx], p_evt.clientX, p_evt.clientY)
+							p_info_instance.pickfeature(cb.layerk, this.feature_dict[cb.layerk][cb.featidx], p_evt.clientX, p_evt.clientY);
+
 						} else {
+
 							topcnv.style.cursor = "pointer";
 							featureHover(this.mapctx, cb.box, cb.layerk, cb.featid);
+
 						}
 						break;
 				} else {
@@ -694,7 +747,6 @@ export class MaptipBox extends PopupBox {
 				}
 			}
 		} 
-
 		
 		if (p_evt['preventDefault'] !== undefined) {
 			p_evt.preventDefault();
