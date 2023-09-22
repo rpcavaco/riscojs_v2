@@ -223,7 +223,7 @@ export function calcNonTextRowHeight(p_row, p_boxwidth, p_imgpadding, p_leftpad,
 // returns height of field in textline count
 export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_layer, max_captwidth, max_valuewidth, o_rows, o_urls) {
 			
-	let caption, ret = 0;
+	let caption, ret = 0, valuelines = [];
 
 	if (p_attrs[p_fld] === undefined) {
 		return ret;
@@ -231,159 +231,167 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_l
 
 	let msgdict = p_layer.msgsdict;
 
-	if (Object.keys(msgdict[p_lang]).indexOf(p_fld) >= 0) {
-		caption = I18n.capitalize(msgdict[p_lang][p_fld]);
-	} else {
-		caption = I18n.capitalize(p_fld);
-	}
+	try {
 
-	let pretext, tmp, captionlines=[], valuelines = [];
-	const lang = p_lang;
-
-	if (p_layer.infocfg.fields["formats"] !== undefined && p_layer.infocfg.fields["formats"][p_fld] !== undefined) {
-		if (p_layer.infocfg.fields["formats"][p_fld]["type"] !== undefined) {
-
-			pretext = null;
-			switch(p_layer.infocfg.fields["formats"][p_fld]["type"]) {
-
-				case "date":
-					tmp = new Date(p_attrs[p_fld]);
-					pretext = tmp.toLocaleDateString(lang);
-					break;
-
-				case "tolocale":
-					pretext = p_attrs[p_fld].toLocaleString(lang);
-					break;
-
-				case "time":
-					tmp = new Date(p_attrs[p_fld]);
-					pretext = tmp.toLocaleTimeString(lang);
-					break;
-
-				case "datetime":
-				case "timeanddate":
-				case "dateandtime":
-					tmp = new Date(p_attrs[p_fld]);
-					pretext = tmp.toLocaleString(lang);
-					break;
-
-				case "URL":
-					if (o_urls != null) {
-						const urlfunc = p_layer.infocfg.fields["formats"][p_fld]["urlbuild"];
-						o_urls[p_fld] = urlfunc(p_attrs[p_fld]);
-						if (p_layer.infocfg.fields["formats"][p_fld]["format"] !== undefined) {
-							pretext = p_layer.infocfg.fields["formats"][p_fld]["format"](p_attrs, p_fld);
-						}
-						if (pretext == null) {
-							pretext = p_attrs[p_fld];
-						}
-					}
-					break;
-
-
-			}
+		if (Object.keys(msgdict[p_lang]).indexOf(p_fld) >= 0) {
+			caption = I18n.capitalize(msgdict[p_lang][p_fld]);
 		} else {
-			if (p_layer.infocfg.fields["formats"][p_fld]["format"] !== undefined) {
-				pretext = p_layer.infocfg.fields["formats"][p_fld]["format"](p_attrs, p_fld, lang);
-			}					
-		}
-	} else {
-		pretext = p_attrs[p_fld];
-	}
-
-	if (caption.length > 0) {
-		pp_ctx.font = `${p_this.normalszPX}px ${p_this.captionfontfamily}`;
-		canvasCollectTextLines(pp_ctx, caption, max_captwidth, captionlines);
-	} else {
-		captionlines.push('');
-	}
-
-	if (pretext) {	
-
-		if (typeof pretext != 'number') {
-
-			if (pretext.length > 0) {
-				pp_ctx.font = `${p_this.normalszPX}px ${p_this.fontfamily}`;
-				canvasCollectTextLines(pp_ctx, pretext, max_valuewidth, valuelines);
-			} else {
-				valuelines.push('');
-			}
-
-		} else {
-
-			if (captionlines.length == 1) {
-				valuelines = [pretext.toString()];
-			} else {
-				valuelines = [];
-				for (let i=0; i<(captionlines.length-1); i++) {
-					valuelines.push('');
-				}
-				valuelines.push(pretext.toString());
-			}
+			caption = I18n.capitalize(p_fld);
 		}
 
-		// prepend empty value lines, to justify text vertically to bottom
-		if (captionlines.length > valuelines.length) {
-			for (let i=0; i<(captionlines.length - valuelines.length); i++) {
-				valuelines.unshift('');
-			}
-		}
+		let pretext, tmp, captionlines=[];
+		const lang = p_lang;
 
-		o_rows.push({ "c": [captionlines, valuelines], "f": p_fld });
-		ret = Math.max(captionlines.length, valuelines.length);	
-	
-	} else {
+		if (p_layer.infocfg.fields["formats"] !== undefined && p_layer.infocfg.fields["formats"][p_fld] !== undefined) {
+			if (p_layer.infocfg.fields["formats"][p_fld]["type"] !== undefined) {
 
-		let imge, src, thumbcoll=[], re, newrow = null;
-		if (p_layer.infocfg.fields["formats"][p_fld] !== undefined && p_layer.infocfg.fields["formats"][p_fld]["type"] !== undefined) {
-			
-			switch(p_layer.infocfg.fields["formats"][p_fld]["type"]) {
+				pretext = null;
+				switch(p_layer.infocfg.fields["formats"][p_fld]["type"]) {
 
-				case "thumbcoll":
+					case "date":
+						tmp = new Date(p_attrs[p_fld]);
+						pretext = tmp.toLocaleDateString(lang);
+						break;
 
-					tmp = p_attrs[p_fld];
-					if (tmp == null) {
-						newrow = { "thumbcoll": [], "err": true, "cap": caption, "f": p_fld };
-					} else {
-						re = new RegExp(`${p_layer.infocfg.fields["formats"][p_fld]["splitpatt"]}`);
-						for (let spl of tmp.split(re)) {
-							
-							src = p_layer.infocfg.fields["formats"][p_fld]["srcfunc"](spl);
-	
-							imge = await p_this.imgbuffer.syncFetchImage(src, spl);
-							if (imge) {
-								thumbcoll.push(imge);
+					case "tolocale":
+						pretext = p_attrs[p_fld].toLocaleString(lang);
+						break;
+
+					case "time":
+						tmp = new Date(p_attrs[p_fld]);
+						pretext = tmp.toLocaleTimeString(lang);
+						break;
+
+					case "datetime":
+					case "timeanddate":
+					case "dateandtime":
+						tmp = new Date(p_attrs[p_fld]);
+						pretext = tmp.toLocaleString(lang);
+						break;
+
+					case "URL":
+						if (o_urls != null) {
+							const urlfunc = p_layer.infocfg.fields["formats"][p_fld]["urlbuild"];
+							o_urls[p_fld] = urlfunc(p_attrs[p_fld]);
+							if (p_layer.infocfg.fields["formats"][p_fld]["format"] !== undefined) {
+								pretext = p_layer.infocfg.fields["formats"][p_fld]["format"](p_attrs, p_fld);
+							}
+							if (pretext == null) {
+								pretext = p_attrs[p_fld];
 							}
 						}
-	
-						newrow = { "thumbcoll": thumbcoll, "cap": caption, "f": p_fld };	
+						break;
+
+
+				}
+			} else {
+				if (p_layer.infocfg.fields["formats"][p_fld]["format"] !== undefined) {
+					pretext = p_layer.infocfg.fields["formats"][p_fld]["format"](p_attrs, p_fld, lang);
+				}					
+			}
+		} else {
+			pretext = p_attrs[p_fld];
+		}
+
+		if (caption.length > 0) {
+			pp_ctx.font = `${p_this.normalszPX}px ${p_this.captionfontfamily}`;
+			canvasCollectTextLines(pp_ctx, caption, max_captwidth, captionlines);
+		} else {
+			captionlines.push('');
+		}
+
+		if (pretext) {	
+
+			if (typeof pretext != 'number') {
+
+				if (pretext.length > 0) {
+					pp_ctx.font = `${p_this.normalszPX}px ${p_this.fontfamily}`;
+					canvasCollectTextLines(pp_ctx, pretext, max_valuewidth, valuelines);
+				} else {
+					valuelines.push('');
+				}
+
+			} else {
+
+				if (captionlines.length == 1) {
+					valuelines = [pretext.toString()];
+				} else {
+					valuelines = [];
+					for (let i=0; i<(captionlines.length-1); i++) {
+						valuelines.push('');
 					}
-					break;
-
-
-				case "singleimg":
-
-					tmp = p_attrs[p_fld];
-					src = p_layer.infocfg.fields["formats"][p_fld]["srcfunc"](tmp);
-					imge = await p_this.imgbuffer.syncFetchImage(src, tmp);
-
-					if (imge) {
-						newrow = { "singleimg": imge, "cap": caption, "f": p_fld };
-					} else {
-						newrow = { "singleimg": null, "err": true, "cap": caption, "f": p_fld };
-					}
-					break;
-
+					valuelines.push(pretext.toString());
+				}
 			}
 
-			if (p_layer.infocfg.fields["formats"][p_fld]["hidecaption"] !== undefined) {
-				newrow["hidecaption"] = p_layer.infocfg.fields["formats"][p_fld]["hidecaption"];
+			// prepend empty value lines, to justify text vertically to bottom
+			if (captionlines.length > valuelines.length) {
+				for (let i=0; i<(captionlines.length - valuelines.length); i++) {
+					valuelines.unshift('');
+				}
 			}
 
-			if (newrow) {
-				o_rows.push(newrow);
+			o_rows.push({ "c": [captionlines, valuelines], "f": p_fld });
+			ret = Math.max(captionlines.length, valuelines.length);	
+		
+		} else {
+
+			let imge, src, thumbcoll=[], re, newrow = null;
+			if (p_layer.infocfg.fields["formats"][p_fld] !== undefined && p_layer.infocfg.fields["formats"][p_fld]["type"] !== undefined) {
+				
+				switch(p_layer.infocfg.fields["formats"][p_fld]["type"]) {
+
+					case "thumbcoll":
+
+						tmp = p_attrs[p_fld];
+						if (tmp == null) {
+							newrow = { "thumbcoll": [], "err": true, "cap": caption, "f": p_fld };
+						} else {
+							re = new RegExp(`${p_layer.infocfg.fields["formats"][p_fld]["splitpatt"]}`);
+							for (let spl of tmp.split(re)) {
+								
+								src = p_layer.infocfg.fields["formats"][p_fld]["srcfunc"](spl);
+		
+								imge = await p_this.imgbuffer.syncFetchImage(src, spl);
+								if (imge) {
+									thumbcoll.push(imge);
+								}
+							}
+		
+							newrow = { "thumbcoll": thumbcoll, "cap": caption, "f": p_fld };	
+						}
+						break;
+
+
+					case "singleimg":
+
+						tmp = p_attrs[p_fld];
+						src = p_layer.infocfg.fields["formats"][p_fld]["srcfunc"](tmp);
+						imge = await p_this.imgbuffer.syncFetchImage(src, tmp);
+
+						if (imge) {
+							newrow = { "singleimg": imge, "cap": caption, "f": p_fld };
+						} else {
+							newrow = { "singleimg": null, "err": true, "cap": caption, "f": p_fld };
+						}
+						break;
+
+				}
+
+				if (p_layer.infocfg.fields["formats"][p_fld]["hidecaption"] !== undefined) {
+					newrow["hidecaption"] = p_layer.infocfg.fields["formats"][p_fld]["hidecaption"];
+				}
+
+				if (newrow) {
+					o_rows.push(newrow);
+				}
 			}
 		}
+
+	} catch(e) {
+		console.error("field:", p_fld);
+		console.error("valuelines:", valuelines);
+		throw (e);
 	}
 
 	return ret;
