@@ -418,36 +418,6 @@ export class CanvasIcon extends MarkerSymbol {
 		super(opt_variablesymb_idx);
 		this.symbname = "Icon";
 	}
-	async drawsymb(p_mapctxt, p_layer, p_coords, p_iconname, opt_feat_id) {
-
-		const sclval = p_mapctxt.getScale();
-		const dim = Math.round(this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval)));
-
-		const img = await p_mapctxt.imgbuffer.syncFetchImage(p_layer.iconsrcfunc(p_iconname), p_iconname);
-
-		// console.log("Icon draw", p_layer.key, "fid:", opt_feat_id);
-
-		const r = img.width / img.height;
-		let w, h;
-		if (r > 1.5) {
-			w = 1.5 * dim;
-			h = w / r;
-		} else if (r > 1) { 
-			h = dim;
-			w = h * r;
-		} else if (r < 0.67) { 
-			h = 1.5 * dim;
-			w = h * r;
-		} else {
-			w = dim;
-			h = w / r;
-		}
-		console.log("    >>> drawimage", p_layer.key, opt_feat_id, p_layer._gfctx == null, img);
-		p_layer._gfctx.drawImage(img, p_coords[0]-(w/2), p_coords[1]-(h/2), w, h);
-		console.log("    <<< drawimage end", p_layer.key, opt_feat_id);
-
-
-	}
 
 	drawsymbAsync(p_mapctxt, p_layer, p_coords, p_iconname, opt_feat_id) {
 
@@ -485,28 +455,34 @@ export class CanvasIcon extends MarkerSymbol {
 
 	}	
 
-	drawfreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step, p_lyr) {
-
-		// SUSPENSO
-		return;
+	drawfreeSymbAsync(p_mapctx, p_ctx, p_symbcenter, p_vert_step, p_lyr) {
 
 		const sclval = p_mapctx.getScale();
 		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
 
 		const r0 = Math.min(dim, 2.0*p_vert_step/3.0);
 
-		const img = p_mapctx.imgbuffer.syncFetchImage(p_lyr.iconsrcfunc(p_lyr.icondefsymb), p_lyr.icondefsymb);
+		return new Promise((resolve, reject) =>  {
 
-		const r = img.width / img.height;
-		let w, h;
-		if (r > 1) {
-			h = r0;
-			w = h * r;
-		} else {
-			w = r0;
-			h = w / r;
-		}
+			p_mapctx.imgbuffer.asyncFetchImage(p_lyr.iconsrcfunc(p_lyr.icondefsymb), p_lyr.icondefsymb).then(
+				(img) => {
+					const r = img.width / img.height;
+					let w, h;
+					if (r > 1) {
+						h = r0;
+						w = h * r;
+					} else {
+						w = r0;
+						h = w / r;
+					}
+		
+					p_ctx.drawImage(img, p_symbcenter[0]-(w/2), p_symbcenter[1]-(h/2), w, h);	
+					
+					resolve();
+		
+				}
+			)
 
-		p_ctx.drawImage(img, p_symbcenter[0]-(w/2), p_symbcenter[1]-(h/2), w, h);		
+		});
 	}
 }

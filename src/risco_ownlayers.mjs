@@ -397,7 +397,7 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 					
 					try {
 					
-						let feat, path_levels, cnt = 0, skipped=0, id2;
+						let feat, path_levels, cnt = 0, skipped=0;
 						for (let id in responsejson.cont) {
 
 							feat = responsejson.cont[id];
@@ -428,15 +428,7 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 								continue;
 							}
 
-							id2 = that._currFeatures.add(that.key, terrain_coords, feat.a, that.geomtype, path_levels, id);
-							// If feature still exists  between cleanups that's because it might not have been properly garbage collected
-							// If exists, let's not try to draw it, id is null
-							
-							// SUSPENSO
-							/*if (id2) {
-								that._currFeatures.featuredraw(that.key, id2, null, null, p_terrain_env);
-							}
-							*/
+							that._currFeatures.add(that.key, terrain_coords, feat.a, that.geomtype, path_levels, id);
 
 							cnt++;
 						}

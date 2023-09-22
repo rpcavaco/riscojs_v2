@@ -275,7 +275,7 @@ export class ControlsBox extends MapPrintInRect {
 	
 }
 
-export function drawTOCSymb(p_mapctx, p_lyr, p_ctx, p_symbxcenter, p_cota, p_vert_step, opt_varstlesymb) {
+export async function drawTOCSymb(p_mapctx, p_lyr, p_ctx, p_symbxcenter, p_cota, p_vert_step, opt_varstlesymb) {
 
 	p_ctx.save();
 
@@ -286,11 +286,15 @@ export function drawTOCSymb(p_mapctx, p_lyr, p_ctx, p_symbxcenter, p_cota, p_ver
 		if (symb == null) {
 			throw new Error(`Missing symb for ${p_lyr.key}`);
 		}
-		if (symb['drawfreeSymb'] === undefined) {
+		if (symb['drawfreeSymb'] === undefined && symb['drawfreeSymbAsync'] === undefined) {
 			console.trace(`[WARN] No 'drawfreeSymb' method in ${JSON.stringify(symb)}`);
 		} else {
 			symb.setStyle(p_ctx);
-			symb.drawfreeSymb(p_mapctx, p_ctx, [p_symbxcenter, p_cota], p_vert_step, p_lyr);
+			if (symb['drawfreeSymbAsync'] !== undefined) {
+				await symb.drawfreeSymbAsync(p_mapctx, p_ctx, [p_symbxcenter, p_cota], p_vert_step, p_lyr);
+			} else {
+				symb.drawfreeSymb(p_mapctx, p_ctx, [p_symbxcenter, p_cota], p_vert_step, p_lyr);
+			}
 		}
 
 	} catch(e) {
