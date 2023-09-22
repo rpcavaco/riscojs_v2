@@ -402,24 +402,79 @@ export class Info {
 		if (currlayer["infocfg"] === undefined) {
 			throw new Error(`Missing 'infocfg' config for layer '${p_layerkey}, cannot 'pick' features`);
 		}
-		if (currlayer["infocfg"]["keyfield"] === undefined) {
-			throw new Error(`Missing 'infocfg.keyfield' config for layer '${p_layerkey}, cannot 'pick' features`);
+		if (currlayer["infocfg"]["keyfields"] === undefined && currlayer["infocfg"]["keyfield"] === undefined) {
+			throw new Error(`Missing 'infocfg.keyfields' and 'infocfg.keyfield' config for layer '${p_layerkey}, cannot 'pick' features`);
 		}
 
-		if (p_feature.a[currlayer["infocfg"]["keyfield"]] === undefined) {
-			console.warn(`[WARN] layer '${p_layerkey}' has no attribute corresponding to INFO key field '${currlayer["infocfg"]["keyfield"]}'`);
-			return;
+		const keyfields = [];
+
+		if (currlayer["infocfg"]["keyfield"] !== undefined) {
+
+			if (p_feature.a[currlayer["infocfg"]["keyfield"]] === undefined) {
+				console.warn(`[WARN] layer '${p_layerkey}' has no attribute corresponding to INFO key field '${currlayer["infocfg"]["keyfield"]}'`);
+				return;
+			}
+
+			if (typeof currlayer["infocfg"]["keyfield"] !== 'string') {
+				console.warn(`[WARN] layer '${p_layerkey}' infocfg->keyfield configuration MUST be of type 'string'`);
+				return;
+			}
+
+			keyfields.push(currlayer["infocfg"]["keyfield"]);
+
+		} else if (currlayer["infocfg"]["keyfields"] !== undefined) {
+
+			if (typeof currlayer["infocfg"]["keyfields"] == 'string') {
+				console.warn(`[WARN] layer '${p_layerkey}' infocfg->keyfields configuration cannot be of type 'string'`);
+				return;
+			}
+
+			if (Array.isArray(currlayer["infocfg"]["keyfields"])) {
+
+				let warned = false;
+				for (let kf of currlayer["infocfg"]["keyfields"]) {
+					if (typeof kf != 'string') {
+						console.warn(`[WARN] layer '${p_layerkey}' has no attribute corresponding to INFO key field '${kf}'`);
+						warned = true;
+						break;
+					}
+				}
+				if (warned) {
+					return;
+				}	
+
+				for (let kf of currlayer["infocfg"]["keyfields"]) {
+					if (p_feature.a[kf] === undefined) {
+						console.warn(`[WARN] layer '${p_layerkey}' has no attribute corresponding to INFO key field '${kf}'`);
+						warned = true;
+						break;
+					}
+				}
+				if (warned) {
+					return;
+				}	
+
+				for (let kf of currlayer["infocfg"]["keyfields"]) {
+					keyfields.push(kf);
+				}
+
+			} else {
+
+				console.warn(`[WARN] layer '${p_layerkey}' infocfg->keyfields configuration is completely invalid`);
+				return;
+
+			}
 		}
 
-		let keyval, ret = false;
-		const _keyval = p_feature.a[currlayer["infocfg"]["keyfield"]];
+		const keyvals = [];		
+		for (let kf of keyfields) {
+			keyvals.push(p_feature.a[kf].toString());
+		}
 
-		if (currlayer["infocfg"]["keyisstring"] === undefined || !currlayer["infocfg"]["keyisstring"])
-			keyval = _keyval;
-		else
-			keyval = _keyval.toString();
+		console.log("keyvals", keyvals);
 
-		if (keyval) {
+		let ret = false;
+		if (keyvals.length > 0) {
 
 			ret = true;
 
@@ -429,7 +484,7 @@ export class Info {
 			// done - [MissingFeat 0002] - Obter este URL de configs
 			fetch(currlayer.url + "/doget", {
 				method: "POST",
-				body: JSON.stringify({"alias":lyr.infocfg.qrykey,"filtervals":[keyval],"pbuffer":0,"lang":"pt"})
+				body: JSON.stringify({ "alias":lyr.infocfg.qrykey, "filtervals":keyvals, "pbuffer":0, "lang":"pt" })
 			})
 			.then(response => response.json())
 			.then(
