@@ -448,28 +448,41 @@ export class MaptipBox extends PopupBox {
 		const imgpadding = GlobalConst.INFO_MAPTIPS_BOXSTYLE["thumbcoll_imgpadding"];
 
 		// calculate height of all rows
-		let maxrowlen, textlinescnt=0, usedlayerkeys=[], hasnontext=false;
+		let maxrowlen, textlinescnt={}, globnontextheight={}, nontextheight=0, usedlayerkeys=[], hasnontext=false;
 		height = 2.5*txtlnheight;
 
 		for (let lyrk of lorder) {
 
+			textlinescnt[lyrk]=[];
+			globnontextheight[lyrk]=[];
 			if (this.rows[lyrk] === undefined) {
 				continue;
 			}
 
 			usedlayerkeys.push(lyrk);
 			
-			for (let featrows of this.rows[lyrk]) {
+			for (let featrows, featidx=0; featidx<this.rows[lyrk].length; featidx++) {
+
+				featrows = this.rows[lyrk][featidx];
+
+				if (textlinescnt[lyrk].length < featidx+1) {
+					textlinescnt[lyrk].push(0);
+					globnontextheight[lyrk].push(0);
+				}
 
 				for (let row of featrows) {
 
+					if (row["err"] !== undefined) {
+						continue
+					}	
+
 					if (row["c"] === undefined) {
 
-						if (row["err"] === undefined) {			
-							// 0.75 = 0.25 spacing + 0.5 (caption height)
-							height = height + calcNonTextRowHeight(row, realwidth, imgpadding, this.leftpad, this.rightpad) + 0.75 * txtlnheight;
-							hasnontext=true;
-						}
+						// 0.75 = 0.25 spacing + 0.5 (caption height)
+						nontextheight = calcNonTextRowHeight(row, realwidth, imgpadding, this.leftpad, this.rightpad) + 1.25 * txtlnheight;
+						globnontextheight[lyrk][featidx] = globnontextheight[lyrk][featidx] + nontextheight; 
+						height = height + nontextheight;
+						hasnontext=true;
 					
 					} else { 
 
@@ -477,7 +490,7 @@ export class MaptipBox extends PopupBox {
 						for (let colidx=0; colidx<numcols; colidx++) {
 							maxrowlen = Math.max(maxrowlen, row["c"][colidx].length);
 						}
-						textlinescnt += maxrowlen;
+						textlinescnt[lyrk][featidx] = textlinescnt[lyrk][featidx] + maxrowlen;
 						
 						height = height + maxrowlen * lineheightfactor * txtlnheight + 0.25 * txtlnheight;
 
@@ -522,7 +535,8 @@ export class MaptipBox extends PopupBox {
 				featrows = this.rows[lyrk][featidx];
 				globalfeatidx++;
 
-				boxdims = [realwidth, (featrows.length+0.7) * txtlnheight];
+				// boxdims = [realwidth, (featrows.length+0.7) * txtlnheight];
+				boxdims = [realwidth, 2 + globnontextheight[lyrk][featidx] + (textlinescnt[lyrk][featidx] * lineheightfactor * txtlnheight + 0.25 * featrows.length * lineheightfactor * txtlnheight)];
 
 				if (featidx==0 && doDrawLayerCaption) {
 					this._drawLayerCaption(p_ctx, cota+0.25*this.layercaptionszPX, lbls[lyrcount-1], realwidth, deltah_caption);
@@ -543,6 +557,10 @@ export class MaptipBox extends PopupBox {
 				}
 
 				for (let row of featrows) {
+
+					if (row["err"] !== undefined) {
+						continue
+					}					
 
 					if (row["c"] !== undefined) {
 
@@ -575,9 +593,9 @@ export class MaptipBox extends PopupBox {
 
 						} while (changed_found);
 
-						cota = cota + 0.25 *txtlnheight;
+						cota = cota + 0.25 * lineheightfactor * txtlnheight;
 
-					} else if (row["err"] === undefined) {
+					} else {
 
 						// Non-text fields
 
