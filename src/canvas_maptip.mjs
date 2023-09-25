@@ -568,7 +568,7 @@ export class MaptipBox extends PopupBox {
 						do {
 							changed_found = false;
 
-							for (let colidx=0; colidx<2; colidx++) {
+							for (let colidx=0; colidx<numcols; colidx++) {
 
 								if (row["c"][colidx].length > lnidx) {
 									
@@ -673,6 +673,7 @@ export class MaptipBox extends PopupBox {
 	}
 
 	clear(p_ctx) {
+		clearFeatureHover(this.mapctx);
 		p_ctx.clearRect(0, 0, ...this.mapdims); 
 		this.is_drawn = false;
 		this.clickboxes = {};
@@ -699,12 +700,16 @@ export class MaptipBox extends PopupBox {
 					p_evt.clientY >= cb.box[1] && p_evt.clientY <= cb.box[1] + cb.box[3]) {
 
 						if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
+
 							this.clear(p_ctx);
 							clearFeatureHover(this.mapctx);
-							p_info_instance.pickfeature(cb.layerk, this.feature_dict[cb.layerk][cb.featidx], p_evt.clientX, p_evt.clientY)
+							p_info_instance.pickfeature(cb.layerk, this.feature_dict[cb.layerk][cb.featidx], p_evt.clientX, p_evt.clientY);
+
 						} else {
+
 							topcnv.style.cursor = "pointer";
 							featureHover(this.mapctx, cb.box, cb.layerk, cb.featid);
+
 						}
 						break;
 				} else {
@@ -712,7 +717,6 @@ export class MaptipBox extends PopupBox {
 				}
 			}
 		} 
-
 		
 		if (p_evt['preventDefault'] !== undefined) {
 			p_evt.preventDefault();
