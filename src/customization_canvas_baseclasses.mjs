@@ -471,8 +471,6 @@ export class Info {
 			keyvals.push(p_feature.a[kf].toString());
 		}
 
-		console.log("keyvals", keyvals);
-
 		let ret = false;
 		if (keyvals.length > 0) {
 
