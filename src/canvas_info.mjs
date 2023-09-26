@@ -27,8 +27,9 @@ export class InfoBox extends PopupBox {
 	infobox_static_expandimage_method;
 	layer;
 	rows;
+	ctx;
 
-	constructor(p_mapctx, p_imgbuffer, p_layer, p_data, p_styles, p_scrx, p_scry, p_infobox_pick_method, p_expandimage_method, b_callout, opt_max_rows_height) {
+	constructor(p_mapctx, p_imgbuffer, p_layer, p_data, p_styles, p_scrx, p_scry, p_infobox_pick_method, p_expandimage_method, p_ctx, b_callout, opt_max_rows_height) {
 
 		super(p_mapctx, p_imgbuffer, p_styles, p_scrx, p_scry, b_callout);
 
@@ -48,6 +49,7 @@ export class InfoBox extends PopupBox {
 		this.infobox_static_pick_method = p_infobox_pick_method;
 		this.infobox_static_expandimage_method = p_expandimage_method;
 		this.max_textlines_height = opt_max_rows_height;
+		this.ctx = p_ctx;
 
 		this.pagecount = 0;
 		this.activepageidx = -1;
@@ -77,7 +79,7 @@ export class InfoBox extends PopupBox {
 		}		
 	}
 
-	drawnavitems(p_ctx, p_recnum, p_totalrecs) {
+	drawnavitems(p_recnum, p_totalrecs) {
 
 		function rightarrow(pp_ctx, p_dims) {
 
@@ -90,10 +92,10 @@ export class InfoBox extends PopupBox {
 			pp_ctx.fill();
 		}
 
-		p_ctx.save();
-		p_ctx.fillStyle = this.navFillStyle;
-		p_ctx.strokeStyle = this.navFillStyle;
-		p_ctx.lineWidth = 2;
+		this.ctx.save();
+		this.ctx.fillStyle = this.navFillStyle;
+		this.ctx.strokeStyle = this.navFillStyle;
+		this.ctx.lineWidth = 2;
 
 		const pad = 10;
 		const width = 12;
@@ -115,12 +117,12 @@ export class InfoBox extends PopupBox {
 
 			this.clickboxes["toend"] = [left, top, right, bottom];
 
-			rightarrow(p_ctx, [left, right, bottom, middle, top]);
+			rightarrow(this.ctx, [left, right, bottom, middle, top]);
 
-			p_ctx.beginPath();
-			p_ctx.moveTo(right, bottom);
-			p_ctx.lineTo(right, top);
-			p_ctx.stroke();
+			this.ctx.beginPath();
+			this.ctx.moveTo(right, bottom);
+			this.ctx.lineTo(right, top);
+			this.ctx.stroke();
 
 			// move to shift right
 			right = left - smallsep; 
@@ -129,31 +131,31 @@ export class InfoBox extends PopupBox {
 
 		// shift right
 		this.clickboxes["next"] = [left, top, right, bottom];
-		rightarrow(p_ctx, [left, right, bottom, middle, top]);
+		rightarrow(this.ctx, [left, right, bottom, middle, top]);
 
 		// shift left
 		right = left - sep; 
 		left = right - width;
 		this.clickboxes["prev"] = [left, top, right, bottom];
 
-		p_ctx.beginPath();
-		p_ctx.moveTo(right, bottom);
-		p_ctx.lineTo(right, top);
-		p_ctx.lineTo(left, middle);
-		p_ctx.closePath();
+		this.ctx.beginPath();
+		this.ctx.moveTo(right, bottom);
+		this.ctx.lineTo(right, top);
+		this.ctx.lineTo(left, middle);
+		this.ctx.closePath();
 
-		p_ctx.fill();
+		this.ctx.fill();
 
-		p_ctx.textAlign = 'right';
-		p_ctx.fillText(`${p_recnum}/${p_totalrecs}`, left-sep, bottom);
+		this.ctx.textAlign = 'right';
+		this.ctx.fillText(`${p_recnum}/${p_totalrecs}`, left-sep, bottom);
 
-		p_ctx.restore();
+		this.ctx.restore();
 
 	}
 
-	drawpagenavitems(p_ctx) {
+	drawpagenavitems() {
 
-		p_ctx.save();
+		this.ctx.save();
 
 		const pagekeys = [];
 		for (let k in this.clickboxes) {
@@ -179,11 +181,11 @@ export class InfoBox extends PopupBox {
 		let origx;
 		let origy = this.box[1] + this.box[3] - size - pad;
 
-		p_ctx.strokeStyle = this.navFillStyle;
-		p_ctx.lineWidth = 1;
+		this.ctx.strokeStyle = this.navFillStyle;
+		this.ctx.lineWidth = 1;
 
-		p_ctx.font = '10px sans-serif';
-		p_ctx.textAlign = "left";
+		this.ctx.font = '10px sans-serif';
+		this.ctx.textAlign = "left";
 
 		for (let tx, ox, i = (this.pagecount-1); i>=0; i--) {
 			
@@ -194,23 +196,23 @@ export class InfoBox extends PopupBox {
 			ox = Math.round(origx+texthoffset+(size/4));
 
 			if (i==this.activepageidx) {
-				p_ctx.fillStyle = this.navFillStyle;
-				p_ctx.fillRect(origx, origy, size, size);
-				p_ctx.fillStyle = "black";
-				p_ctx.fillText(tx, ox, origy+size-textvoffset);	
+				this.ctx.fillStyle = this.navFillStyle;
+				this.ctx.fillRect(origx, origy, size, size);
+				this.ctx.fillStyle = "black";
+				this.ctx.fillText(tx, ox, origy+size-textvoffset);	
 			} else {
-				p_ctx.fillStyle = this.navFillStyle;
-				p_ctx.fillText(tx, ox, origy+size-textvoffset);	
+				this.ctx.fillStyle = this.navFillStyle;
+				this.ctx.fillText(tx, ox, origy+size-textvoffset);	
 			}
-			p_ctx.strokeRect(origx, origy, size, size);
+			this.ctx.strokeRect(origx, origy, size, size);
 
 		}
 
-		p_ctx.restore();
+		this.ctx.restore();
 
 	}
 
-	async draw(p_ctx) {
+	async infodraw() {
 
 		const ifcfg = Object.keys(this.layer.infocfg);
 		if (ifcfg.length < 1) {
@@ -226,7 +228,7 @@ export class InfoBox extends PopupBox {
 
 		const lang = (new I18n(this.layer.msgsdict)).getLang();
 
-		p_ctx.save();
+		this.ctx.save();
 		this.rows.length = 0;
 		for (const p in this.urls) {
 			if (this.urls.hasOwnProperty(p)) {
@@ -302,7 +304,7 @@ export class InfoBox extends PopupBox {
 		for (let fld of this.ordered_fldnames) {
 
 			// ciclar layers
-			this.field_textlines_count[fld] = await canvasWrtField(this, p_ctx, recdata, fld, lang, this.layer, capttextwidth, valuetextwidth, this.rows, this.urls);
+			this.field_textlines_count[fld] = await canvasWrtField(this, this.ctx, recdata, fld, lang, this.layer, capttextwidth, valuetextwidth, this.rows, this.urls);
 
 			if (this.layer.infocfg.fields["formats"][fld] !== undefined) {
 				if (this.nontext_formats.indexOf(this.layer.infocfg.fields["formats"][fld]["type"]) >= 0) {
@@ -337,12 +339,12 @@ export class InfoBox extends PopupBox {
 
 			for (let i=0; i<this.columncount; i++) {
 				if (i==0) {
-					p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
+					this.ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
 				} else {
-					p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
+					this.ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
 				}
 				for (let rowln of row["c"][i]) {
-					this.colsizes[i] = Math.max(p_ctx.measureText(rowln).width, this.colsizes[i]);
+					this.colsizes[i] = Math.max(this.ctx.measureText(rowln).width, this.colsizes[i]);
 				}
 			}
 		}
@@ -358,7 +360,7 @@ export class InfoBox extends PopupBox {
 		accumtextlineslen = 0;
 
 		// calculate global height of text line - from layer caption font - e
-		p_ctx.font = `${this.layercaptionszPX}px ${this.layercaptionfontfamily}`;
+		this.ctx.font = `${this.layercaptionszPX}px ${this.layercaptionfontfamily}`;
 		this.txtlnheight = this.layercaptionszPX
 
 		// Include header
@@ -445,11 +447,11 @@ export class InfoBox extends PopupBox {
 			lbl = "(void label)";	
 		}
 	
-		this._drawBackground(p_ctx, bwidth, height, this.txtlnheight);
-		this._drawLayerCaption(p_ctx, this.origin[1]+1.2*this.txtlnheight, lbl);
+		this._drawBackground(this.ctx, bwidth, height, this.txtlnheight);
+		this._drawLayerCaption(this.ctx, this.origin[1]+1.2*this.txtlnheight, lbl);
 
-		p_ctx.fillStyle = this.fillTextStyle;
-		p_ctx.strokeStyle = this.URLStyle;
+		this.ctx.fillStyle = this.fillTextStyle;
+		this.ctx.strokeStyle = this.URLStyle;
 
 		let cota = this.origin[1] + 2.5*this.txtlnheight;
 		this.topcota = cota - lineheightfactor*this.txtlnheight;
@@ -483,7 +485,7 @@ export class InfoBox extends PopupBox {
 					bgwidth = 0;
 					// loop lines of text to get max textwidth
 					for (lineincell_txt of row[colidx]) {
-						txtdims = p_ctx.measureText(lineincell_txt);
+						txtdims = this.ctx.measureText(lineincell_txt);
 						if (txtdims.width > bgwidth) {
 							bgwidth = txtdims.width;
 						}
@@ -492,10 +494,10 @@ export class InfoBox extends PopupBox {
 					textorig_x = this.origin[0]+this.leftpad+this.colsizes[colidx-1]+colidx*this.betweencols;
 					hunit = lineheightfactor * this.txtlnheight;
 
-					p_ctx.save();
-					p_ctx.fillStyle = fmt["backgroundColor"];
-					p_ctx.fillRect(textorig_x-3, cota - hunit, bgwidth, row[colidx].length * hunit + 0.25 * this.txtlnheight);
-					p_ctx.restore();
+					this.ctx.save();
+					this.ctx.fillStyle = fmt["backgroundColor"];
+					this.ctx.fillRect(textorig_x-3, cota - hunit, bgwidth, row[colidx].length * hunit + 0.25 * this.txtlnheight);
+					this.ctx.restore();
 				}
 			}
 			// --- Draw row's text ----
@@ -514,9 +516,9 @@ export class InfoBox extends PopupBox {
 
 						if (colidx % 2 == 0) { //  EVEN COLUNNS 
 
-							p_ctx.textAlign = "right";
-							p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
-							p_ctx.fillText(lineincell_txt, this.origin[0]+this.leftpad+this.colsizes[0], cota);	
+							this.ctx.textAlign = "right";
+							this.ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
+							this.ctx.fillText(lineincell_txt, this.origin[0]+this.leftpad+this.colsizes[0], cota);	
 
 						} else {  //  odd COLUNNS 
 
@@ -525,26 +527,26 @@ export class InfoBox extends PopupBox {
 							// Drawing values text
 							// console.log(">>", lineincell_txt, fmt);
 
-							p_ctx.textAlign = "left";
-							p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
-							txtdims = p_ctx.measureText(lineincell_txt);
+							this.ctx.textAlign = "left";
+							this.ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
+							txtdims = this.ctx.measureText(lineincell_txt);
 
 							if (this.urls[crrfld] !== undefined) {
-								p_ctx.save();
-								p_ctx.fillStyle = this.URLStyle;
+								this.ctx.save();
+								this.ctx.fillStyle = this.URLStyle;
 							}
 
-							p_ctx.fillText(lineincell_txt, textorig_x, cota);	
+							this.ctx.fillText(lineincell_txt, textorig_x, cota);	
 
 							if (this.urls[crrfld] !== undefined) {
 								// underline
-								p_ctx.beginPath();
-								p_ctx.moveTo(textorig_x, cota+3)
-								p_ctx.lineTo(textorig_x+txtdims.width, cota+3);
-								p_ctx.closePath();
-								p_ctx.stroke();
+								this.ctx.beginPath();
+								this.ctx.moveTo(textorig_x, cota+3)
+								this.ctx.lineTo(textorig_x+txtdims.width, cota+3);
+								this.ctx.closePath();
+								this.ctx.stroke();
 
-								p_ctx.restore();
+								this.ctx.restore();
 							}
 						}
 						changed_found = true;
@@ -577,9 +579,9 @@ export class InfoBox extends PopupBox {
 
 			// Field caption
 			if (row["hidecaption"] === undefined || !row["hidecaption"]) {
-				p_ctx.textAlign = "center";
-				p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
-				p_ctx.fillText(row["cap"], left_caption, cota);	
+				this.ctx.textAlign = "center";
+				this.ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
+				this.ctx.fillText(row["cap"], left_caption, cota);	
 				cota = cota + 0.5 * this.txtlnheight;
 			} else {
 				cota = cota - 0.25 * this.txtlnheight;
@@ -631,7 +633,7 @@ export class InfoBox extends PopupBox {
 									currh = 0;
 								}
 							}
-							p_ctx.drawImage(imge, left_symbs, cota, w, h);
+							this.ctx.drawImage(imge, left_symbs, cota, w, h);
 						};	
 
 						left_symbs = left_symbs + w + imgpadding;	
@@ -646,7 +648,7 @@ export class InfoBox extends PopupBox {
 					const [w, h] = row["dims"];
 					if (imge.complete) {
 						left_symbs = this.origin[0] + (bwidth - w) / 2.0;
-						p_ctx.drawImage(imge, left_symbs, cota, w, h);
+						this.ctx.drawImage(imge, left_symbs, cota, w, h);
 						cota = cota + h;
 					}
 				}
@@ -657,23 +659,23 @@ export class InfoBox extends PopupBox {
 
 
 		if (this.recordcnt > 1) {
-			this.drawnavitems(p_ctx, this.recordidx+1, this.data[this.layer.infocfg.jsonkey].length);
+			this.drawnavitems(this.recordidx+1, this.data[this.layer.infocfg.jsonkey].length);
 		}
 
 		this.drawcount++;
 
-		this.drawpagenavitems(p_ctx);
+		this.drawpagenavitems();
 
-		p_ctx.restore();
+		this.ctx.restore();
 	}
 
-	clear(p_ctx) {
+	infoclear() {
 		const topcnv = this.mapctx.renderingsmgr.getTopCanvas();
-		p_ctx.clearRect(0, 0, ...this.mapdims); 
+		this.ctx.clearRect(0, 0, ...this.mapdims); 
 		topcnv.style.cursor = "default";
 	}	
 
-	interact_infobox(p_ctx, p_evt) {
+	interact_infobox(p_evt) {
 
 		const lineheightfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["lineheightfactor"];
 		const rowsintervalfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["rowsintervalfactor"];
@@ -706,8 +708,8 @@ export class InfoBox extends PopupBox {
 											this.recordidx++;
 										}
 										this.activepageidx = 0;
-										this.clear(p_ctx);
-										this.draw(p_ctx);
+										this.infoclear();
+										this.infodraw();
 										break;
 
 									case "prev":
@@ -717,15 +719,15 @@ export class InfoBox extends PopupBox {
 											this.recordidx--;
 										}
 										this.activepageidx = 0;
-										this.clear(p_ctx);
-										this.draw(p_ctx);
+										this.infoclear();
+										this.infodraw();
 										break;		
 										
 									case "toend":
 										this.recordidx = this.recordcnt-1;
 										this.activepageidx = 0;
-										this.clear(p_ctx);
-										this.draw(p_ctx);
+										this.infoclear();
+										this.infodraw();
 										break;			
 																			
 								}
@@ -740,11 +742,11 @@ export class InfoBox extends PopupBox {
 			let prev, next, left, right, first=true, fldname=null, accumrows=0, row=null;
 
 			if (SHOWROWS) {
-				p_ctx.save();
-				p_ctx.strokeStyle ="white";
-				p_ctx.fillStyle ="white";
-				p_ctx.lineWidth = 2;
-				p_ctx.font = "20px Arial";
+				this.ctx.save();
+				this.ctx.strokeStyle ="white";
+				this.ctx.fillStyle ="white";
+				this.ctx.lineWidth = 2;
+				this.ctx.font = "20px Arial";
 			}
 
 			let cb, alreadycaptured = false;
@@ -762,8 +764,8 @@ export class InfoBox extends PopupBox {
 						const pagenum = parseInt(k.replace(/[a-zA-Z]+/g,''));
 						if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
 							this.activepageidx = pagenum-1;
-							this.clear(p_ctx);
-							this.draw(p_ctx);	
+							this.infoclear();
+							this.infodraw();
 						} else {
 							if (!isNaN(pagenum)) {
 								if (this.activepageidx != (pagenum-1)){
@@ -806,11 +808,11 @@ export class InfoBox extends PopupBox {
 
 				if (SHOWROWS) {
 					console.log(`${cnt.toString()} ${fld}`);
-					p_ctx.fillText(`${cnt.toString()} ${fld}`,90,next);
-					p_ctx.beginPath();
-					p_ctx.moveTo(100,next);
-					p_ctx.lineTo(700,next);
-					p_ctx.stroke();
+					this.ctx.fillText(`${cnt.toString()} ${fld}`,90,next);
+					this.ctx.beginPath();
+					this.ctx.moveTo(100,next);
+					this.ctx.lineTo(700,next);
+					this.ctx.stroke();
 				}
 
 				// console.log('     ', fld, prev, next, p_evt.clientY);
@@ -894,7 +896,7 @@ export class InfoBox extends PopupBox {
 			}
 
 			if (SHOWROWS) {
-				p_ctx.restore();
+				this.ctx.restore();
 			}
 		} 
 

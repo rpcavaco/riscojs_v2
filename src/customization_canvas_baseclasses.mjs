@@ -346,10 +346,10 @@ export class Info {
 
 	_showCallout(p_feature_dict, p_scrx, p_scry, b_noline) {
 
-		this.callout = new MaptipBox(this.mapctx, this.mapctx.imgbuffer, p_feature_dict, this.styles, p_scrx, p_scry, true);
 		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
-		this.callout.clear(ctx);
-		this.callout.tipdraw(ctx, b_noline);
+		this.callout = new MaptipBox(this.mapctx, this.mapctx.imgbuffer, p_feature_dict, this.styles, p_scrx, p_scry, ctx, true);
+		this.callout.tipclear();
+		this.callout.tipdraw(b_noline);
 
 		return true;
 	}
@@ -488,11 +488,11 @@ export class Info {
 			.then(
 				function(responsejson) {
 					// console.log("cust_canvas_baseclasses:828 - antes criação InfoBox");
-					const currlayer = that.mapctx.tocmgr.getLayer(p_layerkey);
-					that.ibox = new InfoBox(that.mapctx, that.mapctx.imgbuffer, currlayer, responsejson, that.styles, p_scrx, p_scry, Info.infobox_pick, Info.expand_image, false, that.max_textlines_height);
 					const ctx = that.mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
-					that.ibox.clear(ctx);
-					that.ibox.draw(ctx);	
+					const currlayer = that.mapctx.tocmgr.getLayer(p_layerkey);
+					that.ibox = new InfoBox(that.mapctx, that.mapctx.imgbuffer, currlayer, responsejson, that.styles, p_scrx, p_scry, Info.infobox_pick, Info.expand_image, ctx, false, that.max_textlines_height);
+					that.ibox.infoclear();
+					that.ibox.infodraw();	
 
 					const ci = that.mapctx.getCustomizationObject();
 					if (ci == null) {
@@ -530,19 +530,16 @@ export class Info {
 			return;
 		}
 
-		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
-
-		
 		let panels_exist = false;
 
 		if (this.callout) {
 
-			this.callout.clear(ctx);
+			this.callout.tipclear();
 			panels_exist = true;
 			
 		} else if (this.ibox) {
 
-			this.ibox.clear(ctx);
+			this.ibox.infoclear();
 			panels_exist = true;
 
 		}
@@ -570,7 +567,7 @@ export class Info {
 				}
 			}
 			//console.trace("clear all temporary");
-			this.mapctx.renderingsmgr.clearAll(['temporary']);
+			this.mapctx.renderingsmgr.clearAll(['transientmap', 'transientviz', 'temporary']);
 
 
 		}
@@ -579,18 +576,16 @@ export class Info {
 
 	}
 
-	interact_fixedtip(p_evt) {
+	interactFixedtip(p_evt) {
 		if (this.callout) {
-			const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
-			this.callout.interact_fixedtip(this, ctx, p_evt);
+			this.callout.interact_fixedtip(this, p_evt);
 		}
 
 	}
 
-	interact_infobox(p_evt) {
+	interactInfobox(p_evt) {
 		if (this.ibox) {
-			const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
-			this.ibox.interact_infobox(ctx, p_evt);
+			this.ibox.interact_infobox(p_evt);
 		}
 
 	}

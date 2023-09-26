@@ -746,11 +746,11 @@ class InfoTool extends BaseTool {
 					if (ic.pick !== undefined || ic.callout !== undefined) {
 
 						if (insidefixedtippanel) {
-							ic.interact_fixedtip(p_evt);
+							ic.interactFixedtip(p_evt);
 							this.setFixedtipPanelActive(ic.callout.is_drawn);
 							ret = true;
 						} else if (insideainfoboxpanel) {
-							ic.interact_infobox(p_evt);
+							ic.interactInfobox(p_evt);
 							ret = true; 
 						} else {
 							this.setAllPanelsInactive();
@@ -767,13 +767,15 @@ class InfoTool extends BaseTool {
 					break;
 
 				case 'mouseout':
-					p_mapctx.renderingsmgr.clearAll(['transientmap', 'temporary', ic.canvaslayer]);
+					ic.clearinfo('INFOTOOL_MOUSEOUT');
 					break;
 
 				case 'mousemove':
 					if (!this.getAnyPanelActive()) {
 						if (ic.hover !== undefined) {
-							p_mapctx.renderingsmgr.clearAll(['transientmap', 'temporary', ic.canvaslayer]);
+
+							ic.clearinfo('INFOTOOL_MOUSEMOVE');
+		
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
 							ret = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, false, ic.hover.bind(ic), ic.clearinfo.bind(ic));
 						} else {
@@ -781,10 +783,10 @@ class InfoTool extends BaseTool {
 						}	
 					} else {
 						if (insidefixedtippanel) {
-							ic.interact_fixedtip(p_evt);
+							ic.interactFixedtip(p_evt);
 							ret = true; 
 						} else if (insideainfoboxpanel) {
-							ic.interact_infobox(p_evt);
+							ic.interactInfobox(p_evt);
 							ret = true; 
 						}						
 					}

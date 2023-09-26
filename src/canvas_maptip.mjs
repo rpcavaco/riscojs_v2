@@ -29,6 +29,7 @@ export class PopupBox {
 	mapctx;
 	imgbuffer;
 	clickboxes;
+	featurehover_canvas;
 
 	constructor(p_mapctx, p_imgbuffer, p_styles, p_scrx, p_scry, b_callout) {
 
@@ -44,6 +45,7 @@ export class PopupBox {
 		this.rows = {};
 		this.mapctx = p_mapctx;
 		this.imgbuffer = p_imgbuffer;
+		this.featurehover_canvas = "transientviz";
 
 		if (p_styles["fillStyle"] !== undefined) {
 			this.fillStyle = p_styles["fillStyle"];
@@ -254,9 +256,9 @@ export class PopupBox {
 	}
 }
 
-function clearFeatureHover(p_mapctx) {
+function clearFeatureHover(p_mapctx, p_canvas_key) {
 	
-	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transientviz", '2d');
+	const gfctx = p_mapctx.renderingsmgr.getDrwCtx(p_canvas_key, '2d');
 	const canvas_dims = [];		
 
 	p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
@@ -264,9 +266,9 @@ function clearFeatureHover(p_mapctx) {
 
 }
 
-function featureHover(p_mapctx, p_box, p_layer_key, p_feat_id) {
+function featureHover(p_mapctx, p_box, p_layer_key, p_feat_id, p_canvas_key) {
 	
-	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transientviz", '2d');
+	const gfctx = p_mapctx.renderingsmgr.getDrwCtx(p_canvas_key, '2d');
 	gfctx.save();
 	const slack = GlobalConst.CONTROLS_STYLES.FST_SEPSELBOXFROMCLASSBOX;
 	let realbox;
@@ -304,15 +306,16 @@ export class MaptipBox extends PopupBox {
 	feature;
 	is_drawn;
 
-	constructor(p_mapctx, p_imgbuffer, p_feature_dict, p_styles, p_scrx, p_scry, b_callout) {
+	constructor(p_mapctx, p_imgbuffer, p_feature_dict, p_styles, p_scrx, p_scry, p_info_grctx, b_callout) {
 		super(p_mapctx, p_imgbuffer, p_styles, p_scrx, p_scry, b_callout);
+		this.ctx = p_info_grctx;
 		this.feature_dict = p_feature_dict;
 		this.is_drawn = false;
 	}
 
-	async tipdraw(p_ctx, b_noline) {
+	async tipdraw(b_noline) {
 
-		p_ctx.save();
+		this.ctx.save();
 		this.rows = {};
 		const numcols = 2;
 
@@ -363,17 +366,17 @@ export class MaptipBox extends PopupBox {
 
 				if (ifkeys.indexOf("add") >= 0) {
 					for (let fld of layer.maptipfields["add"]) {
-						await canvasWrtField(this, p_ctx, feat.a, fld, lang, layer, capttextwidth, valuetextwidth, featrows);
+						await canvasWrtField(this, this.ctx, feat.a, fld, lang, layer, capttextwidth, valuetextwidth, featrows);
 					}	
 				} else if (ifkeys.indexOf("remove") >= 0) {
 					for (let fld in feat.a) {
 						if (layer.maptipfields["remove"].indexOf(fld) < 0) {
-							await canvasWrtField(this, p_ctx, feat.a, fld, lang, layer, capttextwidth, valuetextwidth, featrows);
+							await canvasWrtField(this, this.ctx, feat.a, fld, lang, layer, capttextwidth, valuetextwidth, featrows);
 						}
 					} 
 				} else {
 					for (let fld in feat.a) {
-						await canvasWrtField(this, p_ctx, feat.a, fld, lang, layer, capttextwidth, valuetextwidth, featrows);
+						await canvasWrtField(this, this.ctx, feat.a, fld, lang, layer, capttextwidth, valuetextwidth, featrows);
 					}	
 				}
 
@@ -404,12 +407,12 @@ export class MaptipBox extends PopupBox {
 							}
 		
 							if (i % 2 ==0) {
-								p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
+								this.ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
 							} else {
-								p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
+								this.ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
 							}
 							for (let rowln of row["c"][i]) {
-								colsizes[i] = Math.max(p_ctx.measureText(rowln).width, colsizes[i]);
+								colsizes[i] = Math.max(this.ctx.measureText(rowln).width, colsizes[i]);
 							}
 						}
 					}
@@ -419,7 +422,7 @@ export class MaptipBox extends PopupBox {
 		}
 
 		// calculate global height of text line - from layer caption font - e
-		p_ctx.font = `${this.layercaptionszPX}px ${this.layercaptionfontfamily}`;
+		this.ctx.font = `${this.layercaptionszPX}px ${this.layercaptionfontfamily}`;
 
 		let lbl, lblm=0, lbls = [], deltah_caption = 1.75*this.layercaptionszPX;
 		
@@ -439,7 +442,7 @@ export class MaptipBox extends PopupBox {
 				lbl = "(void label)";	
 			}	
 			lbls.push(lbl);
-			lblm = Math.max(lblm, p_ctx.measureText(lbl).width);
+			lblm = Math.max(lblm, this.ctx.measureText(lbl).width);
 
 		}
 
@@ -510,14 +513,14 @@ export class MaptipBox extends PopupBox {
 		}
 
 
-		this._drawBackground(p_ctx, realwidth, height, txtlnheight);
-		this._drawLayerCaption(p_ctx, this.origin[1]+1.2*txtlnheight, lbls[0])
+		this._drawBackground(this.ctx, realwidth, height, txtlnheight);
+		this._drawLayerCaption(this.ctx, this.origin[1]+1.2*txtlnheight, lbls[0])
 
 		if (!b_noline) {
-			this._drawCalloutLine(p_ctx);
+			this._drawCalloutLine(this.ctx);
 		}
 
-		p_ctx.fillStyle = this.fillTextStyle;
+		this.ctx.fillStyle = this.fillTextStyle;
 
 		// vars for Non-text items
 		const left_caption = this.origin[0] + realwidth / 2.0;
@@ -539,7 +542,7 @@ export class MaptipBox extends PopupBox {
 				boxdims = [realwidth, 2 + globnontextheight[lyrk][featidx] + (textlinescnt[lyrk][featidx] * lineheightfactor * txtlnheight + 0.25 * featrows.length * lineheightfactor * txtlnheight)];
 
 				if (featidx==0 && doDrawLayerCaption) {
-					this._drawLayerCaption(p_ctx, cota+0.25*this.layercaptionszPX, lbls[lyrcount-1], realwidth, deltah_caption);
+					this._drawLayerCaption(this.ctx, cota+0.25*this.layercaptionszPX, lbls[lyrcount-1], realwidth, deltah_caption);
 					cota = cota+deltah_caption;
 				} 
 
@@ -553,7 +556,7 @@ export class MaptipBox extends PopupBox {
 
 				// draw background on even features
 				if (featidx % 2 == 1) {
-					this._drawFeatrowsAltBackground(p_ctx, y, ...boxdims);
+					this._drawFeatrowsAltBackground(this.ctx, y, ...boxdims);
 				}
 
 				for (let row of featrows) {
@@ -574,13 +577,13 @@ export class MaptipBox extends PopupBox {
 									
 									celltxt = row["c"][colidx][lnidx];
 									if (colidx == 0) {
-										p_ctx.textAlign = "right";
-										p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
-										p_ctx.fillText(celltxt, this.origin[0]+this.leftpad+colsizes[0], cota);		
+										this.ctx.textAlign = "right";
+										this.ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
+										this.ctx.fillText(celltxt, this.origin[0]+this.leftpad+colsizes[0], cota);		
 									} else { 
-										p_ctx.textAlign = "left";
-										p_ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
-										p_ctx.fillText(celltxt, this.origin[0]+this.leftpad+colsizes[colidx-1]+colidx*this.betweencols, cota);		
+										this.ctx.textAlign = "left";
+										this.ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
+										this.ctx.fillText(celltxt, this.origin[0]+this.leftpad+colsizes[colidx-1]+colidx*this.betweencols, cota);		
 									}
 									changed_found = true;
 								}	
@@ -600,9 +603,9 @@ export class MaptipBox extends PopupBox {
 						// Non-text fields
 
 						// Field caption
-						p_ctx.textAlign = "center";
-						p_ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
-						p_ctx.fillText(row["cap"], left_caption, cota);	
+						this.ctx.textAlign = "center";
+						this.ctx.font = `${this.normalszPX}px ${this.captionfontfamily}`;
+						this.ctx.fillText(row["cap"], left_caption, cota);	
 						cota = cota + 0.5 * txtlnheight;
 
 						if (row["thumbcoll"] !== undefined) {
@@ -650,7 +653,7 @@ export class MaptipBox extends PopupBox {
 											}
 										}
 										//console.log("::506 draw::", coli, rowi, "h:", h, "cota:", cota, "currh:", currh);
-										p_ctx.drawImage(imge, left_symbs, cota, w, h);
+										this.ctx.drawImage(imge, left_symbs, cota, w, h);
 										currh = Math.max(currh, h);
 									};	
 
@@ -669,18 +672,18 @@ export class MaptipBox extends PopupBox {
 		// console.log(this.rows.length);
 		this.is_drawn = true;
 
-		p_ctx.restore();
+		this.ctx.restore();
 	}
 
-	clear(p_ctx) {
-		clearFeatureHover(this.mapctx);
-		p_ctx.clearRect(0, 0, ...this.mapdims); 
+	tipclear() {
+		clearFeatureHover(this.mapctx, this.featurehover_canvas);
+		this.ctx.clearRect(0, 0, ...this.mapdims); 
 		this.is_drawn = false;
 		this.clickboxes = {};
 		this.callout = null;
 	}	
 
-	interact_fixedtip(p_info_instance, p_ctx, p_evt) {
+	interact_fixedtip(p_info_instance, p_evt) {
 
 		const topcnv = this.mapctx.renderingsmgr.getTopCanvas();
 		topcnv.style.cursor = "default";
@@ -701,19 +704,19 @@ export class MaptipBox extends PopupBox {
 
 						if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
 
-							this.clear(p_ctx);
-							clearFeatureHover(this.mapctx);
+							this.tipclear();
+							clearFeatureHover(this.mapctx, this.featurehover_canvas);
 							p_info_instance.pickfeature(cb.layerk, this.feature_dict[cb.layerk][cb.featidx], p_evt.clientX, p_evt.clientY);
 
 						} else {
 
 							topcnv.style.cursor = "pointer";
-							featureHover(this.mapctx, cb.box, cb.layerk, cb.featid);
+							featureHover(this.mapctx, cb.box, cb.layerk, cb.featid, this.featurehover_canvas);
 
 						}
 						break;
 				} else {
-					clearFeatureHover(this.mapctx);
+					clearFeatureHover(this.mapctx, this.featurehover_canvas);
 				}
 			}
 		} 

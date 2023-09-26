@@ -104,6 +104,10 @@
 		}
 
 		for (const ck of keys) {
+
+			if (ck == null) {
+				continue;
+			}
 			/* if (ck == 'base') {
 				continue;
 			} */
