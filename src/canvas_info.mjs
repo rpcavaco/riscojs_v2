@@ -326,10 +326,6 @@ export class InfoBox extends PopupBox {
 
 		this.colsizes=[0,0];
 
-		// console.log("USED FLDS:", this.used_fldnames);
-		/* console.log("ftlc:", this.field_textlines_count); */
-		// console.log("ROWS:", this.rows);
-
 		// calc max widths of text in columns
 		for (let row of this.rows) {
 
@@ -353,7 +349,7 @@ export class InfoBox extends PopupBox {
 		// ROWS: are not data rows, are rows of printing, each row corresponds to an atrribute or data field
 		// TEXTLINE: each row can geneate ZERO or more text lines
 
-		let height, currow;
+		let currow;
 		let maxrowtextlineslen, accumtextlineslen, pageaccumtextlineslen;
 		this.rowboundaries.length = 0;
 		pageaccumtextlineslen = 0;
@@ -362,10 +358,6 @@ export class InfoBox extends PopupBox {
 		// calculate global height of text line - from layer caption font - e
 		this.ctx.font = `${this.layercaptionszPX}px ${this.layercaptionfontfamily}`;
 		this.txtlnheight = this.layercaptionszPX
-
-		// Include header
-		height = 1.6 * this.txtlnheight;
-		// console.log("inith:", height, "rowinterv:", (rowsintervalfactor * this.txtlnheight));
 
 		let acc_colsz = 0;
 		for (let clsz of this.colsizes) {
@@ -376,14 +368,14 @@ export class InfoBox extends PopupBox {
 
 		// calc text line boundaries for each "page"
 		let prevrowbndry = 0;
-		for (let tmph, onfirstpage=true, ri=0; ri<this.rows.length; ri++) {
+		const page_items = [];
+		for (let tmph, ri=0; ri<this.rows.length; ri++) {
 
 			currow = ri;
 
 			if (this.rows[ri]["c"] === undefined) {
 				
 				tmph = calcNonTextRowHeight(this.rows[ri], bwidth, imgpadding, this.leftpad, this.rightpad);
-				// height = height + tmph + 0.5 *this.txtlnheight;
 
 				this.field_textlines_count[this.rows[ri]["f"]] = (tmph + 0.5 *this.txtlnheight) / this.txtlnheight;
 				maxrowtextlineslen = Math.ceil(this.field_textlines_count[this.rows[ri]["f"]]);
@@ -395,25 +387,34 @@ export class InfoBox extends PopupBox {
 					maxrowtextlineslen = Math.max(maxrowtextlineslen, this.rows[ri]["c"][colidx].length);
 				}
 			}
-			
+
 			if (this.max_textlines_height) {
+
 				if (pageaccumtextlineslen + maxrowtextlineslen > this.max_textlines_height) {
-					onfirstpage = false;
+					page_items.push({
+						"textlineslen": pageaccumtextlineslen,
+					})
 					this.rowboundaries.push([prevrowbndry, ri-1]);
 					prevrowbndry = ri;
 					pageaccumtextlineslen = 0;
-				} else {
-					if (onfirstpage) {
-						height += (maxrowtextlineslen * lineheightfactor * this.txtlnheight) + (rowsintervalfactor * this.txtlnheight);
-					}							
 				}
 			}
 			pageaccumtextlineslen += maxrowtextlineslen;
 			accumtextlineslen += maxrowtextlineslen;
 		}
 
-		// console.log("::canvas_info 410::", this.rows.length, this.rowboundaries);
-				
+		page_items.push({
+			"textlineslen": pageaccumtextlineslen
+		})
+
+		let height, textlineslen = 0
+		for (const pi of page_items) {
+			textlineslen = Math.max(textlineslen, pi.textlineslen);
+		}
+
+		// Header + row lines + row separators
+		height = (GlobalConst.INFO_MAPTIPS_BOXSTYLE["header_spacing_factor"] * this.txtlnheight) + (textlineslen * lineheightfactor * this.txtlnheight) + (this.rows.length * (rowsintervalfactor * this.txtlnheight));
+
 		if (this.rows.length > 0) {
 			this.rowboundaries.push([prevrowbndry, currow]);
 		}
@@ -429,9 +430,9 @@ export class InfoBox extends PopupBox {
 
 		// footer
 		if (this.pagecount > 1) {
-			height += 2 * this.txtlnheight;
+			height += GlobalConst.INFO_MAPTIPS_BOXSTYLE["footer_spacing_factor"][0] * this.txtlnheight;
 		} else {
-			height += 0.6 * this.txtlnheight;
+			height += GlobalConst.INFO_MAPTIPS_BOXSTYLE["footer_spacing_factor"][1] * this.txtlnheight;
 		}
 
 		//console.log("pgcnt:", this.pagecount, this.activepageidx);

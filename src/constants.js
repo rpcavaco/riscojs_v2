@@ -148,7 +148,9 @@ var GlobalConst = {
 		"thumbcoll_normwidth": 48,
 		"thumbcoll_imgpadding": 10,
 
-		"singleimg_maximgheight": 170
+		"singleimg_maximgheight": 170,
+		"header_spacing_factor": 1.6,
+		"footer_spacing_factor": [2, 0.6]  // Info, multiple pages, single page
 	},
 
 	MESSAGING_STYLES: {

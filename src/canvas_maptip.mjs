@@ -511,8 +511,6 @@ export class MaptipBox extends PopupBox {
 		this._drawBackground(this.ctx, realwidth, height, txtlnheight);
 		this._drawLayerCaption(this.ctx, this.origin[1]+1.2*txtlnheight, lbls[0])
 
-		console.log("b_drawline:", b_drawline);
-
 		if (b_drawline) {
 			this._drawCalloutLine(this.ctx);
 		}
