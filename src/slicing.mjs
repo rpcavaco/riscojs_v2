@@ -957,6 +957,10 @@ export class SlicingPanel {
 			function(responsejson) {
 				//console.log(responsejson);
 
+				if (!that.is_active) {
+					return;
+				}
+
 				const fields = Object.keys(responsejson);
 				console.assert(fields.indexOf(splits[1]) >= 0, "field not found in slicing data, key '%s', field '%s'", splits[0], splits[1]) 
 
