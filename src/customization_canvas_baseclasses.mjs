@@ -347,7 +347,7 @@ export class Info {
 	_showCallout(p_feature_dict, p_scrx, p_scry, b_noline) {
 
 		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
-		this.callout = new MaptipBox(this.mapctx, this.mapctx.imgbuffer, p_feature_dict, this.styles, p_scrx, p_scry, ctx, true);
+		this.callout = new MaptipBox(this.mapctx, this.mapctx.imgbuffer, p_feature_dict, this.styles, p_scrx, p_scry, ctx);
 		this.callout.tipclear();
 		this.callout.tipdraw(b_noline);
 
@@ -355,7 +355,7 @@ export class Info {
 	}
 
 	hover(p_feature_dict, p_scrx, p_scry) {
-		return this._showCallout(p_feature_dict, p_scrx, p_scry);
+		return this._showCallout(p_feature_dict, p_scrx, p_scry, true);
 	}
 
 	pick(p_feature_dict, p_scrx, p_scry) {
@@ -372,7 +372,7 @@ export class Info {
 
 		if (opentippanel) {
 
-			if (this._showCallout(p_feature_dict, p_scrx, p_scry, true)) {
+			if (this._showCallout(p_feature_dict, p_scrx, p_scry, false)) {
 		
 				const ci = this.mapctx.getCustomizationObject();
 				if (ci == null) {
@@ -490,7 +490,7 @@ export class Info {
 					// console.log("cust_canvas_baseclasses:828 - antes criação InfoBox");
 					const ctx = that.mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
 					const currlayer = that.mapctx.tocmgr.getLayer(p_layerkey);
-					that.ibox = new InfoBox(that.mapctx, that.mapctx.imgbuffer, currlayer, responsejson, that.styles, p_scrx, p_scry, Info.infobox_pick, Info.expand_image, ctx, false, that.max_textlines_height);
+					that.ibox = new InfoBox(that.mapctx, that.mapctx.imgbuffer, currlayer, responsejson, that.styles, p_scrx, p_scry, Info.infobox_pick, Info.expand_image, ctx, that.max_textlines_height);
 					that.ibox.infoclear();
 					that.ibox.infodraw();	
 

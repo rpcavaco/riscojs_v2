@@ -29,9 +29,9 @@ export class InfoBox extends PopupBox {
 	rows;
 	ctx;
 
-	constructor(p_mapctx, p_imgbuffer, p_layer, p_data, p_styles, p_scrx, p_scry, p_infobox_pick_method, p_expandimage_method, p_ctx, b_callout, opt_max_rows_height) {
+	constructor(p_mapctx, p_imgbuffer, p_layer, p_data, p_styles, p_scrx, p_scry, p_infobox_pick_method, p_expandimage_method, p_ctx, opt_max_rows_height) {
 
-		super(p_mapctx, p_imgbuffer, p_styles, p_scrx, p_scry, b_callout);
+		super(p_mapctx, p_imgbuffer, p_styles, p_scrx, p_scry);
 
 		this.data = p_data;
 		this.layer = p_layer;

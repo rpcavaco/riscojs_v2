@@ -23,7 +23,6 @@ export class PopupBox {
 	fontfamily;
 	mapdims;
 	userpt;
-	callout;	
 	drawcount;
 	rows;
 	mapctx;
@@ -31,7 +30,7 @@ export class PopupBox {
 	clickboxes;
 	featurehover_canvas;
 
-	constructor(p_mapctx, p_imgbuffer, p_styles, p_scrx, p_scry, b_callout) {
+	constructor(p_mapctx, p_imgbuffer, p_styles, p_scrx, p_scry) {
 
 		this.origin = [20,20];
 		this.anchorpt = [20,20];
@@ -113,7 +112,6 @@ export class PopupBox {
 		p_mapctx.renderingsmgr.getCanvasDims(this.mapdims);
 
 		this.userpt = [p_scrx, p_scry];
-		this.callout = b_callout;
 
 		this.clickboxes = {};
 
@@ -239,19 +237,16 @@ export class PopupBox {
 
 	_drawCalloutLine(p_ctx) {
 
-		if (this.callout) {
+		p_ctx.save();
 
-			p_ctx.save();
+		p_ctx.strokeStyle = this.innerStrokeStyle;
 
-			p_ctx.strokeStyle = this.innerStrokeStyle;
+		p_ctx.beginPath();
+		p_ctx.moveTo(...this.userpt);
+		p_ctx.lineTo(...this.anchorpt);
+		this.defaultstroke(p_ctx, 2);
 
-			p_ctx.beginPath();
-			p_ctx.moveTo(...this.userpt);
-			p_ctx.lineTo(...this.anchorpt);
-			this.defaultstroke(p_ctx, 2);
-
-			p_ctx.restore();
-		}
+		p_ctx.restore();
 
 	}
 }
@@ -306,14 +301,14 @@ export class MaptipBox extends PopupBox {
 	feature;
 	is_drawn;
 
-	constructor(p_mapctx, p_imgbuffer, p_feature_dict, p_styles, p_scrx, p_scry, p_info_grctx, b_callout) {
-		super(p_mapctx, p_imgbuffer, p_styles, p_scrx, p_scry, b_callout);
+	constructor(p_mapctx, p_imgbuffer, p_feature_dict, p_styles, p_scrx, p_scry, p_info_grctx) {
+		super(p_mapctx, p_imgbuffer, p_styles, p_scrx, p_scry);
 		this.ctx = p_info_grctx;
 		this.feature_dict = p_feature_dict;
 		this.is_drawn = false;
 	}
 
-	async tipdraw(b_noline) {
+	async tipdraw(b_drawline) {
 
 		this.ctx.save();
 		this.rows = {};
@@ -516,7 +511,9 @@ export class MaptipBox extends PopupBox {
 		this._drawBackground(this.ctx, realwidth, height, txtlnheight);
 		this._drawLayerCaption(this.ctx, this.origin[1]+1.2*txtlnheight, lbls[0])
 
-		if (!b_noline) {
+		console.log("b_drawline:", b_drawline);
+
+		if (b_drawline) {
 			this._drawCalloutLine(this.ctx);
 		}
 
@@ -680,7 +677,6 @@ export class MaptipBox extends PopupBox {
 		this.ctx.clearRect(0, 0, ...this.mapdims); 
 		this.is_drawn = false;
 		this.clickboxes = {};
-		this.callout = null;
 	}	
 
 	interact_fixedtip(p_info_instance, p_evt) {
