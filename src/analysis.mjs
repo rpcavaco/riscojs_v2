@@ -21,6 +21,8 @@ export class AnalysisMgr extends MapPrintInRect {
 	std_boxdims;
 	active_mode;
 	slicing_filter_active;
+	slicing_available;
+	dashboard_available;
 
 	constructor(p_other_widgets) {
 
@@ -44,8 +46,6 @@ export class AnalysisMgr extends MapPrintInRect {
 		this.inUseStyle = GlobalConst.CONTROLS_STYLES.AM_INUSE;
 		this.canvaslayer = 'service_canvas'; 
 		this.slicing_filter_active = false;
-
-		this.dashboard_available = false;
 
 		this.left = 600;
 		this.top = 600;
@@ -77,6 +77,11 @@ export class AnalysisMgr extends MapPrintInRect {
 
 		this.top = this.bottom - this.boxh[this.collapsedstate];*/
 
+	}
+
+	itemsAvailable(p_has_slicing, p_has_dashboarding) {
+		this.slicing_available = p_has_slicing;
+		this.dashboard_available = p_has_dashboarding;
 	}
 
 	preCalcDims(p_mapctx) {
@@ -164,10 +169,14 @@ export class AnalysisMgr extends MapPrintInRect {
 				const imgfilt = new Image();
 				imgfilt.decoding = "sync";
 
-				if (this.active_mode == 'SEG') {
-					vstyle = this.inUseStyle;
+				if (!this.slicing_available) {
+					vstyle = this.inactiveStyleFront;
 				} else {
-					vstyle = this.activeStyleFront;
+					if (this.active_mode == 'SEG') {
+						vstyle = this.inUseStyle;
+					} else {
+						vstyle = this.activeStyleFront;
+					}	
 				}
 				let imgfltsrc = p_mapctx.cfgvar["basic"]["filtericon"].replace(/stroke:%23fff;/g, `stroke:${encodeURIComponent(vstyle)};`);
 
@@ -311,16 +320,33 @@ export class AnalysisMgr extends MapPrintInRect {
 
 					case 'mouseup':
 					case 'touchend':
+
+						const ci = p_mapctx.getCustomizationObject();
+						if (ci == null) {
+							throw new Error("map context customization instance is missing")
+						}
+
 						if (this._checkPickWhichSide(p_evt) == 'LEFT') {					
-							// Fazer nada, de momento
-							//msg = p_mapctx.i18n.msg('DASH', true);
+
+							if (this.active_mode == 'DASH') {
+
+									this.active_mode = 'NONE';
+	
+									const dashpanel = ci.instances["dashboard"];
+									this.print(p_mapctx);
+									dashpanel.closeAction(p_mapctx);								
+	
+							} else {
+								this.active_mode = 'DASH';
+
+								const dashpanel = ci.instances["dashboard"];
+								this.print(p_mapctx);
+								dashpanel.setState(p_mapctx, true);	
+							}
+
 						}
 						else if (this._checkPickWhichSide(p_evt) == 'RIGHT') {					
 							// BRIR PAINEL SEGM
-							const ci = p_mapctx.getCustomizationObject();
-							if (ci == null) {
-								throw new Error("Slicing panel opening, map context customization instance is missing")
-							}
 					
 							if (this.active_mode == 'SEG') {
 
@@ -409,6 +435,20 @@ export class AnalysisMgr extends MapPrintInRect {
 
 		if (this.slicing_filter_active != p_slicing_is_enabled) {
 			this.slicing_filter_active = p_slicing_is_enabled;
+			changed = true;
+		}
+
+		if (changed) {
+			this.print(p_mapctx);
+		}
+
+	}
+
+	deactivateDashboardPanelOpenedSign(p_mapctx) {
+
+		let changed = false;
+		if (this.active_mode == "DASH") {
+			this.active_mode = 'NONE';
 			changed = true;
 		}
 

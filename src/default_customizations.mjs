@@ -3,6 +3,7 @@ import {GlobalConst} from './constants.js';
 import { ctrToolTip, MapPrintInRect, PermanentMessaging, LoadingMessaging, ControlsBox, Info, OverlayMgr } from './customization_canvas_baseclasses.mjs';
 import { AnalysisMgr, SelectionsNavigator } from './analysis.mjs';
 import { SlicingPanel } from './slicing.mjs';
+import { DashboardPanel } from './dashboard.mjs';
 import { TOC } from './tocwidget.mjs';
 
 class MousecoordsPrint extends PermanentMessaging {
@@ -1224,6 +1225,11 @@ export class MapCustomizations {
 		if (this.mapctx.cfgvar["basic"]["slicing"] !== undefined && this.mapctx.cfgvar["basic"]["slicing"]["keys"] !== undefined && Object.keys(this.mapctx.cfgvar["basic"]["slicing"]["keys"]).length > 0) {
 			has_slicing = true;
 		}
+
+		let has_dashboarding = false;
+		if (this.mapctx.cfgvar["basic"]["dashboard"] !== undefined && this.mapctx.cfgvar["basic"]["dashboard"]["keys"] !== undefined && Object.keys(this.mapctx.cfgvar["basic"]["dashboard"]["keys"]).length > 0) {
+			has_dashboarding = true;
+		}		
 		
 		this.instances = {
 			"basiccontrolsbox": new BasicCtrlBox(),
@@ -1246,6 +1252,18 @@ export class MapCustomizations {
 
 			this.instances["analysis"].preCalcDims(p_mapctx);
 			this.instances["navigator"] = new SelectionsNavigator(this.mapctx, [ap, this.instances["analysis"]]);
+		}
+
+		if (has_dashboarding) {
+			if (this.instances["analysis"] === undefined) {
+				this.instances["analysis"] = new AnalysisMgr([ap]);
+				this.instances["analysis"].preCalcDims(p_mapctx);
+			}
+			this.instances["dashboard"] = new DashboardPanel();
+		}
+		
+		if (this.instances["analysis"] === undefined) {
+			this.instances["analysis"].itemsAvailable(has_slicing, has_dashboarding);
 		}
 
 		// Temporariamente sem navigator
