@@ -134,7 +134,7 @@ function isPointOnSegment(p_ptseg1, p_ptseg2, p_ptin, p_minarea, opt_dodebug) {
 	return partA && absarea < p_minarea;		
 }
 
-function projectPointOnSegment(p_ptseg1, p_ptseg2, p_ptin, p_minarea, out_projpt, opt_dodebug) {
+export function projectPointOnSegment(p_ptseg1, p_ptseg2, p_ptin, p_minarea, out_projpt, opt_dodebug) {
 
 	out_projpt.length = 2;
 
@@ -150,8 +150,11 @@ function projectPointOnSegment(p_ptseg1, p_ptseg2, p_ptin, p_minarea, out_projpt
 	
 	out_projpt[0] = p_ptseg1[0] + (inprod * (dx/len2));
 	out_projpt[1] = p_ptseg1[1] + (inprod * (dy/len2));
+
+	if (opt_dodebug)
+		console.log("[DBG:DISTANCETO] prj pt on segm, prj:",out_projpt);
 	
-	if (!isPointOnSegment(p_ptseg1, p_ptseg2, p_ptin, p_minarea, opt_dodebug)) {
+	if (!isPointOnSegment(p_ptseg1, p_ptseg2, out_projpt, p_minarea, opt_dodebug)) {
 
 		if (opt_dodebug)
 			console.log("not on seg");
