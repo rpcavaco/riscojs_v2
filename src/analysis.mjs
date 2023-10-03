@@ -64,6 +64,9 @@ export class AnalysisMgr extends MapPrintInRect {
 		this.expandenv = 1;
 		this.prevboxenv = null;
 
+		this.slicing_available = false;
+		this.dashboard_available = false;
+	
 		/*let mapdims = [];
 		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
 
@@ -80,6 +83,7 @@ export class AnalysisMgr extends MapPrintInRect {
 	}
 
 	itemsAvailable(p_has_slicing, p_has_dashboarding) {
+
 		this.slicing_available = p_has_slicing;
 		this.dashboard_available = p_has_dashboarding;
 	}
@@ -164,7 +168,7 @@ export class AnalysisMgr extends MapPrintInRect {
 			ctx.strokeRect(this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]);
 
 			if (this.collapsedstate == "OPEN") {
-					
+
 				let vstyle;
 				const imgfilt = new Image();
 				imgfilt.decoding = "sync";

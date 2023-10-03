@@ -1262,7 +1262,7 @@ export class MapCustomizations {
 			this.instances["dashboard"] = new DashboardPanel();
 		}
 		
-		if (this.instances["analysis"] === undefined) {
+		if (this.instances["analysis"] !== undefined) {
 			this.instances["analysis"].itemsAvailable(has_slicing, has_dashboarding);
 		}
 

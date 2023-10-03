@@ -1,7 +1,6 @@
 import {GlobalConst} from './constants.js';
 import {I18n} from './i18n.mjs';
-import {genRainbowColor, canvas_text_wrap, symmetricDifference} from './utils.mjs';
-import {addEnv, genOrigEnv, envArea, envInteriorOverlap, ensureMinDimEnv, distSquared2D} from './geom.mjs';
+import {thickCircunference} from './canvas_geometries.mjs';
 
 export class DashboardPanel {
 
@@ -35,14 +34,20 @@ export class DashboardPanel {
 		this.navFillStyle = GlobalConst.CONTROLS_STYLES.SEG_ACTIVECOLOR;
 		this.inactiveStyleFront = GlobalConst.CONTROLS_STYLES.SEG_INACTIVECOLOR;
 		this.margin_offset = GlobalConst.CONTROLS_STYLES.OFFSET;
+
 		this.normalszPX = GlobalConst.CONTROLS_STYLES.NORMALSZ_PX;
 		this.captionszPX = GlobalConst.CONTROLS_STYLES.CAPTIONSZ_PX;
 
+		this.counterszPX = GlobalConst.CONTROLS_STYLES.DASH_COUNTERFONTSIZE_PX;
+		this.counterFontFamily = GlobalConst.CONTROLS_STYLES.DASH_COUNTERFONTFAMILY;
+		this.counterTxtszPX = GlobalConst.CONTROLS_STYLES.DASH_COUNTERTXTFONTSIZE_PX;
+		this.counterTxtFontFamily = GlobalConst.CONTROLS_STYLES.DASH_COUNTERTXTFONTFAMILY;
+
 		this.captionfontfamily = GlobalConst.CONTROLS_STYLES.CAPTIONFONTFAMILY;
 		this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
-		this.datafontfamily = GlobalConst.CONTROLS_STYLES.SEG_DATAFONTFAMILY;
-		this.datacaptionfontsz = GlobalConst.CONTROLS_STYLES.SEG_DATACAPTIONFONTSIZE_PX;
-		this.datafontsz = GlobalConst.CONTROLS_STYLES.SEG_DATAFONTSIZE_PX;
+		// this.datafontfamily = GlobalConst.CONTROLS_STYLES.SEG_DATAFONTFAMILY;
+		// this.datacaptionfontsz = GlobalConst.CONTROLS_STYLES.SEG_DATACAPTIONFONTSIZE_PX;
+		// this.datafontsz = GlobalConst.CONTROLS_STYLES.SEG_DATAFONTSIZE_PX;
 
 		this.is_active = false;
 		this.had_prev_interaction = false;
@@ -56,6 +61,22 @@ export class DashboardPanel {
 		this.total_count = 0;
 
 		this.data = {}
+	}
+
+	static widgetBox(p_box, p_layout_division_list, p_size_list, p_upperleft_list) {
+
+		const unitwidth = p_box[2] / p_layout_division_list[0];
+		const unitheight = p_box[3] / p_layout_division_list[1];
+	
+		const upperleftx = p_box[0] + unitwidth * p_upperleft_list[0];
+		const upperlefty = p_box[1] + unitheight * p_upperleft_list[1];
+	
+		const width = p_size_list[0] * unitwidth;
+		const height = p_size_list[1] * unitheight;
+	
+		return [upperleftx, upperlefty, width, height];
+	
+	
 	}
 
 	calcDims(p_mapctx) {
@@ -243,42 +264,160 @@ export class DashboardPanel {
 	
 	}	
 
-	fetchChartData(p_mapctx) {
+	fetchChartData(p_mapctx, p_cota) {
 
 		const url = p_mapctx.cfgvar["basic"]["dashboard"]["url"];
+		const layoutdivision = p_mapctx.cfgvar["basic"]["dashboard"]["layoutdivision"];
+		const cfgkeyorder = [];
 
-		const keyorder = [];
-		const keys = {};
+		const cfgkeydata = {};
 		for (let k in p_mapctx.cfgvar["basic"]["dashboard"]["keys"]) {
-			keyorder.push(k);
-			keys[k] = p_mapctx.cfgvar["basic"]["dashboard"]["keys"][k];
+			cfgkeydata[k] = p_mapctx.cfgvar["basic"]["dashboard"]["keys"][k];
+			cfgkeyorder.push(k);
 		}
 
-		this.fetchChartDataNext(p_mapctx, keyorder, keys, url) 
+		const stable_cfgkeyorder = [...cfgkeyorder];
+
+		this.fetchChartDataNext(p_mapctx, stable_cfgkeyorder, cfgkeyorder, cfgkeydata, url, layoutdivision, p_cota);
 
 	}
 
-	fetchChartDataNext(p_mapctx, p_keyorder, p_keys, p_url) {
+	drawWidgets(p_mapctx, p_keys, p_layoutdivision, p_cota) {
 
-		const that  = this;
+		let ctx, centerx, centery, current_data, sumofclasscounts, txtdims, lbl;
 
-		let key = p_keyorder[0];
-
-		console.assert(Array.isArray(p_keys[key]), `dashboard config for ${key} is not an array: ${p_keys[key]}`);
-
-		let ctrlcnt = 100;
-		while (p_keys[key].length == 0 && ctrlcnt > 0) {
-			ctrlcnt--;
-			p_keyorder.shift();
-			key = p_keyorder[0];
-		}
-
-		if (p_keyorder.length == 0 || p_keys[key].length == 0) {
-			console.log(this.data);
+		if (p_keys.length < 1) {
 			return;
 		}
 
-		let fieldname = p_keys[key].shift();
+		const lang = (new I18n(p_mapctx.cfgvar["basic"]["msgs"])).getLang();
+
+		const indent = this.left+2*this.margin_offset;
+		const ctrlbox_height = 3*this.normalszPX;
+
+		let counterfont, countersize, txtfont, txtsize, cota = p_cota + 3 * this.normalszPX - this.margin_offset;
+		let graphbox = [indent, cota, this.width-4*this.margin_offset, this.height+this.top-cota - 2*this.margin_offset - ctrlbox_height]; 
+
+		ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+
+		ctx.save();
+		
+		ctx.lineWidth = 1;
+		ctx.strokeStyle = "red";
+
+		ctx.strokeRect(...graphbox);
+		ctx.restore();
+
+		for (let key of p_keys) {
+
+			current_data = this.data[key];
+
+			switch (current_data["type"]) {
+
+				case "counter":
+
+					sumofclasscounts = current_data["remoteitems"]["sumofclasscounts"];
+
+					const [left, top, width, height] = this.constructor.widgetBox(graphbox, p_layoutdivision, current_data["layout"]["size"], current_data["layout"]["upperleft"]);
+
+					centerx = left + width / 2.0;
+					centery = top + height / 2.0;
+
+					ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+					ctx.save();
+
+					if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["dash_counterfont"] !== undefined) {
+						counterfont = p_mapctx.cfgvar["basic"]["style_override"]["dash_counterfont"];
+					} else {
+						counterfont = this.counterFontFamily;
+					}
+
+					if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["dash_countersize"] !== undefined) {
+						countersize = p_mapctx.cfgvar["basic"]["style_override"]["dash_countersize"];
+					} else {
+						countersize = this.counterszPX;
+					}
+
+					if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["dash_countertextfont"] !== undefined) {
+						txtfont = p_mapctx.cfgvar["basic"]["style_override"]["dash_countertextfont"];
+					} else {
+						txtfont = this.counterTxtFontFamily;
+					}
+
+					if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["dash_countertextsize"] !== undefined) {
+						txtsize = p_mapctx.cfgvar["basic"]["style_override"]["dash_countertextsize"];
+					} else {
+						txtsize = this.counterTxtszPX;
+					}
+
+					ctx.lineWidth = 1;
+					ctx.strokeStyle = this.activeStyleFront;
+					ctx.fillStyle = this.activeStyleFront;
+
+					//ctx.strokeRect(centerx - 50, centery - 50, 100, 100);
+
+					thickCircunference(ctx, [centerx, centery], 120, 18, 100, true);
+
+					// ctx.beginPath();
+					// ctx.moveTo(centerx - 50, centery);
+					// ctx.lineTo(centerx + 50, centery);
+					// ctx.stroke();
+
+					ctx.font = `${countersize}px ${counterfont}`;
+
+					txtdims = ctx.measureText(sumofclasscounts);				
+					ctx.fillText(sumofclasscounts, centerx - (txtdims.width / 2.0), centery);
+
+					ctx.font = `${txtsize}px ${txtfont}`;
+
+					if (Object.keys(p_mapctx.cfgvar["basic"]["msgs"][lang]).indexOf(current_data["layout"]["text"]) >= 0) {
+						lbl = I18n.capitalize(p_mapctx.cfgvar["basic"]["msgs"][lang][current_data["layout"]["text"]]);
+					} else {
+						lbl = I18n.capitalize(current_data["layout"]["text"]);
+					}
+					txtdims = ctx.measureText(lbl);				
+					ctx.fillText(lbl, centerx - (txtdims.width / 2.0), centery + (1.4 * txtsize));
+
+											
+					ctx.restore();
+				
+					break;
+			}
+
+
+		}
+
+	}
+
+	fetchChartDataNext(p_mapctx, p_keys, p_keys_worklist, p_keycfgdata, p_url, p_layoutdivision, p_cota) {
+
+		const that  = this;
+
+//		console.log("265:", JSON.stringify(p_keys), JSON.stringify(p_keycfgdata));
+
+		let key = p_keys_worklist[0];
+
+		console.assert(Array.isArray(p_keycfgdata[key]), `dashboard config for ${key} is not an array: ${p_keycfgdata[key]}`);
+
+//		console.log("p_keydata::", JSON.stringify(p_keycfgdata));
+
+		let ctrlcnt = 100;
+		while (p_keycfgdata[key].length == 0 && ctrlcnt > 0) {
+			ctrlcnt--;
+			p_keys_worklist.shift();
+			if (p_keys_worklist.length == 0) {
+				break;
+			}
+			key = p_keys_worklist[0];
+		}
+
+		if (p_keys_worklist.length == 0 || p_keycfgdata[key].length == 0) {
+			this.drawWidgets(p_mapctx, p_keys, p_layoutdivision, p_cota);
+			return;
+		}
+
+		let keycfgdata = p_keycfgdata[key].shift();
+		let fieldname = keycfgdata["fieldname"];
 
 		fetch(p_url + "/astats", {
 			method: "POST",
@@ -292,11 +431,19 @@ export class DashboardPanel {
 				const fields = Object.keys(responsejson);
 				console.assert(fields.indexOf(fieldname) >= 0, "field not found in dashboard data config, key '%s', column '%s'", key, fieldname) 
 
-				if (this.data[key] === undefined) {
-					this.data[key] = {};
+				if (that.data[key] === undefined) {
+					that.data[key] = {
+						"layout": {
+							"upperleft": keycfgdata["upperleft"],
+							"size": keycfgdata["size"],
+							"text": keycfgdata["text"]
+						},
+						"type": keycfgdata["type"],
+						"remoteitems":{}
+					};
 				}
 
-				this.data[key][fieldname] = responsejson[fieldname];
+				that.data[key]["remoteitems"] = responsejson[fieldname];
 
 				// Create items array
 				/*
@@ -322,7 +469,7 @@ export class DashboardPanel {
 				that.classes_data = dict['classes'];
 				*/
 
-				that.fetchChartDataNext(p_mapctx, p_keyorder, p_keys, p_url)
+				that.fetchChartDataNext(p_mapctx, p_keys, p_keys_worklist, p_keycfgdata, p_url, p_layoutdivision, p_cota);
 				
 			}
 		).catch((error) => {
@@ -355,12 +502,14 @@ export class DashboardPanel {
 		ctx.fillStyle = this.fillTextStyle;
 		ctx.textAlign = "left";
 
-		let txtlinecota, cota  = this.top+this.margin_offset+this.captionszPX;
+		let cota  = this.top+this.margin_offset+this.captionszPX;
 		let indent = this.left+2*this.margin_offset;
 		ctx.font = `${this.captionszPX}px ${this.captionfontfamily}`;
 		ctx.fillText(msg, indent, cota);
 		
 		ctx.restore();
+
+		this.fetchChartData(p_mapctx, cota);
 
 
 	}
@@ -378,7 +527,7 @@ export class DashboardPanel {
 
 		const ci = p_mapctx.getCustomizationObject();
 		if (ci == null) {
-			throw new Error("Slicing, map context customization instance is missing")
+			throw new Error("Dashboard, map context customization instance is missing")
 		}
 		const toc = ci.instances["toc"];
 
@@ -511,7 +660,7 @@ export class DashboardPanel {
 								case "CLOSE":
 									const ci = p_mapctx.getCustomizationObject();
 									if (ci == null) {
-										throw new Error("Slicing, CLOSE interaction, map context customization instance is missing")
+										throw new Error("Dashboard, CLOSE interaction, map context customization instance is missing")
 									}
 									const analysispanel = ci.instances["analysis"];
 									if (analysispanel) {
