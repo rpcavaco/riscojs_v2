@@ -265,6 +265,7 @@ var GlobalConst = {
 		DASH_COUNTERFONTFAMILY: "OpenSans-CondensedBold",
 		DASH_COUNTERTXTFONTSIZE_PX: 20,
 		DASH_COUNTERTXTFONTFAMILY: "OpenSans-CondensedBold",
+		DASH_COUNTERGAUGESTYLE: "rgba(255, 150, 84, 0.7)",
 
 		// Feature selection fixed tooltip
 		FST_SEPSELBOXFROMCLASSBOX: 4,

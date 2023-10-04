@@ -1,6 +1,6 @@
 import {GlobalConst} from './constants.js';
 import {I18n} from './i18n.mjs';
-import {thickCircunference} from './canvas_geometries.mjs';
+import {thickTickedCircunference} from './canvas_geometries.mjs';
 
 export class DashboardPanel {
 
@@ -42,6 +42,7 @@ export class DashboardPanel {
 		this.counterFontFamily = GlobalConst.CONTROLS_STYLES.DASH_COUNTERFONTFAMILY;
 		this.counterTxtszPX = GlobalConst.CONTROLS_STYLES.DASH_COUNTERTXTFONTSIZE_PX;
 		this.counterTxtFontFamily = GlobalConst.CONTROLS_STYLES.DASH_COUNTERTXTFONTFAMILY;
+		this.counterGaugeStyle = GlobalConst.CONTROLS_STYLES.DASH_COUNTERGAUGESTYLE;
 
 		this.captionfontfamily = GlobalConst.CONTROLS_STYLES.CAPTIONFONTFAMILY;
 		this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
@@ -284,7 +285,7 @@ export class DashboardPanel {
 
 	drawWidgets(p_mapctx, p_keys, p_layoutdivision, p_cota) {
 
-		let ctx, centerx, centery, current_data, sumofclasscounts, txtdims, lbl;
+		let ctx, centerx, centery, current_data, value, txtdims, lbl, lblsz, r, iniang, finalang;
 
 		if (p_keys.length < 1) {
 			return;
@@ -295,7 +296,7 @@ export class DashboardPanel {
 		const indent = this.left+2*this.margin_offset;
 		const ctrlbox_height = 3*this.normalszPX;
 
-		let counterfont, countersize, txtfont, txtsize, cota = p_cota + 3 * this.normalszPX - this.margin_offset;
+		let counterfont, countersize, txtfont, txtsize, gaugeStyle, cota = p_cota + 3 * this.normalszPX - this.margin_offset;
 		let graphbox = [indent, cota, this.width-4*this.margin_offset, this.height+this.top-cota - 2*this.margin_offset - ctrlbox_height]; 
 
 		ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
@@ -316,7 +317,28 @@ export class DashboardPanel {
 
 				case "counter":
 
-					sumofclasscounts = current_data["remoteitems"]["sumofclasscounts"];
+					if (current_data["mode"] !== undefined) {
+
+						switch(current_data["mode"]) {
+
+							case "total":
+								value = current_data["remoteitems"]["sumofclasscounts"];
+								break;
+
+							case "classes": 
+								value = current_data["remoteitems"]["classescount"];
+								break;
+
+							default:
+								console.error(`invalid 'mode': ${current_data["mode"]}`);
+								value = 0;
+
+						}
+
+					} else {
+						value = current_data["remoteitems"]["sumofclasscounts"];
+					}
+
 
 					const [left, top, width, height] = this.constructor.widgetBox(graphbox, p_layoutdivision, current_data["layout"]["size"], current_data["layout"]["upperleft"]);
 
@@ -350,23 +372,74 @@ export class DashboardPanel {
 						txtsize = this.counterTxtszPX;
 					}
 
+					if (current_data["gauge"] !== undefined) {
+
+						if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["dash_countergaugestyle"] !== undefined) {
+							gaugeStyle = p_mapctx.cfgvar["basic"]["style_override"]["dash_countergaugestyle"];
+						} else {
+							gaugeStyle = this.counterGaugeStyle;
+						}		
+						
+						if (current_data["gauge"]["style"] !== undefined) {
+							gaugeStyle = current_data["gauge"]["style"];
+						}
+
+					}
+
+					// paint gauge stroke
+					if (current_data["gauge"] !== undefined) {
+					
+						r = parseInt(value) / 22000;
+						iniang = 5 * Math.PI / 6.0;
+						finalang = iniang + (r * 8 * Math.PI / 6.0);
+
+						ctx.save();
+
+						ctx.beginPath();
+						ctx.lineWidth = 10;
+						ctx.strokeStyle = gaugeStyle;
+						ctx.arc(centerx, centery, 104, iniang, finalang);
+						ctx.stroke();
+
+						ctx.restore();
+					}
+
 					ctx.lineWidth = 1;
 					ctx.strokeStyle = this.activeStyleFront;
 					ctx.fillStyle = this.activeStyleFront;
 
+					ctx.textAlign = "center";
+					lblsz = 12;
+					ctx.font = `${lblsz}px sans-serif`;
 					//ctx.strokeRect(centerx - 50, centery - 50, 100, 100);
 
-					thickCircunference(ctx, [centerx, centery], 120, 18, 100, true);
+					if (current_data["gauge"] !== undefined) {
+
+						thickTickedCircunference(ctx, [centerx, centery], 120, 18, {
+							"max": current_data["gauge"]["max"],
+							"divisor": current_data["gauge"]["divisor"],
+							"unitdivision": current_data["gauge"]["unitdivision"],
+							"unitticks": current_data["gauge"]["unitticks"],
+							"unitgroupcnt": current_data["gauge"]["unitgroupcnt"] 
+						}, true, true);
+
+					} else {
+	
+						thickTickedCircunference(ctx, [centerx, centery], 120, 18);
+						
+					}
 
 					// ctx.beginPath();
 					// ctx.moveTo(centerx - 50, centery);
 					// ctx.lineTo(centerx + 50, centery);
 					// ctx.stroke();
 
+					ctx.strokeStyle = this.activeStyleFront;
+
 					ctx.font = `${countersize}px ${counterfont}`;
 
-					txtdims = ctx.measureText(sumofclasscounts);				
-					ctx.fillText(sumofclasscounts, centerx - (txtdims.width / 2.0), centery);
+					txtdims = ctx.measureText(value);				
+					ctx.fillText(value, centerx, centery);
 
 					ctx.font = `${txtsize}px ${txtfont}`;
 
@@ -376,7 +449,7 @@ export class DashboardPanel {
 						lbl = I18n.capitalize(current_data["layout"]["text"]);
 					}
 					txtdims = ctx.measureText(lbl);				
-					ctx.fillText(lbl, centerx - (txtdims.width / 2.0), centery + (1.4 * txtsize));
+					ctx.fillText(lbl, centerx, centery + (1.4 * txtsize));
 
 											
 					ctx.restore();
@@ -445,6 +518,12 @@ export class DashboardPanel {
 
 				that.data[key]["remoteitems"] = responsejson[fieldname];
 
+				if (keycfgdata["gauge"] !== undefined) {
+					that.data[key]["gauge"] = keycfgdata["gauge"];
+				}
+				if (keycfgdata["mode"] !== undefined) {
+					that.data[key]["mode"] = keycfgdata["mode"];
+				}
 				// Create items array
 				/*
 				const varvalues = Object.keys(dict['classes']);
