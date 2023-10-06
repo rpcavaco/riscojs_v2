@@ -341,6 +341,13 @@ export class AnalysisMgr extends MapPrintInRect {
 									dashpanel.closeAction(p_mapctx);								
 	
 							} else {
+
+								if (this.active_mode == 'SEG') {
+									const segpanel = ci.instances["slicing"];
+									this.print(p_mapctx);
+									segpanel.closeAction(p_mapctx);								
+								} 
+
 								this.active_mode = 'DASH';
 
 								const dashpanel = ci.instances["dashboard"];
@@ -350,7 +357,6 @@ export class AnalysisMgr extends MapPrintInRect {
 
 						}
 						else if (this._checkPickWhichSide(p_evt) == 'RIGHT') {					
-							// BRIR PAINEL SEGM
 					
 							if (this.active_mode == 'SEG') {
 
@@ -361,6 +367,12 @@ export class AnalysisMgr extends MapPrintInRect {
 								segpanel.closeAction(p_mapctx);								
 
 							} else {
+
+								if (this.active_mode == 'DASH') {
+									const dashpanel = ci.instances["dashboard"];
+									this.print(p_mapctx);
+									dashpanel.closeAction(p_mapctx);								
+								} 
 								this.active_mode = 'SEG';
 
 								const segpanel = ci.instances["slicing"];

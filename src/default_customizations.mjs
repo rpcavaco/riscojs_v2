@@ -1227,7 +1227,7 @@ export class MapCustomizations {
 		}
 
 		let has_dashboarding = false;
-		if (this.mapctx.cfgvar["basic"]["dashboard"] !== undefined && this.mapctx.cfgvar["basic"]["dashboard"]["keys"] !== undefined && Object.keys(this.mapctx.cfgvar["basic"]["dashboard"]["keys"]).length > 0) {
+		if (this.mapctx.cfgvar["basic"]["dashboard"] !== undefined && this.mapctx.cfgvar["basic"]["dashboard"]["widgets"] !== undefined && this.mapctx.cfgvar["basic"]["dashboard"]["widgets"].length > 0) {
 			has_dashboarding = true;
 		}		
 		
@@ -1268,7 +1268,7 @@ export class MapCustomizations {
 
 		// Temporariamente sem navigator
 		this.mapcustom_controls_keys = ["basiccontrolsbox", "basemapctrl", "toc", "analysis", "slicing", "dashboard"]; // widgets exposing a 'print' method, just for display
-		this.mapcustom_controlsmgrs_keys = ["basiccontrolsbox", "basemapctrl", "analysis", "slicing"]; // controls manager widgets, exposing a generic 'interact' method
+		this.mapcustom_controlsmgrs_keys = ["basiccontrolsbox", "basemapctrl", "analysis", "slicing", "dashboard"]; // controls manager widgets, exposing a generic 'interact' method
 
 /* 		this.mapcustom_controls_keys = ["basiccontrolsbox", "basemapctrl", "toc", "navigator", "analysis"]; // widgets exposing a 'print' method, just for display
 		this.mapcustom_controlsmgrs_keys = ["basiccontrolsbox", "basemapctrl", "navigator", "analysis"]; // controls manager widgets, exposing a generic 'interact' method
