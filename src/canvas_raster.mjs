@@ -38,6 +38,7 @@ const canvasRasterMethodsMixin = (Base) => class extends Base {
 
 	canvasKey = 'base';
 	image_filter = 'none';
+	alpha = "none";
 
 	static toGrayScaleImgFilter(p_gfctx, p_imgobj, p_x, p_y, p_ctxw, p_ctxh, null_filteradicdata) {
 			
@@ -74,7 +75,7 @@ const canvasRasterMethodsMixin = (Base) => class extends Base {
 		}
 	};
 
-	static imageEvtsHandling(pp_mapctxt, p_lyr, p_img, pp_scr_env, pp_dims, pp_envkey, p_raster_id) {
+	static imageEvtsHandling(pp_mapctxt, p_lyr, p_img, pp_scr_env, pp_dims, pp_envkey, p_raster_id, p_alpha) {
 		
 		const that = this;
 		p_img.onload = function() {
@@ -84,6 +85,9 @@ const canvasRasterMethodsMixin = (Base) => class extends Base {
 			gfctx.save();
 			try {
 
+				if (p_alpha != null && p_alpha != "none") {
+					gfctx.globalAlpha = parseFloat(p_alpha);
+				}
 				//p_gfctx.clearRect(pp_scr_env[0], pp_scr_env[3], ...pp_dims);
 				gfctx.drawImage(p_img, pp_scr_env[0], pp_scr_env[3]);
 				if (p_lyr.filter == 'grayscale') {
@@ -129,7 +133,7 @@ const canvasRasterMethodsMixin = (Base) => class extends Base {
 
 		const raster_id = uuidv4();
 
-		this.constructor.imageEvtsHandling(p_mapctxt, this, img, p_scr_env.slice(0), p_dims.slice(0), p_envkey, raster_id);		
+		this.constructor.imageEvtsHandling(p_mapctxt, this, img, p_scr_env.slice(0), p_dims.slice(0), p_envkey, raster_id, this.alpha);		
 		img.src = p_raster_url;
 
 		// console.log(`(rstrs on loading at t0 x ${p_envkey}):`, Object.keys(this.rastersloading[p_envkey]));

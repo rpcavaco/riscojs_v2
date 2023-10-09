@@ -94,7 +94,12 @@ const labelSymbolMixin = (Base) => class extends Base {
 	labelLeaderLinewidth = "none";	
 	labelLeaderRotation = "none";	
 
-	label_position_shift = [];
+	labelPositionShift = [];
+
+	labelShadowColor = "none";
+	labelShadowBlur = "none";
+	labelShadowOffsetX = "none";
+	labelShadowOffsetY = "none";			
 
 }
 

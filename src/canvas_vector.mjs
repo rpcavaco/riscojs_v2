@@ -267,7 +267,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		}
 
 		const pt = [];
-		let ret_promise = null;
+		let ret_promise = null, is_data_url, the_url;
 		p_mapctxt.transformmgr.getRenderingCoordsPt(p_coords, pt);
 
 		try {
@@ -281,7 +281,12 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 					this._gfctx.restore();
 				}	
 			} else {
-				if (this._currentsymb['drawsymbAsync'] !== undefined) {
+
+				is_data_url = false;
+				the_url = this.iconsrcfunc(opt_iconname);
+				console.log(">>>>", the_url.slice(0,5));
+
+				if (the_url.slice(0,5) != "data:" && this._currentsymb['drawsymbAsync'] !== undefined) {
 
 					ret_promise = new Promise((resolve, reject) => {
 						this._currentsymb.drawsymbAsync(p_mapctxt, this, pt, opt_iconname, opt_feat_id).then(
@@ -549,9 +554,9 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			}
 
 			let cx, cy;
-			if (this._currentsymb['label_position_shift'] !== undefined && this._currentsymb.label_position_shift.length >= 2) {
-				cx = this._currentsymb.label_position_shift[0] + finalpt[0];
-				cy = this._currentsymb.label_position_shift[1] + finalpt[1];
+			if (this._currentsymb['labelPositionShift'] !== undefined && this._currentsymb.labelPositionShift.length >= 2) {
+				cx = this._currentsymb.labelPositionShift[0] + finalpt[0];
+				cy = this._currentsymb.labelPositionShift[1] + finalpt[1];
 			} else {
 				cx = finalpt[0];
 				cy = finalpt[1];
@@ -563,6 +568,23 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				this._gfctxlbl.rotate(rot);
 				this._gfctxlbl.translate(-cx, -cy);	
 			}
+
+			if (this._currentsymb['labelShadowColor'] !== undefined && this._currentsymb.labelShadowColor != "none") {
+				this._gfctxlbl.shadowColor = this._currentsymb['labelShadowColor'];
+			}
+
+			if (this._currentsymb['labelShadowBlur'] !== undefined && this._currentsymb.labelShadowBlur != "none") {
+				this._gfctxlbl.shadowBlur = this._currentsymb['labelShadowBlur'];
+			}
+
+			if (this._currentsymb['labelShadowOffsetX'] !== undefined && this._currentsymb.labelShadowOffsetX != "none") {
+				this._gfctxlbl.shadowOffsetX = this._currentsymb['labelShadowOffsetX'];
+			}
+
+			if (this._currentsymb['labelShadowOffsetY'] !== undefined && this._currentsymb.labelShadowOffsetY != "none") {
+				this._gfctxlbl.shadowOffsetY = this._currentsymb['labelShadowOffsetY'];
+			}
+
 			this._gfctxlbl.fillText(p_labeltxt, cx, cy);
 			this._gfctxlbl.restore();
 

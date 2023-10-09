@@ -473,9 +473,14 @@ export class ImgLRUCache {
 	asyncFetchImage(p_imgpath, p_name) {
 
 		// console.log("-- A a pedir:", p_name, "buffer len:", this.cache.size, Array.from(this.cache.keys()));
-		const name = p_name.toLowerCase();
+		let name = null;
 		let ret = null;
-		if (this.has(name)) {
+
+		if (p_name) {
+			name = p_name.toLowerCase();
+		}
+
+		if (name != null && this.has(name)) {
 			return Promise.resolve(this.get(name));
 		} else {
 
@@ -488,7 +493,9 @@ export class ImgLRUCache {
 				.decode()
 				.then(() => {
 					if (img.complete) {
-						this.set(name, img);
+						if (name) {
+							this.set(name, img);
+						}
 						resolve(img);
 					} else {
 						reject(new Error(`[WARN] ImgLRUCache syncFetchImage: img ${p_imgpath} NOT complete.`, p_imgpath));
