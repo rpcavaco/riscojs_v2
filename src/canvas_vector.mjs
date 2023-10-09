@@ -666,7 +666,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		let ret_promise = null;
 		let groptsymbs = null;
 		let iconnamefield = null;
-		let iconsrcfunc = null;
+//		let iconsrcfunc = null;
 		let doit = false;
 		let return_error = null;
 
@@ -675,9 +675,9 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		if (this['iconnamefield'] !== undefined && this['iconnamefield'] != "none") {
 			iconnamefield = this['iconnamefield'];
 		}
-		if (this['iconsrcfunc'] !== undefined && this['iconsrcfunc'] != "none") {
-			iconsrcfunc = this['iconsrcfunc'];
-		}
+		// if (this['iconsrcfunc'] !== undefined && this['iconsrcfunc'] != "none") {
+		// 	iconsrcfunc = this['iconsrcfunc'];
+		// }
 
 		if (opt_symbs) {
 
