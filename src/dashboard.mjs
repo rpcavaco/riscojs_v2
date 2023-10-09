@@ -287,7 +287,7 @@ export class DashboardPanel {
 
 		const lang = (new I18n(p_mapctx.cfgvar["basic"]["msgs"])).getLang();
 
-		let counterfont, countersize, txtfont, txtsize, gaugeStyle, gaugelinewidth;
+		let counterfont, counterfntsize, txtfont, txtsize, gaugeStyle, gaugelinewidth;
 
 		ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 
@@ -333,10 +333,10 @@ export class DashboardPanel {
 						counterfont = this.counterFontFamily;
 					}
 
-					if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["dash_countersize"] !== undefined) {
-						countersize = p_mapctx.cfgvar["basic"]["style_override"]["dash_countersize"];
+					if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["dash_counterfontsize"] !== undefined) {
+						counterfntsize = p_mapctx.cfgvar["basic"]["style_override"]["dash_counterfontsize"];
 					} else {
-						countersize = this.counterszPX;
+						counterfntsize = this.counterszPX;
 					}
 
 					if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["dash_countertextfont"] !== undefined) {
@@ -357,6 +357,12 @@ export class DashboardPanel {
 						gaugelinewidth = this.counterGaugeLineWidth;
 					}
 
+					const ext_radius = Math.min(0.4 * Math.min(height, width), GlobalConst.CONTROLS_STYLES.DASH_COUNTERMAXRADIUS);
+					const k = Math.min(ext_radius / GlobalConst.CONTROLS_STYLES.DASH_COUNTERMAXRADIUS, 1);
+
+					const realtextsize = Math.round(k * txtsize);
+					const realcounterfntsize = Math.round(k * counterfntsize);
+
 					if (current_data["gauge"] !== undefined) {
 
 						if (current_data["gauge"]["style"] !== undefined) {
@@ -371,16 +377,16 @@ export class DashboardPanel {
 						
 						// paint gauge stroke
 					
-						r = parseInt(value) / current_data["gauge"]["max"];
+						r = k * parseInt(value) / current_data["gauge"]["max"];
 						iniang = 5 * Math.PI / 6.0;
 						finalang = iniang + (r * 8 * Math.PI / 6.0);
 
 						ctx.save();
 
 						ctx.beginPath();
-						ctx.lineWidth = gaugelinewidth;
+						ctx.lineWidth = Math.round(k * gaugelinewidth);
 						ctx.strokeStyle = gaugeStyle;
-						ctx.arc(centerx, centery, 104, iniang, finalang);
+						ctx.arc(centerx, centery, 0.87 * ext_radius, iniang, finalang);
 						ctx.stroke();
 
 						ctx.restore();
@@ -394,8 +400,6 @@ export class DashboardPanel {
 					lblsz = 12;
 					ctx.font = `${lblsz}px sans-serif`;
 					//ctx.strokeRect(centerx - 50, centery - 50, 100, 100);
-
-					const ext_radius = Math.min(0.8 * height, GlobalConst.CONTROLS_STYLES.DASH_COUNTERMAXRADIUS);
 
 					if (current_data["gauge"] !== undefined) {
 
@@ -422,7 +426,7 @@ export class DashboardPanel {
 					const lblsplits = lbl.split("\n");
 					let maxlnheight = 0;
 
-					ctx.font = `${txtsize}px ${txtfont}`;
+					ctx.font = `${realtextsize}px ${txtfont}`;
 
 					for (let lblsplit of lblsplits) {
 						txtdims = ctx.measureText(lblsplit);	
@@ -430,7 +434,7 @@ export class DashboardPanel {
 					}
 
 					ctx.strokeStyle = this.activeStyleFront;
-					ctx.font = `${countersize}px ${counterfont}`;
+					ctx.font = `${realcounterfntsize}px ${counterfont}`;
 
 					// central line for reference
 					/* ctx.beginPath();
@@ -445,7 +449,7 @@ export class DashboardPanel {
 						ctx.fillText(value, centerx, centery);
 					}
 
-					ctx.font = `${txtsize}px ${txtfont}`;
+					ctx.font = `${realtextsize}px ${txtfont}`;
 
 					for (let cota=0, tli=0; tli < lblsplits.length; tli++) {
 						if (tli == 0) {
