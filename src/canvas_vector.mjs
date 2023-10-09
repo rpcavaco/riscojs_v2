@@ -272,6 +272,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		try {
 			if (opt_symb) {
+
 				try {
 					this._gfctx.save();
 					opt_symb.setStyle(this._gfctx);
@@ -280,16 +281,16 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				} finally {
 					this._gfctx.restore();
 				}	
+
 			} else {
 
 				is_data_url = false;
 				the_url = this.iconsrcfunc(opt_iconname);
-				console.log(">>>>", the_url.slice(0,5));
 
-				if (the_url.slice(0,5) != "data:" && this._currentsymb['drawsymbAsync'] !== undefined) {
+				if (this._currentsymb['drawsymbAsync'] !== undefined) {
 
 					ret_promise = new Promise((resolve, reject) => {
-						this._currentsymb.drawsymbAsync(p_mapctxt, this, pt, opt_iconname, opt_feat_id).then(
+						this._currentsymb.drawsymbAsync(p_mapctxt, this, pt, opt_iconname, (the_url.slice(0,5) == "data:"), opt_feat_id).then(
 							() => {
 								resolve();
 							}

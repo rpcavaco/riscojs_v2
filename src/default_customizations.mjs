@@ -1047,8 +1047,7 @@ class BasemapCtrlBox extends MapPrintInRect {
 
 				case "BLU":
 					this.draw3CircSymbol(ctx, ["rgb(15, 30, 50)", "rgb(50, 100, 160)", "rgb(75, 150, 225)"]);
-					break;
-						
+					break;				
 
 			}
 
