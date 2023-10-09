@@ -75,6 +75,42 @@ const canvasRasterMethodsMixin = (Base) => class extends Base {
 		}
 	};
 
+	static BlueprintEffectImgFilter(p_gfctx, p_imgobj, p_x, p_y, p_ctxw, p_ctxh, null_filteradicdata) {
+			
+		try {
+			const imageData = p_gfctx.getImageData(p_x, p_y, p_ctxw, p_ctxh);
+			const data = imageData.data;
+			let brightness;
+
+			for(var i = 0; i < data.length; i += 4) {
+				brightness = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
+				// red
+				data[i] = 0.5 * brightness;
+				// green
+				data[i + 1] = brightness;
+				// blue
+				data[i + 2] = 1.28 * brightness;
+			}
+
+			// overwrite original image
+			p_gfctx.putImageData(imageData, p_x, p_y);    			
+			
+		} catch(e) {
+			var accepted = false
+			if (e.name !== undefined) {
+				if (["NS_ERROR_NOT_AVAILABLE"].indexOf(e.name) >= 0) {
+					accepted = true;
+				}
+			}
+			if (!accepted) {
+				console.log("... drawImage ERROR ...");
+				console.log(p_imgobj);
+				console.log(e);
+			}
+				
+		}
+	};	
+
 	static imageEvtsHandling(pp_mapctxt, p_lyr, p_img, pp_scr_env, pp_dims, pp_envkey, p_raster_id, p_alpha) {
 		
 		const that = this;
@@ -92,6 +128,8 @@ const canvasRasterMethodsMixin = (Base) => class extends Base {
 				gfctx.drawImage(p_img, pp_scr_env[0], pp_scr_env[3]);
 				if (p_lyr.filter == 'grayscale') {
 					that.toGrayScaleImgFilter(gfctx, p_img, pp_scr_env[0], pp_scr_env[3], ...pp_dims);
+				} else if (p_lyr.filter == 'blueprint') {
+					that.BlueprintEffectImgFilter(gfctx, p_img, pp_scr_env[0], pp_scr_env[3], ...pp_dims);
 				}
 
 				//processHDREffect(gfctx, [0,0], pp_dims)

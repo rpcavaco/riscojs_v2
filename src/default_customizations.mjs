@@ -966,7 +966,7 @@ class BasemapCtrlBox extends MapPrintInRect {
 
 		this.btnSize = 40;
 
-		this.FilterOption = "COLOR";
+		this.FilterIconOption = "COLOR";
 
 		this.had_prev_interaction = false;
 
@@ -1035,10 +1035,21 @@ class BasemapCtrlBox extends MapPrintInRect {
 			ctx.fillRect(...b1);
 			ctx.strokeRect(...b1);
 
-			if (this.FilterOption == "BW") {
-				this.draw3CircSymbol(ctx, ["blue", "red", "green"]);
-			} else {
-				this.draw3CircSymbol(ctx, ["rgb(30, 30, 30)", "rgb(100, 100, 100)", "rgb(150, 150, 150)"]);
+			switch (this.FilterIconOption) {
+
+				case "COLOR":
+					this.draw3CircSymbol(ctx, ["blue", "red", "green"]);
+					break;
+
+				case "BW":
+					this.draw3CircSymbol(ctx, ["rgb(30, 30, 30)", "rgb(100, 100, 100)", "rgb(150, 150, 150)"]);
+					break;
+
+				case "BLU":
+					this.draw3CircSymbol(ctx, ["rgb(15, 30, 50)", "rgb(50, 100, 160)", "rgb(75, 150, 225)"]);
+					break;
+						
+
 			}
 
 		} catch(e) {
@@ -1086,11 +1097,28 @@ class BasemapCtrlBox extends MapPrintInRect {
 
 		const bm = this.tocmgr.getBaseRasterLayer();
 		if (bm != null) {
-			if (bm.filter == 'none') {
-				this.FilterOption = "COLOR";
-			} else {
-				this.FilterOption = "BW";
+
+			const lyrcfg = p_mapctx.cfgvar["layers"]["layers"][bm.key];
+			if (lyrcfg['filter'] === undefined) {
+				return;
 			}
+
+			if (bm.filter == 'none') {
+				
+				switch (lyrcfg['filter']) {
+					case "greyscale":
+						this.FilterIconOption = "BW";
+						break;
+
+					case "blueprint":
+						this.FilterIconOption = "BLU";
+						break;
+				}
+			
+			} else {
+				this.FilterIconOption = "COLOR";
+			}
+
 			this.printSelFilter(p_mapctx);
 		}
 		// this.printSelBasemap(p_mapctx);
@@ -1116,19 +1144,28 @@ class BasemapCtrlBox extends MapPrintInRect {
 				case 'mouseup':
 
 					const bm = this.tocmgr.getBaseRasterLayer();
+					let lyrcfg, changed = false;
 
 					// SelFilter
-					if (this.FilterOption == "COLOR") {
-						bm.filter = 'grayscale';
-					} else {
+					if (this.FilterIconOption == "COLOR") {
+						changed = true;
 						bm.filter = 'none';
+					} else {
+						lyrcfg = p_mapctx.cfgvar["layers"]["layers"][bm.key];
+						if (lyrcfg['filter'] !== undefined) {
+							changed = true;
+							bm.filter = lyrcfg.filter;
+						}
 					}
 
-					this.printSelFilter(p_mapctx);
-					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
-					topcnv.style.cursor = "default";
+					if (changed) {
 
-					p_mapctx.maprefresh();
+						this.printSelFilter(p_mapctx);
+						topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+						topcnv.style.cursor = "default";
+	
+						p_mapctx.maprefresh();	
+					}
 
 					break;
 
