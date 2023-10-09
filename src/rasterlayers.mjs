@@ -363,6 +363,7 @@ export class WMSLayer extends RasterLayer {
 		sp.set('VERSION', verstr);
 		sp.set('REQUEST', 'GetMap');
 		sp.set('LAYERS', lyrnames_str);
+		sp.set('STYLES', '');
 
 		const vers = this.constructor.wmsVersionNumeric((verstr.replace('.', '')));
 		if (vers < 130) {
