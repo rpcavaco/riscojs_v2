@@ -119,6 +119,8 @@ const canvasRasterMethodsMixin = (Base) => class extends Base {
 			const gfctx = pp_mapctxt.renderingsmgr.getDrwCtx(p_lyr.canvasKey, '2d'); //, true);
 
 			gfctx.save();
+			// Requires definition of global var _GLOBAL_SAVE_RESTORE_CTR
+			// _GLOBAL_SAVE_RESTORE_CTR++;
 			try {
 
 				if (p_alpha != null && p_alpha != "none") {
@@ -136,7 +138,11 @@ const canvasRasterMethodsMixin = (Base) => class extends Base {
 			} catch(e) {
 				throw e;
 			} finally {
-				gfctx.restore();
+/* 				_GLOBAL_SAVE_RESTORE_CTR--;
+				if (_GLOBAL_SAVE_RESTORE_CTR < 0) {
+					console.log("Neg _GLOBAL_SAVE_RESTORE_CTR, canvas_raster:", _GLOBAL_SAVE_RESTORE_CTR);
+				}
+ */				gfctx.restore();
 
 				if (p_lyr.rastersloading[p_raster_id] !== undefined) {
 

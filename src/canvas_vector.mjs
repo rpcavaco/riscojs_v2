@@ -172,21 +172,29 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		}
 
 		// _gfctx has underscore to protect from automatic attribute collection from config files
-		try {
-			this._gfctx = p_mapctx.renderingsmgr.getDrwCtx(canvaskey, '2d');
-			this._gfctx.save();
-		} catch(e) {
-			console.error("canvaskey:", canvaskey, opt_alt_canvaskeys, this.canvasKey);
-			throw e;
+		if (b_forlabel) {
+			try {
+				this._gfctxlbl = p_mapctx.renderingsmgr.getDrwCtx(canvaskeyLabels, '2d');
+				// Requires definition of global var _GLOBAL_SAVE_RESTORE_CTRLbl
+				// _GLOBAL_SAVE_RESTORE_CTRLbl++;
+				this._gfctxlbl.save();
+			} catch(e) {
+				console.error("_grabGf2DCtx, canvaskeyLabels:", canvaskeyLabels, opt_alt_canvaskeys, this.canvasKeyLabels);
+				throw e;
+			}	
+		} else {
+			try {
+				this._gfctx = p_mapctx.renderingsmgr.getDrwCtx(canvaskey, '2d');
+				// _GLOBAL_SAVE_RESTORE_CTR++;
+				this._gfctx.save();
+			} catch(e) {
+				console.error("canvaskey:", canvaskey, opt_alt_canvaskeys, this.canvasKey);
+				throw e;
+			}
+	
 		}
 
-		try {
-			this._gfctxlbl = p_mapctx.renderingsmgr.getDrwCtx(canvaskeyLabels, '2d');
-			this._gfctxlbl.save();
-		} catch(e) {
-			console.error("_grabGf2DCtx, canvaskeyLabels:", canvaskeyLabels, opt_alt_canvaskeys, this.canvasKeyLabels);
-			throw e;
-		}
+
 
 		if (opt_symbs) {
 			this._currentsymb = opt_symbs;
@@ -204,7 +212,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		if (b_forlabel) {
 
-			this._currentsymb.setLabelStyle(this._gfctx);
+			this._currentsymb.setLabelStyle(this._gfctxlbl);
 	
 			if (this._currentsymb.labelFillStyle !== undefined && this._currentsymb.labelFillStyle.toLowerCase() !== "none") {
 				this._gfctxlbl.fillStyle = this._currentsymb.labelFillStyle;
@@ -250,10 +258,28 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		if (this._gfctx == null) {
 			throw new Error(`graphics context was not previously grabbed for layer '${this.key}'`);
 		}
+/* 		_GLOBAL_SAVE_RESTORE_CTR--;
+		if (_GLOBAL_SAVE_RESTORE_CTR < 0) {
+			console.log("Neg _GLOBAL_SAVE_RESTORE_CTR, canvas_vector releaseGf2DCtx:", _GLOBAL_SAVE_RESTORE_CTR);
+		} */
 		this._gfctx.restore();
 		this._gfctx = null;
 	
 	}	
+
+	releaseLabelGf2DCtx() {
+
+		if (this._gfctxlbl == null) {
+			throw new Error(`label graphics context was not previously grabbed for layer '${this.key}'`);
+		}
+/* 		_GLOBAL_SAVE_RESTORE_CTRLbl--;
+		if (_GLOBAL_SAVE_RESTORE_CTRLbl < 0) {
+			throw new Error(`Neg _GLOBAL_SAVE_RESTORE_CTRLbl, releaseLabelGf2DCtx: ${_GLOBAL_SAVE_RESTORE_CTRLbl}`);
+		}	 */	
+		this._gfctxlbl.restore();
+		this._gfctxlbl = null;
+	
+	}		
 
 	drawMarker(p_mapctxt, p_coords, opt_iconname, opt_feat_id, opt_symb) {
 
@@ -273,12 +299,17 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		try {
 			if (opt_symb) {
 
+				this._gfctx.save();
+				// _GLOBAL_SAVE_RESTORE_CTR++;
 				try {
-					this._gfctx.save();
 					opt_symb.setStyle(this._gfctx);
 					opt_symb.drawsymb(p_mapctxt, this, pt, opt_iconname, opt_feat_id);
 					ret_promise = Promise.resolve();
 				} finally {
+/* 					_GLOBAL_SAVE_RESTORE_CTR--;
+					if (_GLOBAL_SAVE_RESTORE_CTR < 0) {
+						console.log("Neg _GLOBAL_SAVE_RESTORE_CTR, canvas_vector drawMarker drawsymb:", _GLOBAL_SAVE_RESTORE_CTR);
+					} */
 					this._gfctx.restore();
 				}	
 
@@ -418,7 +449,8 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 					this._gfctx.stroke();
 				}
 
-
+				// to reset ...
+				this._gfctx.beginPath();
 			}
 
 		}
@@ -466,11 +498,13 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			if (this._currentsymb.labelMaskFillStyle.toLowerCase() != "none") {
 				
 				this._gfctxlbl.save();
+				// _GLOBAL_SAVE_RESTORE_CTRLbl++;
 				this._gfctxlbl.fillStyle = this._currentsymb.labelMaskFillStyle;
 				let count= 0;
 				for (const [pt, ang, char, w, h] of textDrawData) {
 
 					this._gfctxlbl.save();
+					// _GLOBAL_SAVE_RESTORE_CTRLbl++;
 					this._gfctxlbl.translate(pt[0], pt[1]);
 					this._gfctxlbl.rotate(ang);
 					this._gfctxlbl.translate(-pt[0], -pt[1]);
@@ -483,10 +517,19 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 						this._gfctxlbl.fillRect(pt[0]-(w/2)-1, pt[1]-(h/2)-1, w+4, h+2);
 					}
 
+/* 					_GLOBAL_SAVE_RESTORE_CTRLbl--;
+					if (_GLOBAL_SAVE_RESTORE_CTRLbl < 0) {
+						console.log("Neg _GLOBAL_SAVE_RESTORE_CTRLbl, canvas_vector drawLabel labelMaskFillStyle cycle:", _GLOBAL_SAVE_RESTORE_CTRLbl);
+					} */
+
 					this._gfctxlbl.restore();
 
 					count++;
 				}
+/* 				_GLOBAL_SAVE_RESTORE_CTRLbl--;
+				if (_GLOBAL_SAVE_RESTORE_CTRLbl < 0) {
+					console.log("Neg _GLOBAL_SAVE_RESTORE_CTRLbl, canvas_vector drawLabel out of labelMaskFillStyle cycle:", _GLOBAL_SAVE_RESTORE_CTRLbl);
+				} */
 				this._gfctxlbl.restore();
 			}
 
@@ -494,16 +537,26 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			for (const [pt, ang, char, w, h] of textDrawData) {
 
 				this._gfctxlbl.save();
+				// _GLOBAL_SAVE_RESTORE_CTRLbl++;
 				this._gfctxlbl.translate(pt[0], pt[1]);
 				this._gfctxlbl.rotate(ang);
 				this._gfctxlbl.translate(-pt[0], -pt[1]);
 
 				this._gfctxlbl.fillText(char, ...pt)
 
+/* 				_GLOBAL_SAVE_RESTORE_CTRLbl--;
+				if (_GLOBAL_SAVE_RESTORE_CTRLbl < 0) {
+					console.log("Neg _GLOBAL_SAVE_RESTORE_CTRLbl, canvas_vector drawLabel labelMaskFillStyle cycle:", _GLOBAL_SAVE_RESTORE_CTRLbl);
+				} */
+
 				this._gfctxlbl.restore();
 
 			}
-			this._gfctxlbl.restore();
+			/*_GLOBAL_SAVE_RESTORE_CTRLbl--;
+			if (_GLOBAL_SAVE_RESTORE_CTRLbl < 0) {
+				console.log("Neg _GLOBAL_SAVE_RESTORE_CTRLbl, canvas_vector drawLabel out of cycle:", _GLOBAL_SAVE_RESTORE_CTRLbl);
+			}
+			this._gfctxlbl.restore();*/
 				
 		} else if (placement == "centroid") {
 
@@ -531,6 +584,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				}
 
 				this._gfctxlbl.save();
+				// _GLOBAL_SAVE_RESTORE_CTRLbl++;
 				
 				if (this._currentsymb.labelLeaderStroke != "none") {
 					this._gfctxlbl.strokeStyle = this._currentsymb.labelLeaderStroke;
@@ -548,6 +602,10 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				this._gfctxlbl.lineTo(...finalpt);
 				this._gfctxlbl.stroke();
 
+/* 				_GLOBAL_SAVE_RESTORE_CTRLbl--;
+				if (_GLOBAL_SAVE_RESTORE_CTRLbl < 0) {
+					console.log("Neg _GLOBAL_SAVE_RESTORE_CTRLbl, canvas_vector drawLabel label leader:", _GLOBAL_SAVE_RESTORE_CTRLbl);
+				} */	
 				this._gfctxlbl.restore();
 
 			} else {
@@ -564,6 +622,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			}
 
 			this._gfctxlbl.save();
+			// _GLOBAL_SAVE_RESTORE_CTRLbl++;
 			if (rot != null) {
 				this._gfctxlbl.translate(cx, cy);
 				this._gfctxlbl.rotate(rot);
@@ -587,6 +646,10 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			}
 
 			this._gfctxlbl.fillText(p_labeltxt, cx, cy);
+/* 			_GLOBAL_SAVE_RESTORE_CTRLbl--;
+			if (_GLOBAL_SAVE_RESTORE_CTRLbl < 0) {
+				console.log("Neg _GLOBAL_SAVE_RESTORE_CTRLbl, canvas_vector drawLabel label centroid:", _GLOBAL_SAVE_RESTORE_CTRLbl);
+			} */	
 			this._gfctxlbl.restore();
 
 		} else if (placement == "extend") {
@@ -628,6 +691,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			}
 
 			this._gfctxlbl.save();
+			//_GLOBAL_SAVE_RESTORE_CTRLbl++;
 			if (ang != 0) {
 				this._gfctxlbl.translate(...anchpt);
 				this._gfctxlbl.rotate(ang);
@@ -677,6 +741,10 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	
 			}
 
+/* 			_GLOBAL_SAVE_RESTORE_CTRLbl--;
+			if (_GLOBAL_SAVE_RESTORE_CTRLbl < 0) {
+				console.log("Neg _GLOBAL_SAVE_RESTORE_CTRLbl, canvas_vector drawLabel label extend:", _GLOBAL_SAVE_RESTORE_CTRLbl);
+			} */	
 			this._gfctxlbl.restore();
 
 		}
@@ -708,8 +776,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				groptsymbs = opt_symbs['graphic'];
 			}
 		}
-
-		let finalReleaseCtx = false; // (iconnamefield != null && (groptsymbs==null || groptsymbs['drawsymb']===undefined));
 
 		if (this.grabGf2DCtx(p_mapctxt, p_attrs, opt_alt_canvaskeys, groptsymbs)) {
 			try {
@@ -745,18 +811,14 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 						})
 
 					} else {
-						finalReleaseCtx = true;
 						this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
+						this.releaseGf2DCtx();
 						ret_promise = Promise.resolve();
 					}
 				}
 			} catch(e) {
 				console.error(p_coords, p_path_levels, this.geomtype);
 				return_error = e;
-			} finally {
-				if (finalReleaseCtx) {
-					this.releaseGf2DCtx();
-				}
 			}				
 		}
 
@@ -823,7 +885,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 						console.error(p_coords, labelfield, lblcontent);
 						console.error(e);
 					} finally {
-						this.releaseGf2DCtx();
+						this.releaseLabelGf2DCtx();
 					}				
 				}
 			}

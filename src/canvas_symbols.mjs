@@ -50,10 +50,11 @@ export class GrSymbol {
 
 	setLabelStyle(p_ctx) {
 
-		this.#toStroke = false;
+		if (this.labelStrokeStyle !== undefined && this.labelStrokeStyle.toLowerCase() !== "none") {
+			p_ctx.strokeStyle = this.labelStrokeStyle;
+		}
 
 		if (this.labelFillStyle !== undefined && this.labelFillStyle.toLowerCase() !== "none") {
-			this.#toFill = true
 			p_ctx.fillStyle = this.labelFillStyle;
 		}	
 
