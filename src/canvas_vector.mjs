@@ -281,7 +281,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	
 	}		
 
-	drawMarker(p_mapctxt, p_coords, opt_iconname, opt_feat_id, opt_symb) {
+	drawMarker(p_mapctxt, p_coords, opt_feat_args, opt_feat_id, opt_symb) {
 
 		if (this._gfctx == null) {
 			return Promise.reject(new Error(`graphics context was not previously grabbed for layer '${this.key}'`));
@@ -303,7 +303,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				// _GLOBAL_SAVE_RESTORE_CTR++;
 				try {
 					opt_symb.setStyle(this._gfctx);
-					opt_symb.drawsymb(p_mapctxt, this, pt, opt_iconname, opt_feat_id);
+					opt_symb.drawsymb(p_mapctxt, this, pt);
 					ret_promise = Promise.resolve();
 				} finally {
 /* 					_GLOBAL_SAVE_RESTORE_CTR--;
@@ -316,13 +316,13 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			} else {
 
 				if (this["iconsrcfunc"] !== undefined && this["iconsrcfunc"] !== 'none') {
-					the_url = this.iconsrcfunc(opt_iconname);
+					the_url = this.iconsrcfunc(opt_feat_args);
 				}
 
 				if (this._currentsymb['drawsymbAsync'] !== undefined) {
 
 					ret_promise = new Promise((resolve, reject) => {
-						this._currentsymb.drawsymbAsync(p_mapctxt, this, pt, opt_iconname, (the_url.slice(0,5) == "data:"), opt_feat_id).then(
+						this._currentsymb.drawsymbAsync(p_mapctxt, this, pt, opt_feat_args, (the_url.slice(0,5) == "data:"), opt_feat_id).then(
 							() => {
 								resolve();
 							}
@@ -333,12 +333,12 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 				} else {
 
-					this._currentsymb.drawsymb(p_mapctxt, this, pt, opt_iconname, opt_feat_id);
+					this._currentsymb.drawsymb(p_mapctxt, this, pt);
 					ret_promise = Promise.resolve();
 				}
 			}
 		} catch(e) {
-			console.error(this,  pt, opt_iconname, opt_feat_id);
+			console.error(this,  pt, opt_feat_id);
 			console.error(this._currentsymb);
 			console.log("error:", e)
 			throw e;
@@ -355,7 +355,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		if (ret_promise) {
 			return ret_promise;
 		} else {
-			return Promise.reject(new Error(`internal error, drawMarker, no promise received for layer:${this.key} icon:${opt_iconname} id:${opt_feat_id}`));
+			return Promise.reject(new Error(`internal error, drawMarker, no promise received for layer:${this.key} id:${opt_feat_id}`));
 		}
 			
 	}
@@ -753,20 +753,20 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		return true;	
 	}
 
-	_refreshitem_feature(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskeys, opt_symbs, opt_terrain_env) {
+	_refreshitem_feature(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskeys, opt_symbs) {
 
 		let ret_promise = null;
 		let groptsymbs = null;
-		let iconnamefield = null;
+//		let iconnamefield = null;
 //		let iconsrcfunc = null;
 		let doit = false;
 		let return_error = null;
 
-		let iconname = null;
+//		let iconname = null;
 
-		if (this['iconnamefield'] !== undefined && this['iconnamefield'] != "none") {
-			iconnamefield = this['iconnamefield'];
-		}
+		// if (this['iconnamefield'] !== undefined && this['iconnamefield'] != "none") {
+		// 	iconnamefield = this['iconnamefield'];
+		// }
 		// if (this['iconsrcfunc'] !== undefined && this['iconsrcfunc'] != "none") {
 		// 	iconsrcfunc = this['iconsrcfunc'];
 		// }
@@ -797,13 +797,9 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 					if (this.geomtype == "point") {
 
-						iconname = null;
-						if (iconnamefield && p_attrs[iconnamefield] !== undefined) {
-							iconname = p_attrs[iconnamefield];
-						}
-
 						ret_promise = new Promise((resolve, reject) => {
-							this.drawMarker( p_mapctxt, p_coords[0], iconname, opt_feat_id, (groptsymbs!=null && groptsymbs['drawsymb']!==undefined ? groptsymbs : null)).then(
+
+							this.drawMarker( p_mapctxt, p_coords[0], p_attrs, opt_feat_id, (groptsymbs!=null && groptsymbs['drawsymb']!==undefined ? groptsymbs : null)).then(
 								() => {
 									this.releaseGf2DCtx();		
 									resolve();		
@@ -905,7 +901,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		const that = this;
 		return new Promise((resolve, reject) => {
-			that._refreshitem_feature(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskeys, opt_symbs, opt_terrain_env).then(
+			that._refreshitem_feature(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskeys, opt_symbs).then(
 				() => {
 					that._refreshitem_label(p_mapctxt, p_coords, p_attrs, p_path_levels, opt_feat_id, opt_alt_canvaskeys, opt_symbs, opt_terrain_env);
 					resolve();

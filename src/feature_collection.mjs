@@ -281,7 +281,7 @@ export class FeatureCollection {
 		//this.spIndex.invalidate();
 	}
 
-	featuredraw(p_layerkey, p_featid, p_alt_canvaskey, opt_symbs, opt_terrain_env, opt_checkfeatattrsfunc) {
+	featuredraw(p_layerkey, p_featid, p_alt_canvaskey, opt_symbs, opt_checkfeatattrsfunc, opt_terrain_env) {
 
 		if (this.featList[p_layerkey] === undefined) {
 			return Promise.reject(new Error(`featuredraw, layer '${p_layerkey}' was not set through 'setLayer' method`));
@@ -301,20 +301,26 @@ export class FeatureCollection {
 
 		return new Promise((resolve, reject) => {
 
-			if (opt_checkfeatattrsfunc==null || opt_checkfeatattrsfunc(feat.a)) {
-				that.layers[p_layerkey].refreshitem(that.mapctx, feat.g, feat.a, feat.l, p_featid, p_alt_canvaskey, opt_symbs, opt_terrain_env).then(
-					() => { resolve(feat); }
-				).catch(
-					(e) => { reject(e); }
-				);
-
-			} else {
-				resolve(null);
+			try {
+				if (opt_checkfeatattrsfunc==null || opt_checkfeatattrsfunc(feat.a)) {
+					that.layers[p_layerkey].refreshitem(that.mapctx, feat.g, feat.a, feat.l, p_featid, p_alt_canvaskey, opt_symbs, opt_terrain_env).then(
+						() => { resolve(feat); }
+					).catch(
+						(e) => { reject(e); }
+					);
+	
+				} else {
+					resolve(null);
+				}	
+			} catch(e) {
+				console.log(opt_checkfeatattrsfunc);
+				reject(e);
 			}
 
 		});
 
 	}	
+
 
 	featuresdrawNext(p_layerkey, p_featidlist, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
 
@@ -328,7 +334,9 @@ export class FeatureCollection {
 			} else {
 				try {
 
-					that.featuredraw(p_layerkey, feat_id, opt_alt_canvaskey, opt_symbs, opt_terrain_env, that.layers[p_layerkey].isFeatureInsideFilter.bind(that.layers[p_layerkey])).then(
+					// featuredraw(p_layerkey, p_featid, p_alt_canvaskey, opt_symbs, opt_checkfeatattrsfunc, opt_terrain_env) {
+
+					that.featuredraw(p_layerkey, feat_id, opt_alt_canvaskey, opt_symbs, that.layers[p_layerkey].isFeatureInsideFilter.bind(that.layers[p_layerkey]), opt_terrain_env).then(
 						(feat) => { 
 							// console.log(":: 336 ::", feat);
 							that.featuresdrawNext(p_layerkey, p_featidlist, opt_alt_canvaskey, opt_symbs, opt_terrain_env).then(

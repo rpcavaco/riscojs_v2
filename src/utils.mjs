@@ -470,14 +470,15 @@ export class ImgLRUCache {
 		return ret;
 	}
 
-	asyncFetchImage(p_imgpath, p_name) {
+	asyncFetchImage(p_imgsrclist) {
 
 		// console.log("-- A a pedir:", p_name, "buffer len:", this.cache.size, Array.from(this.cache.keys()));
 		let name = null;
-		let ret = null;
 
-		if (p_name) {
-			name = p_name.toLowerCase();
+		const [inname, imgpath] = p_imgsrclist;
+
+		if (inname) {
+			name = inname.toLowerCase();
 		}
 
 		if (name != null && this.has(name)) {
@@ -486,7 +487,7 @@ export class ImgLRUCache {
 
 			const img = new Image();
 			img.decoding = "async";
-			img.src = p_imgpath;
+			img.src = imgpath;
 
 			return new Promise((resolve, reject) => {
 				img
@@ -498,11 +499,11 @@ export class ImgLRUCache {
 						}
 						resolve(img);
 					} else {
-						reject(new Error(`[WARN] ImgLRUCache syncFetchImage: img ${p_imgpath} NOT complete.`, p_imgpath));
+						reject(new Error(`[WARN] ImgLRUCache syncFetchImage: img ${imgpath} NOT complete.`, imgpath));
 					}
 				})
 				.catch((e) => {
-					reject(new Error(`[WARN] ImgLRUCache syncFetchImage on '${p_name}': error '${e}'.`));
+					reject(new Error(`[WARN] ImgLRUCache syncFetchImage on '${name}': error '${e}'.`));
 				});
 			});
 		}

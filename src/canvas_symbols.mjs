@@ -194,7 +194,7 @@ class MarkerSymbol extends labelSymbolMixin(GrSymbol) {
 	get variablesymb_idx() {
 		return this._variablesymb_idx;
 	}	
-	drawsymb(p_mapctxt, p_layer, p_coords, opt_iconname, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords) {
 		// asbtract, to be implemented by subclasses
 	}
 	
@@ -208,7 +208,7 @@ export class CanvasVertCross extends strokeSymbolMixin(MarkerSymbol) {
 		super(opt_variablesymb_idx);
 		this.symbname = "VertCross";
 	}
-	drawsymb(p_mapctxt, p_layer, p_coords, opt_iconname, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = this.markersize * GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval);
@@ -246,7 +246,7 @@ export class CanvasCircle extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol
 		super(opt_variablesymb_idx);
 		this.symbname = "Circle";
 	}
-	drawsymb(p_mapctxt, p_layer, p_coords, opt_iconname, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
@@ -300,7 +300,7 @@ export class CanvasDiamond extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbo
 		super(opt_variablesymb_idx);
 		this.symbname = "Diamond";
 	}
-	drawsymb(p_mapctxt, p_layer, p_coords, opt_iconname, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval)) * 0.5;
@@ -362,7 +362,7 @@ export class CanvasSquare extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol
 		this.symbname = "Square";
 	}
 
-	drawsymb(p_mapctxt, p_layer, p_coords, opt_iconname, opt_feat_id) {
+	drawsymb(p_mapctxt, p_layer, p_coords) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval)) * 0.5;
@@ -426,7 +426,7 @@ export class CanvasIcon extends MarkerSymbol {
 		this.symbname = "Icon";
 	}
 
-	drawsymbAsync(p_mapctxt, p_layer, p_coords, p_iconname, b_from_dataurl, opt_feat_id) {
+	drawsymbAsync(p_mapctxt, p_layer, p_coords, p_args, b_from_dataurl) {
 
 		const sclval = p_mapctxt.getScale();
 		const dim = Math.round(this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval)));
@@ -437,7 +437,7 @@ export class CanvasIcon extends MarkerSymbol {
 
 			prom = new Promise((resolve, reject) => {
 
-				const imgurl = p_layer.iconsrcfunc(p_iconname);
+				const [ _, imgurl] = p_layer.iconsrcfunc(p_args);
 		
 				const img = new Image();
 				img.decoding = "async";
@@ -468,17 +468,17 @@ export class CanvasIcon extends MarkerSymbol {
 		
 						resolve();
 					} else {
-						reject(new Error(`[WARN] drawsymbAsync: img ${p_iconname} NOT complete.`));
+						reject(new Error(`[WARN] drawsymbAsync: img for feat ${p_args} NOT complete.`));
 					}
 				})
 				.catch((e) => {
-					reject(new Error(`[WARN] drawsymbAsync '${p_iconname}': error '${e}'.`));
+					reject(new Error(`[WARN] drawsymbAsync for feat '${p_args}': error '${e}'.`));
 				});
 			});
 			
 		} else {
 			prom = new Promise((resolve, reject) =>  {
-				p_mapctxt.imgbuffer.asyncFetchImage(p_layer.iconsrcfunc(p_iconname), p_iconname).then(
+				p_mapctxt.imgbuffer.asyncFetchImage(p_layer.iconsrcfunc(p_args)).then(
 					(img) => {
 	
 						const r = img.width / img.height;
@@ -522,7 +522,7 @@ export class CanvasIcon extends MarkerSymbol {
 
 		return new Promise((resolve, reject) =>  {
 
-			p_mapctx.imgbuffer.asyncFetchImage(p_lyr.iconsrcfunc(p_lyr.icondefsymb), p_lyr.icondefsymb).then(
+			p_mapctx.imgbuffer.asyncFetchImage(p_lyr.iconsrcfunc(p_lyr.icondefsymb)).then(
 				(img) => {
 					const r = img.width / img.height;
 					let w, h;

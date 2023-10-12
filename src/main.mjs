@@ -435,7 +435,9 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			}
 
 			return new Promise((resolve,reject) => {
-				this.featureCollection.featuredraw(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict, { "graphic": symb, 'label': lsymb } ).then(
+				const env = [];
+				this.getMapBounds(env);
+				this.featureCollection.featuredraw(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict, { "graphic": symb, 'label': lsymb }, null, env ).then(
 					(feat) => { resolve(feat); }
 				).catch((e) => {
 					reject(e);

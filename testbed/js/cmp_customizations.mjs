@@ -185,6 +185,9 @@ export class LocQuery {
 										p_this.setTopo(p_cod_topo, p_toponimo);
 										p_this.query_box.value = p_toponimo;
 
+										const env = [];
+										that.mapctx.getMapBounds(env);
+						
 										that.mapctx.tocmgr.addAfterRefreshProcedure(() => {
 
 											filter_dict = {}
@@ -193,7 +196,7 @@ export class LocQuery {
 											for (let foundid of foundlist) {
 												that.mapctx.featureCollection.featuredraw(that.centerlinefeats["layerkey"], 
 												foundid, {'normal': 'temporary', 'label': 'temporary' }, 
-												{ "graphic": that.symbs["centerlinefeats"] } );
+												{ "graphic": that.symbs["centerlinefeats"] }, null, env );
 											}
 			
 										});
@@ -249,11 +252,15 @@ export class LocQuery {
 								filter_dict = {}
 								filter_dict[that.centerlinefeats["fieldname_topo"]] = responsejson['out']['cod_topo'];
 								that.mapctx.featureCollection.find(that.centerlinefeats["layerkey"], 'EQ', filter_dict, foundlist);
+
+								const env = [];
+								that.mapctx.getMapBounds(env);
+
 								//console.warn("feat id:", featid, "feat:", feat, "symb:", GlobalConst.FEATMOUSESEL_HIGHLIGHT[feat.gt])
 								for (let foundid of foundlist) {
 									that.mapctx.featureCollection.featuredraw(that.centerlinefeats["layerkey"], 
 									foundid, {'normal': 'temporary', 'label': 'temporary' }, 
-									{ "graphic": that.symbs["centerlinefeats"] } );
+									{ "graphic": that.symbs["centerlinefeats"] }, null, env );
 								}
 
 							});
@@ -326,13 +333,16 @@ export class LocQuery {
 
 							that.mapctx.tocmgr.addAfterRefreshProcedure(() => {
 
+								const env = [];
+								that.mapctx.getMapBounds(env);
+
 								filter_dict = {}
 								filter_dict[that.centerlinefeats["fieldname_topo"]] = responsejson['out']['cod_topo'];
 								that.mapctx.featureCollection.find(that.centerlinefeats["layerkey"], 'EQ', filter_dict, foundlist);
 								for (let foundid of foundlist) {
 									that.mapctx.featureCollection.featuredraw(that.centerlinefeats["layerkey"], 
 									foundid, {'normal': 'temporary', 'label': 'temporary' }, 
-									{ "graphic": that.symbs["centerlinefeats"] } );
+									{ "graphic": that.symbs["centerlinefeats"] }, null, env );
 								}
 
 								filter_dict = {}
@@ -343,7 +353,7 @@ export class LocQuery {
 								for (let foundid of foundlist) {
 									that.mapctx.featureCollection.featuredraw(that.npolfeats["layerkey"], 
 									foundid, {'normal': 'temporary', 'label': 'temporary' }, 
-									{ "graphic": that.symbs["npolfeats"] } );
+									{ "graphic": that.symbs["npolfeats"] }, null, env );
 								}
 
 							});
