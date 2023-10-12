@@ -427,6 +427,15 @@ class TransformsQueue {
 	setScaleCenteredAtScreenCenter(p_scaleval, do_store) {
 
 		const cdims = [], cen= [], terr_pt_from = [], terr_pt_to = [], newpt = [];
+		let maxscl = Number.MAX_SAFE_INTEGER;
+
+		if (this.mapctx.cfgvar.basic["maxscaleview"] !== undefined && this.mapctx.cfgvar.basic["maxscaleview"]["scale"] !== undefined && this.mapctx.cfgvar.basic["maxscaleview"]["terrain_center"] !== undefined) {
+			maxscl = this.mapctx.cfgvar.basic["maxscaleview"]["scale"];
+		}
+
+		if (p_scaleval >= maxscl) {
+			return this.setScaleCenteredAtPoint(p_scaleval, this.mapctx.cfgvar.basic["maxscaleview"]["terrain_center"], do_store);
+		}
 
 		this.mapctx.renderingsmgr.getCanvasDims(cdims);
 		this.getTerrainPt([cdims[0] / 2, cdims[1] / 2], terr_pt_from);
