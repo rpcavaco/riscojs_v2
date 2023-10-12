@@ -83,11 +83,20 @@
 	 */
 	init() {
 
-		let bounds = this.paneldiv.getBoundingClientRect();
+		const bounds = this.paneldiv.getBoundingClientRect();
+
+		const w = parseInt(bounds.width);
+		const h = parseInt(bounds.height);
+
+		//const dpr = 1.0;
 
 		for (let i=0; i<this.canvaskeys.length; i++) {
-			this.canvases[this.canvaskeys[i]].setAttribute('width', parseInt(bounds.width));
-			this.canvases[this.canvaskeys[i]].setAttribute('height', parseInt(bounds.height));
+
+			this.canvases[this.canvaskeys[i]].setAttribute('width', w);
+			this.canvases[this.canvaskeys[i]].setAttribute('height', h);
+			this.canvases[this.canvaskeys[i]].width = w;
+			this.canvases[this.canvaskeys[i]].height = h;
+
 		}
 
 	}
