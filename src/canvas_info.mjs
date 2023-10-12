@@ -256,14 +256,14 @@ export class InfoBox extends PopupBox {
 
 		const recdata = this.data[this.layer.infocfg.jsonkey][this.recordidx];
 
-		if (this.layer.infocfg.fields["transforms"] !== undefined) {
+		/*if (this.layer.infocfg.fields["transforms"] !== undefined) {
 			const trfcfgs = this.layer.infocfg.fields.transforms;
 			for (const trcfg of trfcfgs) {
 				const [data, format] = trcfg.func(recdata);
 				recdata[trcfg.outfield] = data;
 				this.formats[trcfg.outfield] = format;
 			}
-		}
+		} */
 
 		// collect all field names to publish
 		this.ordered_fldnames.length = 0;
