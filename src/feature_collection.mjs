@@ -376,7 +376,6 @@ export class FeatureCollection {
 
 		return new Promise((resolve, reject) => {
 			if (featidlist.length > 0) {
-
 				that.featuresdrawNext(p_layerkey, featidlist, opt_alt_canvaskey, opt_symbs, opt_terrain_env).then(
 					() => { 
 						resolve(); 

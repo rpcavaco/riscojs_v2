@@ -293,7 +293,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		}
 
 		const pt = [];
-		let ret_promise = null, is_data_url, the_url;
+		let ret_promise = null, the_url="";
 		p_mapctxt.transformmgr.getRenderingCoordsPt(p_coords, pt);
 
 		try {
@@ -315,8 +315,9 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 			} else {
 
-				is_data_url = false;
-				the_url = this.iconsrcfunc(opt_iconname);
+				if (this["iconsrcfunc"] !== undefined && this["iconsrcfunc"] !== 'none') {
+					the_url = this.iconsrcfunc(opt_iconname);
+				}
 
 				if (this._currentsymb['drawsymbAsync'] !== undefined) {
 
