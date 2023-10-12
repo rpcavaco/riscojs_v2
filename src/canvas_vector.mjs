@@ -808,7 +808,9 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 									this.releaseGf2DCtx();		
 									resolve();		
 								}
-							);	
+							).catch((e) => {
+								reject(e);								
+							});	
 						})
 
 					} else {
@@ -816,7 +818,11 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 						this.releaseGf2DCtx();
 						ret_promise = Promise.resolve();
 					}
+
+				} else {	
+					ret_promise = Promise.resolve();
 				}
+
 			} catch(e) {
 				console.error(p_coords, p_path_levels, this.geomtype);
 				return_error = e;
