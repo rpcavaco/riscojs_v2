@@ -5,7 +5,7 @@ import {addEnv} from './riscojs_v2/geom.mjs';
 
 function getCircularReplacer() {
 	return function (key, value) {
-	  if (key == "mapctxt" || key == "i18n" || key == "msg_ctrlr") {
+	  if (key == "mapctx" || key == "i18n" || key == "msg_ctrlr") {
 		return null;
 	  } else if (typeof value === 'function') {
 		return "[metodo]";
@@ -56,6 +56,8 @@ export class LocQuery {
 			Object.assign(symb, p_cfg[symbitem]['symb']);
 			this.symbs[symbitem] = symb;
 		}
+
+		console.log("cl feats", p_cfg["centerlinefeats"]);
 
 	}
 
@@ -202,7 +204,7 @@ export class LocQuery {
 								"str": responsejson['out']['str'],
 								"loc": responsejson['out']['loc'],
 								"toponym": responsejson['out']['toponym'],
-								"codtopo": responsejson['out']['codtopo'],
+								"cod_topo": responsejson['out']['cod_topo'],
 								"np": responsejson['out']['npol']
 
 	
@@ -211,11 +213,13 @@ export class LocQuery {
 	fillResultInUI(p_results_json) {
 
 		let featcount = 0, single_customqry_feat = null;
-		let h = 0, usablestr;
+		let h = 0, usablestr, cod_topo, npol;
 
 		// console.log(p_results_json);
 
 		this.cleanResultArea(true);		
+
+		const that = this;
 		
 		if (p_results_json["customqry"] !== undefined && p_results_json["customqry"]["status"] == "OK") {
 			let tempfeat=null;
@@ -230,7 +234,7 @@ export class LocQuery {
 
 		// Se houver apenas uma feature resultado da pesquisa especializada, fazer zoom + info à mesma
 		if (single_customqry_feat) {
-			this.mapctxt.zoomToFeatsAndOpenInfoOnLast([single_customqry_feat.oid], single_customqry_feat.env, {'normal': 'temporary', 'label': 'temporary' });
+			this.mapctx.zoomToFeatsAndOpenInfoOnLast([single_customqry_feat.oid], single_customqry_feat.env, {'normal': 'temporary', 'label': 'temporary' });
 			return;
 		}
 
@@ -243,17 +247,83 @@ export class LocQuery {
 				switch(p_results_json["address"]["data"]["type"]) {
 
 					case "topo":
-						usablestr = this.query_box.value = p_results_json["address"]["data"]["toponym"];
+
+						usablestr = p_results_json["address"]["data"]["toponym"];
 						h += this.addLine2Results(p_results_json["address"]["data"]["toponym"], "CLICK", (e) => {
-							this.query_box.value = usablestr;
+							that.query_box.value = usablestr;
+							that.cleanResultArea();
 						});
+
+						cod_topo = p_results_json["address"]["data"]['cod_topo'];
+						this.mapctx.tocmgr.addAfterRefreshProcedure(() => {
+
+							let filter_dict = {}, foundlist = [];
+							filter_dict[that.centerlinefeats["fieldname_topo"]] = cod_topo;
+							that.mapctx.featureCollection.find(that.centerlinefeats["layerkey"], 'EQ', filter_dict, foundlist);
+
+							const env = [];
+							that.mapctx.getMapBounds(env);
+
+							//console.warn("feat id:", featid, "feat:", feat, "symb:", GlobalConst.FEATMOUSESEL_HIGHLIGHT[feat.gt])
+							for (let foundid of foundlist) {
+								that.mapctx.featureCollection.featuredraw(that.centerlinefeats["layerkey"], 
+								foundid, {'normal': 'temporary', 'label': 'temporary' }, 
+								{ "graphic": that.symbs["centerlinefeats"] }, null, env );
+							}
+
+						});
+
+						this.mapctx.transformmgr.zoomToRect(p_results_json["address"]["data"]['ext'][0], p_results_json["address"]["data"]['ext'][1], p_results_json["address"]["data"]['ext'][2], p_results_json["address"]["data"]['ext'][3]);
+						
 						break;
 					
 					case "npol":
+
 						usablestr = `${p_results_json["address"]["data"]["toponym"]}, ${p_results_json["address"]["data"]["np"]}`;
 						h += this.addLine2Results(usablestr, "CLICK", (e) => {
-							this.query_box.value = usablestr;
+							that.query_box.value = usablestr;
+							that.cleanResultArea();
 						});
+
+						cod_topo = p_results_json["address"]["data"]['cod_topo'];
+						npol = p_results_json["address"]["data"]['npol'];
+						this.mapctx.tocmgr.addAfterRefreshProcedure(() => {
+
+							const env = [];
+							that.mapctx.getMapBounds(env);
+
+							let filter_dict = {}, foundlist = [];
+							filter_dict[that.centerlinefeats["fieldname_topo"]] = cod_topo;
+							that.mapctx.featureCollection.find(that.centerlinefeats["layerkey"], 'EQ', filter_dict, foundlist);
+							for (let foundid of foundlist) {
+								that.mapctx.featureCollection.featuredraw(that.centerlinefeats["layerkey"], 
+								foundid, {'normal': 'temporary', 'label': 'temporary' }, 
+								{ "graphic": that.symbs["centerlinefeats"] }, null, env );
+							}
+
+							filter_dict = {}
+							filter_dict[that.npolfeats["fieldname_topo"]] = cod_topo;
+							filter_dict[that.npolfeats["fieldname_npol"]] = npol;
+							that.mapctx.featureCollection.find(that.npolfeats["layerkey"], 'EQ', filter_dict, foundlist);
+
+							for (let foundid of foundlist) {
+								that.mapctx.featureCollection.featuredraw(that.npolfeats["layerkey"], 
+								foundid, {'normal': 'temporary', 'label': 'temporary' }, 
+								{ "graphic": that.symbs["npolfeats"] }, null, env );
+							}
+
+						});
+
+						// console.log(responsejson['out']['tiporesp'], responsejson['out']['loc']);
+
+						if (that.loc_layer_key) {
+							const lyr = that.mapctx.tocmgr.getLayer(that.loc_layer_key);
+							lyr.setToPoint([p_results_json["address"]["data"]['loc'][0], p_results_json["address"]["data"]['loc'][1]]);
+						}
+						
+
+						that.mapctx.transformmgr.setScaleCenteredAtPoint(that.zoomto, [p_results_json["address"]["data"]['loc'][0], p_results_json["address"]["data"]['loc'][1]], true);
+
 						break;
 
 				}
@@ -261,7 +331,7 @@ export class LocQuery {
 			} else if (p_results_json["address"]["data"]["type"] == "errornp") {
 
 				// lista nao encontrado + numbers
-				h += this.addLine2Results("Topónimo", "CLASS");
+				h += this.addLine2Results("Topónimo encontrado", "CLASS");
 				h += this.addLine2Results(p_results_json["address"]["data"]["toponym"]);
 				h += this.addLine2Results("Números de polícia", "CLASS");
 				h += this.addLine2Results(`Número '${p_results_json["address"]["data"]["np"]}': não encontrado.`, "MSG");
@@ -447,7 +517,7 @@ export class LocQuery {
 									"str": responsejson['out']['str'],
 									"ext": responsejson['out']['ext'],
 									"toponym": responsejson['out']['toponym'],
-									"codtopo": responsejson['out']['codtopo'],
+									"cod_topo": responsejson['out']['cod_topo'],
 									"np": responsejson['out']['errornp'],
 									"numbers": JSON.parse(JSON.stringify(responsejson['numbers']))
 								});
@@ -459,7 +529,7 @@ export class LocQuery {
 									"str": responsejson['out']['str'],
 									"ext": responsejson['out']['ext'],
 									"toponym": responsejson['out']['toponym'],
-									"codtopo": responsejson['out']['codtopo']
+									"cod_topo": responsejson['out']['cod_topo']
 								});
 
 							}
@@ -471,7 +541,7 @@ export class LocQuery {
 								"str": responsejson['out']['str'],
 								"loc": responsejson['out']['loc'],
 								"toponym": responsejson['out']['toponym'],
-								"codtopo": responsejson['out']['codtopo'],
+								"cod_topo": responsejson['out']['cod_topo'],
 								"np": responsejson['out']['npol']
 							});
 
@@ -679,7 +749,7 @@ export class LocQuery {
 			throw new Error("não foram encontrados elementos correspondentes à pesquisa");
 		}
 
-		this.mapctxt.zoomToFeatsAndOpenInfoOnLast(lyrkIds, totalEnv, {'normal': 'temporary', 'label': 'temporary' }, this.adic_callback);
+		this.mapctx.zoomToFeatsAndOpenInfoOnLast(lyrkIds, totalEnv, {'normal': 'temporary', 'label': 'temporary' }, this.adic_callback);
 
 	}	
 }
