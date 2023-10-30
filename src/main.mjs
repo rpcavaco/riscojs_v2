@@ -177,6 +177,7 @@ export class RiscoMapCtx {
 				break;
 
 		}
+
 		this.featureCollection = new FeatureCollection(this);
 		this.transformmgr = new Transform2DMgr(this, p_config_var["basic"]);	
 		this.toolmgr = new ToolManager(p_config_var["basic"]);
@@ -184,8 +185,6 @@ export class RiscoMapCtx {
 		this.i18n = new I18n(p_config_var["text"]);
 		this.touchevtctrlr = new TouchController();
 		this.imgbuffer = new ImgLRUCache(GlobalConst.IMAGE_LRUCACHE_SZ);
-
-		this.query_box = new I18n(p_config_var["text"]);
 
 		this._refresh_timeout_id = null;
 
@@ -227,7 +226,7 @@ export class RiscoMapCtx {
 	setCustomizationObj(p_object, p_setmapctx_func) {
 
 		this.#customization_object = p_object;
-		p_setmapctx_func(p_object, this);
+		p_setmapctx_func(p_object);
 
 		for (let objid of this.#customization_object.mapcustom_controlsmgrs_keys) {
 			if (p_object.instances[objid] !== undefined) {

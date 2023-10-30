@@ -1,6 +1,19 @@
 
 import {I18n} from './riscojs_v2/i18n.mjs';
 import {GrSymbol} from './riscojs_v2/canvas_symbols.mjs';
+import {addEnv} from './riscojs_v2/geom.mjs';
+
+function getCircularReplacer() {
+	return function (key, value) {
+	  if (key == "mapctxt" || key == "i18n" || key == "msg_ctrlr") {
+		return null;
+	  } else if (typeof value === 'function') {
+		return "[metodo]";
+	  } else {
+			return value;
+	  }
+	};
+  }
 
 export class LocQuery {
 
@@ -31,7 +44,6 @@ export class LocQuery {
 		this.npolfeats = p_cfg["npolfeats"];
 		this.centerlinefeats = p_cfg["centerlinefeats"];
 		this.crs = p_crs;
-		this.found = null;
 		this.loc_layer_key = opt_loc_layer_key;
 		// this._querying = false;
 		// this._query_timeout_id = null;
@@ -62,6 +74,8 @@ export class LocQuery {
 	cleanResultArea(p_keepshown) {
 		if (!p_keepshown) {
 			this.query_results.style.display = 'none';	
+		} else {
+			this.query_results.style.display = '';	
 		}
 		while (this.query_results.firstChild) {
 			this.query_results.removeChild(this.query_results.firstChild);
@@ -77,7 +91,6 @@ export class LocQuery {
 		}
 	
 		if (p_full) {
-			this.found = null;
 			if (lyr != null) {
 				lyr.clear();
 				this.mapctx.maprefresh();
@@ -90,300 +103,387 @@ export class LocQuery {
 		this.#lastinput = '';
 	}
 
-	setTopo(p_cod_topo, p_toponimo) {
+	addLine2Results(p_txtlns, p_types, opt_clickhandler) {
 
-		let ret = false;
-
-		if (this.found == null || this.found["codigo_topo"] != p_cod_topo) {
-			this.found = {
-				"codigo_topo": p_cod_topo,
-				"toponimo": p_toponimo
+		let txtstrings = [];
+		let types = [];
+		if (Array.isArray(p_txtlns)) {
+			txtstrings = [...p_txtlns];
+			if (p_types) {
+				types = [...p_types];
 			}
-			ret = true;
-		}
-
-		return ret;
-	}
-
-	setNpol(p_npol, p_cod_topo, p_toponimo) {
-
-		let ret = false;
-
-		if (this.found == null || this.found["codigo_topo"] != p_cod_topo) {
-			this.found = {
-				"codigo_topo": p_cod_topo,
-				"toponimo": p_toponimo,
-				"npol": p_npol
-			}
-			ret = true;
 		} else {
-			if (this.found["npol"] === undefined || this.found["npol"] != p_npol) {
-				this.found["npol"] = p_npol;
-				ret = true;
+			txtstrings.push(p_txtlns.toLocaleString());
+			if (p_types) {
+				types.push(p_types.toLocaleString());
 			}
 		}
 
-		return ret;
+		let p, s, r, h = 0;
+
+		if (txtstrings.length == 0) {
+
+			return  h;
+
+		} else if (txtstrings.length == 1) {
+
+			p = this.query_results.appendChild(document.createElement('p'));
+			p.innerText = txtstrings[0];
+
+			if (types.length > 0 && types[0] != null) {
+	
+				switch (types[0]) {
+	
+					case "MSG":
+						p.classList.add("queryret-message");
+						break;
+		
+					case "CLASS":
+						p.classList.add("queryret-classify");
+						break;
+
+					case "CLICK":
+						p.classList.add("queryret-clickable");
+						break;
+
+					case "CLICKBOLD":
+						p.classList.add("queryret-clickable");
+						p.classList.add("bold");
+						break;							
+				}
+
+				if (types[0].startsWith("CLICK")) {
+					if (opt_clickhandler) {
+						p.addEventListener("click", opt_clickhandler);
+					}
+				}
+	
+			}
+
+			r = p.getBoundingClientRect();
+			h = r.height;
+
+		} else {
+
+			for (let si=0; si<txtstrings.length; si++) {
+			
+				p = this.query_results.appendChild(document.createElement('p'));
+				s = document.createElement('span')
+				s.innerText = txtstrings[si];
+				p.appendChild(s);
+	
+				if (types.length > 0) {
+	
+					switch (types[si]) {
+		
+						case "MSG":
+							s.classList.add("queryret-message");
+							break;
+			
+						case "CLASS":
+							s.classList.add("queryret-classify");
+							break;
+			
+					}
+		
+				}
+		
+			}
+
+			r = p.getBoundingClientRect();
+			h = r.height;
+		}
+
+		return h;	
 	}
 
+	/*
+								"type": "npol",
+								"str": responsejson['out']['str'],
+								"loc": responsejson['out']['loc'],
+								"toponym": responsejson['out']['toponym'],
+								"codtopo": responsejson['out']['codtopo'],
+								"np": responsejson['out']['npol']
+
+	
+	*/
+
+	fillResultInUI(p_results_json) {
+
+		let featcount = 0, single_customqry_feat = null;
+		let h = 0, usablestr;
+
+		// console.log(p_results_json);
+
+		this.cleanResultArea(true);		
+		
+		if (p_results_json["customqry"] !== undefined && p_results_json["customqry"]["status"] == "OK") {
+			let tempfeat=null;
+			for (let lyrk in p_results_json["customqry"]["features"]) {
+				tempfeat = p_results_json["customqry"]["features"][lyrk][0];
+				featcount += tempfeat.length;
+			}
+			if (featcount == 1) {
+				single_customqry_feat = JSON.parse(JSON.stringify(tempfeat));
+			}
+		} 
+
+		// Se houver apenas uma feature resultado da pesquisa especializada, fazer zoom + info à mesma
+		if (single_customqry_feat) {
+			this.mapctxt.zoomToFeatsAndOpenInfoOnLast([single_customqry_feat.oid], single_customqry_feat.env, {'normal': 'temporary', 'label': 'temporary' });
+			return;
+		}
+
+		if (p_results_json["address"] !== undefined && p_results_json["address"]["status"] === "OK") {
+
+			if (["topo", "npol"].indexOf(p_results_json["address"]["data"]["type"]) >= 0) {
+
+				this.query_results.style.display = '';
+
+				switch(p_results_json["address"]["data"]["type"]) {
+
+					case "topo":
+						usablestr = this.query_box.value = p_results_json["address"]["data"]["toponym"];
+						h += this.addLine2Results(p_results_json["address"]["data"]["toponym"], "CLICK", (e) => {
+							this.query_box.value = usablestr;
+						});
+						break;
+					
+					case "npol":
+						usablestr = `${p_results_json["address"]["data"]["toponym"]}, ${p_results_json["address"]["data"]["np"]}`;
+						h += this.addLine2Results(usablestr, "CLICK", (e) => {
+							this.query_box.value = usablestr;
+						});
+						break;
+
+				}
+
+			} else if (p_results_json["address"]["data"]["type"] == "errornp") {
+
+				// lista nao encontrado + numbers
+				h += this.addLine2Results("Topónimo", "CLASS");
+				h += this.addLine2Results(p_results_json["address"]["data"]["toponym"]);
+				h += this.addLine2Results("Números de polícia", "CLASS");
+				h += this.addLine2Results(`Número '${p_results_json["address"]["data"]["np"]}': não encontrado.`, "MSG");
+				h += this.addLine2Results("Alguns números de polícia existentes:", "MSG");
+				for (const np of p_results_json["address"]["data"]["numbers"]) {
+					h += this.addLine2Results(np["npol"], "CLICKBOLD");
+				}
+
+			}
+
+		}
+
+
+		if (h == 0) {								
+			this.cleanResultArea();	
+		} else {
+			this.query_results.style.height = h + "px";
+		}		
+
+	}
+
+	// query entry point, executed after firing of input events in query box
 	query(p_qrystr) {
 
-		const msgs_ctrlr  = this.msgs_ctrlr;
 		const that = this;
+		const results = {};
+		let oqtype = "empty";
 
 		//this.startedQuerying();
 
 		if (this.otherqueriesmgr) {
-			const oqtype = this.otherqueriesmgr.test(p_qrystr);
-			// const pt_buffer_dist = 50;
+
+			oqtype = this.otherqueriesmgr.test(p_qrystr);
+
 			if (oqtype != "none") {
-				this.otherqueriesmgr.query([ p_qrystr ], oqtype);
-				return;
+
+				this.otherqueriesmgr.customquery([ p_qrystr ], oqtype).then((p_responsejson) => {
+
+					const customqresult = {};
+					if (p_responsejson == null) {
+						customqresult["status"] = "NULL_RESPONSE"; 
+					} else if (Array.isArray(p_responsejson)) {
+						if (p_responsejson.length == 1 && p_responsejson[0] == "SEM_RESULTADO") {
+							customqresult["status"] = "EMPTY_RESPONSE"; 
+						} else if (p_responsejson.length == 1 && p_responsejson[0] == "NUMCHARS_INSUFICIENTE") {
+							customqresult["status"] = "EMPTY_QUERY"; 
+						} else {
+							const msg = JSON.stringify(p_responsejson);
+							console.error("custom query:", msg);
+							customqresult["status"] = "ERROR"; 
+							customqresult["msg"] = msg; 
+						}
+					} else {
+						if (p_responsejson != null && Object.keys(p_responsejson).length > 0) {
+
+							let has_feats = false;
+							for (let lyrk in p_responsejson) {
+								if (p_responsejson[lyrk].length > 0) {
+									has_feats = true;
+									break;
+								}
+							}
+				
+							if (has_feats) {
+								customqresult["status"] = "OK"; 
+								customqresult["features"] = JSON.parse(JSON.stringify(p_responsejson));	
+							} else {
+								customqresult["status"] = "EMPTY_RESPONSE";
+							}
+						}	
+					}
+
+					results["customqry"] = JSON.parse(JSON.stringify(customqresult));
+
+					if (oqtype == "_mix") {
+
+						this.addressQuery(p_qrystr).then((p_responsejson) => {
+
+							if (["partial", "errornp", "topo", "npol"].indexOf(p_responsejson["type"]) >= 0) {
+			
+								results["address"]  = {
+									"status":  "OK",
+									"data": JSON.parse(JSON.stringify(p_responsejson))
+								}
+			
+							} else {
+								console.error("address query:", p_responsejson);
+								results["address"]  = {
+									"status":  "ERROR"
+								}
+
+							}
+
+							// console.log(JSON.stringify(results));
+							this.fillResultInUI(results);
+			
+						}).catch((e) => {
+			
+							const msg = "Erro em tentativa de pesquisa de endereço:" + e;
+							console.error(msg);
+							that.msgs_ctrlr.warn(msg);
+					
+						});
+			
+					}					
+
+				}).catch((e) => {
+
+					const msg = "Erro em tentativa de pesquisa: " + e.message;
+					console.error(msg);
+					that.msgs_ctrlr.warn(msg);
+	
+				});
+
 			}
 		}
 
-		fetch(this.url, {
-			method: "POST",
-			body: JSON.stringify({ "curstr": p_qrystr, "outsrid": this.crs })
-		})
-		.then(response => response.json())
-		.then(
-			function(responsejson) {
+		if (oqtype == "none") {
 
-				let p, r, hei, filter_dict, foundlist = [];
+			this.addressQuery(p_qrystr).then((p_responsejson) => {
 
-				// that.stoppedQuerying();
-				//console.log("!! TEST A !!", p_qrystr, that.lastinput, that.query_box.value);
+				if (["partial", "errornp", "topo", "npol", "full"].indexOf(p_responsejson["type"]) < 0) {
 
-				if (responsejson['error'] !== undefined) {
-					msgs_ctrlr.warn(responsejson['error']);
-				} else {
-					if (responsejson['out']['tiporesp'] == 'partial') {
+					results["address"]  = JSON.parse(JSON.stringify(p_responsejson));
 
-						that.found = null;
+				}
 
-						if (that.query_results == null) {
-							return;
-						}
+				console.log(JSON.stringify(results));
+				this.fillResultInUI(results);
 
-						that.cleanResultArea();					
-						if (responsejson['toponyms'] === undefined) {
-							return;
-						}
+			}).catch((e) => {
 
-						hei = 0;
-						that.query_results.style.display = '';		
-						for(const top of responsejson['toponyms']['list']) {
+				const msg = "Erro em tentativa de pesquisa de endereço:" + e;
+				console.error(msg);
+				that.msgs_ctrlr.warn(msg);
+		
+			});
 
-							p = that.query_results.appendChild(document.createElement('p'));
-							((p_elem, p_this, p_cod_topo, p_toponimo, p_env) => {
-								p_elem.innerText = p_toponimo;
-								p_elem.classList.add("hoverme");
-								p_elem.addEventListener(
-									'click', (e) => { 
+		}
 
-										p_this.setTopo(p_cod_topo, p_toponimo);
-										p_this.query_box.value = p_toponimo;
 
-										const env = [];
-										that.mapctx.getMapBounds(env);
-						
-										that.mapctx.tocmgr.addAfterRefreshProcedure(() => {
+	}
 
-											filter_dict = {}
-											filter_dict[that.centerlinefeats["fieldname_topo"]] = p_cod_topo;
-											that.mapctx.featureCollection.find(that.centerlinefeats["layerkey"], 'EQ', filter_dict, foundlist);
-											for (let foundid of foundlist) {
-												that.mapctx.featureCollection.featuredraw(that.centerlinefeats["layerkey"], 
-												foundid, {'normal': 'temporary', 'label': 'temporary' }, 
-												{ "graphic": that.symbs["centerlinefeats"] }, null, env );
-											}
-			
-										});
+	// query entry point, executed after firing of input events in query box
+	addressQuery(p_qrystr) {
 
-										that.mapctx.transformmgr.zoomToRect(p_env[0], p_env[1], p_env[2], p_env[3]);	
-										
-										const el = document.getElementById('loc-query_results');
-										if (el) {
-											el.style.display = 'none';
-											while (el.firstChild) {
-												el.removeChild(el.firstChild);
-											}											
-										}
-									}
-								);	
-							})(p, that, top['cod_topo'], top['toponimo'], top['env']);
-							r = p.getBoundingClientRect();
-							hei += r.height;
+		return new Promise((resolve, reject) => {
 
-						}
-						if (hei == 0) {								
-							that.cleanResultArea();	
-						} else {
-							that.query_results.style.height = hei + "px";
-						}
+			fetch(this.url, {
+				method: "POST",
+				body: JSON.stringify({ "curstr": p_qrystr, "outsrid": this.crs })
+			})
+			.then(response => response.json())
+			.then(
+				function(responsejson) {
 
-					} else if (responsejson['out']['tiporesp'] == 'topo') { 
+					console.log(responsejson);
 
-						if (that.setTopo(responsejson['out']['cod_topo'], responsejson['out']['toponym'])) {
+					if (responsejson['error'] !== undefined) {
 
-							// console.log("!! TEST B !!", p_qrystr, that.lastinput, that.query_box.value);
+						reject(responsejson['error']);
 
-							// that.query_box.value = responsejson['out']['toponym'];
+					} else {
 
-							that.cleanResultArea(true);	
-							that.query_results.innerText = responsejson['out']['toponym'];
-							that.query_results.style.display = '';
+						if (responsejson['out']['tiporesp'] == 'partial') {
 
-							if (navigator.userAgent.toLowerCase().includes("mobile") || navigator.userAgent.toLowerCase().includes("android")) {
-								that.query_results.style.height = 14 + "px";
+							if (responsejson['toponyms'] === undefined) {
+								reject("resposta parcial truncada");
 							} else {
-								that.query_results.style.height = 16 + "px";
+								resolve({
+									"type": "partial",
+									"str": responsejson['out']['str'],
+									"toponyms": JSON.parse(JSON.stringify(responsejson['toponyms']['list']))
+								});
 							}
 
-							that.query_results.addEventListener(
-								'click', (e) => { 
-									that.query_box.value = responsejson['out']['toponym'] + ' ';
-									that.query_results.style.display = 'none';
+						} else if (responsejson['out']['tiporesp'] == 'topo') { 
+
+							if (responsejson['out']['errornp'] !== undefined) {
+
+								resolve({
+									"type": "errornp",
+									"str": responsejson['out']['str'],
+									"ext": responsejson['out']['ext'],
+									"toponym": responsejson['out']['toponym'],
+									"codtopo": responsejson['out']['codtopo'],
+									"np": responsejson['out']['errornp'],
+									"numbers": JSON.parse(JSON.stringify(responsejson['numbers']))
 								});
 
-							that.mapctx.tocmgr.addAfterRefreshProcedure(() => {
+							} else {
 
-								filter_dict = {}
-								filter_dict[that.centerlinefeats["fieldname_topo"]] = responsejson['out']['cod_topo'];
-								that.mapctx.featureCollection.find(that.centerlinefeats["layerkey"], 'EQ', filter_dict, foundlist);
+								resolve({
+									"type": "topo",
+									"str": responsejson['out']['str'],
+									"ext": responsejson['out']['ext'],
+									"toponym": responsejson['out']['toponym'],
+									"codtopo": responsejson['out']['codtopo']
+								});
 
-								const env = [];
-								that.mapctx.getMapBounds(env);
+							}
 
-								//console.warn("feat id:", featid, "feat:", feat, "symb:", GlobalConst.FEATMOUSESEL_HIGHLIGHT[feat.gt])
-								for (let foundid of foundlist) {
-									that.mapctx.featureCollection.featuredraw(that.centerlinefeats["layerkey"], 
-									foundid, {'normal': 'temporary', 'label': 'temporary' }, 
-									{ "graphic": that.symbs["centerlinefeats"] }, null, env );
-								}
+						} else if (responsejson['out']['tiporesp'] == 'npol' || responsejson['out']['tiporesp'] == 'full') {
 
+							resolve({
+								"type": "npol",
+								"str": responsejson['out']['str'],
+								"loc": responsejson['out']['loc'],
+								"toponym": responsejson['out']['toponym'],
+								"codtopo": responsejson['out']['codtopo'],
+								"np": responsejson['out']['npol']
 							});
 
-							that.mapctx.transformmgr.zoomToRect(responsejson['out']['ext'][0], responsejson['out']['ext'][1], responsejson['out']['ext'][2], responsejson['out']['ext'][3]);
 						}
 
-						if (responsejson['out']['errornp'] !== undefined) {
-
-							if (that.query_results == null) {
-								return;
-							}
-
-							while (that.query_results.firstChild) {
-								that.query_results.removeChild(that.query_results.firstChild);
-							}
-
-							that.query_results.style.display = '';		
-							for (let ln of [
-								`Número '${responsejson['out']['errornp']}': não encontrado.`
-							]) {
-								p = that.query_results.appendChild(document.createElement('p'));
-								p.innerText = ln;
-								p.style.fontWeight = "bold";
-								r = p.getBoundingClientRect();
-								hei = r.height;	
-							}
-
-							if (responsejson['numbers'] !== undefined) {
-
-								for (let ln of [
-									"Alguns números de polícia existentes:"
-								]) {
-									p = that.query_results.appendChild(document.createElement('p'));
-									p.innerText = ln;
-									p.style.fontWeight = "bold";
-									r = p.getBoundingClientRect();
-									hei += r.height;	
-								}
-
-								for(const np of responsejson['numbers']) {
-									p = that.query_results.appendChild(document.createElement('p'));
-									((p_elem, p_this, p_npol, p_cod_topo, p_toponimo, p_pt) => {
-										p_elem.innerText = ` ${p_toponimo} ${p_npol}`;
-										p_elem.classList.add("hoverme");
-										p_elem.addEventListener(
-											'click', (e) => { 
-												p_this.setNpol(p_npol, p_cod_topo, p_toponimo);
-												p_this.query_box.value = `${p_toponimo} ${p_npol}`;
-												p_this.query_results.style.display = 'none';
-												while (p_this.query_results.firstChild) {
-													p_this.query_results.removeChild(p_this.query_results.firstChild);
-												}	
-												that.mapctx.transformmgr.setScaleCenteredAtPoint(that.zoomto, [p_pt[0], p_pt[1]], true);
-											}
-										);	
-									})(p, that, np['npol'], responsejson['out']['cod_topo'], responsejson['out']['toponym'], np['pt']);
-									r = p.getBoundingClientRect();
-									hei += r.height;
-								}
-							}
-
-							that.query_results.style.height = hei + "px";
-						}
-						
-					} else if (responsejson['out']['tiporesp'] == 'npol') {
-
-						if (that.setNpol(responsejson['out']['npol'], responsejson['out']['cod_topo'], responsejson['out']['toponym'])) {
-							that.query_box.value = `${responsejson['out']['toponym']} ${responsejson['out']['npol']}`;
-
-							that.mapctx.tocmgr.addAfterRefreshProcedure(() => {
-
-								const env = [];
-								that.mapctx.getMapBounds(env);
-
-								filter_dict = {}
-								filter_dict[that.centerlinefeats["fieldname_topo"]] = responsejson['out']['cod_topo'];
-								that.mapctx.featureCollection.find(that.centerlinefeats["layerkey"], 'EQ', filter_dict, foundlist);
-								for (let foundid of foundlist) {
-									that.mapctx.featureCollection.featuredraw(that.centerlinefeats["layerkey"], 
-									foundid, {'normal': 'temporary', 'label': 'temporary' }, 
-									{ "graphic": that.symbs["centerlinefeats"] }, null, env );
-								}
-
-								filter_dict = {}
-								filter_dict[that.npolfeats["fieldname_topo"]] = responsejson['out']['cod_topo'];
-								filter_dict[that.npolfeats["fieldname_npol"]] = responsejson['out']['npol'];
-								that.mapctx.featureCollection.find(that.npolfeats["layerkey"], 'EQ', filter_dict, foundlist);
-
-								for (let foundid of foundlist) {
-									that.mapctx.featureCollection.featuredraw(that.npolfeats["layerkey"], 
-									foundid, {'normal': 'temporary', 'label': 'temporary' }, 
-									{ "graphic": that.symbs["npolfeats"] }, null, env );
-								}
-
-							});
-
-							// console.log(responsejson['out']['tiporesp'], responsejson['out']['loc']);
-
-							if (that.loc_layer_key) {
-								const lyr = that.mapctx.tocmgr.getLayer(that.loc_layer_key);
-								lyr.setToPoint([responsejson['out']['loc'][0], responsejson['out']['loc'][1]]);
-							}
-							
-
-							that.mapctx.transformmgr.setScaleCenteredAtPoint(that.zoomto, [responsejson['out']['loc'][0], responsejson['out']['loc'][1]], true);
-						}
-						that.cleanResultArea();
 					}
 				}
+			).catch((error) => {
+				reject(error);
+			});			
 
-				if (false) { // debugging
-					console.log("[DBG:TEXTQUERY] ------------------------");
-					console.log(responsejson);
-				}
-
-			}
-		).catch((error) => {
-			// that.stoppedQuerying();
-
-			console.error("Erro em tentativa de acesso ao serviço Localizador " + error);
-		});			
-
+		});
 	}
 
 	setCustomizationUI(p_customization_instance, p_mapctx, p_global_constants, p_basic_config) {
@@ -556,4 +656,30 @@ export class LocQuery {
 
 	}				
 
+	zoomToFoundFeats(p_jsonresponse) {
+
+		const totalEnv = [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER];
+		const lyrkIds = {};
+		let featcount = 0;
+			
+		for (let lyrk in p_jsonresponse) {
+
+			if (lyrkIds[lyrk] === undefined) {
+				lyrkIds[lyrk] = [];
+			}
+
+			for (let resp_feat of p_jsonresponse[lyrk].features) {
+				featcount++;
+				lyrkIds[lyrk].push(resp_feat.oid);
+				addEnv(totalEnv, resp_feat.env);
+			}
+		}
+
+		if (featcount == 0) {
+			throw new Error("não foram encontrados elementos correspondentes à pesquisa");
+		}
+
+		this.mapctxt.zoomToFeatsAndOpenInfoOnLast(lyrkIds, totalEnv, {'normal': 'temporary', 'label': 'temporary' }, this.adic_callback);
+
+	}	
 }
