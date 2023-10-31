@@ -371,7 +371,7 @@ export class VectorLayer extends featureLayersMixin(vectorLayersMixin(Layer)) {
 
 }
 
-export class RemoteVectorLayer extends featureLayersMixin(vectorLayersMixin(Layer)) {
+export class RemoteVectorLayer extends VectorLayer {
 
 	featchunksloading = {};
 	_prerefreshed = false;
