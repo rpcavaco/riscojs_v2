@@ -40,6 +40,8 @@ var GlobalConst = {
 	SCALEINOUT_STEP: 150,
 	MAXSCALE: 1000000,
 	MINSCALEDIFF: 1,
+	GLOBAL_SEQATTEMPTS_DELAY_MS: 700,
+	GLOBAL_SEQATTEMPTS_MAXNR: 50,
 
 	// Specialized debugging - canvas path opening and closing
 	DEBUG_CANVASVECTOR_PATHCLOSING: null,

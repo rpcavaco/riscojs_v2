@@ -137,6 +137,10 @@ export class RiscoMapCtx {
 
 	#customization_object;
 	classname = "RiscoMapCtx";
+	//_refresh_timeout_id;
+	//_setscaleatcenter_timeout_id;
+
+	_timeout_ids = {};
 
 	// p_mode -- just 'canvas' for now
 	constructor(p_config_var, p_paneldiv, p_mode, b_wait_for_customization_avail) {
@@ -187,6 +191,7 @@ export class RiscoMapCtx {
 		this.imgbuffer = new ImgLRUCache(GlobalConst.IMAGE_LRUCACHE_SZ);
 
 		this._refresh_timeout_id = null;
+		this._setscaleatcenter_timeout_id = null;
 
 		// Attach event listeners to this map context panel
 		(function(p_mapctx) {
@@ -670,6 +675,45 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	}
 
 
+	setScaleCenteredAtPoint(p_scaleval, p_terrain_pt, do_store, opt_after_refresh_paramless_procedure, opt_prevseqattempts_or_null) {
+
+		let seqattempts;
+
+		if (opt_prevseqattempts_or_null) {
+			seqattempts = opt_prevseqattempts_or_null + 1;
+		} else {
+			seqattempts = 1;
+		}
+
+		if (seqattempts > GlobalConst.GLOBAL_SEQATTEMPTS_MAXNR) {
+			console.warn("[WARN] exceeded seq.attempts max on setScaleCenteredAtPoint");
+			return;
+		}
+		
+		if (this.tocmgr.isRefreshing()) {
+
+			// Prevent effective re-refreshing calls while refresh process is still in progress
+			// A single refresh call is delayed to happen after previous refresh process is finished
+			
+			if (this._timeout_ids["scaleatcenter"] !== undefined && this._timeout_ids["scaleatcenter"] != null) {
+				clearTimeout(this._timeout_ids["scaleatcenter"]);
+				this._timeout_ids["scaleatcenter"] = null;
+			}
+
+			(function(p_this, p_delay_msecs) {
+				p_this._timeout_ids["scaleatcenter"] = setTimeout(function() {
+					p_this.setScaleCenteredAtPoint(p_scaleval, p_terrain_pt, do_store, opt_after_refresh_paramless_procedure, seqattempts);
+				}, p_delay_msecs);
+			})(this, GlobalConst.GLOBAL_SEQATTEMPTS_DELAY_MS);
+
+		} else {
+
+			this.tocmgr.addAfterRefreshProcedure(opt_after_refresh_paramless_procedure);
+			this.transformmgr.setScaleCenteredAtPoint(p_scaleval, p_terrain_pt, do_store);	
+	
+		}
+
+	}
 
 
 

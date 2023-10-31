@@ -2,7 +2,7 @@
 import {GlobalConst} from './constants.js';
 import {GraticuleLayer, PointGridLayer, AreaGridLayer, AGSQryLayer} from './vectorlayers.mjs';
 import { RiscoFeatsLayer } from './risco_ownlayers.mjs';
-import {evalTextAlongPathViability, pathLength, findPolygonCentroid, dist2D, segmentMeasureToPoint, loopPathParts, distanceToLine, deg2Rad, lineMeasureToPoint, lineExtremePoints, getFeatureCenterPoint } from './geom.mjs';
+import {evalTextAlongPathViability, pathLength, dist2D, segmentMeasureToPoint, deg2Rad, lineMeasureToPoint, lineExtremePoints, getFeatureCenterPoint } from './geom.mjs';
 
 
 function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coords, p_labeltxt, p_label_len, out_data) {
@@ -184,6 +184,9 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			}	
 		} else {
 			try {
+
+				console.log("<< grabb >>", canvaskey, this.key);
+
 				this._gfctx = p_mapctx.renderingsmgr.getDrwCtx(canvaskey, '2d');
 				// _GLOBAL_SAVE_RESTORE_CTR++;
 				this._gfctx.save();

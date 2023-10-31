@@ -336,6 +336,7 @@ class LocLayerClass extends VectorLayer {
 				if (item["accuracy"] !== undefined) {
 					yield [[item.pt], { "key": item.key, "accuracy": item.accuracy }, 1];
 				} else {
+					console.log(">> yield:", [[item.pt], { "key": item.key }, 1]);
 					yield [[item.pt], { "key": item.key }, 1];
 				}
 			}
@@ -394,8 +395,10 @@ export class CanvasLocLayerClass extends canvasVectorMethodsMixin(LocLayerClass)
 					
 					} else {
 
+						console.log(":: 389 ::", cpt, this.key, this._gfctx);
+
 						this._gfctx.beginPath();
-						this._gfctx.arc(cpt[0], cpt[1], 2, 0, Math.PI * 2, true);
+						this._gfctx.arc(cpt[0], cpt[1], 3, 0, Math.PI * 2, true);
 						strokeFill(this);
 
 						this._gfctx.beginPath();

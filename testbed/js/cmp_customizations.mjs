@@ -215,7 +215,26 @@ export class LocQuery {
 	drawNPolPoint(p_cod_topo, p_npol, p_loc) {
 
 		const that = this;
-		this.mapctx.tocmgr.addAfterRefreshProcedure(() => {
+
+		console.log("ZOOM TO NP", p_cod_topo, p_npol);
+		this.current_npol = p_npol;
+
+		this.current_npol_data = {
+			"cod_topo": p_cod_topo,
+			"npol": p_npol,
+			"loc": [...p_loc]
+		}
+
+		console.log("zoom to, p_loc >>>>", that.zoomto, p_loc, "refreshing:", this.mapctx.tocmgr.isRefreshing());
+
+
+		if (this.loc_layer_key) {
+			const lyr = this.mapctx.tocmgr.getLayer(this.loc_layer_key);
+			console.log("SET TO PT np", this.current_npol_data.cod_topo, this.current_npol_data.npol);
+			lyr.setToPoint(this.current_npol_data.loc);
+		}
+
+		this.mapctx.setScaleCenteredAtPoint(that.zoomto, p_loc, true, () => {
 
 			const env = [];
 			that.mapctx.getMapBounds(env);
@@ -244,26 +263,9 @@ export class LocQuery {
 
 			console.log("AFTERREFRESH TO NP", this.current_npol_data.cod_topo, this.current_npol_data.npol);
 
-
-			if (this.loc_layer_key) {
-				const lyr = this.mapctx.tocmgr.getLayer(this.loc_layer_key);
-				console.log("SET TO PT np", this.current_npol_data.cod_topo, this.current_npol_data.npol);
-				lyr.setToPoint(this.current_npol_data.npol);
-			}
 	
 		});
 
-		// console.log(responsejson['out']['tiporesp'], responsejson['out']['loc']);
-		
-		console.log("ZOOM TO NP", p_cod_topo, p_npol);
-		this.current_npol = p_npol;
-
-		this.current_npol_data = {
-			"cod_topo": p_cod_topo,
-			"npol": p_npol
-		}
-
-		this.mapctx.transformmgr.setScaleCenteredAtPoint(that.zoomto, p_loc, true);		
 	}
 
 	drawCenterline(p_cod_topo, p_ext) {
@@ -491,7 +493,7 @@ export class LocQuery {
 						}).catch((e) => {
 			
 							const msg = "Erro em tentativa de pesquisa de endereço:" + e;
-							console.error(msg);
+							console.error(e);
 							that.msgs_ctrlr.warn(msg);
 					
 						});

@@ -155,6 +155,9 @@ class TransformsQueue {
  */
  export class Transform2DMgr {
 
+	mapctx;
+	transformsQueue;
+
 	constructor(p_mapctx, p_mapctx_config_var) {
 
 		if (p_mapctx_config_var == null) {

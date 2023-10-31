@@ -66,6 +66,7 @@ export class TOCManager {
 	}
 
 	startedRefreshing() {
+		console.log("----- startedRefreshing")
 		this._refreshing = true;
 	}	
 
@@ -74,12 +75,13 @@ export class TOCManager {
 	}
 
 	finishedRefreshing() {
-		this._refreshing = false;
 		const l = this.after_refresh_procedure_list.length;
 		for (let p, i=0; i<l; i++) {
 			p = this.after_refresh_procedure_list.pop();
 			p();
 		}
+		console.log("----- stoppedRefreshing")
+		this._refreshing = false;
 	}
 
 	getLayer(p_layerkey) {
@@ -93,6 +95,15 @@ export class TOCManager {
 		}
 		return ret;
 	}
+
+	/*getAllVectorLayerKeys(o_lkey_list) {
+		o_lkey_list.length = 0;
+		for (let lyr of this.layers) {
+			if (lyr instanceof canvasVectorMethodsMixin) {
+				o_lkey_list.push(lyr.key);
+			}
+		}
+	}*/
 
 	setLayerVisibility(p_layerkey, p_visible) {
 		let ret = false;

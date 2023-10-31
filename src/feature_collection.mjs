@@ -431,6 +431,9 @@ export class FeatureCollection {
 
 		this.mapctx.renderingsmgr.clearAll(canvases_keys);
 
+		//this.mapctx.tocmgr.getAllVectorLayerKeys(work_layerkeys);
+
+
 		const featlyrkeys = Object.keys(this.featList);
 		for (lyrkey of this.mapctx.cfgvar["layers"].lorder) {
 			if (featlyrkeys.indexOf(lyrkey) >= 0) {
@@ -441,6 +444,8 @@ export class FeatureCollection {
 				work_layerkeys.push(lyrkey);
 			}
 		}
+
+		console.log(":: 436 :: work_layerkeys", work_layerkeys);
 
 		if (work_layerkeys.length > 0) {
 			this.redrawAllVectorLayersNext(work_layerkeys);
