@@ -21,7 +21,7 @@ export class GraticuleLayer extends SimpleVectorLayer {
 		yield [];
 	}	
 
-	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_item_chunk_params) {
+	* genlayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_item_chunk_params) {
 
 		let x, endlimit, crdlist = [], out_pt = [], crdlist_t;
 		for (const mode of ['horiz', 'vert']) {
@@ -90,7 +90,7 @@ export class PointGridLayer extends SimpleVectorLayer {
 		return ret;
 	}
 
-	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
+	* genlayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
 
 		let out_pt = [];
 		let sclval = p_mapctxt.getScale();
@@ -160,7 +160,7 @@ export class AreaGridLayer extends VectorLayer {
 		yield [];
 	}	
 
-	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
+	* genlayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
 
 		let ll = [], ur = [];
 		let sclval = p_mapctxt.getScale();
@@ -187,7 +187,7 @@ export class AreaGridLayer extends VectorLayer {
 				//p_mapctxt.transformmgr.getRenderingCoordsPt([x + sep, y + sep], ur);
 				ring = [[x, y], [x + sep, y], [x + sep, y + sep], [x, y + sep], [x, y]];
 				preid = this._columns * cntrows + cntcols;
-				id = this._currFeatures.add(this.key, ring, { "id": preid }, this.geomtype, 1, null, "id");
+				id = this._currFeatures.addfeature(this.key, ring, { "id": preid }, this.geomtype, 1, null, "id");
 
 				// If feature still exists  between cleanups that's because it might not have been properly garbage collected
 				// If exists, let's not try to draw it, id is null
@@ -695,7 +695,7 @@ export class AGSQryLayer extends RemoteVectorLayer {
 
 	}		
 
-	layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_item_chunks_params) {
+	looplayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_item_chunks_params) {
 
 		const firstrecid = p_item_chunks_params["firstrecid"] 
 		const reccount = p_item_chunks_params["reccount"] 
@@ -760,7 +760,7 @@ export class AGSQryLayer extends RemoteVectorLayer {
 										continue;
 									}
 																		
-									id = that._currFeatures.add(that.key, feat.geometry.rings, feat.attributes, that.geomtype, 2, null, that.oidfldname);
+									id = that._currFeatures.addfeature(that.key, feat.geometry.rings, feat.attributes, that.geomtype, 2, null, that.oidfldname);
 									// If feature still exists  between cleanups that's because it might not have been properly garbage collected
 									// If exists, let's not try to draw it, id is null
 									if (id) {

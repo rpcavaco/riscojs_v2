@@ -1,6 +1,6 @@
 
 import {GlobalConst} from './constants.js';
-import {RasterLayer, RemoteVectorLayer} from './layers.mjs';
+import {RasterLayer, VectorLayer, RemoteVectorLayer} from './layers.mjs';
 import {layerClassAdapter, symbClassAdapter} from './layers_and_symbols_adapter.mjs'
 
 class DynamicLayer {
@@ -96,14 +96,16 @@ export class TOCManager {
 		return ret;
 	}
 
-	/*getAllVectorLayerKeys(o_lkey_list) {
+	getAllVectorLayerKeys(o_lkey_list, opt_exclusion_keylist) {
 		o_lkey_list.length = 0;
 		for (let lyr of this.layers) {
-			if (lyr instanceof canvasVectorMethodsMixin) {
-				o_lkey_list.push(lyr.key);
+			if (lyr instanceof VectorLayer) {
+				if (opt_exclusion_keylist==null || opt_exclusion_keylist.indexOf(lyr.key) < 0) {
+					o_lkey_list.push(lyr.key);
+				}
 			}
 		}
-	}*/
+	}
 
 	setLayerVisibility(p_layerkey, p_visible) {
 		let ret = false;

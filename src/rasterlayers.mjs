@@ -384,7 +384,7 @@ export class WMSLayer extends RasterLayer {
 		return ret; 
 	}
 	
-	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
+	* genlayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
 
 		// p_mapctxt.getCanvasDims(p_dims);
 		yield this.buildGetMapURL(p_mapctxt, p_terrain_env, p_dims);
@@ -797,7 +797,7 @@ export class AGSMapLayer extends RasterLayer {
 		return ret; 
 	}
 	
-	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
+	* genlayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
 
 		// p_mapctxt.getCanvasDims(p_dims);
 		yield this.buildExportMapURL(p_mapctxt, p_terrain_env, p_dims);

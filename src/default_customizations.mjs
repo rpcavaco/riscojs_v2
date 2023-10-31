@@ -328,26 +328,33 @@ class LocLayerClass extends VectorLayer {
 		yield [];
 	}	
 
-	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
+	* genlayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
 
-		for (const item of this.items) {
-
+		for (let item, i=0; i<this.items.length; i++) {
+			item = this.items[i];
 			if (item) {
+
+				let yield_ret = null;
 				if (item["accuracy"] !== undefined) {
-					yield [[item.pt], { "key": item.key, "accuracy": item.accuracy }, 1];
+					yield_ret = [[item.pt], { "key": item.key, "accuracy": item.accuracy }, 1];
 				} else {
 					console.log(">> yield:", [[item.pt], { "key": item.key }, 1]);
-					yield [[item.pt], { "key": item.key }, 1];
+					yield_ret = [[item.pt], { "key": item.key }, 1];
 				}
-			}
-			
+
 			// yield [item_coords, item_attrs, item_path_levels];
+				if (yield_ret) {
+					this._currFeatures.addfeature(this.key, yield_ret[0], yield_ret[1], this._geomtype, yield_ret[2], i);
+					yield yield_ret;
+				}
+
+				yield yield_ret;
+			}
 
 		}
 
 		p_mapctxt.tocmgr.signalVectorLoadFinished(this.key);		
 	}
-
 }
 
 export class CanvasLocLayerClass extends canvasVectorMethodsMixin(LocLayerClass) {

@@ -215,9 +215,17 @@ const vectorLayersMixin = (Base) => class extends Base {
 		return ret;
 	}
 
+	// Base refresh method for simple layer types which don't implement their own 'refresh' method.
+	// Usually such layer types should implement 'simplerefreshitem'.
+	//
+	// Otherwise, most layers implement 'RemoteVectorLayer' class, which has a (common) 'refreshitem' method,
+	//  which usually calls a 'genlayeritems' or 'looplayeritems' method.
+
 	refresh(p_mapctx, p_prep_data) {
 
 		let cancel = false;
+
+		console.log("## refresh", this.key);
 
 		if (this.isCanceled()) {
 
@@ -272,14 +280,15 @@ const vectorLayersMixin = (Base) => class extends Base {
 
 								for (item_chunk_params of this.itemchunks(p_mapctx, p_prep_data)) {
 
-									for (const [item_coords, item_attrs, item_path_levels] of this.layeritems(p_mapctx, terrain_env, scr_env, dims, item_chunk_params)) {
+									for (const [item_coords, item_attrs, item_path_levels] of this.genlayeritems(p_mapctx, terrain_env, scr_env, dims, item_chunk_params)) {
 
-										//console.log("-- item --", terrain_env, scr_env, item_coords, item_attrs);
 
 										if (!this.simplerefreshitem(p_mapctx, terrain_env, scr_env, dims, item_coords, item_attrs, item_path_levels )) {
 											cancel = true;
 											break;
 										}
+
+										console.log("## item refr -- cancel:", cancel, this.key, terrain_env, scr_env, item_coords, item_attrs);
 
 										if (this.isCanceled()) {
 											cancel = true;
@@ -337,7 +346,7 @@ export class SimpleVectorLayer extends vectorLayersMixin(Layer) {
 		// for each chunk, respond with firstrecid, reccount
 	}		
 
-	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
+	* genlayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
 		// to be extended
 		// for each chunk in 'itemschunks', generate graphic items (graphics and attributes) to be drawn
 	}	
@@ -357,10 +366,15 @@ export class VectorLayer extends featureLayersMixin(vectorLayersMixin(Layer)) {
 		// for each chunk, respond with item_chunk_params object, specific to layer type
 	}		
 
-	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
+	* genlayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
 		// to be extended
 		// for each chunk in 'itemschunks', generate graphic items (graphics and attributes) to be drawn
 	}	
+
+	loopayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
+		// to be extended
+		// for each chunk in 'itemschunks', generate graphic items (graphics and attributes) to be drawn
+	}
 
 	simplerefreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_path_levels) {
 
@@ -432,7 +446,7 @@ export class RemoteVectorLayer extends VectorLayer {
 	}
 
 	// overrides vectorLayersMixin refresh
-	// main diff: layeritems should not be a generator
+	// main diff: uses looplayeritems which is not a generator
 	refresh(p_mapctx, p_prep_data) {
 
 		this._prerefreshed = false;
@@ -468,7 +482,7 @@ export class RemoteVectorLayer extends VectorLayer {
 					// console.log("--   >> 359 --", firstrec_order, reccount, this.constructor.name);
 					// console.log("## 360 FILLSTYLE ####", gfctx.fillStyle);
 
-					this.layeritems(p_mapctx, terrain_env, scr_env, dims, item_chunk_params);
+					this.looplayeritems(p_mapctx, terrain_env, scr_env, dims, item_chunk_params);
 
 					if (this.isCanceled()) {
 						cancel = true;
@@ -518,7 +532,7 @@ export class RasterLayer extends Layer {
 		}
 	}
 		
-	* layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
+	* genlayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
 		// to be extended
 		// for each envelope generated in 'envs', generate an url to fetch an image
 	}	
@@ -584,7 +598,7 @@ export class RasterLayer extends Layer {
 
 					// console.log("-- gettting rasters --");
 
-					for (const raster_url of this.layeritems(p_mapctx, terrain_env, scr_env, dims)) {
+					for (const raster_url of this.genlayeritems(p_mapctx, terrain_env, scr_env, dims)) {
 						
 						// console.log("-- item --", terrain_env, scr_env, raster_url);
 

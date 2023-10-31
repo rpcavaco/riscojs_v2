@@ -51,7 +51,7 @@ export class FeatureCollection {
 		} */
 	}
 
-	add(p_layerkey, p_geom, p_attrs, p_geom_type, p_path_levels, opt_id, opt_id_fieldname) {
+	addfeature(p_layerkey, p_geom, p_attrs, p_geom_type, p_path_levels, opt_id, opt_id_fieldname) {
 
 		function innerCycle(pp_this, pp_bbox, pp_root, pp_call_level, pp_path_level, pp_feat_id) {
 	
@@ -371,6 +371,8 @@ export class FeatureCollection {
 			throw new Error(`layer '${p_layerkey}' was not set through 'setLayer' method`);
 		}
 
+		console.log(":: 374 ::", p_layerkey, this.featList[p_layerkey]);
+
 		for (let id in this.featList[p_layerkey]) {
 			if (this.featList[p_layerkey].hasOwnProperty(id)) {
 				featidlist.push(id);
@@ -431,10 +433,10 @@ export class FeatureCollection {
 
 		this.mapctx.renderingsmgr.clearAll(canvases_keys);
 
-		//this.mapctx.tocmgr.getAllVectorLayerKeys(work_layerkeys);
+		this.mapctx.tocmgr.getAllVectorLayerKeys(work_layerkeys, this.lyrkeys_exclude_from_redraw);
 
 
-		const featlyrkeys = Object.keys(this.featList);
+		/*const featlyrkeys = Object.keys(this.featList);
 		for (lyrkey of this.mapctx.cfgvar["layers"].lorder) {
 			if (featlyrkeys.indexOf(lyrkey) >= 0) {
 				if (this.lyrkeys_exclude_from_redraw.indexOf(lyrkey) >= 0) {
@@ -443,7 +445,7 @@ export class FeatureCollection {
 				//console.log(":: redraw", lyrkey);
 				work_layerkeys.push(lyrkey);
 			}
-		}
+		}*/
 
 		console.log(":: 436 :: work_layerkeys", work_layerkeys);
 

@@ -352,7 +352,7 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 
 	}
 
-	layeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_item_chunk_params) {
+	looplayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_item_chunk_params) {
 
 		const urlstr = this.getFeaturesURL(p_mapctxt, p_item_chunk_params);
 		const that = this;
@@ -428,7 +428,7 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 								continue;
 							}
 
-							that._currFeatures.add(that.key, terrain_coords, feat.a, that.geomtype, path_levels, id);
+							that._currFeatures.addfeature(that.key, terrain_coords, feat.a, that.geomtype, path_levels, id);
 
 							cnt++;
 						}
