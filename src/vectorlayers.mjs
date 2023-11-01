@@ -22,38 +22,34 @@ export class GraticuleLayer extends VectorLayer {
 		yield [];
 	}	
 
-	* genlayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_item_chunk_params) {
+	refresh(p_mapctxt, p_prep_data) {
 
-		let x, endlimit, crdlist = [], out_pt = [], crdlist_t;
+		const bounds = [];
+		p_mapctxt.getMapBounds(bounds);
+
+		let x, endlimit, crdlist = [], id=0;
 		for (const mode of ['horiz', 'vert']) {
 
 			if (mode == 'vert') {
-				x = this.fixedseparation * Math.floor(p_terrain_env[0] / this.fixedseparation);
-				endlimit = p_terrain_env[2];
+				x = this.fixedseparation * Math.floor(bounds[0] / this.fixedseparation);
+				endlimit = bounds[2];
 			} else {
-				x = this.fixedseparation * Math.floor(p_terrain_env[1] / this.fixedseparation);
-				endlimit = p_terrain_env[3];
+				x = this.fixedseparation * Math.floor(bounds[1] / this.fixedseparation);
+				endlimit = bounds[3];
 			}
 
 			while (x <= endlimit) {
 
 				x = x + this.fixedseparation;
 				if (mode == 'vert') {
-					crdlist.length = 0;
-					crdlist.push(...[x, p_terrain_env[1], x, p_terrain_env[3]]);
+					crdlist = [[x, bounds[1]], [x, bounds[3]]];
 				} else {
-					crdlist.length = 0;
-					crdlist.push(...[p_terrain_env[0], x, p_terrain_env[2], x]);
+					crdlist = [[bounds[0], x], [bounds[2], x]];
 				}
-				crdlist_t = []
-				crdlist_t.length = crdlist.length;
-				for (let i = 0; i < 2; i++) {
-					p_mapctxt.transformmgr.getRenderingCoordsPt([crdlist[2 * i], crdlist[2 * i + 1]], out_pt)
-					crdlist_t[2 * i] = out_pt[0];
-					crdlist_t[2 * i + 1] = out_pt[1];
-				}
+				
+				id++;
+				this._currFeatures.addfeature(this.key, crdlist, {}, this.geomtype, 1, id);
 
-				yield [crdlist_t, null, 1];
 			}
 
 		}
@@ -116,12 +112,7 @@ export class PointGridLayer extends VectorLayer {
 			while (x <= x_lim) {
 
 				x = x + sep;
-				//p_mapctxt.transformmgr.getRenderingCoordsPt([x, y], out_pt);
-				//// item_coords, item_attrs, item_path_levels
-				//yield [out_pt.slice(0), null, null];
-
 				// using terrain coords
-				// console.log("terrain_coords:", terrain_coords, "key:", that.key);
 				id++;
 
 				this._currFeatures.addfeature(this.key, [[x, y]], {}, this.geomtype, 1, id);
@@ -200,19 +191,11 @@ export class AreaGridLayer extends VectorLayer {
 
 				cntcols++;
 
-				//p_mapctxt.transformmgr.getRenderingCoordsPt([x, y], ll);
-				//p_mapctxt.transformmgr.getRenderingCoordsPt([x + sep, y + sep], ur);
 				ring = [[x, y], [x + sep, y], [x + sep, y + sep], [x, y + sep], [x, y]];
 				preid = this._columns * cntrows + cntcols;
 				id = this._currFeatures.addfeature(this.key, ring, { "id": preid }, this.geomtype, 1, null, "id");
 
-/* 				// If feature still exists  between cleanups that's because it might not have been properly garbage collected
-				// If exists, let's not try to draw it, id is null
-				if (id && !this.hiddengraphics) {
-					yield [ring, null, 1];
-				}				
-		
- */				x = x + sep;
+				x = x + sep;
 
 			}
 

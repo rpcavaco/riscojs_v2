@@ -152,9 +152,9 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	maptipfields = {}; // 'add' and 'remove'
 	infocfg = {};
 	// _gfctx, _gfctxlbl, _currentsymb has underscore to protect from automatic attribute collection from config files
-	_gfctx;  // current graphics context to be always updated at each refreshing / drawing
-	_gfctxlbl;
-	_currentsymb;
+	_gfctx = null;  // current graphics context to be always updated at each refreshing / drawing
+	_gfctxlbl = null;
+	_currentsymb = null;
 
 	// b_protect_from_async_use - during async use, this._gfctx should be permanent and not constantly saved and restored.
 	// To be only used for applying drawImage symbols, context state shouldn't be altered
@@ -184,9 +184,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			}	
 		} else {
 			try {
-
-				console.log("<< grabb >>", canvaskey, this.key);
-
 				this._gfctx = p_mapctx.renderingsmgr.getDrwCtx(canvaskey, '2d');
 				// _GLOBAL_SAVE_RESTORE_CTR++;
 				this._gfctx.save();
@@ -196,8 +193,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			}
 	
 		}
-
-
 
 		if (opt_symbs) {
 			this._currentsymb = opt_symbs;
@@ -813,6 +808,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 						})
 
 					} else {
+
 						this.drawPath(p_mapctxt, p_coords, p_path_levels, opt_feat_id);
 						this.releaseGf2DCtx();
 						ret_promise = Promise.resolve();
@@ -920,108 +916,14 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 export class CanvasGraticuleLayer extends canvasVectorMethodsMixin(GraticuleLayer) {
 
-	simplerefreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels) {
-
-		const ok = this.grabGf2DCtx(p_mapctxt);
-
-		if (ok && !this._currentsymb.toStroke && !this._currentsymb.toFill) {
-			throw new Error(`Layer ${this.key}, no 'dostroke' and no 'dofill' flags, nothin to draw`);
-		}
-
-		if (ok) {
-			try {
-				this._gfctx.beginPath();
-				this._gfctx.moveTo(p_coords[0], p_coords[1]);
-				this._gfctx.lineTo(p_coords[2], p_coords[3]);
-
-				if (this._currentsymb.toFill) {
-					this._gfctx.fill();
-				};
-				if (this._currentsymb.toStroke) {
-					this._gfctx.stroke();
-				};
-
-
-			} catch(e) {
-				throw e;
-			} finally {
-				this.releaseGf2DCtx();
-			}
-		}
-
-		return true;		
-	}
 }
 
 export class CanvasPointGridLayer extends canvasVectorMethodsMixin(PointGridLayer) {
 
-	simplerefreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels) {
-
-		const ok = this.grabGf2DCtx(p_mapctxt);
-
-		if (ok && !this._currentsymb.toStroke && !this._currentsymb.toFill) {
-			throw new Error(`Layer ${this.key}, no 'stroke' and no 'fill' flags, nothin to draw`);
-		}
-
-		if (ok) {
-			try {
-
-				this.default_symbol.drawsymb(p_mapctxt, this, p_coords)
-
-			} catch(e) {
-				throw e;
-			} finally {
-				this.releaseGf2DCtx();
-			}
-		}
-
-		return true;		
-	}	
 }
 
 export class CanvasAreaGridLayer extends canvasVectorMethodsMixin(AreaGridLayer) {
 
-	simplerefreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels) {
-
-		const ok = this.grabGf2DCtx(p_mapctxt);
-
-		if (ok && !this._currentsymb.toStroke && !this._currentsymb.toFill) {
-			throw new Error(`Layer ${this.key}, no 'stroke' and no 'fill' flags, nothin to draw`);
-		}
-
-		if (ok) {
-			try {
-				this._gfctx.beginPath();
-				let cnt = 0, cpt=[];
-
-				for (let pt of p_coords) {
-
-					p_mapctxt.transformmgr.getRenderingCoordsPt(pt, cpt);
-
-					if (cnt < 1) {
-						this._gfctx.moveTo(...cpt);
-					} else {
-						this._gfctx.lineTo(...cpt);
-					}
-					cnt++;
-				}
-
-				if (this._currentsymb.toFill) {
-					this._gfctx.fill();
-				};
-				if (this._currentsymb.toStroke) {
-					this._gfctx.stroke();
-				};
-
-			} catch(e) {
-				throw e;
-			} finally {
-				this.releaseGf2DCtx();
-			}
-		}
-
-		return true;		
-	}
 }
 
 export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {

@@ -207,128 +207,6 @@ export class Layer {
 	}		
 }
 
-/*
-const vectorLayersMixin = (Base) => class extends Base {
-	
-	geomtype;
-	_filterfunc = null;
-
-	setFilterFunc(p_function) {
-		// console.log("layer", this.key, "func:", p_function);
-		this._filterfunc = p_function;
-	}
-
-	isFeatureInsideFilter(p_feat_atts) {
-		let ret = true;
-		if (this._filterfunc != null && !this._filterfunc(p_feat_atts)) {
-			ret = false;
-		}
-		return ret;
-	}
-
-	// Base refresh method for simple layer types which don't implement their own 'refresh' method.
-	// Usually such layer types should implement 'simplerefreshitem'.
-	//
-	// Otherwise, most layers implement 'RemoteVectorLayer' class, which has a (common) 'refreshitem' method,
-	//  which usually calls a 'genlayeritems' or 'looplayeritems' method.
-
-	refresh(p_mapctx, p_prep_data) {
-
-		let cancel = false;
-
-		console.log("## refresh", this.key, "iscanceled:", this.isCanceled());
-
-		if (this.isCanceled()) {
-
-			cancel = true;
-		
-		} else {
-
-			const [terrain_env, scr_env, dims] = genSingleEnv(p_mapctx);
-
-			if (!this.layervisible) {
-				
-				if (GlobalConst.getDebug("LAYERS")) {
-					console.log(`[DBG:LAYERS] Vector layer '${this.key}' is not visible`);
-				}
-
-			} else {
-
-				if (!this.checkScaleVisibility(p_mapctx.getScale())) {
-
-					if (GlobalConst.getDebug("LAYERS")) {
-						console.log(`[DBG:LAYERS] Vector layer '${this.key}' is OUT of scale visibility for 1:${p_mapctx.getScale()}`);
-					}
-
-				} else {
-
-					if (GlobalConst.getDebug("LAYERS")) {
-						console.log(`[DBG:LAYERS] Vector layer '${this.key}' is IN scale visibility for 1:${p_mapctx.getScale()}`);
-					}
-				
-					if (!this.isInited()) {
-
-						console.log(`[WARN:LAYERS] Vector layer '${this.key}' is not inited`);
-
-					} else {	
-
-						if (GlobalConst.getDebug("LAYERS")) {
-							console.log(`[DBG:LAYERS] Vector layer '${this.key}' IS inited`);
-						}
-	
-
-						try {
-
-							// console.log("-- 297 --", terrain_env, scr_env, gfctx.strokeStyle, gfctx.lineWidth);
-							// console.log("-- 239 --", gfctx.strokeStyle, gfctx.lineWidth);
-
-							if (this.isCanceled()) {
-								if (GlobalConst.getDebug("LAYERS")) {
-									console.log(`[DBG:LAYERS] Vector layer '${this.key}' IS canceled`);
-								}
-								cancel = true;		
-							} else  {
-
-								// firstrec_order is zero - based
-								let item_chunk_params;
-
-								for (item_chunk_params of this.itemchunks(p_mapctx, p_prep_data)) {
-
-									for (const [item_coords, item_attrs, item_path_levels] of this.genlayeritems(p_mapctx, terrain_env, scr_env, dims, item_chunk_params)) {
-
-
-										if (!this.simplerefreshitem(p_mapctx, terrain_env, scr_env, dims, item_coords, item_attrs, item_path_levels )) {
-											cancel = true;
-											break;
-										}
-
-										if (this.isCanceled()) {
-											cancel = true;
-											break;
-										}				
-									}
-
-								}
-							}
-
-						} catch(e) {
-							throw e;
-						}
-					}
-
-				}
-
-			}
-
-		}
-
-		console.log("## refresh finish", this.key, "cancel:", cancel);
-
-		return cancel;
-	}		
-}
-*/
-
 const featureLayersMixin = (Base) => class extends Base {
 
 	_currFeatures;
@@ -348,28 +226,6 @@ const featureLayersMixin = (Base) => class extends Base {
 	}	
 
 }
-
-/*
-// no feature mgmt, no attributes
-export class SimpleVectorLayer extends vectorLayersMixin(Layer) {
-
-	constructor() {
-		super();
-	}
-	
-	* itemchunks(p_mapctxt, p_prep_data) {
-		// to be implemented
-		// for each chunk, respond with firstrecid, reccount
-	}		
-
-	* genlayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
-		// to be extended
-		// for each chunk in 'itemschunks', generate graphic items (graphics and attributes) to be drawn
-	}	
-
-	
-}
-*/
 
 // has feature mgmt, has attributes
 export class VectorLayer extends featureLayersMixin(Layer) {
@@ -407,42 +263,9 @@ export class VectorLayer extends featureLayersMixin(Layer) {
 			name = this._name;
 		}
 
-		console.error(`'itemchunks' generator method not implemented for '${name}' class`);
+		console.error(`'itemchunks' generator method not implemented for '${name}', vector layer class`);
 
 	}		
-
-	/*
-	* genlayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
-		// to be extended, either this or looplayeritems
-		// for each chunk in 'itemschunks', generates (yields) graphic items (graphics and attributes) to be drawn
-	}	*/
-
-	/*
-	looplayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
-		
-		// to be extended, to be called by 'refresh' method
-		// for each chunk in 'itemschunks', add features to current feature collection
-
-		// method meant to be extended
-		let name;
-		if (this._name === undefined) {
-			name = "<class yet not defining '_name' attribute>";
-		} else {
-			name = this._name;
-		}
-
-		console.error(`'looplayeritems' method not implemented for '${name}' class`);
-
-	}
-	*
-
-	/*
-	simplerefreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_path_levels) {
-
-		// to be implemented
-		// for each 'canvas' item just draw each 'layeritem'
-
-	}	*/
 
 }
 
