@@ -189,9 +189,10 @@ export class Layer {
 		this._drawingcanceled = true;
 	}
 
-	refresh(p_mapctx) {
+	refresh(p_mapctx, p_prep_data) {
 
 		// method meant to be extended
+
 		let name;
 		if (this._name === undefined) {
 			name = "<class yet not defining '_name' attribute>";
@@ -199,7 +200,7 @@ export class Layer {
 			name = this._name;
 		}
 
-		console.error(`'refresh' method not implemented for '${name}' class`);
+		console.error(`'refresh' method not implemented for layer '${this.key}', '${name}' class`);
 		
 		let cancel = false;
 		return cancel;
@@ -397,6 +398,17 @@ export class VectorLayer extends featureLayersMixin(Layer) {
 	* itemchunks(p_mapctxt, p_prep_data) {
 		// to be implemented
 		// for each chunk, respond with item_chunk_params object, specific to layer type
+
+		// method meant to be extended
+		let name;
+		if (this._name === undefined) {
+			name = "<class yet not defining '_name' attribute>";
+		} else {
+			name = this._name;
+		}
+
+		console.error(`'itemchunks' generator method not implemented for '${name}' class`);
+
 	}		
 
 	/*
@@ -405,17 +417,32 @@ export class VectorLayer extends featureLayersMixin(Layer) {
 		// for each chunk in 'itemschunks', generates (yields) graphic items (graphics and attributes) to be drawn
 	}	*/
 
-	loopayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
-		// to be extended
+	/*
+	looplayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
+		
+		// to be extended, to be called by 'refresh' method
 		// for each chunk in 'itemschunks', add features to current feature collection
-	}
 
+		// method meant to be extended
+		let name;
+		if (this._name === undefined) {
+			name = "<class yet not defining '_name' attribute>";
+		} else {
+			name = this._name;
+		}
+
+		console.error(`'looplayeritems' method not implemented for '${name}' class`);
+
+	}
+	*
+
+	/*
 	simplerefreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_path_levels) {
 
 		// to be implemented
 		// for each 'canvas' item just draw each 'layeritem'
 
-	}	
+	}	*/
 
 }
 
@@ -478,6 +505,23 @@ export class RemoteVectorLayer extends VectorLayer {
 		// to be implemented
 		// calculations for itemchunks,
 		// first method to be called when consuming services, should call refresh
+	}
+
+	looplayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
+		
+		// to be extended, to be called by 'refresh' method
+		// for each chunk in 'itemschunks', add features to current feature collection
+
+		// method meant to be extended
+		let name;
+		if (this._name === undefined) {
+			name = "<class yet not defining '_name' attribute>";
+		} else {
+			name = this._name;
+		}
+
+		console.error(`'looplayeritems' method not implemented for '${name}' class`);
+
 	}
 
 	// accesses remote content, uses looplayeritems to feed read features to current feature collection
@@ -579,7 +623,7 @@ export class RasterLayer extends Layer {
 
 	}	
 
-	refresh(p_mapctx) {
+	refresh(p_mapctx, p_prep_data) {
 
 		if (this.isCanceled()) {
 			return true;

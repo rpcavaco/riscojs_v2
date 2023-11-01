@@ -92,16 +92,19 @@ export class PointGridLayer extends VectorLayer {
 		return ret;
 	}
 
-	looplayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
+	refresh(p_mapctxt, p_prep_data) {
+
+		const bounds = [];
+		p_mapctxt.getMapBounds(bounds);
 
 		let sclval = p_mapctxt.getScale();
 		let sep = this.separation(sclval);
 
-		let x, xorig = sep * Math.floor(p_terrain_env[0] / sep);
-		let x_lim = p_terrain_env[2];
+		let x, xorig = sep * Math.floor(bounds[0] / sep);
+		let x_lim = bounds[2];
 
-		let y = sep * Math.floor(p_terrain_env[1] / sep);
-		let y_lim = p_terrain_env[3];
+		let y = sep * Math.floor(bounds[1] / sep);
+		let y_lim = bounds[3];
 
 		let id = 0;
 
@@ -121,7 +124,7 @@ export class PointGridLayer extends VectorLayer {
 				// console.log("terrain_coords:", terrain_coords, "key:", that.key);
 				id++;
 
-				this._currFeatures.addfeature(this.key, [x, y], {}, this.geomtype, 1, id);
+				this._currFeatures.addfeature(this.key, [[x, y]], {}, this.geomtype, 1, id);
 
 
 			}
@@ -172,17 +175,19 @@ export class AreaGridLayer extends VectorLayer {
 		yield [];
 	}	
 
-	* genlayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
+	refresh(p_mapctxt, p_prep_data) {
 
-		let ll = [], ur = [];
+		const bounds = [];
+		p_mapctxt.getMapBounds(bounds);
+
 		let sclval = p_mapctxt.getScale();
 		let sep = this.separation(sclval);
 
-		let preid, id, ring, x, xorig = sep * Math.floor(p_terrain_env[0] / sep);
-		let x_lim = p_terrain_env[2];
+		let preid, id, ring, x, xorig = sep * Math.floor(bounds[0] / sep);
+		let x_lim = bounds[2];
 
-		let y = sep * Math.floor(p_terrain_env[1] / sep);
-		let y_lim = p_terrain_env[3];
+		let y = sep * Math.floor(bounds[1] / sep);
+		let y_lim = bounds[3];
 
 		let cntcols=0, cntrows=0;
 		this._columns = 0;
@@ -201,13 +206,13 @@ export class AreaGridLayer extends VectorLayer {
 				preid = this._columns * cntrows + cntcols;
 				id = this._currFeatures.addfeature(this.key, ring, { "id": preid }, this.geomtype, 1, null, "id");
 
-				// If feature still exists  between cleanups that's because it might not have been properly garbage collected
+/* 				// If feature still exists  between cleanups that's because it might not have been properly garbage collected
 				// If exists, let's not try to draw it, id is null
 				if (id && !this.hiddengraphics) {
 					yield [ring, null, 1];
 				}				
 		
-				x = x + sep;
+ */				x = x + sep;
 
 			}
 

@@ -299,6 +299,10 @@ export class FeatureCollection {
 
 		const that = this;
 
+		if (this.layers[p_layerkey]["refreshitem"] === undefined) {
+			throw new Error(`layer '${p_layerkey}' class is not implemeting a 'refreshitem' method (async method returning a Promise); maybe your class should extend 'canvasVectorMethodsMixin'`);
+		}
+
 		return new Promise((resolve, reject) => {
 
 			try {

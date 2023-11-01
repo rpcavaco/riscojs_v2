@@ -1,18 +1,15 @@
 
 
-import { CanvasGraticuleLayer, CanvasAGSQryLayer, CanvasRiscoFeatsLayer} from './canvas_vector.mjs';
-import {CanvasWMSLayer, CanvasAGSMapLayer} from  './canvas_raster.mjs';
-import {CanvasLineSymbol, CanvasPolygonSymbol, CanvasVertCross, CanvasCircle, CanvasDiamond, CanvasIcon, CanvasSquare} from './canvas_symbols.mjs';
-import { AreaGridLayer, PointGridLayer } from './vectorlayers.mjs'
+import { CanvasPointGridLayer, CanvasAreaGridLayer, CanvasGraticuleLayer, CanvasAGSQryLayer, CanvasRiscoFeatsLayer} from './canvas_vector.mjs';
+import { CanvasWMSLayer, CanvasAGSMapLayer} from  './canvas_raster.mjs';
+import { CanvasLineSymbol, CanvasPolygonSymbol, CanvasVertCross, CanvasCircle, CanvasDiamond, CanvasIcon, CanvasSquare} from './canvas_symbols.mjs';
 
 
 export const layerClassAdapter = {
 	"canvas": {
 		"graticule": CanvasGraticuleLayer,
-		// "ptgrid": CanvasPointGridLayer,	
-		// "areagrid": CanvasAreaGridLayer,	
-		"ptgrid": PointGridLayer,	
-		"areagrid": AreaGridLayer,		
+		"ptgrid": CanvasPointGridLayer,	
+		"areagrid": CanvasAreaGridLayer,	
 		"wms": CanvasWMSLayer,
 		"ags_map": CanvasAGSMapLayer,
 		"ags_qry": CanvasAGSQryLayer,
