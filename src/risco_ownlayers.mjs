@@ -205,6 +205,7 @@ function adaptCoords(p_path_levels, p_in_coords, p_center_pt, p_pixsz, out_coord
 export class RiscoFeatsLayer extends RemoteVectorLayer {
 
 	url;     // https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer
+	_name = "RiscoFeatsLayer";
 
 	constructor() { 
 		super();

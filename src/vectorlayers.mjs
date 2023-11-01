@@ -3,14 +3,15 @@ import {GlobalConst} from './constants.js';
 import {WKID_List} from './esri_wkids.js';
 import {uuidv4} from './utils.mjs';
 
-import { SimpleVectorLayer, VectorLayer, RemoteVectorLayer } from './layers.mjs';
+import { VectorLayer, RemoteVectorLayer } from './layers.mjs';
 
 
 
-export class GraticuleLayer extends SimpleVectorLayer {
+export class GraticuleLayer extends VectorLayer {
 
 	fixedseparation = 100;
 	_geomtype = "line";
+	_name = "GraticuleLayer";
 
 	constructor() {
 		super();
@@ -63,13 +64,14 @@ export class GraticuleLayer extends SimpleVectorLayer {
 
 }
 
-export class PointGridLayer extends SimpleVectorLayer {
+export class PointGridLayer extends VectorLayer {
 
 	fixedseparation = 100;
 	scaledep_separation_1k = -1;
 	_geomtype = "point";
 	marker;
 	// mrksize = 2;
+	_name = "PointGridLayer";
 
 	constructor() {
 		super();
@@ -90,9 +92,8 @@ export class PointGridLayer extends SimpleVectorLayer {
 		return ret;
 	}
 
-	* genlayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
+	looplayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
 
-		let out_pt = [];
 		let sclval = p_mapctxt.getScale();
 		let sep = this.separation(sclval);
 
@@ -102,6 +103,8 @@ export class PointGridLayer extends SimpleVectorLayer {
 		let y = sep * Math.floor(p_terrain_env[1] / sep);
 		let y_lim = p_terrain_env[3];
 
+		let id = 0;
+
 		while (y <= y_lim) {
 
 			y = y + sep;
@@ -110,9 +113,17 @@ export class PointGridLayer extends SimpleVectorLayer {
 			while (x <= x_lim) {
 
 				x = x + sep;
-				p_mapctxt.transformmgr.getRenderingCoordsPt([x, y], out_pt);
-				// item_coords, item_attrs, item_path_levels
-				yield [out_pt.slice(0), null, null];
+				//p_mapctxt.transformmgr.getRenderingCoordsPt([x, y], out_pt);
+				//// item_coords, item_attrs, item_path_levels
+				//yield [out_pt.slice(0), null, null];
+
+				// using terrain coords
+				// console.log("terrain_coords:", terrain_coords, "key:", that.key);
+				id++;
+
+				this._currFeatures.addfeature(this.key, [x, y], {}, this.geomtype, 1, id);
+
+
 			}
 		}
 
@@ -130,6 +141,7 @@ export class AreaGridLayer extends VectorLayer {
 	is_internal = true;
 	hiddengraphics = false;
 	_columns = 0;
+	_name = "AreaGridLayer";
 
 	// TODO - check this layera acting as spatial index is unique
 	spindex = false;    // acting as a spatial index ? (defautl is false, should only be ONE acting as spatialindex at a time)
@@ -213,7 +225,6 @@ export class AreaGridLayer extends VectorLayer {
 
 }
 
-
 export class AGSQryLayer extends RemoteVectorLayer {
 
 	url;     // https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer
@@ -221,6 +232,7 @@ export class AGSQryLayer extends RemoteVectorLayer {
 	oidfldname = "objectid"
 	precision = 3;
 	f = "json";
+	_name = "AGSQryLayer";
 
 	constructor() { 
 		super();

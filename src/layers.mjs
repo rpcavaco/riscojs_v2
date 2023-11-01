@@ -137,6 +137,7 @@ export class Layer {
 	_servmetadata_report;
 	_servmetadata_report_completed = false;
 	_metadata_or_root_url;
+	_name = "<Layer base class>";
 
 	constructor() {
 		this.missing_mandatory_configs = [];
@@ -190,13 +191,22 @@ export class Layer {
 
 	refresh(p_mapctx) {
 
-		// to be extended
+		// method meant to be extended
+		let name;
+		if (this._name === undefined) {
+			name = "<class yet not defining '_name' attribute>";
+		} else {
+			name = this._name;
+		}
+
+		console.error(`'refresh' method not implemented for '${name}' class`);
 		
 		let cancel = false;
 		return cancel;
 	}		
 }
 
+/*
 const vectorLayersMixin = (Base) => class extends Base {
 	
 	geomtype;
@@ -225,7 +235,7 @@ const vectorLayersMixin = (Base) => class extends Base {
 
 		let cancel = false;
 
-		console.log("## refresh", this.key);
+		console.log("## refresh", this.key, "iscanceled:", this.isCanceled());
 
 		if (this.isCanceled()) {
 
@@ -272,6 +282,9 @@ const vectorLayersMixin = (Base) => class extends Base {
 							// console.log("-- 239 --", gfctx.strokeStyle, gfctx.lineWidth);
 
 							if (this.isCanceled()) {
+								if (GlobalConst.getDebug("LAYERS")) {
+									console.log(`[DBG:LAYERS] Vector layer '${this.key}' IS canceled`);
+								}
 								cancel = true;		
 							} else  {
 
@@ -287,8 +300,6 @@ const vectorLayersMixin = (Base) => class extends Base {
 											cancel = true;
 											break;
 										}
-
-										console.log("## item refr -- cancel:", cancel, this.key, terrain_env, scr_env, item_coords, item_attrs);
 
 										if (this.isCanceled()) {
 											cancel = true;
@@ -310,9 +321,12 @@ const vectorLayersMixin = (Base) => class extends Base {
 
 		}
 
+		console.log("## refresh finish", this.key, "cancel:", cancel);
+
 		return cancel;
 	}		
 }
+*/
 
 const featureLayersMixin = (Base) => class extends Base {
 
@@ -334,6 +348,7 @@ const featureLayersMixin = (Base) => class extends Base {
 
 }
 
+/*
 // no feature mgmt, no attributes
 export class SimpleVectorLayer extends vectorLayersMixin(Layer) {
 
@@ -353,12 +368,30 @@ export class SimpleVectorLayer extends vectorLayersMixin(Layer) {
 
 	
 }
+*/
 
 // has feature mgmt, has attributes
-export class VectorLayer extends featureLayersMixin(vectorLayersMixin(Layer)) {
+export class VectorLayer extends featureLayersMixin(Layer) {
+
+	geomtype;
+	_filterfunc = null;
+	_name = "<VectorLayer base class>";
 
 	constructor() {
 		super();
+	}
+
+	setFilterFunc(p_function) {
+		// console.log("layer", this.key, "func:", p_function);
+		this._filterfunc = p_function;
+	}
+
+	isFeatureInsideFilter(p_feat_atts) {
+		let ret = true;
+		if (this._filterfunc != null && !this._filterfunc(p_feat_atts)) {
+			ret = false;
+		}
+		return ret;
 	}
 	
 	* itemchunks(p_mapctxt, p_prep_data) {
@@ -366,14 +399,15 @@ export class VectorLayer extends featureLayersMixin(vectorLayersMixin(Layer)) {
 		// for each chunk, respond with item_chunk_params object, specific to layer type
 	}		
 
+	/*
 	* genlayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
-		// to be extended
-		// for each chunk in 'itemschunks', generate graphic items (graphics and attributes) to be drawn
-	}	
+		// to be extended, either this or looplayeritems
+		// for each chunk in 'itemschunks', generates (yields) graphic items (graphics and attributes) to be drawn
+	}	*/
 
 	loopayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
 		// to be extended
-		// for each chunk in 'itemschunks', generate graphic items (graphics and attributes) to be drawn
+		// for each chunk in 'itemschunks', add features to current feature collection
 	}
 
 	simplerefreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_geom, item_atts, p_path_levels) {
@@ -389,6 +423,7 @@ export class RemoteVectorLayer extends VectorLayer {
 
 	featchunksloading = {};
 	_prerefreshed = false;
+	_name = "<RemoteVectorLayer base class>";	
 
 	isLoading() {
 		// console.info(`[***] Checking layer ${this.key} is loading, preref: ${this._prerefreshed} OR featchkld:${Object.keys(this.featchunksloading).length}>0`);
@@ -445,8 +480,7 @@ export class RemoteVectorLayer extends VectorLayer {
 		// first method to be called when consuming services, should call refresh
 	}
 
-	// overrides vectorLayersMixin refresh
-	// main diff: uses looplayeritems which is not a generator
+	// accesses remote content, uses looplayeritems to feed read features to current feature collection
 	refresh(p_mapctx, p_prep_data) {
 
 		this._prerefreshed = false;
@@ -508,6 +542,7 @@ export class RasterLayer extends Layer {
 	filter = "none";
 	envsplit = true;
 	envsplit_cfg = {};
+	_name = "<RasterLayer base class>";
 
 	constructor(p_mapctx) {
 		super(p_mapctx);

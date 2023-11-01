@@ -12,6 +12,7 @@ export class WMSLayer extends RasterLayer {
 	layernames;
 	imageformat = "image/jpeg";
 	reuseurl = false;
+	_name = "WMSLayer";
 
 	constructor() { 
 		super();
