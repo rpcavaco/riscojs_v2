@@ -59,8 +59,6 @@ export class LocQuery {
 			this.symbs[symbitem] = symb;
 		}
 
-		console.log("cl feats", p_cfg["centerlinefeats"]);
-
 	}
 
 	set lastinput(p_li) {
@@ -216,7 +214,6 @@ export class LocQuery {
 
 		const that = this;
 
-		console.log("ZOOM TO NP", p_cod_topo, p_npol);
 		this.current_npol = p_npol;
 
 		this.current_npol_data = {
@@ -225,21 +222,19 @@ export class LocQuery {
 			"loc": [...p_loc]
 		}
 
-		console.log("zoom to, p_loc >>>>", that.zoomto, p_loc, "refreshing:", this.mapctx.tocmgr.isRefreshing());
-
-
 		if (this.loc_layer_key) {
-			const lyr = this.mapctx.tocmgr.getLayer(this.loc_layer_key);
-			console.log("SET TO PT np", this.current_npol_data.cod_topo, this.current_npol_data.npol);
+			const lyr = this.mapctx.tocmgr.getLayer(that.loc_layer_key);
 			lyr.setToPoint(this.current_npol_data.loc);
 		}
 
-		this.mapctx.setScaleCenteredAtPoint(that.zoomto, p_loc, true, () => {
+
+		this.mapctx.setScaleCenteredAtPoint(this.zoomto, p_loc, true, () => {
+
+			// Desenha features temporárias, de eixo de via e de linha de
+			//  projeção do número de polícia
 
 			const env = [];
 			that.mapctx.getMapBounds(env);
-
-			// console.log("==>", p_cod_topo,this.current_npol, p_npol);
 
 			let filter_dict = {}, foundlist = [];
 			filter_dict[that.centerlinefeats["fieldname_topo"]] = p_cod_topo;
@@ -251,8 +246,8 @@ export class LocQuery {
 			}
 
 			filter_dict = {}
-			filter_dict[that.npolfeats["fieldname_topo"]] = this.current_npol_data.cod_topo;
-			filter_dict[that.npolfeats["fieldname_npol"]] = this.current_npol_data.npol;
+			filter_dict[that.npolfeats["fieldname_topo"]] = that.current_npol_data.cod_topo;
+			filter_dict[that.npolfeats["fieldname_npol"]] = that.current_npol_data.npol;
 			that.mapctx.featureCollection.find(that.npolfeats["layerkey"], 'EQ', filter_dict, foundlist);
 
 			for (let foundid of foundlist) {
@@ -261,9 +256,6 @@ export class LocQuery {
 				{ "graphic": that.symbs["npolfeats"] }, null, env );
 			}
 
-			console.log("AFTERREFRESH TO NP", this.current_npol_data.cod_topo, this.current_npol_data.npol);
-
-	
 		});
 
 	}
@@ -272,8 +264,6 @@ export class LocQuery {
 
 		const that = this;
 		this.mapctx.tocmgr.addAfterRefreshProcedure(() => {
-
-			console.log("AFTER REFRESH", p_cod_topo);
 
 			let filter_dict = {}, foundlist = [];
 			filter_dict[that.centerlinefeats["fieldname_topo"]] = p_cod_topo;
@@ -290,8 +280,6 @@ export class LocQuery {
 			}
 
 		});
-
-		console.log("ZOOM TO", p_cod_topo);
 
 		this.mapctx.transformmgr.zoomToRect(...p_ext);		
 	}
@@ -347,8 +335,6 @@ export class LocQuery {
 					
 					case "npol":
 
-					console.log(p_results_json["address"]["data"]);
-
 						this.drawNPolPoint(p_results_json["address"]["data"]['cod_topo'], p_results_json["address"]["data"]['np'], p_results_json["address"]["data"]['loc']);
 
 						usablestr = `${p_results_json["address"]["data"]["toponym"]}, ${p_results_json["address"]["data"]["np"]}`;
@@ -369,8 +355,6 @@ export class LocQuery {
 				h += this.addLine2Results(`Número '${p_results_json["address"]["data"]["np"]}': não encontrado.`, "MSG");
 				h += this.addLine2Results("Alguns números de polícia existentes:", "MSG");
 				for (const np of p_results_json["address"]["data"]["numbers"]) {
-
-					//console.log("np:", np);
 
 					h += this.addLine2Results(np["npol"], "CLICKBOLD", (e) => {
 
@@ -487,7 +471,6 @@ export class LocQuery {
 
 							}
 
-							// console.log(JSON.stringify(results));
 							this.fillResultInUI(results);
 			
 						}).catch((e) => {
@@ -520,8 +503,6 @@ export class LocQuery {
 					results["address"]  = JSON.parse(JSON.stringify(p_responsejson));
 
 				}
-
-				console.log(JSON.stringify(results));
 				this.fillResultInUI(results);
 
 			}).catch((e) => {
@@ -549,8 +530,6 @@ export class LocQuery {
 			.then(response => response.json())
 			.then(
 				function(responsejson) {
-
-					console.log(responsejson);
 
 					if (responsejson['error'] !== undefined) {
 
@@ -761,7 +740,6 @@ export class LocQuery {
 
 					pp_query_box.addEventListener(evttypes[i], function(e) {
 						let clntxt = pp_query_box.value.trim();
-						//console.log("::375:: qryb EVENT", e.type, clntxt, pp_query_box.value, "len", clntxt.length, "!=", p_qryb_obj.lastinput.length);
 						if (clntxt.length > 2) {
 							if (clntxt != p_qryb_obj.lastinput) {
 								p_qryb_obj.lastinput = clntxt;

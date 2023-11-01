@@ -9,6 +9,7 @@ export class GrSymbol {
 	#toStroke = false;
 	#toFill = false;
 	globalAlpha = "none";
+	skipconfigs = [];
 	/* constructor() {
 		this.whereClause = new WhereClause();
 	} */
@@ -270,6 +271,68 @@ export class CanvasCircle extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol
 
 		if (this["strokeStyle"] !== undefined && this["strokeStyle"].toLowerCase() !== "none") {
 			p_layer._gfctx.stroke();
+		}
+
+	}
+
+	drawfreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step, p_lyr) {
+
+		const sclval = p_mapctx.getScale();
+		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
+
+		const r = Math.min(dim, p_vert_step/4.0);
+
+		p_ctx.beginPath();
+		p_ctx.arc(p_symbcenter[0], p_symbcenter[1], r, 0, Math.PI * 2, true);
+
+		if (this["fillStyle"] !== undefined && this["fillStyle"].toLowerCase() !== "none") {
+			p_ctx.fill();
+		}
+		if (this["strokeStyle"] !== undefined && this["strokeStyle"].toLowerCase() !== "none") {
+			p_ctx.stroke();
+		}
+	}
+}
+
+export class CanvasConcentricCircles extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol)) { 
+
+	symbname;
+	radiuses;
+	skipconfigs = ['markersize'];
+
+	constructor(opt_variablesymb_idx) {
+		super(opt_variablesymb_idx);
+		this.symbname = "ConcentricCircles";
+	}
+	drawsymb(p_mapctxt, p_layer, p_coords) {
+
+		const sclval = p_mapctxt.getScale();
+		let dim, cx, cy;
+
+		for (let ri=0; ri<this.radiuses.length; ri++) {
+
+			dim = this.radiuses[ri] * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
+
+			if (this.position_shift.length >= 2) {
+				cx = this.position_shift[0] + p_coords[0];
+				cy = this.position_shift[1] + p_coords[1];
+			} else {
+				cx = p_coords[0];
+				cy = p_coords[1];
+			}
+	
+			p_layer._gfctx.beginPath();
+			p_layer._gfctx.arc(cx, cy, dim, 0, Math.PI * 2, true);
+	
+			
+			if (ri==0 && this["fillStyle"] !== undefined && this["fillStyle"].toLowerCase() !== "none") {
+				p_layer._gfctx.fill();
+			}
+	
+			if (this["strokeStyle"] !== undefined && this["strokeStyle"].toLowerCase() !== "none") {
+				p_layer._gfctx.stroke();
+			}
+
 		}
 
 	}

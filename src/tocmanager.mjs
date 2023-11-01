@@ -66,7 +66,6 @@ export class TOCManager {
 	}
 
 	startedRefreshing() {
-		console.log("----- startedRefreshing")
 		this._refreshing = true;
 	}	
 
@@ -80,7 +79,6 @@ export class TOCManager {
 			p = this.after_refresh_procedure_list.pop();
 			p();
 		}
-		console.log("----- stoppedRefreshing")
 		this._refreshing = false;
 	}
 
@@ -262,6 +260,12 @@ export class TOCManager {
 
 						// item is missing if has no default value
 						if (scaneables[si][items[ii]] == null) {
+
+							// if config named items[ii] is in skipconfigs names list, let's skip it
+							if (scaneables[si]["skipconfigs"] !== undefined && scaneables[si]["skipconfigs"].indexOf(items[ii]) >= 0) {
+								console.info(`[INFO] FROM 'skipconfigs', skipping cfg '${items[ii]}' on layer: ${p_layerkey}`);
+								continue;
+							}
 
 							switch (items[ii]) {
 

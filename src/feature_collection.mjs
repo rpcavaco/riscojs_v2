@@ -375,8 +375,6 @@ export class FeatureCollection {
 			throw new Error(`layer '${p_layerkey}' was not set through 'setLayer' method`);
 		}
 
-		console.log(":: 374 ::", p_layerkey, this.featList[p_layerkey]);
-
 		for (let id in this.featList[p_layerkey]) {
 			if (this.featList[p_layerkey].hasOwnProperty(id)) {
 				featidlist.push(id);
@@ -433,7 +431,7 @@ export class FeatureCollection {
 
 	redrawAllVectorLayers() {
 
-		let lyrkey, canvases_keys = [...this.mapctx.renderingsmgr.featdraw_canvaskeys], work_layerkeys = [];
+		let canvases_keys = [...this.mapctx.renderingsmgr.featdraw_canvaskeys], work_layerkeys = [];
 
 		this.mapctx.renderingsmgr.clearAll(canvases_keys);
 
@@ -451,7 +449,7 @@ export class FeatureCollection {
 			}
 		}*/
 
-		console.log(":: 436 :: work_layerkeys", work_layerkeys);
+		console.info("[INFO] redrawing feat.collection, layers:", work_layerkeys);
 
 		if (work_layerkeys.length > 0) {
 			this.redrawAllVectorLayersNext(work_layerkeys);

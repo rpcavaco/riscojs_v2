@@ -342,14 +342,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			throw e;
 		}
 
-		if (this._currentsymb.toFill) {
-			this._gfctx.fill();
-		}
-
-		if (this._currentsymb.toStroke) {
-			this._gfctx.stroke();
-		}
-
 		if (ret_promise) {
 			return ret_promise;
 		} else {

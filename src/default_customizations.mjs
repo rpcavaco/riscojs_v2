@@ -292,10 +292,10 @@ class LoadingPrint extends LoadingMessaging {
 import {canvasVectorMethodsMixin} from '../riscojs_v2/canvas_vector.mjs';
 import { VectorLayer } from '../riscojs_v2/layers.mjs';
 
-class LocLayerClass extends VectorLayer {
+class LocPointsLayerClass extends VectorLayer {
 
 	is_internal = true;
-	_geomtype = "line";
+	_geomtype = "point";
 	items;
 
 	constructor() {
@@ -328,7 +328,10 @@ class LocLayerClass extends VectorLayer {
 		yield [];
 	}	
 
-	* genlayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims, item_chunk_params) {
+	refresh(p_mapctxt, p_prep_data) {
+
+		const bounds = [];
+		p_mapctxt.getMapBounds(bounds);
 
 		for (let item, i=0; i<this.items.length; i++) {
 			item = this.items[i];
@@ -338,17 +341,13 @@ class LocLayerClass extends VectorLayer {
 				if (item["accuracy"] !== undefined) {
 					yield_ret = [[item.pt], { "key": item.key, "accuracy": item.accuracy }, 1];
 				} else {
-					console.log(">> yield:", [[item.pt], { "key": item.key }, 1]);
 					yield_ret = [[item.pt], { "key": item.key }, 1];
 				}
 
 			// yield [item_coords, item_attrs, item_path_levels];
 				if (yield_ret) {
 					this._currFeatures.addfeature(this.key, yield_ret[0], yield_ret[1], this._geomtype, yield_ret[2], i);
-					yield yield_ret;
 				}
-
-				yield yield_ret;
 			}
 
 		}
@@ -357,93 +356,10 @@ class LocLayerClass extends VectorLayer {
 	}
 }
 
-export class CanvasLocLayerClass extends canvasVectorMethodsMixin(LocLayerClass) {
+export class CanvasLocPointsLayerClass extends canvasVectorMethodsMixin(LocPointsLayerClass) {
 
-	simplerefreshitem(p_mapctxt, p_terrain_env, p_scr_env, p_dims, p_coords, p_attrs, p_path_levels) {
-
-		const ok = this.grabGf2DCtx(p_mapctxt);
-
-		function strokeFill(p_this) {
-			if (p_this._currentsymb.toFill) {
-				p_this._gfctx.fill();
-			};
-			if (p_this._currentsymb.toStroke) {
-				p_this._gfctx.stroke();
-			};
-		}
-
-		if (ok && !this._currentsymb.toStroke && !this._currentsymb.toFill) {
-			throw new Error(`Layer ${this.key}, no 'stroke' and no 'fill' flags, nothin to draw`);
-		}
-
-		if (ok) {
-			try {
-				let radius=0, cpt=[], other=[];
-
-				for (let pt of p_coords) {
-
-					p_mapctxt.transformmgr.getRenderingCoordsPt(pt, cpt);
-
-					if (p_attrs["key"] == "from") {
-
-						this._gfctx.beginPath();
-						this._gfctx.arc(cpt[0], cpt[1], 2, 0, Math.PI * 2, true);
-						strokeFill(this);
-					
-						// linha de ligação, ponto GPS > Local
-						if (this.items[1]) {
-							p_mapctxt.transformmgr.getRenderingCoordsPt(this.items[1].pt, other);
-
-							this._gfctx.beginPath();
-							this._gfctx.moveTo(...cpt);
-							this._gfctx.lineTo(...other);
-							strokeFill(this);							
-						}
-					
-					} else {
-
-						console.log(":: 389 ::", cpt, this.key, this._gfctx);
-
-						this._gfctx.beginPath();
-						this._gfctx.arc(cpt[0], cpt[1], 3, 0, Math.PI * 2, true);
-						strokeFill(this);
-
-						this._gfctx.beginPath();
-						this._gfctx.arc(cpt[0], cpt[1], 12, 0, Math.PI * 2, true);
-						strokeFill(this);
-
-						/* TODO - locrsb PRECISA DE aspeto especifico
-						this._gfctx.beginPath();
-						this._gfctx.moveTo(cpt[0]-20, cpt[1]+18);
-						this._gfctx.lineTo(cpt[0], cpt[1]-22);
-						this._gfctx.lineTo(cpt[0]+20, cpt[1]+18);
-						this._gfctx.closePath();
-						strokeFill(this);
-						*/
-					}
-
-					// accuracy circle
-					if (p_attrs["key"] == "from") {
-
-						radius = Math.round(p_mapctxt.transformmgr.convertReadableScaleToScalingFactor(p_mapctxt.transformmgr.getReadableCartoScale()) * p_attrs["accuracy"]);
-
-						this._gfctx.beginPath();
-						this._gfctx.arc(cpt[0], cpt[1], radius, 0, Math.PI * 2, true);
-						strokeFill(this);
-
-					}
-				}
-
-			} catch(e) {
-				throw e;
-			} finally {
-				this.releaseGf2DCtx();
-			}
-		}
-
-		return true;		
-	}
 }
+
 
 function getGeoLocation(p_this, b_check_active) {
 

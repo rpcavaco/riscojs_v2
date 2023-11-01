@@ -155,11 +155,13 @@
 			// Customizations changing controls or toolboxes go first
 			// (limiting available space for other widgets)
 			loc_layer = "LOCATIONS_LAYER";
-			p_mapctx.tocmgr.addLayer("LOCATIONS_LAYER", {
+			mapctx.tocmgr.addLayer("LOCATIONS_LAYER", {
+				"marker": "conc_circles",
 				"strokeStyle": "red",
-				"fillStyle": "none",
-				"lineWidth": 3
-			}, CanvasLocLayerClass);
+				"radiuses": [1,3],
+				"lineWidth": 3,
+				"fillStyle": "white"
+			}, CanvasLocPointsLayerClass); 
 								
 			p_this.instances["geolocation"] = new GeoLocationMgr(p_mapctx, loc_layer);
 
