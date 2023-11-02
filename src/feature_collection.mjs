@@ -449,7 +449,7 @@ export class FeatureCollection {
 			}
 		}*/
 
-		console.info("[INFO] redrawing feat.collection, layers:", work_layerkeys);
+		console.info("[INFO] redrawing feat.collection, layers (in this order):", JSON.stringify(work_layerkeys));
 
 		if (work_layerkeys.length > 0) {
 			this.redrawAllVectorLayersNext(work_layerkeys);

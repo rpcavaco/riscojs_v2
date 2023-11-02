@@ -5,11 +5,14 @@ export class GrSymbol {
 
 	greaterOrEqualScale = Number.MAX_SAFE_INTEGER; // limit above the current scale
 	func = "none";
+	change = "none";
 	key = "default";
 	#toStroke = false;
 	#toFill = false;
 	globalAlpha = "none";
 	skipconfigs = [];
+	dimsinpix = false; // dimensions in pixels
+
 	/* constructor() {
 		this.whereClause = new WhereClause();
 	} */
@@ -306,12 +309,17 @@ export class CanvasConcentricCircles extends fillSymbolMixin(strokeSymbolMixin(M
 	}
 	drawsymb(p_mapctxt, p_layer, p_coords) {
 
-		const sclval = p_mapctxt.getScale();
+		let sclval = p_mapctxt.getScale();
 		let dim, cx, cy;
 
 		for (let ri=0; ri<this.radiuses.length; ri++) {
 
-			dim = this.radiuses[ri] * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
+			if (this.dimsinpix) {
+				dim = this.radiuses[ri];
+			} else {
+				sclval = p_mapctxt.getScale();
+				dim = this.radiuses[ri] * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
+			}
 
 			if (this.position_shift.length >= 2) {
 				cx = this.position_shift[0] + p_coords[0];

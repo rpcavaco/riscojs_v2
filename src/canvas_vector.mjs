@@ -199,9 +199,27 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		} else {
 			this._currentsymb = this.default_symbol;
 			if (this["varstyles_symbols"]!==undefined && opt_attrs) {
-				for (let vi=0; vi<this.varstyles_symbols.length; vi++) {										
+
+				let chgresult;
+				for (let vi=0; vi<this.varstyles_symbols.length; vi++) {
+
 					if (this.varstyles_symbols[vi]["func"] !== undefined && this.varstyles_symbols[vi].func(p_mapctx.getScale(), opt_attrs)) {
+						
 						this._currentsymb = this.varstyles_symbols[vi];
+						if (this.varstyles_symbols[vi]["change"] !== undefined && this.varstyles_symbols[vi]["change"] != "none") {
+							chgresult = this.varstyles_symbols[vi].change(p_mapctx.getScale(), p_mapctx.getPixSize(), opt_attrs)
+						} else {
+							chgresult = null;
+						}
+
+						if (chgresult) {
+							for (let k in chgresult) {
+								if (chgresult.hasOwnProperty(k)) {
+									this._currentsymb[k] = chgresult[k];
+								}
+							}
+						}
+
 						break;
 					}
 				}
