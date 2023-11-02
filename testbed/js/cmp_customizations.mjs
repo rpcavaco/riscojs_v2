@@ -290,7 +290,7 @@ export class LocQuery {
 		let featcount = 0, single_customqry_feat = null;
 		let h = 0, usablestr;
 
-		// console.log(p_results_json);
+		// console.log("fillResultInUI:", JSON.stringify(p_results_json));
 
 		this.cleanResultArea(true);		
 
@@ -388,7 +388,12 @@ export class LocQuery {
 
 			}
 
+		} else {
+
+			that.msgs_ctrlr.warn("Pesquisa sem resultados");
+			
 		}
+
 
 
 		if (h == 0) {								
@@ -456,33 +461,44 @@ export class LocQuery {
 
 						this.addressQuery(p_qrystr).then((p_responsejson) => {
 
-							if (["partial", "errornp", "topo", "npol"].indexOf(p_responsejson["type"]) >= 0) {
-			
+							if (["partial", "errornp", "topo", "npol"].indexOf(p_responsejson["type"]) >= 0) {			
 								results["address"]  = {
 									"status":  "OK",
 									"data": JSON.parse(JSON.stringify(p_responsejson))
 								}
-			
+								
 							} else {
-								console.error("address query:", p_responsejson);
 								results["address"]  = {
-									"status":  "ERROR"
+									"status":  "ERROR",
+									"message": `'type' desconhecido: ${p_responsejson['type']}`
 								}
-
 							}
 
 							this.fillResultInUI(results);
 			
 						}).catch((e) => {
-			
-							const msg = "Erro em tentativa de pesquisa de endereço:" + e;
-							console.error(e);
-							that.msgs_ctrlr.warn(msg);
-					
+
+							if (e.name == "SyntaxError" && e.message.indexOf("JSON.parse") >= 0) {
+								results["address"]  = {
+									"status":  "ERROR",
+									"message": e.message
+								}
+							} else {
+								const msg = "Erro em tentativa de pesquisa de endereço:" + e;
+								console.error(e);
+								that.msgs_ctrlr.warn(msg);	
+							}			
+
+
+							this.fillResultInUI(results);
+							
 						});
 			
-					}					
+					} else {
 
+						this.fillResultInUI(results);
+					}	
+					
 				}).catch((e) => {
 
 					const msg = "Erro em tentativa de pesquisa: " + e.message;
@@ -492,6 +508,9 @@ export class LocQuery {
 				});
 
 			}
+		
+		} else {
+			oqtype = "none";
 		}
 
 		if (oqtype == "none") {
@@ -507,7 +526,7 @@ export class LocQuery {
 
 			}).catch((e) => {
 
-				const msg = "Erro em tentativa de pesquisa de endereço:" + e;
+				const msg = "Erro em tentativa de pesquisa de endereço:" + e.message;
 				console.error(msg);
 				that.msgs_ctrlr.warn(msg);
 		
@@ -527,11 +546,17 @@ export class LocQuery {
 				method: "POST",
 				body: JSON.stringify({ "curstr": p_qrystr, "outsrid": this.crs })
 			})
-			.then(response => response.json())
+			.then(
+				response => response.json()
+			)
 			.then(
 				function(responsejson) {
 
-					if (responsejson['error'] !== undefined) {
+					if (responsejson['status'] == 500) {
+
+						reject(responsejson['statusText']);
+
+					} else if (responsejson['error'] !== undefined) {
 
 						reject(responsejson['error']);
 
@@ -540,7 +565,7 @@ export class LocQuery {
 						if (responsejson['out']['tiporesp'] == 'partial') {
 
 							if (responsejson['toponyms'] === undefined) {
-								reject("resposta parcial truncada");
+								reject({ "error": "resposta parcial truncada" });
 							} else {
 								resolve({
 									"type": "partial",
@@ -765,6 +790,7 @@ export class LocQuery {
 		})(this.query_clrbtn, this.query_box, this, p_mapctx);	
 
 	}				
+
 
 	zoomToFoundFeats(p_jsonresponse) {
 
