@@ -13,7 +13,8 @@ function getCircularReplacer() {
 			return value;
 	  }
 	};
-  }
+}
+
 
 export class LocQuery {
 
@@ -287,7 +288,7 @@ export class LocQuery {
 
 	fillResultInUI(p_results_json) {
 
-		let featcount = 0, single_customqry_feat = null;
+		let featcount = 0, single_customqry_feat = null, layer=null, feats=null, zoomdict;
 		let h = 0, usablestr;
 
 		// console.log("fillResultInUI:", JSON.stringify(p_results_json));
@@ -297,23 +298,56 @@ export class LocQuery {
 		const that = this;
 		
 		if (p_results_json["customqry"] !== undefined && p_results_json["customqry"]["status"] == "OK") {
-			let tempfeat=null;
-			for (let lyrk in p_results_json["customqry"]["features"]) {
-				tempfeat = p_results_json["customqry"]["features"][lyrk][0];
-				featcount += tempfeat.length;
-			}
-			if (featcount == 1) {
-				single_customqry_feat = JSON.parse(JSON.stringify(tempfeat));
+
+			for (let lyrk in p_results_json["customqry"]["layers"]) {
+
+				layer = p_results_json["customqry"]["layers"][lyrk];
+
+				console.assert(layer['srid'] == this.crs, `sistemas coords incompatíveis, entre layer '${lyrk}' (${layer['srid']}) e o CRS esperado (${this.crs})`);
+
+				feats = layer["features"];
+				featcount += feats.length;
+				if (featcount == 1) {
+					single_customqry_feat = {"layerkey": lyrk, "feat": JSON.parse(JSON.stringify(feats[0]))};
+				}
 			}
 		} 
 
-		// Se houver apenas uma feature resultado da pesquisa especializada, fazer zoom + info à mesma
-		if (single_customqry_feat) {
-			this.mapctx.zoomToFeatsAndOpenInfoOnLast([single_customqry_feat.oid], single_customqry_feat.env, {'normal': 'temporary', 'label': 'temporary' });
-			return;
-		}
+		if (featcount > 0) {
 
-		if (p_results_json["address"] !== undefined && p_results_json["address"]["status"] === "OK") {
+			// Se houver apenas uma feature resultado da pesquisa especializada, fazer zoom + info à mesma
+			if (featcount == 1) {
+				
+				console.assert(single_customqry_feat != null);
+				zoomdict = {};
+				zoomdict[single_customqry_feat.layerkey] = [single_customqry_feat.feat.oid];
+				this.mapctx.zoomToFeatsAndOpenInfoOnLast(zoomdict, single_customqry_feat.feat.env, {'normal': 'temporary', 'label': 'temporary' });
+
+				h += this.addLine2Results(I18n.capitalize(this.otherqueriesmgr.layers_labels[single_customqry_feat.layerkey]), "CLASS");
+				h += this.addLine2Results(single_customqry_feat.feat.label, "CLICK", (e) => {
+					that.query_box.value = single_customqry_feat.feat.label;
+					that.cleanResultArea();
+				});
+
+			} else {
+				for (let lyrk in p_results_json["customqry"]["layers"]) {
+
+					h += this.addLine2Results(I18n.capitalize(this.otherqueriesmgr.layers_labels[lyrk]), "CLASS");
+
+					layer = p_results_json["customqry"]["layers"][lyrk];
+					for (const f of layer["features"]) {
+						h += this.addLine2Results(f.label, "CLICKBOLD", (e) => {
+							that.query_box.value = f.label;
+							zoomdict = {};
+							zoomdict[lyrk] = [f.oid];
+							this.mapctx.zoomToFeatsAndOpenInfoOnLast(zoomdict, f.env, {'normal': 'temporary', 'label': 'temporary' });
+							that.cleanResultArea();
+						});		
+					}
+				}
+			}
+
+		} else if (p_results_json["address"] !== undefined && p_results_json["address"]["status"] === "OK") {
 
 			if (["topo", "npol"].indexOf(p_results_json["address"]["data"]["type"]) >= 0) {
 
@@ -411,6 +445,8 @@ export class LocQuery {
 		const results = {};
 		let oqtype = "empty";
 
+		const identsre = new RegExp("^[\\d/\-_]+$", "g");
+
 		//this.startedQuerying();
 
 		if (this.otherqueriesmgr) {
@@ -436,11 +472,12 @@ export class LocQuery {
 							customqresult["msg"] = msg; 
 						}
 					} else {
+
 						if (p_responsejson != null && Object.keys(p_responsejson).length > 0) {
 
 							let has_feats = false;
 							for (let lyrk in p_responsejson) {
-								if (p_responsejson[lyrk].length > 0) {
+								if (p_responsejson[lyrk]["features"].length > 0) {
 									has_feats = true;
 									break;
 								}
@@ -448,7 +485,7 @@ export class LocQuery {
 				
 							if (has_feats) {
 								customqresult["status"] = "OK"; 
-								customqresult["features"] = JSON.parse(JSON.stringify(p_responsejson));	
+								customqresult["layers"] = JSON.parse(JSON.stringify(p_responsejson));	
 							} else {
 								customqresult["status"] = "EMPTY_RESPONSE";
 							}
@@ -457,7 +494,7 @@ export class LocQuery {
 
 					results["customqry"] = JSON.parse(JSON.stringify(customqresult));
 
-					if (oqtype == "_mix") {
+					if (oqtype == "_mix" && !identsre.test(p_qrystr)) {
 
 						this.addressQuery(p_qrystr).then((p_responsejson) => {
 
@@ -478,15 +515,21 @@ export class LocQuery {
 			
 						}).catch((e) => {
 
-							if (e.name == "SyntaxError" && e.message.indexOf("JSON.parse") >= 0) {
+							if (typeof e == "string") {
+								if (e == "SEM_RESULTADO") {
+									results["address"]  = {
+										"status":  "EMPTY_RESPONSE"
+									}	
+								} else {
+									const msg = "Erro em tentativa de pesquisa de endereço:" + e;
+									console.error(e);
+									that.msgs_ctrlr.warn(msg);		
+								}
+							} else if (e.name == "SyntaxError" && e.message.indexOf("JSON.parse") >= 0) {
 								results["address"]  = {
 									"status":  "ERROR",
 									"message": e.message
 								}
-							} else {
-								const msg = "Erro em tentativa de pesquisa de endereço:" + e;
-								console.error(e);
-								that.msgs_ctrlr.warn(msg);	
 							}			
 
 
@@ -552,7 +595,11 @@ export class LocQuery {
 			.then(
 				function(responsejson) {
 
-					if (responsejson['status'] == 500) {
+					if (Object.keys(responsejson).length == 0) {
+
+						reject("SEM_RESULTADO");
+
+					} else if (responsejson['status'] == 500) {
 
 						reject(responsejson['statusText']);
 
