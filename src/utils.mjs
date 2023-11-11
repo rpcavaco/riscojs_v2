@@ -233,7 +233,7 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_l
 
 	try {
 
-		if (Object.keys(msgdict[p_lang]).indexOf(p_fld) >= 0) {
+		if (msgdict!==undefined && msgdict[p_lang]!==undefined && Object.keys(msgdict[p_lang]).indexOf(p_fld) >= 0) {
 			caption = I18n.capitalize(msgdict[p_lang][p_fld]);
 		} else {
 			caption = I18n.capitalize(p_fld);
@@ -243,6 +243,7 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_l
 		const lang = p_lang;
 
 		if (p_layer.infocfg.fields["formats"] !== undefined && p_layer.infocfg.fields["formats"][p_fld] !== undefined) {
+
 			if (p_layer.infocfg.fields["formats"][p_fld]["type"] !== undefined) {
 
 				pretext = null;

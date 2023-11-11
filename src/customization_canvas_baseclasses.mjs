@@ -403,7 +403,8 @@ export class Info {
 			throw new Error(`Missing 'infocfg' config for layer '${p_layerkey}, cannot 'pick' features`);
 		}
 		if (currlayer["infocfg"]["keyfields"] === undefined && currlayer["infocfg"]["keyfield"] === undefined) {
-			throw new Error(`Missing 'infocfg.keyfields' and 'infocfg.keyfield' config for layer '${p_layerkey}, cannot 'pick' features`);
+			console.warn(`missing 'infocfg.keyfields' and 'infocfg.keyfield' config for layer '${p_layerkey}, cannot 'pick' features`);
+			return;
 		}
 
 		const keyfields = [];
