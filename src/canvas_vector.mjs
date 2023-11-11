@@ -332,7 +332,12 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			} else {
 
 				if (this["iconsrcfunc"] !== undefined && this["iconsrcfunc"] !== 'none') {
-					the_url = this.iconsrcfunc(opt_feat_args);
+
+					if (this.iconmarkervalue !== undefined && this.iconmarkervalue != 'none') {
+						the_url = this.iconsrcfunc(this.iconmarkervalue);
+					} else {
+						the_url = this.iconsrcfunc(opt_feat_args);
+					}
 				}
 
 				if (this._currentsymb['drawsymbAsync'] !== undefined) {
@@ -765,19 +770,8 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 
 		let ret_promise = null;
 		let groptsymbs = null;
-//		let iconnamefield = null;
-//		let iconsrcfunc = null;
 		let doit = false;
 		let return_error = null;
-
-//		let iconname = null;
-
-		// if (this['iconnamefield'] !== undefined && this['iconnamefield'] != "none") {
-		// 	iconnamefield = this['iconnamefield'];
-		// }
-		// if (this['iconsrcfunc'] !== undefined && this['iconsrcfunc'] != "none") {
-		// 	iconsrcfunc = this['iconsrcfunc'];
-		// }
 
 		if (opt_symbs) {
 

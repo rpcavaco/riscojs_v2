@@ -257,8 +257,6 @@ export class TOC  extends MapPrintInRect {
 							}
 						}
 
-						//console.log(lyr["label"], ">> _currFeatures <<", lyr.featCount());
-
 						if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
 
 							// console.log("334:", lyr["varstyles_symbols"] )

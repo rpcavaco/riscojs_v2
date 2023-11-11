@@ -186,6 +186,7 @@ export class CanvasPolygonSymbol extends labelSymbolMixin(fillSymbolMixin(stroke
 class MarkerSymbol extends labelSymbolMixin(GrSymbol) {
 	markersize; 
 	position_shift = [];
+	iconmarkervalue = "none";
 	_variablesymb_idx;
 	constructor(opt_variablesymb_idx) {
 		super();
@@ -502,13 +503,19 @@ export class CanvasIcon extends MarkerSymbol {
 		const sclval = p_mapctxt.getScale();
 		const dim = Math.round(this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval)));
 
-		let prom;
+		let prom, isfresult;
 
 		if (b_from_dataurl) {
 
 			prom = new Promise((resolve, reject) => {
 
-				const [ _, imgurl] = p_layer.iconsrcfunc(p_args);
+				if (this.iconmarkervalue !== undefined && this.iconmarkervalue != 'none') {
+					isfresult = this.iconsrcfunc(this.iconmarkervalue);
+				} else {
+					isfresult = this.iconsrcfunc(p_args);
+				}
+
+				const [ _, imgurl] = isfresult;
 		
 				const img = new Image();
 				img.decoding = "async";
@@ -549,8 +556,8 @@ export class CanvasIcon extends MarkerSymbol {
 			
 		} else {
 			prom = new Promise((resolve, reject) =>  {
-				p_mapctxt.imgbuffer.asyncFetchImage(p_layer.iconsrcfunc(p_args)).then(
-					(img) => {
+
+				function fetchimg(img) {
 	
 						const r = img.width / img.height;
 						let w, h;
@@ -573,8 +580,14 @@ export class CanvasIcon extends MarkerSymbol {
 	
 						resolve();
 				
-					}
-				);
+				};
+
+				if (this.iconmarkervalue !== undefined && this.iconmarkervalue != 'none') {
+					p_mapctxt.imgbuffer.asyncFetchImage(p_layer.iconsrcfunc(this.iconmarkervalue)).then(fetchimg).catch(reject);
+				} else {
+					p_mapctxt.imgbuffer.asyncFetchImage(p_layer.iconsrcfunc(p_args)).then(fetchimg).catch(reject);
+				}
+
 			});
 		}
 
@@ -593,24 +606,35 @@ export class CanvasIcon extends MarkerSymbol {
 
 		return new Promise((resolve, reject) =>  {
 
-			p_mapctx.imgbuffer.asyncFetchImage(p_lyr.iconsrcfunc(p_lyr.icondefsymb)).then(
-				(img) => {
-					const r = img.width / img.height;
-					let w, h;
-					if (r > 1) {
-						h = r0;
-						w = h * r;
-					} else {
-						w = r0;
-						h = w / r;
-					}
-		
-					p_ctx.drawImage(img, p_symbcenter[0]-(w/2), p_symbcenter[1]-(h/2), w, h);	
-					
-					resolve();
-		
+			function fetchimg(img) {
+				const r = img.width / img.height;
+				let w, h;
+				if (r > 1) {
+					h = r0;
+					w = h * r;
+				} else {
+					w = r0;
+					h = w / r;
 				}
-			)
+	
+				p_ctx.drawImage(img, p_symbcenter[0]-(w/2), p_symbcenter[1]-(h/2), w, h);	
+				
+				resolve();
+	
+			}
+
+			if (this.iconmarkervalue !== undefined && this.iconmarkervalue != 'none') {
+				p_mapctx.imgbuffer.asyncFetchImage(p_lyr.iconsrcfunc(this.iconmarkervalue)).then(fetchimg).catch(reject);
+			} else {
+
+				if (p_lyr.icondefsymb == null || p_lyr.icondefsymb == "none") {
+					reject(`layer '${p_lyr.key}' has no 'icondefsymb' configuration`);
+				}
+		
+				p_mapctx.imgbuffer.asyncFetchImage(p_lyr.iconsrcfunc(p_lyr.icondefsymb)).then(fetchimg).catch(reject);
+			}
+
+
 
 		});
 	}

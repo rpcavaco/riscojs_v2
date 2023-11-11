@@ -211,6 +211,13 @@ export class TOCManager {
 					currentLayer.default_symbol = new DynamicSymbol(this.mode, classkey);
 					scaneables.push(currentLayer.default_symbol);	
 
+					if (p_layercfg_entry.varstyles) {
+						for (let vi=0; vi<p_layercfg_entry.varstyles.length; vi++) {	
+							currentLayer.varstyles_symbols[vi] = new DynamicSymbol(this.mode, classkey, vi);
+							scaneables.push(currentLayer.varstyles_symbols[vi]);
+						}
+					}
+
 					if (p_layercfg_entry["selectionsymbol"] !== undefined) {
 
 						if (p_layercfg_entry["selectionsymbol"]["marker"] !== undefined && p_layercfg_entry["selectionsymbol"]["marker"] != "none") { 
@@ -221,13 +228,6 @@ export class TOCManager {
 
 						currentLayer.default_sel_symbol = new DynamicSymbol(this.mode, classkey);
 						scaneables.push(currentLayer.selectionsymbol);		
-					}
-					
-					if (p_layercfg_entry.varstyles) {
-						for (let vi=0; vi<p_layercfg_entry.varstyles.length; vi++) {	
-							currentLayer.varstyles_symbols[vi] = new DynamicSymbol(this.mode, classkey, vi);
-							scaneables.push(currentLayer.varstyles_symbols[vi]);
-						}
 					}
 				}
 			} else {
@@ -306,7 +306,6 @@ export class TOCManager {
 			if (currentLayer.setCurrFeatures !== undefined) {
 				currentLayer.setCurrFeatures(this.mapctx.featureCollection, p_layerkey, currentLayer, opt_exclude_from_redraw);
 			}
-
 
 			console.info(`[init RISCO] TOCManager, layer '${p_layerkey}' (${currentLayer.constructor.name}) prepared`);
 
