@@ -151,7 +151,7 @@ export class TOC  extends MapPrintInRect {
 		// this.leftcol_width is merged when necessary, in max_lbl_w
 		this.boxw["OPEN"] = max_lbl_w + 2 * this.margin_offset;
 
-		let grcota, cota, maxcota, count, lyr, txleft, indent_txleft, step, mapdims = [];
+		let grcota, cota, maxcota, count, lyr, txleft, indent_txleft, step, substep, mapdims = [];
 		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
 
 		this.left = mapdims[0] - (this.boxw[this.collapsedstate] + this.margin_offset);
@@ -215,6 +215,7 @@ export class TOC  extends MapPrintInRect {
 				count = 0;
 				cota = 0;
 				step = GlobalConst.CONTROLS_STYLES.TOC_SEPARATION_FACTOR * this.normalszPX;
+				substep = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
 
 				for (let li=this.tocmgr.layers.length-1; li>=0; li--) {
 
@@ -271,9 +272,9 @@ export class TOC  extends MapPrintInRect {
 									ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_INACTIVECOLOR;
 								}
 			
-								grcota = 4 + cota + 0.5 * GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
-								drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota, step, vs);							
-								cota += GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
+								grcota = 4 + cota + 0.5 * substep;
+								drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota, substep, vs);							
+								cota += substep;
 								ctx.fillText(varstyle_caption, indent_txleft, cota);
 
 								if (vs['hide'] !== undefined && vs['hide']) {
