@@ -975,6 +975,10 @@ class BasemapCtrlBox extends MapPrintInRect {
 					this.draw3CircSymbol(ctx, ["rgb(15, 30, 50)", "rgb(50, 100, 160)", "rgb(75, 150, 225)"]);
 					break;				
 
+				case "SEP":
+					this.draw3CircSymbol(ctx, ["rgb(50, 30, 15)", "rgb(120, 60, 20)", "rgb(225, 120, 40)"]);
+					break;				
+	
 			}
 
 		} catch(e) {
@@ -1038,7 +1042,11 @@ class BasemapCtrlBox extends MapPrintInRect {
 					case "blueprint":
 						this.FilterIconOption = "BLU";
 						break;
-				}
+
+					case "sepia":
+						this.FilterIconOption = "SEP";
+						break;
+					}
 			
 			} else {
 				this.FilterIconOption = "COLOR";
