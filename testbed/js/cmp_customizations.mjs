@@ -671,7 +671,7 @@ export class LocQuery {
 
 	setCustomizationUI(p_customization_instance, p_mapctx, p_global_constants, p_basic_config) {
 
-		let r, bcb = null,  qryb=null, qryboxheight = 22, canvas_dims=[];
+		let xoffset, logo=null, bcb = null,  qryb=null, qryboxheight = 22, canvas_dims=[];
 
 		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
@@ -679,13 +679,15 @@ export class LocQuery {
 			bcb = p_customization_instance.instances["basiccontrolsbox"];
 		}	
 
-		let xoffset, logo = document.createElement('img');
-		logo.src = p_basic_config["logo"]["src"];
-		logo.setAttribute("id", "logo-img");
-		p_mapctx.panelwidget.appendChild(logo);
-		logo.style.position = "absolute";
-		logo.style.zIndex = p_mapctx.renderingsmgr.getMaxZIndex()+1;
-		logo.style.width = p_basic_config["logo"]["width"];
+		if (p_basic_config["logo"]["src"] !== undefined) {
+			logo = document.createElement('img');
+			logo.src = p_basic_config["logo"]["src"];
+			logo.setAttribute("id", "logo-img");
+			p_mapctx.panelwidget.appendChild(logo);
+			logo.style.position = "absolute";
+			logo.style.zIndex = p_mapctx.renderingsmgr.getMaxZIndex()+1;
+			logo.style.width = p_basic_config["logo"]["width"];	
+		}
 
 		this.query_box = document.createElement('input');
 		this.query_box.setAttribute("id", "loc-inputtext");
@@ -731,14 +733,15 @@ export class LocQuery {
 		this.query_results.style.margin = "0";
 
 		if (bcb) {
-			logo.style.top = bcb.top - 2 + "px";
-			logo.style.left = (2 * bcb.left + bcb.getWidth()) + "px";	
 
-			// com logo
-			xoffset = (2 * bcb.left + bcb.getWidth()) + 80 + 4;
+			if (logo) {
+				logo.style.top = bcb.top - 2 + "px";
+				logo.style.left = (2 * bcb.left + bcb.getWidth()) + "px";		
 
-			// sem logo
-			//xoffset = (2 * bcb.left + bcb.getWidth());
+				xoffset = (2 * bcb.left + bcb.getWidth()) + 80 + 4;
+			} else {
+				xoffset = (2 * bcb.left + bcb.getWidth());
+			}
 
 			this.query_box.style.top = bcb.top + "px";
 			this.query_box.style.left = xoffset + "px";	

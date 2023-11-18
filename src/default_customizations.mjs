@@ -1217,19 +1217,19 @@ export class MapCustomizations {
 		}
 
 		if (has_slicing) {
-			this.instances["analysis"] = new AnalysisMgr([ap]);
-			this.instances["slicing"] = new SlicingPanel();
+			this.instances["analysis"] = new AnalysisMgr(this.mapctx, [ap]);
+			this.instances["slicing"] = new SlicingPanel(this.mapctx);
 
-			this.instances["analysis"].preCalcDims(p_mapctx);
+			this.instances["analysis"].preCalcDims(this.mapctx);
 			this.instances["navigator"] = new SelectionsNavigator(this.mapctx, [ap, this.instances["analysis"]]);
 		}
 
 		if (has_dashboarding) {
 			if (this.instances["analysis"] === undefined) {
-				this.instances["analysis"] = new AnalysisMgr([ap]);
+				this.instances["analysis"] = new AnalysisMgr(this.mapctx, [ap]);
 				this.instances["analysis"].preCalcDims(p_mapctx);
 			}
-			this.instances["dashboard"] = new DashboardPanel();
+			this.instances["dashboard"] = new DashboardPanel(this.mapctx);
 		}
 		
 		if (this.instances["analysis"] !== undefined) {

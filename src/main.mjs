@@ -207,15 +207,17 @@ export class RiscoMapCtx {
 			this.maprefresh();
 		}
 
-		let f;
-		for (let fkey in GlobalConst.FONTS) {
-			f = new FontFace(fkey, `url(${GlobalConst.FONTS[fkey]})`);
-			f.load().then(() => {
-				console.info(`[init RISCO] ${fkey} font loaded`);
-			}, (err) => {
-				console.error(err);
-			});
-			document.fonts.add(f);			
+		if (p_config_var["basic"]["skipfonts"] === undefined || !p_config_var["basic"]["skipfonts"]) {
+			let f;
+			for (let fkey in GlobalConst.FONTS) {
+				f = new FontFace(fkey, `url(${GlobalConst.FONTS[fkey]})`);
+				f.load().then(() => {
+					console.info(`[init RISCO] ${fkey} font loaded`);
+				}, (err) => {
+					console.warn(`[init RISCO] no font '${fkey}' available`);
+				});
+				document.fonts.add(f);			
+			}
 		}
 
 		console.info(`[init RISCO] ==  End of map context init for '${this.panelwidget.id}'  ==`);

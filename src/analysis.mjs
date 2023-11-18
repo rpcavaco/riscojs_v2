@@ -24,7 +24,7 @@ export class AnalysisMgr extends MapPrintInRect {
 	slicing_available;
 	dashboard_available;
 
-	constructor(p_other_widgets) {
+	constructor(p_mapctx, p_other_widgets) {
 
 		super();
 		this.name = "AnalysisMgr";
@@ -41,7 +41,13 @@ export class AnalysisMgr extends MapPrintInRect {
 		this.inactiveStyleFront = GlobalConst.CONTROLS_STYLES.AM_INACTIVECOLOR;
 		this.margin_offset = GlobalConst.CONTROLS_STYLES.OFFSET;
 		this.normalszPX = GlobalConst.CONTROLS_STYLES.AM_NORMALSZ_PX;
-		this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
+
+		if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["fontfamily"] !== undefined) {		
+			this.fontfamily = p_mapctx.cfgvar["basic"]["style_override"]["fontfamily"];
+		} else {
+			this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
+		}
+
 		this.std_boxdims = GlobalConst.CONTROLS_STYLES.AM_BOXDIMS;
 		this.inUseStyle = GlobalConst.CONTROLS_STYLES.AM_INUSE;
 		this.canvaslayer = 'service_canvas'; 
@@ -510,7 +516,13 @@ export class SelectionsNavigator extends MapPrintInRect {
 		this.inactiveStyleFront = GlobalConst.CONTROLS_STYLES.SN_INACTIVECOLOR;
 		this.margin_offset = GlobalConst.CONTROLS_STYLES.OFFSET;
 		this.normalszPX = GlobalConst.CONTROLS_STYLES.SN_NORMALSZ_PX;
-		this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
+
+		if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["fontfamily"] !== undefined) {		
+			this.fontfamily = p_mapctx.cfgvar["basic"]["style_override"]["fontfamily"];
+		} else {
+			this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
+		}
+
 		this.canvaslayer = 'service_canvas'; 
 		this.std_boxdims = GlobalConst.CONTROLS_STYLES.SN_BOXDIMS;
 

@@ -229,7 +229,7 @@ export class SlicingPanel {
 	is_maprefresh_pending;
 	total_count;
 
-	constructor() {
+	constructor(p_mapctx) {
 
 		this.fillTextStyle = GlobalConst.CONTROLS_STYLES.SEG_TEXTFILL;  
 		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.SEG_BCKGRD; 
@@ -240,8 +240,18 @@ export class SlicingPanel {
 		this.normalszPX = GlobalConst.CONTROLS_STYLES.NORMALSZ_PX;
 		this.captionszPX = GlobalConst.CONTROLS_STYLES.CAPTIONSZ_PX;
 
-		this.captionfontfamily = GlobalConst.CONTROLS_STYLES.CAPTIONFONTFAMILY;
-		this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
+		if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["captionfontfamily"] !== undefined) {		
+			this.fontfamily = p_mapctx.cfgvar["basic"]["style_override"]["captionfontfamily"];
+		} else {
+			this.fontfamily = GlobalConst.CONTROLS_STYLES.CAPTIONFONTFAMILY;
+		}
+
+		if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["fontfamily"] !== undefined) {		
+			this.fontfamily = p_mapctx.cfgvar["basic"]["style_override"]["fontfamily"];
+		} else {
+			this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
+		}
+
 		this.datafontfamily = GlobalConst.CONTROLS_STYLES.SEG_DATAFONTFAMILY;
 		this.datacaptionfontsz = GlobalConst.CONTROLS_STYLES.SEG_DATACAPTIONFONTSIZE_PX;
 		this.datafontsz = GlobalConst.CONTROLS_STYLES.SEG_DATAFONTSIZE_PX;

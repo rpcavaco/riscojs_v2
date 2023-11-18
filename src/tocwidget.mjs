@@ -37,7 +37,15 @@ export class TOC  extends MapPrintInRect {
 		this.leftcol_width = GlobalConst.CONTROLS_STYLES.TOC_LEFTCOL_WIDTH;
 		this.normalszPX = GlobalConst.CONTROLS_STYLES.NORMALSZ_PX;
 		this.varstylePX = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLESZ_PX;
-		this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
+
+		if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["fontfamily"] !== undefined) {		
+			this.fontfamily = p_mapctx.cfgvar["basic"]["style_override"]["fontfamily"];
+		} else {
+			this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
+		}
+
+		console.log("F FAMILY", this.fontfamily);
+
 		this.canvaslayer = 'service_canvas'; 
 
 		this.left = 600;

@@ -26,7 +26,7 @@ export class DashboardPanel {
 	data;
 	// iconfuncs;
 
-	constructor() {
+	constructor(p_mapctx) {
 
 		this.fillTextStyle = GlobalConst.CONTROLS_STYLES.SEG_TEXTFILL;  
 		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.SEG_BCKGRD; 
@@ -44,8 +44,17 @@ export class DashboardPanel {
 		this.counterTxtFontFamily = GlobalConst.CONTROLS_STYLES.DASH_COUNTERTXTFONTFAMILY;
 		this.counterGaugeStyle = GlobalConst.CONTROLS_STYLES.DASH_COUNTERGAUGESTYLE;
 
-		this.captionfontfamily = GlobalConst.CONTROLS_STYLES.CAPTIONFONTFAMILY;
-		this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
+		if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["captionfontfamily"] !== undefined) {		
+			this.fontfamily = p_mapctx.cfgvar["basic"]["style_override"]["captionfontfamily"];
+		} else {
+			this.fontfamily = GlobalConst.CONTROLS_STYLES.CAPTIONFONTFAMILY;
+		}
+
+		if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["fontfamily"] !== undefined) {		
+			this.fontfamily = p_mapctx.cfgvar["basic"]["style_override"]["fontfamily"];
+		} else {
+			this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
+		}
 
 		this.counterMaxRadius = GlobalConst.CONTROLS_STYLES.DASH_COUNTERMAXRADIUS;
 		this.counterGaugeLineWidth = GlobalConst.CONTROLS_STYLES.DASH_COUNTERGAUGELINEWIDTH;
