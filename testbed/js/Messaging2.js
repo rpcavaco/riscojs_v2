@@ -27,10 +27,10 @@ function getSelOption(p_wdg) {
 }
 
 // Singleton
-let MessagesController = {
+let MessagesController2 = {
 
 	// Constantes
-	elemid: "msgsdiv",
+	elemid: "mapmsgsdiv",
 	minwidth: 300,
 	maxwidth: 550,
 	messageTimeout: 4000,
@@ -60,6 +60,9 @@ let MessagesController = {
 	},
 
 	check() {
+
+		console.log(this.elemid);
+
 		let msgsdiv = document.getElementById(this.elemid);
 		msgsdiv.style.display = 'none';
 
@@ -386,7 +389,7 @@ let MessagesController = {
 			} else {
 				tmo = this.messageTimeout;
 			}
-			this.timer = setTimeout(function() { MessagesController.hideMessage(true); }, tmo);
+			this.timer = setTimeout(function() { MessagesController2.hideMessage(true); }, tmo);
 		}
 	},
 
@@ -441,7 +444,7 @@ let MessagesController = {
 			} else {
 				tmo = this.messageTimeout;
 			}
-			this.timer = setTimeout(function() { MessagesController.hideMessage(true); }, tmo);
+			this.timer = setTimeout(function() { MessagesController2.hideMessage(true); }, tmo);
 		}
 	},*/
 

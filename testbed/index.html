@@ -90,7 +90,7 @@
 	<script src="risco_basic_config.js"></script>
 	<script src="colorramps.js"></script>
 	<script src="risco_layers_config.js"></script>
-	<script src="js/Messaging.js"></script>
+	<script src="js/Messaging2.js"></script>
 
 	<script type="module">
 
@@ -142,10 +142,10 @@
 			checkPoints(p_mapctx);
 		};
 
-		MessagesController.check();
+		MessagesController2.check();
 
 		
-		const mc = new MapCustomizations(mapctx, MessagesController);
+		const mc = new MapCustomizations(mapctx, MessagesController2);
 
 		mapctx.setCustomizationObj(mc, function(p_this, p_mapctx) {
 			
