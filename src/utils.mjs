@@ -451,6 +451,7 @@ export class ImgLRUCache {
 		} else {
 
 			const img = new Image();
+			img.crossOrigin = "anonymous";
 			img.decoding = "sync";
 			img.src = p_imgpath;
 
@@ -487,6 +488,7 @@ export class ImgLRUCache {
 		} else {
 
 			const img = new Image();
+			img.crossOrigin = "anonymous";
 			img.decoding = "async";
 			img.src = imgpath;
 

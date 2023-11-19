@@ -176,7 +176,12 @@
 		this.getCanvasDims(dims);
 		for (let ctx, i=0; i<canvaskeys.length; i++) {
 			ctx = this.canvases[canvaskeys[i]].getContext('2d');
-			out_dict[canvaskeys[i]] = ctx.getImageData(0, 0, ...dims);
+			try {
+				out_dict[canvaskeys[i]] = ctx.getImageData(0, 0, ...dims);
+			} catch(e) {
+				console.error(` ... affected canvas key: ${canvaskeys[i]}`);
+				console.error(e);
+			}
 		}
 	}
 

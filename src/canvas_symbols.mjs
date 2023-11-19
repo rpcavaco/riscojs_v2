@@ -518,6 +518,7 @@ export class CanvasIcon extends MarkerSymbol {
 				const [ _, imgurl] = isfresult;
 		
 				const img = new Image();
+				img.crossOrigin = "anonymous";
 				img.decoding = "async";
 				img.src = imgurl;
 

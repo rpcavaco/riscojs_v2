@@ -1033,6 +1033,14 @@ export class ToolManager {
 
 		for (let mapctrl_key in this.mapcontrolmgrs) {
 
+			if (!this.mapcontrolmgrs.hasOwnProperty(mapctrl_key)) {
+				continue;
+			}
+
+			if (this.mapcontrolmgrs[mapctrl_key]["interact"] === undefined) {
+				console.error(`missing 'interact' function for control key '${mapctrl_key}'`);
+				continue;
+			}
 
 			_ret = this.mapcontrolmgrs[mapctrl_key].interact(p_mapctx, p_evt);
 			if (_ret) {
