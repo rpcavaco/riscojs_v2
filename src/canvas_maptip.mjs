@@ -683,7 +683,7 @@ export class MaptipBox extends PopupBox {
 		topcnv.style.cursor = "default";
 
 		// no header interaction 
-		if (p_evt.clientY >= this.headerbox[1] + this.headerbox[3]) {
+		if (p_evt.offsetY >= this.headerbox[1] + this.headerbox[3]) {
 
 			let cb; //, alreadycaptured = false;
 			for (let k in this.clickboxes) {
@@ -693,14 +693,14 @@ export class MaptipBox extends PopupBox {
 				}
 				cb = this.clickboxes[k];
 
-				if (p_evt.clientX >= cb.box[0] && p_evt.clientX <= cb.box[0] + cb.box[2] && 
-					p_evt.clientY >= cb.box[1] && p_evt.clientY <= cb.box[1] + cb.box[3]) {
+				if (p_evt.offsetX >= cb.box[0] && p_evt.offsetX <= cb.box[0] + cb.box[2] && 
+					p_evt.offsetY >= cb.box[1] && p_evt.offsetY <= cb.box[1] + cb.box[3]) {
 
 						if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
 
 							this.tipclear();
 							clearFeatureHover(this.mapctx, this.featurehover_canvas);
-							p_info_instance.pickfeature(cb.layerk, this.feature_dict[cb.layerk][cb.featidx], p_evt.clientX, p_evt.clientY);
+							p_info_instance.pickfeature(cb.layerk, this.feature_dict[cb.layerk][cb.featidx], p_evt.offsetX, p_evt.offsetY);
 
 						} else {
 

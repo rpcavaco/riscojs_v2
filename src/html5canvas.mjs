@@ -226,10 +226,10 @@
 
 						ctx.save();
 
-						const divw =  p_mouseevt.clientX / p_imgdata_dict[key].width;
-						const divh =  p_mouseevt.clientY / p_imgdata_dict[key].height;
-						const ox = (p_mouseevt.clientX - (p_imgdata_dict[key].width * pp_scale * divw)) / pp_scale;
-						const oy = (p_mouseevt.clientY - (p_imgdata_dict[key].height * pp_scale * divh)) / pp_scale;
+						const divw =  p_mouseevt.offsetX / p_imgdata_dict[key].width;
+						const divh =  p_mouseevt.offsetY / p_imgdata_dict[key].height;
+						const ox = (p_mouseevt.offsetX - (p_imgdata_dict[key].width * pp_scale * divw)) / pp_scale;
+						const oy = (p_mouseevt.offsetY - (p_imgdata_dict[key].height * pp_scale * divh)) / pp_scale;
 
 						ctx.scale(pp_scale, pp_scale);
 						ctx.drawImage(bmp, ox, oy);

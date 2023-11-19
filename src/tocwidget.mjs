@@ -44,8 +44,6 @@ export class TOC  extends MapPrintInRect {
 			this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
 		}
 
-		console.log("F FAMILY", this.fontfamily);
-
 		this.canvaslayer = 'service_canvas'; 
 
 		this.left = 600;
@@ -371,7 +369,7 @@ export class TOC  extends MapPrintInRect {
 		let i=-1, ret = false, step;
 		let changed=false, found = null, topcnv;
 
-		if (p_evt.clientX >= this.left && p_evt.clientX <= this.left+this.boxw[this.collapsedstate] && p_evt.clientY >= this.top && p_evt.clientY <= this.top+this.boxh[this.collapsedstate]) {
+		if (p_evt.offsetX >= this.left && p_evt.offsetX <= this.left+this.boxw[this.collapsedstate] && p_evt.offsetY >= this.top && p_evt.offsetY <= this.top+this.boxh[this.collapsedstate]) {
 
 			if (this.collapsedstate == "OPEN") {
 
@@ -392,7 +390,7 @@ export class TOC  extends MapPrintInRect {
 						if (ctx) {
 							ctx.strokeRect(left, prev, width, step);
 						}
-						if (p_evt.clientX >= left && p_evt.clientX <= this.left+width && p_evt.clientY >= prev && p_evt.clientY <= next) {
+						if (p_evt.offsetX >= left && p_evt.offsetX <= this.left+width && p_evt.offsetY >= prev && p_evt.offsetY <= next) {
 							found = {
 								"key": lyr.key,
 								"subkey": null
@@ -419,7 +417,7 @@ export class TOC  extends MapPrintInRect {
 								if (ctx) {
 									ctx.strokeRect(left, prev, width, step);
 								}
-								if (p_evt.clientX >= left && p_evt.clientX <= this.left+width && p_evt.clientY >= prev && p_evt.clientY <= next) {
+								if (p_evt.offsetX >= left && p_evt.offsetX <= this.left+width && p_evt.offsetY >= prev && p_evt.offsetY <= next) {
 									found = {
 										"key": lyr.key,
 										"subkey": vs.key

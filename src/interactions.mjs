@@ -57,7 +57,7 @@ class DefaultTool extends BaseTool {
 		}
 
 		if (p_evt.type == 'mousemove') {
-			p_mapctx.printMouseCoords(p_evt.clientX, p_evt.clientY);
+			p_mapctx.printMouseCoords(p_evt.offsetX, p_evt.offsetY);
 			ret = true;
 		}
 		if (p_evt.type == 'mouseout' || p_evt.type == "mouseleave") {
@@ -420,7 +420,7 @@ class wheelEventCtrller {
 				if (GlobalConst.getDebug("DISENG_WHEEL")) {
 					console.log("[DBG:DISENG_WHEEL] would be firing at scale:", p_this.wheelscale);
 				} else {
-					pp_mapctx.transformmgr.setScaleCenteredAtScrPoint(p_this.wheelscale, [pp_evt.clientX, pp_evt.clientY], true);
+					pp_mapctx.transformmgr.setScaleCenteredAtScrPoint(p_this.wheelscale, [pp_evt.offsetX, pp_evt.offsetY], true);
 				}
 				p_this.wheelscale = -1;		
 				this.wheelevtTmoutID = null;
@@ -537,7 +537,7 @@ class MultiTool extends BaseTool {
 				} else {
 					orig = "mouse";
 				}
-				this.finishPan(p_mapctx.transformmgr, p_evt.clientX, p_evt.clientY, orig);	
+				this.finishPan(p_mapctx.transformmgr, p_evt.offsetX, p_evt.offsetY, orig);	
 			//}
 			this.imgs_dict={};
 			this.start_screen = null;
@@ -581,7 +581,7 @@ class MultiTool extends BaseTool {
 
 					if (this.start_screen == null) {
 						if (p_evt.buttons === undefined || (p_evt.buttons & 1) == 1) {						
-							this.start_screen = [p_evt.clientX, p_evt.clientY];		
+							this.start_screen = [p_evt.offsetX, p_evt.offsetY];		
 							if (GlobalConst.getDebug("INTERACTIONCLICKEND") && ["touchstart", "touchend", "mousedown", "mouseup", "mouseleave", "mouseout"].indexOf(p_evt.type) >= 0) {
 								console.log("[DBG:INTERACTIONCLICKEND] MULTITOOL mdown start point marked at:", this.start_screen);
 							}		
@@ -621,7 +621,7 @@ class MultiTool extends BaseTool {
 
 						// never do pan on mouseout or mouseleave events
 						//if (["mouseleave", "mouseout"].indexOf(p_evt.type) < 0) {
-							this.finishPan(p_mapctx.transformmgr, p_evt.clientX, p_evt.clientY, orig);	
+							this.finishPan(p_mapctx.transformmgr, p_evt.offsetX, p_evt.offsetY, orig);	
 						//}
 						this.imgs_dict={};
 						this.start_screen = null;
@@ -638,7 +638,7 @@ class MultiTool extends BaseTool {
 				case 'mousemove':
 					if (this.start_screen != null) {
 						if (p_evt.buttons === undefined || (p_evt.buttons & 1) == 1) {
-							p_mapctx.renderingsmgr.putImages(this.imgs_dict, [p_evt.clientX-this.start_screen[0], p_evt.clientY-this.start_screen[1]]);
+							p_mapctx.renderingsmgr.putImages(this.imgs_dict, [p_evt.offsetX-this.start_screen[0], p_evt.offsetY-this.start_screen[1]]);
 						}
 					}
 					//this.wheelevtctrlr.clear();
@@ -706,8 +706,8 @@ class InfoTool extends BaseTool {
 
 			if (ic.callout != null && ic.callout !== undefined && ic.callout['box'] !== undefined) {
 				if (this.getFixedtipPanelActive()) {
-					if (p_evt.clientX >= ic.callout.box[0] && p_evt.clientX <= ic.callout.box[0] + ic.callout.box[2] && 
-						p_evt.clientY >= ic.callout.box[1] && p_evt.clientY <= ic.callout.box[1] + ic.callout.box[3]) {
+					if (p_evt.offsetX >= ic.callout.box[0] && p_evt.offsetX <= ic.callout.box[0] + ic.callout.box[2] && 
+						p_evt.offsetY >= ic.callout.box[1] && p_evt.offsetY <= ic.callout.box[1] + ic.callout.box[3]) {
 							insidefixedtippanel = true;
 					}
 				}
@@ -716,8 +716,8 @@ class InfoTool extends BaseTool {
 			if (!insidefixedtippanel) {
 				if (ic.ibox != null && ic.pick !== undefined && ic.ibox['box'] !== undefined) {
 					if (this.getPickPanelActive()) {
-						if (p_evt.clientX >= ic.ibox.box[0] && p_evt.clientX <= ic.ibox.box[0] + ic.ibox.box[2] && 
-							p_evt.clientY >= ic.ibox.box[1] && p_evt.clientY <= ic.ibox.box[1] + ic.ibox.box[3]) {
+						if (p_evt.offsetX >= ic.ibox.box[0] && p_evt.offsetX <= ic.ibox.box[0] + ic.ibox.box[2] && 
+							p_evt.offsetY >= ic.ibox.box[1] && p_evt.offsetY <= ic.ibox.box[1] + ic.ibox.box[3]) {
 								insideainfoboxpanel = true;
 						}
 					}
@@ -758,7 +758,7 @@ class InfoTool extends BaseTool {
 
 						if (!ret && !this.getAnyPanelActive()) {
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-							ret = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, true, ic.pick.bind(ic), ic.clearinfo.bind(ic));
+							ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, true, ic.pick.bind(ic), ic.clearinfo.bind(ic));
 						}
 					} else {
 						console.warn(`infoclass customization unavailable, cannot pick feature`);			
@@ -777,7 +777,7 @@ class InfoTool extends BaseTool {
 							ic.clearinfo('INFOTOOL_MOUSEMOVE');
 		
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-							ret = interactWithSpindexLayer(p_mapctx, p_evt.clientX, p_evt.clientY, mxdist, false, ic.hover.bind(ic), ic.clearinfo.bind(ic));
+							ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, false, ic.hover.bind(ic), ic.clearinfo.bind(ic));
 						} else {
 							console.warn(`infoclass customization unavailable, cannot hover / maptip feature`);			
 						}	
@@ -862,10 +862,10 @@ class MeasureTool extends BaseTool {
 
 				case 'mouseup':
 					if (this.prevpt == null) {
-						this.prevpt = [p_evt.clientX, p_evt.clientY];
+						this.prevpt = [p_evt.offsetX, p_evt.offsetY];
 						console.log("dist start");
 					} else {
-						pt = [p_evt.clientX, p_evt.clientY];
+						pt = [p_evt.offsetX, p_evt.offsetY];
 						d = dist2D(this.prevpt, pt);
 						if (d < 2) {
 							this.accumdist = 0;
@@ -873,7 +873,7 @@ class MeasureTool extends BaseTool {
 							console.log("dist reset");	
 						} else {
 							this.accumdist += d;
-							this.prevpt = [p_evt.clientX, p_evt.clientY];
+							this.prevpt = [p_evt.offsetX, p_evt.offsetY];
 							console.log("dist:", this.accumdist);
 						}
 					}	
@@ -1030,6 +1030,8 @@ export class ToolManager {
 		const clickendevents = ["touchstart", "touchend", "mousedown", "mouseup", "mouseleave", "mouseout"];
 
 		let _ret;
+
+		// console.log("mapcontrolmgrs:", Object.keys(this.mapcontrolmgrs));
 
 		for (let mapctrl_key in this.mapcontrolmgrs) {
 

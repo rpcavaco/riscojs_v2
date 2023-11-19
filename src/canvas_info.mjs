@@ -687,16 +687,16 @@ export class InfoBox extends PopupBox {
 		topcnv.style.cursor = "default";
 
 		// in header
-		if (p_evt.clientX >= this.headerbox[0] && p_evt.clientX <= this.headerbox[0] + this.headerbox[2] && 
-			p_evt.clientY >= this.headerbox[1] && p_evt.clientY <= this.headerbox[1] + this.headerbox[3]) {
+		if (p_evt.offsetX >= this.headerbox[0] && p_evt.offsetX <= this.headerbox[0] + this.headerbox[2] && 
+			p_evt.offsetY >= this.headerbox[1] && p_evt.offsetY <= this.headerbox[1] + this.headerbox[3]) {
 
 				let cb;
 				for (let k in this.clickboxes) {
 
 					cb = this.clickboxes[k];
 
-					if (p_evt.clientX >= cb[0] && p_evt.clientX <= cb[2] && 
-						p_evt.clientY >= cb[1] && p_evt.clientY <= cb[3]) {
+					if (p_evt.offsetX >= cb[0] && p_evt.offsetX <= cb[2] && 
+						p_evt.offsetY >= cb[1] && p_evt.offsetY <= cb[3]) {
 
 							if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
 
@@ -759,8 +759,8 @@ export class InfoBox extends PopupBox {
 
 				cb = this.clickboxes[k];
 
-				if (p_evt.clientX >= cb[0] && p_evt.clientX <= cb[2] && 
-					p_evt.clientY >= cb[1] && p_evt.clientY <= cb[3]) {
+				if (p_evt.offsetX >= cb[0] && p_evt.offsetX <= cb[2] && 
+					p_evt.offsetY >= cb[1] && p_evt.offsetY <= cb[3]) {
 
 						const pagenum = parseInt(k.replace(/[a-zA-Z]+/g,''));
 						if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
@@ -816,8 +816,8 @@ export class InfoBox extends PopupBox {
 					this.ctx.stroke();
 				}
 
-				// console.log('     ', fld, prev, next, p_evt.clientY);
-				if (p_evt.clientY >= prev && p_evt.clientY < next) {
+				// console.log('     ', fld, prev, next, p_evt.offsetY);
+				if (p_evt.offsetY >= prev && p_evt.offsetY < next) {
 					fldname = fld;
 					row = this.rows[flix];
 					break;
@@ -856,8 +856,8 @@ export class InfoBox extends PopupBox {
 							topcnv.style.cursor = "default";
 							this.infobox_static_expandimage_method(row["singleimg"]);
 						} else if ("mousemove" == p_evt.type) {
-							if (p_evt.clientX >= this.box[0]+this.leftpad 
-								&& p_evt.clientX <= this.box[0]+this.box[2]-this.rightpad) {
+							if (p_evt.offsetX >= this.box[0]+this.leftpad 
+								&& p_evt.offsetX <= this.box[0]+this.box[2]-this.rightpad) {
 								topcnv.style.cursor = "pointer";
 							}
 						}
@@ -873,7 +873,7 @@ export class InfoBox extends PopupBox {
 							left = right+this.betweencols;
 						}
 						right = left + this.colsizes[colidx];		
-						if (p_evt.clientX >= left && p_evt.clientX <= right) {
+						if (p_evt.offsetX >= left && p_evt.offsetX <= right) {
 							foundcolidx = colidx;
 							break;
 						}

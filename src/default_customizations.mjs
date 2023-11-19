@@ -116,8 +116,8 @@ class MapScalePrint extends PermanentMessaging {
 			return ret;
 		}
 
-		if (p_evt.clientX >= this.left && p_evt.clientX <= this.left + this.boxw && 
-			p_evt.clientY >= this.top && p_evt.clientY <= this.top + this.boxh) {
+		if (p_evt.offsetX >= this.left && p_evt.offsetX <= this.left + this.boxw && 
+			p_evt.offsetY >= this.top && p_evt.offsetY <= this.top + this.boxh) {
 
 			switch(p_evt.type) {
 
@@ -1068,8 +1068,8 @@ class BasemapCtrlBox extends MapPrintInRect {
 		const b2 = this.boxSelBasemapBtn();
 		let topcnv, ret = false;
 
-		if (this.tocmgr.getBaseRasterLayer() != null && p_evt.clientX >= b1[0] && p_evt.clientX <= b1[0] + b1[2] && 
-			p_evt.clientY >= b1[1] && p_evt.clientY <= b1[1] + b1[3]) {
+		if (this.tocmgr.getBaseRasterLayer() != null && p_evt.offsetX >= b1[0] && p_evt.offsetX <= b1[0] + b1[2] && 
+			p_evt.offsetY >= b1[1] && p_evt.offsetY <= b1[1] + b1[3]) {
 
 			switch(p_evt.type) {
 
@@ -1121,8 +1121,8 @@ class BasemapCtrlBox extends MapPrintInRect {
 		}
 
 		if (!ret) {
-			if (p_evt.clientX >= b2[0] && p_evt.clientX <= b2[0] + b2[2] && 
-				p_evt.clientY >= b2[1] && p_evt.clientY <= b2[1] + b2[3]) {
+			if (p_evt.offsetX >= b2[0] && p_evt.offsetX <= b2[0] + b2[2] && 
+				p_evt.offsetY >= b2[1] && p_evt.offsetY <= b2[1] + b2[3]) {
 	
 				// SelBaseMap
 				ret = true;

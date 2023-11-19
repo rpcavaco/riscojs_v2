@@ -61,8 +61,6 @@ let MessagesController2 = {
 
 	check() {
 
-		console.log(this.elemid);
-
 		let msgsdiv = document.getElementById(this.elemid);
 		msgsdiv.style.display = 'none';
 

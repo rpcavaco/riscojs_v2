@@ -35,19 +35,19 @@ export function ctrToolTip(p_mapctx, p_evt, p_text, opt_deltas) {
 			deltay = 50;
 		}
 
-		if (p_evt.clientX < (canvas_dims[0]/2)) {
+		if (p_evt.offsetX < (canvas_dims[0]/2)) {
 			dx = deltax;
 		} else {
 			dx = -deltax;
 		}
 
-		if (p_evt.clientY < (canvas_dims[1]/2)) {
+		if (p_evt.offsetY < (canvas_dims[1]/2)) {
 			dy = deltay;
 		} else {
 			dy = -deltay;
 		}		
-		const x = p_evt.clientX + dx;
-		const y = p_evt.clientY + dy;
+		const x = p_evt.offsetX + dx;
+		const y = p_evt.offsetY + dy;
 		const h = 2*slack + tm.actualBoundingBoxAscent + tm.actualBoundingBoxDescent;
 
 		gfctx.fillStyle = "#8080807f";
@@ -177,6 +177,7 @@ export class ControlsBox extends MapPrintInRect {
 	}	
 
 	addControl(p_key, p_togglable, p_is_round, p_drawface_func, p_endevent_func, p_mmove_func, opt_gap_to_prev) {
+
 		this.controls_keys.push(p_key);
 		this.controls_funcs[p_key] = {
 			"drawface": p_drawface_func,
@@ -237,7 +238,7 @@ export class ControlsBox extends MapPrintInRect {
 					top = accum + ci * this.boxh + this.top;
 				}
 
-				this.controls_boxes[this.controls_keys[ci]] = [left, top, this.boxw, this.boxh];			
+				this.controls_boxes[this.controls_keys[ci]] = [left, top, this.boxw, this.boxh];					
 				ctx.lineWidth = this.strokeWidth;
 
 				this.drawControlFace(ctx, this.controls_keys[ci], left, top, this.boxw, this.boxh, p_mapctx.cfgvar["basic"], GlobalConst);
@@ -262,13 +263,19 @@ export class ControlsBox extends MapPrintInRect {
 	interact(p_mapctx, p_evt) {
 
 		let cb, key = null;
+
 		for (let _key in this.controls_boxes) {
 
+			if (!this.controls_boxes.hasOwnProperty(_key)) {
+				continue;
+			}
+
 			cb = this.controls_boxes[_key];
-			if (p_evt.clientX >= cb[0] && p_evt.clientX <= cb[0]+cb[2] && p_evt.clientY >= cb[1] && p_evt.clientY <= cb[1]+cb[3]) {
+			if (p_evt.offsetX >= cb[0] && p_evt.offsetX <= cb[0]+cb[2] && p_evt.offsetY >= cb[1] && p_evt.offsetY <= cb[1]+cb[3]) {
 				key = _key;
 			}
 		}
+
 		return key;
 	}
 
@@ -672,7 +679,7 @@ export class OverlayMgr {
 			topcnv.style.cursor = "default";
 	
 			ret = true;
-			if (this.box != null && p_evt.clientX >= this.box[0] && p_evt.clientX <= this.box[0]+this.box[2] && p_evt.clientY >= this.box[1] && p_evt.clientY <= this.box[1]+this.box[3]) {
+			if (this.box != null && p_evt.offsetX >= this.box[0] && p_evt.offsetX <= this.box[0]+this.box[2] && p_evt.offsetY >= this.box[1] && p_evt.offsetY <= this.box[1]+this.box[3]) {
 				if (['touchend', 'mouseup', 'mouseout', 'mouseleave'].indexOf(p_evt.type) >= 0) {
 					this.clear();	
 				} else if (p_evt.type == "mousemove") {

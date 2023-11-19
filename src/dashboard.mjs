@@ -667,10 +667,10 @@ export class DashboardPanel {
 			return ret;
 		}
 
-		if (p_evt.clientX >= this.left && 
-			p_evt.clientX <= this.left+this.width && 
-			p_evt.clientY >= this.top && 
-			p_evt.clientY <= this.top+this.height) {
+		if (p_evt.offsetX >= this.left && 
+			p_evt.offsetX <= this.left+this.width && 
+			p_evt.offsetY >= this.top && 
+			p_evt.offsetY <= this.top+this.height) {
 
 			ret = true;
 		}
@@ -679,10 +679,10 @@ export class DashboardPanel {
 
 			for (let k in this.interaction_boxes) {
 
-				if (p_evt.clientX >= this.interaction_boxes[k][0] && 
-					p_evt.clientX <= this.interaction_boxes[k][0]+this.interaction_boxes[k][2] && 
-					p_evt.clientY >= this.interaction_boxes[k][1] && 
-					p_evt.clientY <= this.interaction_boxes[k][1]+this.interaction_boxes[k][3]) {
+				if (p_evt.offsetX >= this.interaction_boxes[k][0] && 
+					p_evt.offsetX <= this.interaction_boxes[k][0]+this.interaction_boxes[k][2] && 
+					p_evt.offsetY >= this.interaction_boxes[k][1] && 
+					p_evt.offsetY <= this.interaction_boxes[k][1]+this.interaction_boxes[k][3]) {
 						interact_box_key = k;
 						break;
 				}

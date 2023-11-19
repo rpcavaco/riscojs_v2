@@ -281,15 +281,15 @@ export class AnalysisMgr extends MapPrintInRect {
 	_checkPickWhichSide(p_evt) {
 		let ret = null;
 		
-		if (p_evt.clientX >= this.left+this.margin_offset && 
-			p_evt.clientX <= this.left+(this.boxw[this.collapsedstate] / 2.0) && 
-			p_evt.clientY >= this.top+this.margin_offset && 
-			p_evt.clientY <= this.top+this.boxh[this.collapsedstate]-+this.margin_offset) {					
+		if (p_evt.offsetX >= this.left+this.margin_offset && 
+			p_evt.offsetX <= this.left+(this.boxw[this.collapsedstate] / 2.0) && 
+			p_evt.offsetY >= this.top+this.margin_offset && 
+			p_evt.offsetY <= this.top+this.boxh[this.collapsedstate]-+this.margin_offset) {					
 				ret = 'LEFT';
-		} else if (p_evt.clientX >= this.left+(this.boxw[this.collapsedstate] / 2.0) && 
-			p_evt.clientX <= this.left+this.boxw[this.collapsedstate]-this.margin_offset && 
-			p_evt.clientY >= this.top+this.margin_offset && 
-			p_evt.clientY <= this.top+this.boxh[this.collapsedstate]-this.margin_offset) {
+		} else if (p_evt.offsetX >= this.left+(this.boxw[this.collapsedstate] / 2.0) && 
+			p_evt.offsetX <= this.left+this.boxw[this.collapsedstate]-this.margin_offset && 
+			p_evt.offsetY >= this.top+this.margin_offset && 
+			p_evt.offsetY <= this.top+this.boxh[this.collapsedstate]-this.margin_offset) {
 				ret = 'RIGHT';
 		}
 
@@ -299,10 +299,10 @@ export class AnalysisMgr extends MapPrintInRect {
 	interact(p_mapctx, p_evt) {
 		let topcnv, ret = false;
 
-		if (p_evt.clientX >= this.left && 
-			p_evt.clientX <= this.left+this.boxw[this.collapsedstate] && 
-			p_evt.clientY >= this.top && 
-			p_evt.clientY <= this.top+this.boxh[this.collapsedstate]) {
+		if (p_evt.offsetX >= this.left && 
+			p_evt.offsetX <= this.left+this.boxw[this.collapsedstate] && 
+			p_evt.offsetY >= this.top && 
+			p_evt.offsetY <= this.top+this.boxh[this.collapsedstate]) {
 
 				switch(p_evt.type) {
 
@@ -693,10 +693,10 @@ export class SelectionsNavigator extends MapPrintInRect {
 	interact(p_mapctx, p_evt) {
 		let topcnv, ret = false;
 
-		if (p_evt.clientX >= this.left && 
-			p_evt.clientX <= this.left+this.boxw[this.collapsedstate] && 
-			p_evt.clientY >= this.top && 
-			p_evt.clientY <= this.top+this.boxh[this.collapsedstate]) {
+		if (p_evt.offsetX >= this.left && 
+			p_evt.offsetX <= this.left+this.boxw[this.collapsedstate] && 
+			p_evt.offsetY >= this.top && 
+			p_evt.offsetY <= this.top+this.boxh[this.collapsedstate]) {
 
 				switch(p_evt.type) {
 

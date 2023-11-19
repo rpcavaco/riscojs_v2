@@ -7,8 +7,8 @@ function copyTouch(touch, target, type) {
 		identifier: touch.identifier, 
 		pageX: touch.pageX, 
 		pageY: touch.pageY,
-		clientX: touch.clientX, 
-		clientY: touch.clientY,
+		offsetX: touch.offsetX, 
+		offsetY: touch.offsetY,
 		screenX: touch.screenX, 
 		screenY: touch.screenY,
 		type: type
@@ -85,7 +85,7 @@ export class TouchController {
 		}
 
 		if (ret) {
-			this.start = [ret.clientX, ret.clientY];
+			this.start = [ret.offsetX, ret.offsetY];
 		}
 
 		if (GlobalConst.getDebug("INTERACTION")) {
@@ -119,8 +119,8 @@ export class TouchController {
 		}
 
 		if (ret != null && this.start.length > 0) {
-			if (ret['clientX'] !== undefined) {
-				if (Math.abs(ret.clientX - this.start[0]) <= move_sensibility && Math.abs(ret.clientY - this.start[1]) <= move_sensibility) {
+			if (ret['offsetX'] !== undefined) {
+				if (Math.abs(ret.offsetX - this.start[0]) <= move_sensibility && Math.abs(ret.offsetY - this.start[1]) <= move_sensibility) {
 					ret = null;
 				}
 			}
@@ -179,10 +179,10 @@ export class TouchController {
 		for (let i=0; i < 2; i++) {
 			t = this.ongoingTouches[i];
 			//getEvtCoords(t, t.target, coords);
-			minx = Math.min(minx, t.clientX);
-			miny = Math.min(miny, t.clientY);
-			maxx = Math.max(maxx, t.clientX);
-			maxy = Math.max(maxy, t.clientY);
+			minx = Math.min(minx, t.offsetX);
+			miny = Math.min(miny, t.offsetY);
+			maxx = Math.max(maxx, t.offsetX);
+			maxy = Math.max(maxy, t.offsetY);
 			}
 		dx = parseInt(maxx - minx);
 		dy = parseInt(maxy - miny);
