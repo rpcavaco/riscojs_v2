@@ -35,13 +35,29 @@ export class TOC  extends MapPrintInRect {
 		this.inactiveStyleFront = GlobalConst.CONTROLS_STYLES.TOC_INACTIVECOLOR;
 		this.margin_offset = GlobalConst.CONTROLS_STYLES.OFFSET;
 		this.leftcol_width = GlobalConst.CONTROLS_STYLES.TOC_LEFTCOL_WIDTH;
-		this.normalszPX = GlobalConst.CONTROLS_STYLES.NORMALSZ_PX;
-		this.varstylePX = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLESZ_PX;
 
-		if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["fontfamily"] !== undefined) {		
-			this.fontfamily = p_mapctx.cfgvar["basic"]["style_override"]["fontfamily"];
-		} else {
-			this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
+		if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined) {
+
+			if (p_mapctx.cfgvar["basic"]["style_override"]["fontfamily"] !== undefined) {		
+				this.fontfamily = p_mapctx.cfgvar["basic"]["style_override"]["fontfamily"];
+			} else {
+				this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
+			}
+
+			if (p_mapctx.cfgvar["basic"]["style_override"]["normalsz_px"] !== undefined) {		
+				this.normalszPX = p_mapctx.cfgvar["basic"]["style_override"]["normalsz_px"];
+			} else {
+				this.normalszPX = GlobalConst.CONTROLS_STYLES.NORMALSZ_PX;
+			}
+
+			if (p_mapctx.cfgvar["basic"]["style_override"]["toc"] !== undefined) {
+				if (p_mapctx.cfgvar["basic"]["style_override"]["toc"]["varstylesz_px"] !== undefined) {		
+					this.varstylePX = p_mapctx.cfgvar["basic"]["style_override"]["toc"]["varstylesz_px"];
+				} else {
+					this.varstylePX = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLESZ_PX;
+				}
+			}
+			
 		}
 
 		this.canvaslayer = 'service_canvas'; 
@@ -171,6 +187,20 @@ export class TOC  extends MapPrintInRect {
 			indent_txleft = this.left + this.margin_offset + this.leftcol_width;
 			txleft = this.left + this.margin_offset;
 
+			let toc_sep, vs_toc_sep;
+
+			if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["toc"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["toc"]["separation_factor"] !== undefined) {
+				toc_sep = p_mapctx.cfgvar["basic"]["style_override"]["toc"]["separation_factor"];
+			} else {
+				toc_sep = GlobalConst.CONTROLS_STYLES.TOC_SEPARATION_FACTOR;
+			}
+	
+			if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["toc"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["toc"]["varstyle_separation_factor"] !== undefined) {
+				vs_toc_sep = p_mapctx.cfgvar["basic"]["style_override"]["toc"]["varstyle_separation_factor"];
+			} else {
+				vs_toc_sep = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR;
+			}	
+
 			// Measure height
 			count = 0;
 			maxcota = 0;
@@ -185,14 +215,14 @@ export class TOC  extends MapPrintInRect {
 					if (count == 1) {
 						cota = 2* this.margin_offset + this.normalszPX;
 					} else {
-						cota += GlobalConst.CONTROLS_STYLES.TOC_SEPARATION_FACTOR * this.normalszPX;
+						cota += toc_sep * this.normalszPX;
 					}
 
 					if (lyr["varstyles_symbols"] !== undefined) {
 						
 						ctx.font = `${this.varstylePX}px ${this.fontfamily}`;
 						for (const vs of lyr["varstyles_symbols"]) {
-							cota += GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
+							cota += vs_toc_sep * this.varstylePX;
 						}
 					}					
 				}
@@ -220,8 +250,8 @@ export class TOC  extends MapPrintInRect {
 						
 				count = 0;
 				cota = 0;
-				step = GlobalConst.CONTROLS_STYLES.TOC_SEPARATION_FACTOR * this.normalszPX;
-				substep = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.varstylePX;
+				step = toc_sep * this.normalszPX;
+				substep = vs_toc_sep * this.varstylePX;
 
 				for (let li=this.tocmgr.layers.length-1; li>=0; li--) {
 
@@ -359,8 +389,22 @@ export class TOC  extends MapPrintInRect {
 			ctx.strokeStyle = "cyan";	
 		}
 
-		const stepEntry = GlobalConst.CONTROLS_STYLES.TOC_SEPARATION_FACTOR * this.normalszPX - 2;
-		const stepSubEntry = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR * this.normalszPX - 2;
+		let toc_sep, vs_toc_sep;
+
+		if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["toc"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["toc"]["separation_factor"] !== undefined) {
+			toc_sep = p_mapctx.cfgvar["basic"]["style_override"]["toc"]["separation_factor"];
+		} else {
+			toc_sep = GlobalConst.CONTROLS_STYLES.TOC_SEPARATION_FACTOR;
+		}
+
+		if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["toc"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["toc"]["varstyle_separation_factor"] !== undefined) {
+			vs_toc_sep = p_mapctx.cfgvar["basic"]["style_override"]["toc"]["varstyle_separation_factor"];
+		} else {
+			vs_toc_sep = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLE_SEPARATION_FACTOR;
+		}		
+
+		const stepEntry = toc_sep * this.normalszPX - 2;
+		const stepSubEntry = vs_toc_sep * this.normalszPX - 2;
 		let next, prev = this.top + this.margin_offset;
 
 		const width = this.boxw[this.collapsedstate] - 2* this.margin_offset;
