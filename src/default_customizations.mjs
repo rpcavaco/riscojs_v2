@@ -279,7 +279,7 @@ class LoadingPrint extends LoadingMessaging {
 
 			const bottom = this.top + this.boxh;
 
-			ctx.fillText(msg, this.boxw/2, bottom-8, this.boxw - 2 * GlobalConst.MESSAGING_STYLES.TEXT_OFFSET);		
+			ctx.fillText(msg, this.boxw/2, bottom-GlobalConst.MESSAGING_STYLES.LOADING_TEXT_OFFSET, this.boxw - 2 * GlobalConst.MESSAGING_STYLES.TEXT_OFFSET);		
 
 		} catch(e) {
 			throw e;

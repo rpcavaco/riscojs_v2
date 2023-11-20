@@ -8,23 +8,6 @@ var SUBKEYS = {
 
 // DISENG_WHEEL - "disengage wheel" desliga a mousewheel das respetivas acoes, apenas gera msgs de debug
 
-/*
-var sel_drawsymb_func = function(p_mapctxt, p_layer, p_coords, opt_feat_id) {
-
-	const sclval = p_mapctxt.getScale();
-	const dim = 10;
-
-	p_layer._gfctx.beginPath();
-	p_layer._gfctx.arc(p_coords[0], p_coords[1], dim, 0, Math.PI * 2, true);
-
-	if (this["fillStyle"] !== undefined) {
-		p_layer._gfctx.fill();
-	}
-
-	p_layer._gfctx.stroke();
-}
-*/
-
 var GlobalConst = {
 
 	// ------------------------------------------------------------------------
@@ -161,11 +144,13 @@ var GlobalConst = {
 		PERMANENT_COLOR: "rgb(65, 65, 65)",
 		PERMANENT_FONT: "8pt Arial",
 
-		LOADING_BCKGRD: "#fc4040",
+		LOADING_BCKGRD: "#fc2424a0",
 		LOADING_COLOR: "#ffffff",
 		LOADING_FONT: "8pt Arial",
 		LOADING_WIDTH: 250,
 		LOADING_HEIGHT: 20,
+		LOADING_TEXT_OFFSET: 6,
+
 		TEXT_OFFSET: 12,
 
 		MAPSCALE_WIDTH: 130,

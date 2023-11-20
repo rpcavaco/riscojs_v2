@@ -207,7 +207,7 @@ export class RiscoMapCtx {
 			this.maprefresh();
 		}
 
-		if (p_config_var["basic"]["skipfonts"] === undefined || !p_config_var["basic"]["skipfonts"]) {
+		if (p_config_var["basic"]["skipdefaultfonts"] === undefined || !p_config_var["basic"]["skipdefaultfonts"]) {
 			let f;
 			for (let fkey in GlobalConst.FONTS) {
 				f = new FontFace(fkey, `url(${GlobalConst.FONTS[fkey]})`);
@@ -219,6 +219,20 @@ export class RiscoMapCtx {
 				document.fonts.add(f);			
 			}
 		}
+
+		if (p_config_var["basic"]["adicfonts"] !== undefined) {
+			let f;
+			for (let fkey in p_config_var["basic"]["adicfonts"]) {
+				f = new FontFace(fkey, `url(${p_config_var["basic"]["adicfonts"][fkey]})`);
+				f.load().then(() => {
+					console.info(`[init RISCO] ${fkey} adic font loaded`);
+				}, (err) => {
+					console.warn(`[init RISCO] no adic font '${fkey}' available`);
+				});
+				document.fonts.add(f);			
+			}			
+		}
+
 
 		console.info(`[init RISCO] ==  End of map context init for '${this.panelwidget.id}'  ==`);
 	}
@@ -409,7 +423,6 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		// SUPENSO
 		let symb = new GrSymbol();
 		let lsymb = new GrSymbol();
-		let ret = null;
 
 		const ly = this.tocmgr.getLayer(p_layer_key);
 
