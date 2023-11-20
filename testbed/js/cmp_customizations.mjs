@@ -764,6 +764,7 @@ export class LocQuery {
 		
 		this.query_clrbtn = document.createElement('button');
 		this.query_clrbtn.setAttribute("id", "loc-clrbtn");
+		this.query_clrbtn.setAttribute("type", "button");
 		p_mapctx.panelwidget.appendChild(this.query_clrbtn);
 
 		this.query_clrbtn.innerText = p_mapctx.i18n.msg('CLR', true);
@@ -805,7 +806,8 @@ export class LocQuery {
 
 				// clear up map UI
 				pp_mapctx.clearInteractions('LOCCLRBTN', true);
-
+				e.stopPropagation();
+				
 			}); 
 
 			// Query box input event

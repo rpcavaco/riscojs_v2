@@ -274,6 +274,8 @@ let MessagesController2 = {
 
 						btn1 = document.createElement("button");
 						const btn2 = document.createElement("button");
+						btn1.setAttribute("type", "button");
+						btn2.setAttribute("type", "button");
 						ctrldiv.appendChild(btn1);
 						ctrldiv.appendChild(btn2);
 						if (p_type.endsWith("YESNO")) {
@@ -347,6 +349,8 @@ let MessagesController2 = {
 
 					const btn1 = document.createElement("button");
 					const btn2 = document.createElement("button");
+					btn1.setAttribute("type", "button");
+					btn2.setAttribute("type", "button");
 					ctrldiv.appendChild(btn1);
 					ctrldiv.appendChild(btn2);
 
