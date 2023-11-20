@@ -3,6 +3,7 @@ import {GlobalConst} from './constants.js';
 import {GraticuleLayer, PointGridLayer, AreaGridLayer, AGSQryLayer} from './vectorlayers.mjs';
 import { RiscoFeatsLayer } from './risco_ownlayers.mjs';
 import {evalTextAlongPathViability, pathLength, dist2D, segmentMeasureToPoint, deg2Rad, lineMeasureToPoint, lineExtremePoints, getFeatureCenterPoint } from './geom.mjs';
+import { diffDays } from './utils.mjs';  // Can be called in 'varstyles' on 'iconsrcfunc' functions
 
 
 function textDrawParamsAlongStraightSegmentsPath(p_mapctxt, p_gfctx, p_path_coords, p_labeltxt, p_label_len, out_data) {
@@ -156,6 +157,8 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	_gfctxlbl = null;
 	_currentsymb = null;
 
+	utils_for_varstyles = {"diffDays": diffDays};
+
 	// b_protect_from_async_use - during async use, this._gfctx should be permanent and not constantly saved and restored.
 	// To be only used for applying drawImage symbols, context state shouldn't be altered
 	_grabGf2DCtx(p_mapctx, b_forlabel, opt_attrs, opt_alt_canvaskeys, opt_symbs) {
@@ -203,7 +206,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				let chgresult;
 				for (let vi=0; vi<this.varstyles_symbols.length; vi++) {
 
-					if (this.varstyles_symbols[vi]["func"] !== undefined && this.varstyles_symbols[vi].func(p_mapctx.getScale(), opt_attrs)) {
+					if (this.varstyles_symbols[vi]["func"] !== undefined && this.varstyles_symbols[vi].func(this.utils_for_varstyles, p_mapctx.getScale(), opt_attrs)) {
 						
 						this._currentsymb = this.varstyles_symbols[vi];
 						if (this.varstyles_symbols[vi]["change"] !== undefined && this.varstyles_symbols[vi]["change"] != "none") {
@@ -787,7 +790,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				doit = true;
 				if (this["varstyles_symbols"]!==undefined) {
 					for (let vi=0; vi<this.varstyles_symbols.length; vi++) {										
-						if (this.varstyles_symbols[vi]["func"] !== undefined && this.varstyles_symbols[vi].func(p_mapctxt.getScale(), p_attrs)) {							
+						if (this.varstyles_symbols[vi]["func"] !== undefined && this.varstyles_symbols[vi].func(this.utils_for_varstyles, p_mapctxt.getScale(), p_attrs)) {							
 							if (this.varstyles_symbols[vi]["hide"] !== undefined && this.varstyles_symbols[vi]["hide"]) {
 								doit = false;
 							}

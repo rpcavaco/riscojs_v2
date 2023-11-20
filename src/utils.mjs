@@ -729,6 +729,22 @@ function arrayEquals(a, b) {
         a.every((val, index) => val === b[index]);
 }
 
+/* Difference in moving periods of 24 hours. 
+ * If diff is less than 24 hours, if date is the same, the result is zero and 1 otherwise
+ **/
+export function diffDays(d1, d2) {
+	let diffTime = Math.abs(d2.getTime() - d1.getTime());
+	let diffa, diffb = Math.floor(diffTime / (1000 * 60 * 60 * 24)); 
+	diffa = diffb;
+	if (diffb < 1) {
+		if (d2.getDate() != d1.getDate()) {
+			diffa = 1;
+		}
+	}
+
+	return diffa;
+}
+
 let testl = [
 	["saguão", ['sa', 'guão']],
 	["sabão", ['sa', 'bão']],

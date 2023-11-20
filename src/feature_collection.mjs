@@ -1,7 +1,8 @@
 import {GlobalConst} from './constants.js';
 import {distanceToPoly, distanceToLine, dist2D, bbTouch} from './geom.mjs'
 import {Layer} from './layers.mjs'
-import {isSuperset, setEquality} from './utils.mjs'
+import { isSuperset, setEquality} from './utils.mjs'
+import { diffDays } from './utils.mjs';  // Can be called in 'varstyles' on 'iconsrcfunc' functions
 
 export class FeatureCollection {
 
@@ -11,6 +12,7 @@ export class FeatureCollection {
 	indexes;
 	lyrkeys_exclude_from_redraw;
 	current_featuresdraw_status;
+	utils_for_varstyles;
 
 	constructor(p_mapctx) {
 
@@ -23,6 +25,8 @@ export class FeatureCollection {
 
 		this.relationscfg = p_mapctx.cfgvar["layers"]["relations"];	
 		this.current_featuresdraw_status = null;
+
+		this.utils_for_varstyles = {"diffDays": diffDays};
 		
 	}
 
@@ -246,7 +250,7 @@ export class FeatureCollection {
 		if (opt_filterfunc) {
 			ret = 0;
 			for (let fk in this.featList[p_layerkey]) {
-				if (opt_filterfunc(null, this.featList[p_layerkey][fk].a)) {
+				if (opt_filterfunc(this.utils_for_varstyles, null, this.featList[p_layerkey][fk].a)) {
 					ret++;
 				}
 			}
