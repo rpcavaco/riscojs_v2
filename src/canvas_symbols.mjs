@@ -12,6 +12,7 @@ export class GrSymbol {
 	globalAlpha = "none";
 	skipconfigs = [];
 	dimsinpix = false; // dimensions in pixels
+	vsgroup = "none";
 
 	/* constructor() {
 		this.whereClause = new WhereClause();

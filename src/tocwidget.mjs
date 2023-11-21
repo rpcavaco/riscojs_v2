@@ -232,6 +232,7 @@ export class TOC  extends MapPrintInRect {
 			count = 0;
 			maxcota = 0;
 			cota = 0;
+			let varstyles_groups_found = [];
 			for (let li of paint_order) {
 
 				lyr = this.tocmgr.layers[li]; 
@@ -246,12 +247,17 @@ export class TOC  extends MapPrintInRect {
 					}
 
 					if (lyr["varstyles_symbols"] !== undefined) {
-						
 						ctx.font = `${this.varstylePX}px ${this.fontfamily}`;
 						for (const vs of lyr["varstyles_symbols"]) {
+							if (vs["vsgroup"] !== undefined && vs["vsgroup"] !== "none") {
+								if (varstyles_groups_found.indexOf(vs["vsgroup"]) < 0) {
+									varstyles_groups_found.push(vs["vsgroup"]);
+									cota += this.margin_offset/4.0 + vs_toc_sep * this.varstylePX;
+								}
+							}
 							cota += vs_toc_sep * this.varstylePX;
 						}
-					}					
+					}				
 				}
 
 			}
@@ -279,6 +285,7 @@ export class TOC  extends MapPrintInRect {
 				cota = 0;
 				step = toc_sep * this.normalszPX;
 				substep = vs_toc_sep * this.varstylePX;
+				varstyles_groups_found.length = 0;
 
 				for (let li of paint_order) {
 
@@ -307,6 +314,7 @@ export class TOC  extends MapPrintInRect {
 							drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota, step);	
 							ctx.fillText(lbl, indent_txleft, cota);	
 						} else {
+
 							ctx.fillText(lbl, txleft, cota);	
 
 							if (!lyr.layervisible) {
@@ -329,13 +337,25 @@ export class TOC  extends MapPrintInRect {
 
 								varstyle_caption = lyr_vs_captions[lyr.key][vs.key]
 
+								if (vs["vsgroup"] !== undefined && vs["vsgroup"] !== "none") {
+									if (varstyles_groups_found.indexOf(vs["vsgroup"]) < 0) {
+										varstyles_groups_found.push(vs["vsgroup"]);
+										
+										cota += this.margin_offset/4.0 + substep;
+										
+										ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_ACTIVECOLOR;
+										ctx.fillText(p_mapctx.i18n.msg(vs["vsgroup"], true), txleft+this.margin_offset, cota);
+									}
+								}
+
 								if (lyr.filteredFeatCount(vs.func) > 0) {
 									ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_ACTIVECOLOR;
 								} else {
 									ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_INACTIVECOLOR;
 								}
-			
+											
 								grcota = 4 + cota + 0.5 * substep;
+
 								drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota, substep, vs);							
 								cota += substep;
 								ctx.fillText(varstyle_caption, indent_txleft, cota);

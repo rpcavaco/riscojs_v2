@@ -88,6 +88,10 @@ export class I18n {
 			if (b_capitalize) {
 				ret = this.constructor.capitalize(ret);
 			}	
+		} else {
+			if (b_capitalize) {
+				ret = this.constructor.capitalize(p_msgkey);
+			}
 		}
 
 		return ret;
