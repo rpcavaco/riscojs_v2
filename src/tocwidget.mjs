@@ -113,6 +113,33 @@ export class TOC  extends MapPrintInRect {
 		// cal width
 		let lbl, lyr_labels={}, lyr_fc = {}, lyr_vs_captions={}, lyr_vs_fc={}, varstyle_caption, lang, max_lbl_w = 0, varstyles_fc;
 
+		let paint_order = [], temp_paint_order = [], forced_order_cnt = 0;
+		temp_paint_order.length = this.tocmgr.forced_lorder.length;
+		for (let ti, lyr, li=0; li<this.tocmgr.layers.length; li++) {
+			lyr = this.tocmgr.layers[li];
+			ti = this.tocmgr.forced_lorder.indexOf(lyr.key);
+			if (ti >= 0) {
+				forced_order_cnt++;
+				temp_paint_order[ti] = li;
+			}
+		}
+
+		if (forced_order_cnt > 0) {
+			if (forced_order_cnt != this.tocmgr.forced_lorder.length) {
+				console.warn("toclorder invalid, contains non-existing layer keys");
+			} else {
+				paint_order = [...temp_paint_order.toReversed()];
+			}
+		}
+
+		if (paint_order.length == 0) {
+			for (let lyr, li=this.tocmgr.layers.length-1; li>=0; li--) {
+				lyr = this.tocmgr.layers[li]; 
+				if (lyr["label"] !== undefined && lyr["label"] != "none") {
+					paint_order.push(li);
+				}
+			}
+		}
 
 		for (const lyr of this.tocmgr.layers) {
 
@@ -205,7 +232,7 @@ export class TOC  extends MapPrintInRect {
 			count = 0;
 			maxcota = 0;
 			cota = 0;
-			for (let li=this.tocmgr.layers.length-1; li>=0; li--) {
+			for (let li of paint_order) {
 
 				lyr = this.tocmgr.layers[li]; 
 				if (lyr["label"] !== undefined && lyr["label"] != "none") {
@@ -253,7 +280,7 @@ export class TOC  extends MapPrintInRect {
 				step = toc_sep * this.normalszPX;
 				substep = vs_toc_sep * this.varstylePX;
 
-				for (let li=this.tocmgr.layers.length-1; li>=0; li--) {
+				for (let li of paint_order) {
 
 					lyr = this.tocmgr.layers[li]; 
 					if (lyr["label"] !== undefined && lyr["label"] != "none") {

@@ -35,6 +35,7 @@ export class TOCManager {
 	after_refresh_procedure_list;
 	toccontrol;
 	prev_tocontrol_interaction_result;
+	forced_lorder;
 	#base_raster_layer_key;
 	
 	constructor(p_mapctx, p_mode) {
@@ -46,6 +47,7 @@ export class TOCManager {
 		this.after_refresh_procedure_list = [];
 		this.prev_tocontrol_interaction_result = null;
 		this.#base_raster_layer_key = null;
+		this.forced_lorder = [];
 
 		this.initLayersFromConfig();
 	}
@@ -330,6 +332,10 @@ export class TOCManager {
 
 		const cfgvar = this.mapctx.cfgvar;
 		const layerscfg = cfgvar["layers"];
+
+		if (layerscfg["toclorder"] !== undefined) {
+			this.forced_lorder = layerscfg["toclorder"]
+		}
 		
 		if (layerscfg["relations"] === undefined) {
 			layerscfg["relations"] = [];
