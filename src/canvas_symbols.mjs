@@ -604,7 +604,7 @@ export class CanvasIcon extends MarkerSymbol {
 		const sclval = p_mapctx.getScale();
 		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
 
-		const r0 = Math.min(dim, 2.0*p_vert_step/3.0);
+		const r0 = Math.min(dim, p_vert_step);
 
 		return new Promise((resolve, reject) =>  {
 

@@ -98,7 +98,7 @@ export class PopupBox {
 		}
 		if (p_styles["layercaptionfontfamily"] !== undefined) {
 			this.layercaptionfontfamily = p_styles["layercaptionfontfamily"];
-		}	
+		}		
 		if (p_styles["normalszPX"] !== undefined) {
 			this.normalszPX = p_styles["normalszPX"];
 		}	
