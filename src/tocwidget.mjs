@@ -333,6 +333,8 @@ export class TOC  extends MapPrintInRect {
 
 							// console.log("334:", lyr["varstyles_symbols"] )
 							ctx.font = `${this.varstylePX}px ${this.fontfamily}`;
+
+							let vslbl;
 							for (const vs of lyr["varstyles_symbols"]) {
 
 								varstyle_caption = lyr_vs_captions[lyr.key][vs.key]
@@ -344,7 +346,14 @@ export class TOC  extends MapPrintInRect {
 										cota += this.margin_offset/4.0 + substep;
 										
 										ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_ACTIVECOLOR;
-										ctx.fillText(p_mapctx.i18n.msg(vs["vsgroup"], true), txleft+this.margin_offset, cota);
+
+										if (lyr['msgsdict'] !== undefined && lyr.msgsdict[lang] !== undefined && Object.keys(lyr.msgsdict[lang]).indexOf(vs["vsgroup"]) >= 0) {
+											vslbl = I18n.capitalize(lyr.msgsdict[lang][vs["vsgroup"]]);
+										} else {
+											vslbl = I18n.capitalize(vs["vsgroup"]);
+										}
+
+										ctx.fillText(p_mapctx.i18n.msg(vslbl, true), txleft+this.margin_offset, cota);
 									}
 								}
 
