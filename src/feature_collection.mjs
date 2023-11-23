@@ -442,17 +442,6 @@ export class FeatureCollection {
 		this.mapctx.tocmgr.getAllVectorLayerKeys(work_layerkeys, this.lyrkeys_exclude_from_redraw);
 
 
-		/*const featlyrkeys = Object.keys(this.featList);
-		for (lyrkey of this.mapctx.cfgvar["layers"].lorder) {
-			if (featlyrkeys.indexOf(lyrkey) >= 0) {
-				if (this.lyrkeys_exclude_from_redraw.indexOf(lyrkey) >= 0) {
-					continue;
-				}
-				//console.log(":: redraw", lyrkey);
-				work_layerkeys.push(lyrkey);
-			}
-		}*/
-
 		console.info("[INFO] redrawing feat.collection, layers (in this order):", JSON.stringify(work_layerkeys));
 
 		if (work_layerkeys.length > 0) {

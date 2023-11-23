@@ -137,6 +137,7 @@ export class RiscoMapCtx {
 
 	#customization_object;
 	classname = "RiscoMapCtx";
+	graphicsmode;
 	//_refresh_timeout_id;
 	//_setscaleatcenter_timeout_id;
 
@@ -173,6 +174,8 @@ export class RiscoMapCtx {
 		}	
 
 		this.cfgvar = p_config_var;
+
+		this.graphicsmode = p_mode;
 
 		switch(p_mode) {
 
@@ -729,13 +732,6 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		}
 
 	}
-
-
-
-
-
-
-
 
 }
 

@@ -23,7 +23,8 @@ export class I18n {
 				"ZIN": "aproximar",
 				"HOME": "vista inicial",
 				//"CL2CP": "clicar para copiar valor",
-				"DEFSCL": "indique a escala"
+				"DEFSCL": "indique a escala",
+				"CHOOSEBASEMAP": "escolha o mapa base"
 			}, 
 			"en": {
 				"Y": "yes",
@@ -36,7 +37,9 @@ export class I18n {
 				"ZIN": "zoom in",
 				"HOME": "home view",
 				//"CL2CP": "click to copy value"
-				"DEFSCL": "set maps scale"
+				"DEFSCL": "set maps scale",
+				"CHOOSEBASEMAP": "choose base map"
+
 			}
 		};	
 		

@@ -116,7 +116,13 @@ export class TOC  extends MapPrintInRect {
 		let paint_order = [], temp_paint_order = [], forced_order_cnt = 0;
 		temp_paint_order.length = this.tocmgr.forced_lorder.length;
 		for (let ti, lyr, li=0; li<this.tocmgr.layers.length; li++) {
+			
 			lyr = this.tocmgr.layers[li];
+			// skip raster basemap
+			if (lyr['featCount'] === undefined) {
+				continue;
+			}
+
 			ti = this.tocmgr.forced_lorder.indexOf(lyr.key);
 			if (ti >= 0) {
 				forced_order_cnt++;
@@ -135,6 +141,10 @@ export class TOC  extends MapPrintInRect {
 		if (paint_order.length == 0) {
 			for (let lyr, li=this.tocmgr.layers.length-1; li>=0; li--) {
 				lyr = this.tocmgr.layers[li]; 
+				// skip raster basemap
+				if (lyr['featCount'] === undefined) {
+					continue;
+				}
 				if (lyr["label"] !== undefined && lyr["label"] != "none") {
 					paint_order.push(li);
 				}
@@ -144,6 +154,11 @@ export class TOC  extends MapPrintInRect {
 		for (const lyr of this.tocmgr.layers) {
 
 			if (lyr["label"] !== undefined && lyr["label"] != "none") {
+
+				// skip raster basemap
+				if (lyr['featCount'] === undefined) {
+					continue;
+				}
 
 				lang = (new I18n(lyr.msgsdict)).getLang();
 

@@ -1014,6 +1014,16 @@ class BasemapCtrlBox extends MapPrintInRect {
 			ctx.fillRect(...b2);
 			ctx.strokeRect(...b2);
 
+			const imgsrc = GlobalConst.CONTROLS_STYLES.LAYERSSYMB;
+			const imgh = new Image();
+			imgh.decoding = "sync";
+
+			imgh.src = imgsrc;
+			imgh.decode()
+			.then(() => {
+				ctx.drawImage(imgh, ...b2);
+			});			
+
 		} catch(e) {
 			throw e;
 		} finally {
@@ -1035,6 +1045,7 @@ class BasemapCtrlBox extends MapPrintInRect {
 			if (bm.filter == 'none') {
 				
 				switch (lyrcfg['filter']) {
+					case "grayscale":
 					case "greyscale":
 						this.FilterIconOption = "BW";
 						break;
@@ -1054,7 +1065,8 @@ class BasemapCtrlBox extends MapPrintInRect {
 
 			this.printSelFilter(p_mapctx);
 		}
-		// this.printSelBasemap(p_mapctx);
+		
+		this.printSelBasemap(p_mapctx);
 
 	}		
 
@@ -1068,6 +1080,18 @@ class BasemapCtrlBox extends MapPrintInRect {
 		const b2 = this.boxSelBasemapBtn();
 		let topcnv, ret = false;
 
+		const cfgvar = p_mapctx.cfgvar;
+		const layerscfg = cfgvar["layers"];
+		const bm_keyvalues = {};
+
+		for (const bmk of layerscfg.basemaps) {
+			if (layerscfg.layers[bmk]['label'] !== undefined) {
+				bm_keyvalues[bmk] = layerscfg.layers[bmk]['label'];
+			} else {
+				bm_keyvalues[bmk] = bmk;
+			}
+		}
+			
 		if (this.tocmgr.getBaseRasterLayer() != null && p_evt.offsetX >= b1[0] && p_evt.offsetX <= b1[0] + b1[2] && 
 			p_evt.offsetY >= b1[1] && p_evt.offsetY <= b1[1] + b1[3]) {
 
@@ -1078,6 +1102,8 @@ class BasemapCtrlBox extends MapPrintInRect {
 
 					const bm = this.tocmgr.getBaseRasterLayer();
 					let lyrcfg, changed = false;
+
+					lyrcfg = p_mapctx.cfgvar["layers"]["layers"][bm.key];
 
 					// SelFilter
 					if (this.FilterIconOption == "COLOR") {
@@ -1093,11 +1119,14 @@ class BasemapCtrlBox extends MapPrintInRect {
 
 					if (changed) {
 
-						this.printSelFilter(p_mapctx);
+						// this.printSelFilter(p_mapctx);
 						topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 						topcnv.style.cursor = "default";
+
+						p_mapctx.tocmgr.layers[0].refresh(p_mapctx);
+						this.print(p_mapctx);
 	
-						p_mapctx.maprefresh();	
+						// p_mapctx.maprefresh();	
 					}
 
 					break;
@@ -1120,14 +1149,48 @@ class BasemapCtrlBox extends MapPrintInRect {
 			ret = true;
 		}
 
-		if (!ret) {
-			if (p_evt.offsetX >= b2[0] && p_evt.offsetX <= b2[0] + b2[2] && 
-				p_evt.offsetY >= b2[1] && p_evt.offsetY <= b2[1] + b2[3]) {
-	
-				// SelBaseMap
-				ret = true;
+		if (!ret && p_evt.offsetX >= b2[0] && p_evt.offsetX <= b2[0] + b2[2] && 
+		p_evt.offsetY >= b2[1] && p_evt.offsetY <= b2[1] + b2[3]) {
+
+			switch(p_evt.type) {
+
+				case 'touchend':
+				case 'mouseup':
+
+					// selectInputMessage: function(p_msg_txt, p_value_text_pairs, p_callback, opt_constraint_items)
+
+					(function(p_basemap_ctrl, pp_mapctx, pp_tocmgr, p_bm_keyvalues) {
+						pp_mapctx.getCustomizationObject().messaging_ctrlr.selectInputMessage(
+							pp_mapctx.i18n.msg('CHOOSEBASEMAP', true), 
+							p_bm_keyvalues,
+							(evt, p_result, p_value) => {
+								if (p_value) {
+									pp_tocmgr.setBaseRasterLayer(p_value);
+									p_basemap_ctrl.print(pp_mapctx);
+								}
+							}
+						);
+					})(this, p_mapctx, p_mapctx.tocmgr, bm_keyvalues);
+
+
+					break; 
+
+				case 'mousemove':
+
+					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					topcnv.style.cursor = "pointer";
+
+					ctrToolTip(p_mapctx, p_evt, p_mapctx.i18n.msg('ALTBMAP', true), [80,30]);
+
+					break;
+
+				default:
+					topcnv = p_mapctx.renderingsmgr.getTopCanvas();
+					topcnv.style.cursor = "default";
+
 			}
-	
+
+			ret = true;
 		}
 
 		if (!ret) {

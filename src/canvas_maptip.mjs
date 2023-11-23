@@ -325,8 +325,8 @@ export class MaptipBox extends PopupBox {
 		let ordered_layers = [], featids = {};
 		let lorder = [];
 		
-		for (let lki=this.mapctx.cfgvar["layers"].lorder.length-1; lki>0; lki--) {
-			lorder.push(this.mapctx.cfgvar["layers"].lorder[lki]);
+		for (let lki=this.mapctx.tocmgr.current_maplorder.length-1; lki>0; lki--) {
+			lorder.push(this.mapctx.tocmgr.current_maplorder[lki]);
 		}
 
 		let layer, ifkeys;

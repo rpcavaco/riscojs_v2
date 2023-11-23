@@ -176,14 +176,11 @@ export class Layer {
 		return ret;
 	}
 
-
 	resetCanceled() {
 		this._drawingcanceled = false;
 	}
 
-
 	doCancel() {
-
 		console.info(`[INFO] Layer ${this.key} was canceled`);
 		console.trace();
 		this._drawingcanceled = true;

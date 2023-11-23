@@ -35,8 +35,10 @@ export class TOCManager {
 	after_refresh_procedure_list;
 	toccontrol;
 	prev_tocontrol_interaction_result;
+	current_maplorder;
 	forced_lorder;
 	#base_raster_layer_key;
+	name = "TOCManager";
 	
 	constructor(p_mapctx, p_mode) {
 		this.layers = [];
@@ -47,16 +49,22 @@ export class TOCManager {
 		this.after_refresh_procedure_list = [];
 		this.prev_tocontrol_interaction_result = null;
 		this.#base_raster_layer_key = null;
+		this.current_maplorder = [];
 		this.forced_lorder = [];
 
 		this.initLayersFromConfig();
 	}
 
-	/* static readLayerConfigItem(p_lyrob, p_configvar, p_layerkey, p_itemname) {
-		if (p_configvar.lorder[p_layerkey][p_itemname] !== undefined) {	
-			p_lyrob[p_itemname]	= p_configvar.lorder[p_layerkey][p_itemname];
-		}
-	} */
+	set basekey(p_key) {
+		this.#base_raster_layer_key = p_key;
+	}
+	get basekey() {
+		return this.#base_raster_layer_key;
+	}
+
+	resetBasekey() {
+		this.#base_raster_layer_key = null;
+	}
 
 	setTOCControl(p_tocctrl_inst) {
 		this.toccontrol = p_tocctrl_inst;
@@ -119,19 +127,43 @@ export class TOCManager {
 		return ret;
 	}
 
-
 	getBaseRasterLayer() {
 		let ret = null;
-		if (this.#base_raster_layer_key) {
-			ret = this.getLayer(this.#base_raster_layer_key);
+		if (this.basekey) {
+			ret = this.getLayer(this.basekey);
 		}
 		return ret;
 	}
 
-	addLayer(p_layerkey, p_layercfg_entry, opt_crafted_layerclass, opt_exclude_from_redraw) {
+	// Does not refresh
+	// Simply nullifies layer[0], rendering map now will result in error.
+	// Meant to be called from setBaseRasterLayer
+	_removeBaseRasterLayerIfExists(p_new_layerkey_to_replace) {
+		let ret = false;
+		if (this.basekey!=null && this.layers.length > 0) {
+			if (!(this.layers[0] instanceof RasterLayer)) {
+				console.info(`[INFO] _removeBaseRasterLayerIfExists, layer zero '${this.layers[0].key}' is not raster`);
+			}
+			if (p_new_layerkey_to_replace == null || p_new_layerkey_to_replace != this.layers[0].key) {
+				this.layers.shift();
+				this.resetBasekey();
+				ret = true;
+			}
+		}
+		return ret;
+	}
 
-		const lidx = this.layers.push(null) - 1;
+	addLayer(p_layerkey, p_layercfg_entry, opt_crafted_layerclass, opt_exclude_from_redraw, b_to_start) {
+
+		let lidx;
 		let currentLayer;
+
+		if (b_to_start) {
+			this.layers.unshift(null);
+			lidx = 0;
+		} else {
+			lidx = this.layers.push(null) - 1;
+		}
 
 		const missing_configs_to_letgo = ["layernames"]; 
 
@@ -146,6 +178,8 @@ export class TOCManager {
 				if (p_layercfg_entry["type"] === undefined) {
 					throw new Error(`TOCManager, layer with key '${p_layerkey}' has no type, cannot be read.`);
 				}
+
+
 		
 				this.layers[lidx] = new DynamicLayer(this.mode, p_layercfg_entry["type"]);
 			}
@@ -233,10 +267,10 @@ export class TOCManager {
 					}
 				}
 			} else {
-				if (this.#base_raster_layer_key) {
+				if (this.basekey) {
 					throw new Error(`Base raster already defined, cannot include '${currentLayer.key}' in current workable config`);
 				} else {
-					this.#base_raster_layer_key = currentLayer.key;
+					this.basekey = currentLayer.key;
 				}
 			}
 
@@ -318,6 +352,26 @@ export class TOCManager {
 		}
 	}
 
+	setBaseRasterLayer(p_key) {
+
+		if (p_key!=null && this._removeBaseRasterLayerIfExists(p_key)) {
+
+			const cfgvar = this.mapctx.cfgvar;
+			const layerscfg = cfgvar["layers"];
+
+			if (layerscfg.layers[p_key] !== undefined) {
+
+				this.addLayer(p_key, layerscfg.layers[p_key], null, false, true);
+
+				this.layers[0].refresh(this.mapctx);
+
+			} else {
+				console.error(`TOCManager, no layer with key '${p_key}' found in config.`);
+			}	
+			
+		}
+	}
+
 	initLayersFromConfig() {
 
 		const selectable_feat_layer_types = [
@@ -336,7 +390,15 @@ export class TOCManager {
 		if (layerscfg["toclorder"] !== undefined) {
 			this.forced_lorder = layerscfg["toclorder"]
 		}
+
+		if (layerscfg["basemaps"] !== undefined && layerscfg["basemaps"].length > 0) {
+			this.current_maplorder.push(layerscfg["basemaps"][0]);
+		}	
 		
+		for (const lyk of layerscfg.lorder) {
+			this.current_maplorder.push(lyk);
+		}
+
 		if (layerscfg["relations"] === undefined) {
 			layerscfg["relations"] = [];
 		}
@@ -344,9 +406,9 @@ export class TOCManager {
 
 		this.layers.length = 0;
 
-		for (let lyentry, lyk, i=0; i <= layerscfg.lorder.length; i++) {
+		for (let lyentry, lyk, i=0; i <= this.current_maplorder.length; i++) {
 
-			if (i == layerscfg.lorder.length) {
+			if (i == this.current_maplorder.length) {
 				
 				// loading spatial grid layer as overlay over all others
 				lyk = "SPATIALIDX_GRID";
@@ -356,7 +418,7 @@ export class TOCManager {
 			} else {
 
 				exclude_from_redraw = false;
-				lyk = layerscfg.lorder[i];
+				lyk = this.current_maplorder[i];
 
 				if (layerscfg.layers[lyk] === undefined) {
 					throw new Error(`layerscfg config has no '${lyk}' entry`);
@@ -401,6 +463,7 @@ export class TOCManager {
 		this.startedRefreshing();
 
 		const ckeys = new Set();
+
 		for (let li=0; li < this.layers.length; li++) {
 			ckeys.add(this.layers[li].canvasKey);
 		}

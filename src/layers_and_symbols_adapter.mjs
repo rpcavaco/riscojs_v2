@@ -4,7 +4,6 @@ import { CanvasPointGridLayer, CanvasAreaGridLayer, CanvasGraticuleLayer, Canvas
 import { CanvasWMSLayer, CanvasAGSMapLayer} from  './canvas_raster.mjs';
 import { CanvasLineSymbol, CanvasPolygonSymbol, CanvasVertCross, CanvasConcentricCircles, CanvasCircle, CanvasDiamond, CanvasIcon, CanvasSquare} from './canvas_symbols.mjs';
 
-
 export const layerClassAdapter = {
 	"canvas": {
 		"graticule": CanvasGraticuleLayer,
