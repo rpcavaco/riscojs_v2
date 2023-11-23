@@ -214,7 +214,7 @@
 	 * @param {*} opt_img_dims se null, todo o canvas será limpo
 	 */
 	putTransientImages(p_imgdata_dict, p_scale, p_mouseevt) {
-		let ctx, c;
+		let ctx, x, y;
 		const dims=[];
 		for (const key in p_imgdata_dict) {
 			ctx = this.canvases[key].getContext('2d');
@@ -226,10 +226,18 @@
 
 						ctx.save();
 
-						const divw =  p_mouseevt.offsetX / p_imgdata_dict[key].width;
-						const divh =  p_mouseevt.offsetY / p_imgdata_dict[key].height;
-						const ox = (p_mouseevt.offsetX - (p_imgdata_dict[key].width * pp_scale * divw)) / pp_scale;
-						const oy = (p_mouseevt.offsetY - (p_imgdata_dict[key].height * pp_scale * divh)) / pp_scale;
+						if (p_mouseevt.offsetX == 0) {
+							x = p_mouseevt.clientX;
+							y = p_mouseevt.clientY;
+						} else {
+							x = p_mouseevt.offsetX;
+							y = p_mouseevt.offsetY;
+						}
+
+						const divw =  x / p_imgdata_dict[key].width;
+						const divh =  y / p_imgdata_dict[key].height;
+						const ox = (x - (p_imgdata_dict[key].width * pp_scale * divw)) / pp_scale;
+						const oy = (y - (p_imgdata_dict[key].height * pp_scale * divh)) / pp_scale;
 
 						ctx.scale(pp_scale, pp_scale);
 						ctx.drawImage(bmp, ox, oy);

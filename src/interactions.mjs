@@ -416,11 +416,16 @@ class wheelEventCtrller {
 				//console.log(" ---- timed out", p_this.wheelevtTmoutID)
 				if (p_this.wheelscale < 0) {
 					return;
-				}			
+				}	
+				
 				if (GlobalConst.getDebug("DISENG_WHEEL")) {
 					console.log("[DBG:DISENG_WHEEL] would be firing at scale:", p_this.wheelscale);
 				} else {
-					pp_mapctx.transformmgr.setScaleCenteredAtScrPoint(p_this.wheelscale, [pp_evt.offsetX, pp_evt.offsetY], true);
+					if (pp_evt.offsetX == 0) {
+						pp_mapctx.transformmgr.setScaleCenteredAtScrPoint(p_this.wheelscale, [pp_evt.clientX, pp_evt.clientY], true);
+					} else {
+						pp_mapctx.transformmgr.setScaleCenteredAtScrPoint(p_this.wheelscale, [pp_evt.offsetX, pp_evt.offsetY], true);
+					}
 				}
 				p_this.wheelscale = -1;		
 				this.wheelevtTmoutID = null;
