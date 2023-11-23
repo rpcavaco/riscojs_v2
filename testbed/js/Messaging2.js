@@ -46,10 +46,19 @@ let MessagesController2 = {
 	isvisible: false,
 	timer: null,
 	i18n: null,
+	media_root: "",
 
 	setI18n(p_i18nobj) {
 		this.i18n = p_i18nobj;
 	},
+
+	setMediaRoot(p_path) {
+		if (p_path.endsWith("/")) {
+			this.media_root = p_path;
+		} else {
+			this.media_root = p_path + "/";
+		}
+	},	
 
 	i18nMsg(p_input, p_capitalize) {
 		let ret = p_input;
@@ -139,13 +148,13 @@ let MessagesController2 = {
 			iconimg = document.createElement("img");
 			if (p_type == "WARN") {
 				this.persist = false;
-				iconimg.src = "media/warning-5-32.png";
+				iconimg.src = this.media_root + "media/warning-5-32.png";
 			} else if (p_type == "INFO") {
 				this.persist = false;
-				iconimg.src = "media/info-3-32.png";
+				iconimg.src = this.media_root + "media/info-3-32.png";
 			} else if (p_type == "YESNO" || p_type == "OKCANCEL" || p_type == "SELECT" || p_type == "TEXT" || p_type == "NUMBER") {
 				this.persist = true;
-				iconimg.src = "media/q-32.png";
+				iconimg.src = this.media_root + "media/q-32.png";
 			}
 
 			msgsdiv.appendChild(iconimg);
@@ -320,13 +329,13 @@ let MessagesController2 = {
 
 				} else {
 
-					const ctrldiv = document.createElement("div");
-					ctrldiv.style.float = "right";
-					innercontentdiv.appendChild(ctrldiv);
-
 					const wdg0 = document.createElement("div");
 					wdg0.classList.add("attention-select");
 					innercontentdiv.appendChild(wdg0);
+
+					const ctrldiv = document.createElement("div");
+					ctrldiv.style.float = "right";
+					innercontentdiv.appendChild(ctrldiv);
 
 					contentelem = document.createElement("select");
 					wdg0.appendChild(contentelem);
@@ -342,6 +351,7 @@ let MessagesController2 = {
 							if (opt_constraintitems['selected'] !== undefined) {
 								if (opt_constraintitems['selected'] == k) {
 									optel.selected = 'selected';
+									optel.style.fontWeight = 'bold';
 								}
 							}
 						}

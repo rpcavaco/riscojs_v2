@@ -1160,6 +1160,9 @@ class BasemapCtrlBox extends MapPrintInRect {
 					// selectInputMessage: function(p_msg_txt, p_value_text_pairs, p_callback, opt_constraint_items)
 
 					(function(p_basemap_ctrl, pp_mapctx, pp_tocmgr, p_bm_keyvalues) {
+
+						const bm = pp_tocmgr.getBaseRasterLayer();
+
 						pp_mapctx.getCustomizationObject().messaging_ctrlr.selectInputMessage(
 							pp_mapctx.i18n.msg('CHOOSEBASEMAP', true), 
 							p_bm_keyvalues,
@@ -1168,6 +1171,9 @@ class BasemapCtrlBox extends MapPrintInRect {
 									pp_tocmgr.setBaseRasterLayer(p_value);
 									p_basemap_ctrl.print(pp_mapctx);
 								}
+							},
+							{
+								"selected": bm.key
 							}
 						);
 					})(this, p_mapctx, p_mapctx.tocmgr, bm_keyvalues);
