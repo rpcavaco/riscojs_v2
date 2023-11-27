@@ -1,7 +1,7 @@
 
 import {GlobalConst} from './constants.js';
 import {AreaGridLayer} from './vectorlayers.mjs';
-import {EditManager} from './edit_manager.mjs';
+import {EditingMgr} from './edit_manager.mjs';
 import {dist2D} from './geom.mjs';
 
 export class BaseTool {
@@ -909,7 +909,7 @@ export class ToolManager {
 
 		this.basic_config = p_mapctx_config_var;
 
-		this.editmgr = new EditManager(this);
+		this.editmgr = new EditingMgr(this);
 		// this.maptools = [new DefaultTool(), new MultiTool()];
 		this.maptools = [new MultiTool()];
 		this.mapcontrolmgrs = [];

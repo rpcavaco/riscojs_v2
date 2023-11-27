@@ -1,10 +1,10 @@
 
-export class EditManager {
+export class EditingMgr {
 
 	current_user;
 	editmgr_toolmanager;
 
-	constructor(p_toolmanager) {
+	constructor(p_toolmanager, auth_mode, p_other_widgets) {
 		this.editmgr_toolmanager = p_toolmanager;
 	}
 

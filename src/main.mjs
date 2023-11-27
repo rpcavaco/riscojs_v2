@@ -138,13 +138,14 @@ export class RiscoMapCtx {
 	#customization_object;
 	classname = "RiscoMapCtx";
 	graphicsmode;
+	tabletmode; 
 	//_refresh_timeout_id;
 	//_setscaleatcenter_timeout_id;
 
 	_timeout_ids = {};
 
 	// p_mode -- just 'canvas' for now
-	constructor(p_config_var, p_paneldiv, p_mode, b_wait_for_customization_avail) {
+	constructor(p_config_var, p_paneldiv, p_mode, b_wait_for_customization_avail, b_in_tabletmode) {
 
 		this.wait_for_customization_avail = b_wait_for_customization_avail;
 
@@ -176,6 +177,12 @@ export class RiscoMapCtx {
 		this.cfgvar = p_config_var;
 
 		this.graphicsmode = p_mode;
+
+		if (b_in_tabletmode) {
+			this.tabletmode = true;
+		} else {
+			this.tabletmode = false;
+		}
 
 		switch(p_mode) {
 

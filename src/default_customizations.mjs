@@ -5,6 +5,7 @@ import { AnalysisMgr, SelectionsNavigator } from './analysis.mjs';
 import { SlicingPanel } from './slicing.mjs';
 import { DashboardPanel } from './dashboard.mjs';
 import { TOC } from './tocwidget.mjs';
+import { EditingMgr } from './edit_manager.mjs';
 
 class MousecoordsPrint extends PermanentMessaging {
 
@@ -1259,6 +1260,7 @@ export class MapCustomizations {
 
 		// widget which presence impacts others, at least through display area occupied
 		const ap = new AttributionPrint();
+		const toc = new TOC(this.mapctx);
 
 		let has_slicing = false;
 		if (this.mapctx.cfgvar["basic"]["slicing"] !== undefined && this.mapctx.cfgvar["basic"]["slicing"]["keys"] !== undefined && Object.keys(this.mapctx.cfgvar["basic"]["slicing"]["keys"]).length > 0) {
@@ -1269,11 +1271,22 @@ export class MapCustomizations {
 		if (this.mapctx.cfgvar["basic"]["dashboard"] !== undefined && this.mapctx.cfgvar["basic"]["dashboard"]["widgets"] !== undefined && this.mapctx.cfgvar["basic"]["dashboard"]["widgets"].length > 0) {
 			has_dashboarding = true;
 		}		
+
+		let has_editing = false;
+		let auth_mode = null;
+		if (this.mapctx.cfgvar["basic"]["editing"] !== undefined && this.mapctx.cfgvar["basic"]["editing"]["editable_layers"] !== undefined && this.mapctx.cfgvar["basic"]["editing"]["editable_layers"].length > 0) {
+			has_editing = true;
+			if (this.mapctx.cfgvar["basic"]["editing"]["auth"] !== undefined) {
+				auth_mode = this.mapctx.cfgvar["basic"]["editing"]["auth"];
+			} else {
+				auth_mode = "remote_user_header";
+			}		
+		}		
 		
 		this.instances = {
 			"basiccontrolsbox": new BasicCtrlBox(),
 			"basemapctrl": new BasemapCtrlBox(),
-			"toc": new TOC(this.mapctx),
+			"toc": toc,
 			"infoclass": new Info(this.mapctx, infoboxStyle, max_textlines_height),
 			"mousecoordsprint": new MousecoordsPrint(),
 			"mapscaleprint": new MapScalePrint(),
@@ -1303,6 +1316,10 @@ export class MapCustomizations {
 		
 		if (this.instances["analysis"] !== undefined) {
 			this.instances["analysis"].itemsAvailable(has_slicing, has_dashboarding);
+		}
+
+		if (has_editing) {
+			this.instances["analysis"] = new EditingMgr(this.mapctx, auth_mode, [toc]);
 		}
 
 		// Temporariamente sem navigator
