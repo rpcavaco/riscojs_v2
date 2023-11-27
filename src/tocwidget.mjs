@@ -453,7 +453,7 @@ export class TOC  extends MapPrintInRect {
 
 		const SHOWROWS = false;
 
-		let ctx = null;
+		let ctx = null, varstyles_groups_found=[];
 		if (SHOWROWS) {
 			ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 			ctx.save();
@@ -525,6 +525,14 @@ export class TOC  extends MapPrintInRect {
 									step = stepSubEntry;
 								} else {
 									step = stepEntry;
+								}
+
+								if (vs["vsgroup"] !== undefined && vs["vsgroup"] !== "none") {
+									if (varstyles_groups_found.indexOf(vs["vsgroup"]) < 0) {
+										varstyles_groups_found.push(vs["vsgroup"]);
+										
+										prev += step;
+									}
 								}
 								next = prev + step;
 
