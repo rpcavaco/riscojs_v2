@@ -584,6 +584,11 @@ export class Info {
 
 	}
 
+	// To be called from map context 'clearInteractions' method
+	customizClearInteractions() {
+		this.clearinfo("FROM_CLEARINTERACTIONS");
+	}
+
 	interactFixedtip(p_evt) {
 		if (this.callout) {
 			this.callout.interact_fixedtip(this, p_evt);
@@ -621,6 +626,11 @@ export class OverlayMgr {
 		ctx.clearRect(0, 0, ...mapdims); 
 
 		this.box = null;
+	}
+
+	// To be called from map context 'clearInteractions' method
+	customizClearInteractions() {
+		this.clear();
 	}
 
 	drawImage(p_imageobj) {
@@ -665,9 +675,7 @@ export class OverlayMgr {
 		ctx.shadowBlur = 2; 
 		ctx.fillText(this.mapctx.i18n.msg('CLKIMG2CLOSE', false), mapdims[0]/2.0, oy+h-20);
 
-
 		ctx.restore();
-
 	}
 
 	interact(p_mapctx, p_evt) {
@@ -675,9 +683,9 @@ export class OverlayMgr {
 		let ret = false;
 		if (this.is_active) {
 
-			const topcnv = this.mapctx.renderingsmgr.getTopCanvas();
+			const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 			topcnv.style.cursor = "default";
-	
+
 			ret = true;
 			if (this.box != null && p_evt.offsetX >= this.box[0] && p_evt.offsetX <= this.box[0]+this.box[2] && p_evt.offsetY >= this.box[1] && p_evt.offsetY <= this.box[1]+this.box[3]) {
 				if (['touchend', 'mouseup', 'mouseout', 'mouseleave'].indexOf(p_evt.type) >= 0) {

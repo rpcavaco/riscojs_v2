@@ -1067,7 +1067,9 @@ class BasemapCtrlBox extends MapPrintInRect {
 			this.printSelFilter(p_mapctx);
 		}
 		
-		this.printSelBasemap(p_mapctx);
+		if (p_mapctx.cfgvar["layers"]["basemaps"].length > 1) {
+			this.printSelBasemap(p_mapctx);
+		}
 
 	}		
 
@@ -1150,7 +1152,7 @@ class BasemapCtrlBox extends MapPrintInRect {
 			ret = true;
 		}
 
-		if (!ret && p_evt.offsetX >= b2[0] && p_evt.offsetX <= b2[0] + b2[2] && 
+		if (!ret && layerscfg.basemaps.length > 1 && p_evt.offsetX >= b2[0] && p_evt.offsetX <= b2[0] + b2[2] && 
 		p_evt.offsetY >= b2[1] && p_evt.offsetY <= b2[1] + b2[3]) {
 
 			switch(p_evt.type) {

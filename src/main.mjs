@@ -672,6 +672,12 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			throw new Error("clearInteractions, no customization object found")
 		}
 
+		for (let k in ci.instances) {
+			if (ci.instances[k]["customizClearInteractions"] !== undefined) {
+				ci.instances[k].customizClearInteractions();
+			}
+		}
+
 		const ic = ci.instances["infoclass"];
 		if (ic) {
 			ic.clearinfo(opt_source_id);

@@ -800,7 +800,7 @@ export class LocQuery {
 
 			// Query clear button
 			p_btn.addEventListener("click", function(e) { 
-				
+
 				// clear input box
 				p_qryb_obj.clear(true);
 
