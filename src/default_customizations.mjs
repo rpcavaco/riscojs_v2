@@ -1319,7 +1319,7 @@ export class MapCustomizations {
 		}
 
 		if (has_editing) {
-			this.instances["analysis"] = new EditingMgr(this.mapctx, auth_mode, [toc]);
+			this.instances["editing"] = new EditingMgr(this.mapctx, auth_mode, [toc]);
 		}
 
 		// Temporariamente sem navigator

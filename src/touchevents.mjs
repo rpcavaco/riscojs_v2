@@ -1,14 +1,22 @@
 
 import {GlobalConst} from './constants.js';
 
-function copyTouch(touch, target, type) {
+function copyTouch(touch, evt, type) {
+
+	const rect = evt.target.getBoundingClientRect();
+
+	const offx = touch.pageX - rect.left;
+	const offy = touch.pageY - rect.top;
+
 	return { 
-		target: target,
+		target: evt.target,
 		identifier: touch.identifier, 
 		pageX: touch.pageX, 
 		pageY: touch.pageY,
-		offsetX: touch.offsetX, 
-		offsetY: touch.offsetY,
+		offsetX: offx, 
+		offsetY: offy,
+		clientX: touch.clientX, 
+		clientY: touch.clientY,
 		screenX: touch.screenX, 
 		screenY: touch.screenY,
 		type: type
@@ -75,7 +83,7 @@ export class TouchController {
 		this.zoomcenter.length = 0;
 		
 		for (let i = 0; i < touches.length; i++) {
-			this.ongoingTouches.push(copyTouch(touches[i], e.target, "touchstart"));
+			this.ongoingTouches.push(copyTouch(touches[i], e, "touchstart"));
 		}
 		if (this.ongoingTouches.length == 1) {
 			ret = this.ongoingTouches[0];
@@ -104,7 +112,7 @@ export class TouchController {
 		for (let i = 0; i < touches.length; i++) {
 			idx = this.ongoingTouchIndexById(touches[i].identifier);
 			if (idx >= 0) {
-				this.ongoingTouches.splice(idx, 1, copyTouch(touches[i], e.target, "touchmove"));
+				this.ongoingTouches.splice(idx, 1, copyTouch(touches[i], e, "touchmove"));
 			}
 		}
 
@@ -138,7 +146,7 @@ export class TouchController {
 			idx = this.ongoingTouchIndexById(touches[i].identifier);
 			if (idx >= 0) {
 				if (found == null) {
-					found = copyTouch(touches[i], e.target, "touchend");
+					found = copyTouch(touches[i], e, "touchend");
 				}
 				this.ongoingTouches.splice(idx, 1);
 			}
