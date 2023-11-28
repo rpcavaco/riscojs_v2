@@ -36,6 +36,8 @@ export class TOC  extends MapPrintInRect {
 		this.margin_offset = GlobalConst.CONTROLS_STYLES.OFFSET;
 		this.leftcol_width = GlobalConst.CONTROLS_STYLES.TOC_LEFTCOL_WIDTH;
 
+		this.varstylePX = null;
+
 		if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined) {
 
 			if (p_mapctx.cfgvar["basic"]["style_override"]["fontfamily"] !== undefined) {		
@@ -53,11 +55,12 @@ export class TOC  extends MapPrintInRect {
 			if (p_mapctx.cfgvar["basic"]["style_override"]["toc"] !== undefined) {
 				if (p_mapctx.cfgvar["basic"]["style_override"]["toc"]["varstylesz_px"] !== undefined) {		
 					this.varstylePX = p_mapctx.cfgvar["basic"]["style_override"]["toc"]["varstylesz_px"];
-				} else {
-					this.varstylePX = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLESZ_PX;
 				}
 			}
-			
+
+			if (this.varstylePX == null) {
+				this.varstylePX = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLESZ_PX;
+			}			
 		}
 
 		this.canvaslayer = 'service_canvas'; 
@@ -287,7 +290,6 @@ export class TOC  extends MapPrintInRect {
 			} else {
 				ctx.fillStyle = this.fillStyleBack;
 			}
-			//console.log(this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]);
 			ctx.fillRect(this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]);
 			
 			ctx.strokeStyle = this.activeStyleFront;
