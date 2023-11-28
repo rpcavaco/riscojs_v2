@@ -71,7 +71,7 @@ class DefaultTool extends BaseTool {
 	}	
 }
 
-async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_event, opt_actonselfeat, opt_clearafterselfeat) {
+async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_event, opt_actonselfeat, opt_clearafterselfeat, opt_preselobj_for_tabletmode) {
 	
 	let foundly = null, ref_x, ref_y, max_y, col, row, maxrow, sqrid;
 
@@ -293,12 +293,14 @@ async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_i
 					for (let id of findings[lyrk].ids) {
 						feat = await p_mapctx.drawFeatureAsMouseSelected(lyrk, id, canvas_layers);
 						if (feat!=null && opt_actonselfeat != null) {
+
 							if (feats[lyrk] === undefined) {
 								feats[lyrk] = [];
 							}
 							f = JSON.parse(JSON.stringify(feat));
 							f['id'] = id;
 							feats[lyrk].push(JSON.parse(JSON.stringify(f)));
+
 						}
 					}	
 
@@ -306,13 +308,25 @@ async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_i
 			}
 		}
 
+		let usesel = null;
 		if (opt_actonselfeat != null) {
 
-			ret_dir_interact = false;
-			if (Object.keys(feats).length > 0) {
-				ret_dir_interact = opt_actonselfeat(feats, p_scrx, p_scry);
+			if (opt_preselobj_for_tabletmode && opt_preselobj_for_tabletmode.isActive) {
+				if (!opt_preselobj_for_tabletmode.isSet) {
+					opt_preselobj_for_tabletmode.set(feats);
+					usesel = feats;
+				} else {
+					usesel = opt_preselobj_for_tabletmode.get();
+					opt_preselobj_for_tabletmode.reset();
+				}
+			} else {
+				usesel = feats;
 			}
-				//console.assert(ret_dir_interact === undefined, `optional action on selected feat failed, nearest layer:${nearestlyk}, feat id:${nearestid}`)
+
+			ret_dir_interact = false;
+			if (usesel != null && Object.keys(usesel).length > 0) {
+				ret_dir_interact = opt_actonselfeat(usesel, p_scrx, p_scry);
+			} 
 
 			if (!ret_dir_interact && p_is_end_event) {
 				if (opt_clearafterselfeat) {
@@ -736,6 +750,7 @@ class InfoTool extends BaseTool {
 				console.log("[DBG:INTERACTIONCLICKEND] INFOTOOL onEvent evt.type:", p_evt.type, "insideactivepanel:", insideainfoboxpanel, "insidefixedtippanel:", insidefixedtippanel);
 			}
 
+			let meth;
 			switch(p_evt.type) {
 
 				case 'touchstart':
@@ -763,7 +778,14 @@ class InfoTool extends BaseTool {
 
 						if (!ret && !this.getAnyPanelActive()) {
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-							ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, true, ic.pick.bind(ic), ic.clearinfo.bind(ic));
+							if (p_mapctx.tabletFeatPreSelection != null) {
+								if (p_mapctx.tabletFeatPreSelection.isSet) {
+									meth = ic.pick.bind(ic)
+								} else {
+									meth = ic.hover.bind(ic);
+								}
+							}
+							ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, true, meth, ic.clearinfo.bind(ic), p_mapctx.tabletFeatPreSelection);
 						}
 					} else {
 						console.warn(`infoclass customization unavailable, cannot pick feature`);			
@@ -776,6 +798,11 @@ class InfoTool extends BaseTool {
 					break;
 
 				case 'mousemove':
+					// if in tablet mode, igonore mouse move for info / maptip purposes
+					if (p_mapctx.tabletFeatPreSelection.isActive) {
+						ret = false;
+						break;
+					}
 					if (!this.getAnyPanelActive()) {
 						if (ic.hover !== undefined) {
 

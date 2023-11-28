@@ -87,9 +87,11 @@ export class RiscoMapOverlay {
 	 * @param {object} p_config_var - Variable object containing configuration JSON dictionary
 	 * @param {string} p_ctx_id - Identification of this context eg: 'left', 'right', 'single', 'base', etc.
 	 * @param {string} p_mode - Just 'canvas' for now
+	 * @param {boolean} b_wait_for_customization_avail - Flag - if true, customizations must be completely inited before first refresh of map
+	 * @param {boolean} b_in_tabletmode - Flag to activate 'tablet mode'
 	 * @returns - the context just created
 	 */
-	newMapCtx(p_config_var, p_ctx_id, p_mode, b_wait_for_customization_avail) {
+	newMapCtx(p_config_var, p_ctx_id, p_mode, b_wait_for_customization_avail, b_in_tabletmode) {
 
 		if (p_config_var == null) {
 			throw new Error("Class RiscoMapOverlay, newMapCtx, null config_var");
@@ -98,7 +100,7 @@ export class RiscoMapOverlay {
 			throw new Error("Class RiscoMapOverlay, newMapCtx, null context id");
 		}	
 
-		this.mapcontexts[p_ctx_id] = new RiscoMapCtx(p_config_var, this.panelwidget, p_mode, b_wait_for_customization_avail);
+		this.mapcontexts[p_ctx_id] = new RiscoMapCtx(p_config_var, this.panelwidget, p_mode, b_wait_for_customization_avail, b_in_tabletmode);
 
 		return this.mapcontexts[p_ctx_id];
 	}
@@ -124,6 +126,51 @@ export class RiscoMapOverlay {
 	
 }
 
+class tabletFeatPreSelectionMgr {
+	//selection ids per layer key
+	#feats_dict = null;
+	#active = false;
+
+	activate(p_do_activate) {
+		if (p_do_activate) {
+			this.#active = true;
+		} else {
+			this.#active = false;
+		}
+	}
+
+	get isActive() {
+		return this.#active;
+	}
+
+	reset() {
+		this.#feats_dict = null;
+	}
+
+	set(p_feats_dict) {
+		if (this.#active) {
+			this.#feats_dict = JSON.parse(JSON.stringify(p_feats_dict));
+		}
+	}
+
+	get() {
+		if (this.#active) {
+			return JSON.parse(JSON.stringify(this.#feats_dict));
+		} else {
+			return null;
+		}
+	}
+
+	get isSet() {
+		let ret = false;
+		if (this.#active) {
+			ret = (this.#feats_dict != null);
+		}
+
+		return ret;
+	}
+
+}
 /**
  * Class RiscoMapCtx
  * 
@@ -139,6 +186,7 @@ export class RiscoMapCtx {
 	classname = "RiscoMapCtx";
 	graphicsmode;
 	tabletmode; 
+	tabletFeatPreSelection;
 	//_refresh_timeout_id;
 	//_setscaleatcenter_timeout_id;
 
@@ -178,10 +226,11 @@ export class RiscoMapCtx {
 
 		this.graphicsmode = p_mode;
 
+		// Tablet mode (tabletFeatPreSelection activated): changes mouse and touch interaction with features
+		// Keeps selected layer key and associated selected feature id
+		this.tabletFeatPreSelection = new tabletFeatPreSelectionMgr();
 		if (b_in_tabletmode) {
-			this.tabletmode = true;
-		} else {
-			this.tabletmode = false;
+			this.tabletFeatPreSelection.activate(true);
 		}
 
 		switch(p_mode) {
