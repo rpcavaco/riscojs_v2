@@ -537,7 +537,7 @@ export class DashboardPanel {
 				
 			}
 		).catch((error) => {
-			console.error(`Impossible to fetch stats on key '${current_widget_cfg["alphastatskey"]}'`, error);
+			console.error(`Impossible to fetch stats on key '${current_widget_cfg["alphastatskey"]}', ${error}`);
 		});	
 
 	}

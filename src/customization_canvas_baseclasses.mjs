@@ -409,14 +409,20 @@ export class Info {
 		if (currlayer["infocfg"] === undefined) {
 			throw new Error(`Missing 'infocfg' config for layer '${p_layerkey}, cannot 'pick' features`);
 		}
-		if (currlayer["infocfg"]["keyfields"] === undefined && currlayer["infocfg"]["keyfield"] === undefined) {
-			console.warn(`missing 'infocfg.keyfields' and 'infocfg.keyfield' config for layer '${p_layerkey}, cannot 'pick' features`);
+		if (currlayer["infocfg"]["function"] === undefined && currlayer["infocfg"]["keyfields"] === undefined && currlayer["infocfg"]["keyfield"] === undefined) {
+			console.warn(`missing either 'infocfg.function' config OR 'infocfg.keyfields' and 'infocfg.keyfield' configs for layer '${p_layerkey}, cannot 'pick' features`);
 			return;
 		}
 
 		const keyfields = [];
 
-		if (currlayer["infocfg"]["keyfield"] !== undefined) {
+		if (currlayer["infocfg"]["function"] !== undefined) {
+
+			const ic = this.mapctx.getCustomizationObject().interactivity_ctrlr;
+
+			return currlayer["infocfg"]["function"](ic, p_layerkey, p_feature);
+
+		} else if (currlayer["infocfg"]["keyfield"] !== undefined) {
 
 			if (p_feature.a[currlayer["infocfg"]["keyfield"]] === undefined) {
 				console.warn(`[WARN] layer '${p_layerkey}' has no attribute corresponding to INFO key field '${currlayer["infocfg"]["keyfield"]}'`);
@@ -433,7 +439,7 @@ export class Info {
 		} else if (currlayer["infocfg"]["keyfields"] !== undefined) {
 
 			if (typeof currlayer["infocfg"]["keyfields"] == 'string') {
-				console.warn(`[WARN] layer '${p_layerkey}' infocfg->keyfields configuration cannot be of type 'string'`);
+				console.warn(`[WARN] layer '${p_layerkey}' infocfg->keyfields configuration cannot be of type 'string', must be array`);
 				return;
 			}
 
@@ -468,11 +474,12 @@ export class Info {
 
 			} else {
 
-				console.warn(`[WARN] layer '${p_layerkey}' infocfg->keyfields configuration is completely invalid`);
+				console.warn(`[WARN] layer '${p_layerkey}' infocfg->keyfields configuration is not an array`);
 				return;
 
 			}
-		}
+
+		}  // pickfunction
 
 		const keyvals = [];		
 		for (let kf of keyfields) {
@@ -523,7 +530,8 @@ export class Info {
 					
 				}
 			).catch((error) => {
-				console.error(`Impossible to fetch attributes on '${p_layerkey}'`, error);
+				console.error(`Impossible to fetch attributes on '${p_layerkey}'`);
+				throw new Error(error);
 			});	
 
 		}

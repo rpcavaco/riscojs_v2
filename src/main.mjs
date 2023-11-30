@@ -795,5 +795,13 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 	}
 
+	enableUser(p_logging_name, b_can_edit) {
+
+	}
+
+	enableEditing() {
+
+	}
+
 }
 

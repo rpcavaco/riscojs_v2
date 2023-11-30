@@ -242,7 +242,7 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_l
 		let pretext, tmp, captionlines=[];
 		const lang = p_lang;
 
-		if (p_layer.infocfg.fields["formats"] !== undefined && p_layer.infocfg.fields["formats"][p_fld] !== undefined) {
+		if (p_layer.infocfg['fields'] !== undefined && p_layer.infocfg.fields["formats"] !== undefined && p_layer.infocfg.fields["formats"][p_fld] !== undefined) {
 
 			if (p_layer.infocfg.fields["formats"][p_fld]["type"] !== undefined) {
 
