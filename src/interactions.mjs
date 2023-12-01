@@ -1,7 +1,6 @@
 
 import {GlobalConst} from './constants.js';
 import {AreaGridLayer} from './vectorlayers.mjs';
-import {EditingMgr} from './edit_manager.mjs';
 import {dist2D} from './geom.mjs';
 
 export class BaseTool {
@@ -30,7 +29,7 @@ export class BaseTool {
 		return false;
 	}
 
-	setEditManager(p_edit_manager) {
+	setEditingManager(p_edit_manager) {
 		this.editmanager = p_edit_manager;
 	}
 
@@ -936,7 +935,6 @@ export class ToolManager {
 
 		this.basic_config = p_mapctx_config_var;
 
-		this.editmgr = new EditingMgr(this);
 		// this.maptools = [new DefaultTool(), new MultiTool()];
 		this.maptools = [new MultiTool()];
 		this.mapcontrolmgrs = [];
@@ -963,6 +961,10 @@ export class ToolManager {
 		
 	}
 
+	setEditingManager(p_editmgr) {
+		this.editmgr = p_editmgr;
+	}
+
 	addTool(p_toolinstance) {
 		if (p_toolinstance == null) {
 			throw new Error("Class ToolManager, addTool, null tool instance passed");
@@ -973,7 +975,7 @@ export class ToolManager {
 			throw new Error(`Class ToolManager, addTool, tool is not a BaseTool instance: ${classname}`);
 		}	
 		
-		p_toolinstance.setEditManager(this.editmgr);
+		p_toolinstance.setEditingManager(this.editmgr);
 
 		for (let i=0; i<this.maptools.length; i++) {
 			if (existing_classnames.indexOf(this.maptools[i].constructor.name) >= 0) {
@@ -1138,13 +1140,5 @@ export class ToolManager {
 		this.mapcontrolmgrs[p_key] = p_mapctrlmgr;
 		// this.mapcontrolmgrs[p_key].setToolmgr(this);
 	}
-
-	setCurrentUser(p_username) {
-		this.editmgr.setCurrentUser(p_username)
-	}
-	
-
-	
-
 
 }

@@ -1277,15 +1277,9 @@ export class MapCustomizations {
 			has_dashboarding = true;
 		}		
 
-		let has_editing = false;
-		let auth_mode = null;
+		let editable_layers = [];
 		if (this.mapctx.cfgvar["basic"]["editing"] !== undefined && this.mapctx.cfgvar["basic"]["editing"]["editable_layers"] !== undefined && this.mapctx.cfgvar["basic"]["editing"]["editable_layers"].length > 0) {
-			has_editing = true;
-			if (this.mapctx.cfgvar["basic"]["editing"]["auth"] !== undefined) {
-				auth_mode = this.mapctx.cfgvar["basic"]["editing"]["auth"];
-			} else {
-				auth_mode = "remote_user_header";
-			}		
+			editable_layers = this.mapctx.cfgvar["basic"]["editing"]["editable_layers"];
 		}		
 		
 		this.instances = {
@@ -1323,8 +1317,8 @@ export class MapCustomizations {
 			this.instances["analysis"].itemsAvailable(has_slicing, has_dashboarding);
 		}
 
-		if (has_editing) {
-			this.instances["editing"] = new EditingMgr(this.mapctx, auth_mode, [toc]);
+		if (editable_layers.length > 0) {
+			this.instances["editing"] = new EditingMgr(this.mapctx, editable_layers, [toc]);
 		}
 
 		// Temporariamente sem navigator
