@@ -70,16 +70,25 @@ class DefaultTool extends BaseTool {
 	}	
 }
 
-async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_event, opt_actonselfeat, opt_clearafterselfeat, opt_preselobj_for_tabletmode) {
+async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_event, opt_actonselfeat_dict, opt_clearafterselfeat, opt_preselobj_for_tabletmode) {
 	
 	let foundly = null, ref_x, ref_y, max_y, col, row, maxrow, sqrid;
 
-	let ret_dir_interact = false;
+	let ret_dir_interact = false, opt_actonselfeat_keys = null, opt_actonselfeat_ok = false;
 
 	const terrain_bounds = [], terr_pt = [];
 	p_mapctx.getMapBounds(terrain_bounds);
 
 	// console.log("interactWithSpindexLayer");
+
+	if (opt_actonselfeat_dict != null) {
+
+		opt_actonselfeat_keys = Object.keys(opt_actonselfeat_dict);
+		if (opt_actonselfeat_keys.length > 0) {
+			opt_actonselfeat_ok = true;
+		}
+
+	}
 
 	for (let ly of p_mapctx.tocmgr.layers) {
 		if (ly.spindex !== undefined && ly.spindex && (ly instanceof AreaGridLayer)) {
@@ -291,7 +300,7 @@ async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_i
 					let f;
 					for (let id of findings[lyrk].ids) {
 						feat = await p_mapctx.drawFeatureAsMouseSelected(lyrk, id, canvas_layers);
-						if (feat!=null && opt_actonselfeat != null) {
+						if (feat!=null && opt_actonselfeat_ok) {
 
 							if (feats[lyrk] === undefined) {
 								feats[lyrk] = [];
@@ -307,24 +316,94 @@ async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_i
 			}
 		}
 
-		let usesel = null;
-		if (opt_actonselfeat != null) {
+		let usesel = null, mode, coincidence_found;
+		if (opt_actonselfeat_ok) {
 
-			if (opt_preselobj_for_tabletmode && opt_preselobj_for_tabletmode.isActive) {
-				if (!opt_preselobj_for_tabletmode.isSet) {
-					opt_preselobj_for_tabletmode.set(feats);
-					usesel = feats;
+			// at this point, opt_actonselfeat_dict contains methods to execute just on 'hover' or on 'hover' and on 'pick'
+
+			mode = "hover";
+			if (opt_actonselfeat_keys.length > 1) {
+
+				// if opt_actonselfeat_dict has methods for both 'hover' and 'pick' ...
+
+				if (opt_preselobj_for_tabletmode && opt_preselobj_for_tabletmode.isActive) {
+
+					// if pre-selection object exists and is active ...
+
+					if (!opt_preselobj_for_tabletmode.isSet) {
+
+						// if pre-selection object is empty, lets 'hover' with current features
+
+						opt_preselobj_for_tabletmode.set(feats);
+						usesel = feats;
+
+					} else {
+
+						// pre-selection object is not empty, lets retrieve pre-selected features.
+
+						usesel = opt_preselobj_for_tabletmode.get();
+
+						// Now, must check coincidence exists between preselected and current features
+						//  (by at least one feature).
+
+						coincidence_found = false;
+						for (let lyrk in feats) {
+
+							for (const from_feat of feats[lyrk]) {
+
+								if (!feats.hasOwnProperty(lyrk)) {
+									continue;
+								}	
+
+								if (usesel[lyrk] !== undefined) {
+									for (const to_feat of usesel[lyrk]) {
+										if (!usesel.hasOwnProperty(lyrk)) {
+											continue;
+										}		
+										if (from_feat.id == to_feat.id) {
+											coincidence_found = true;
+											break;
+										}
+									}	
+								}
+								if (coincidence_found) {
+									break;
+								}
+							}
+						}
+
+						// In case current and pre-sel features share at least one feat, ...
+
+						if (coincidence_found) {
+
+							//  ... pre-selection is cleared, and retrieved pre-selected features are used to 'pick',
+							opt_preselobj_for_tabletmode.reset();						
+							mode = "pick";
+
+						} else {
+
+							// Otherwise, current features are put in pre-sel and used to 'hover'
+							opt_preselobj_for_tabletmode.set(feats);
+							usesel = feats;						
+							mode = "hover";
+
+						}
+
+					}
+
 				} else {
-					usesel = opt_preselobj_for_tabletmode.get();
-					opt_preselobj_for_tabletmode.reset();
+
+					// no pre-selection, no decision to make, just 'pick'
+					mode = "pick";
 				}
-			} else {
+			}
+			if (usesel == null) {
 				usesel = feats;
 			}
 
 			ret_dir_interact = false;
 			if (usesel != null && Object.keys(usesel).length > 0) {
-				ret_dir_interact = opt_actonselfeat(usesel, p_scrx, p_scry);
+				ret_dir_interact = opt_actonselfeat_dict[mode](usesel, p_scrx, p_scry);
 			} 
 
 			if (!ret_dir_interact && p_is_end_event) {
@@ -776,15 +855,15 @@ class InfoTool extends BaseTool {
 						}
 
 						if (!ret && !this.getAnyPanelActive()) {
+ 
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-							if (p_mapctx.tabletFeatPreSelection != null) {
-								if (p_mapctx.tabletFeatPreSelection.isSet) {
-									meth = ic.pick.bind(ic)
-								} else {
-									meth = ic.hover.bind(ic);
-								}
-							}
-							ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, true, meth, ic.clearinfo.bind(ic), p_mapctx.tabletFeatPreSelection);
+							ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, true, 
+								{
+									"hover": ic.hover.bind(ic),
+									"pick": ic.pick.bind(ic)
+
+								},
+								ic.clearinfo.bind(ic), p_mapctx.tabletFeatPreSelection);
 						}
 					} else {
 						console.warn(`infoclass customization unavailable, cannot pick feature`);			
@@ -808,7 +887,7 @@ class InfoTool extends BaseTool {
 							ic.clearinfo('INFOTOOL_MOUSEMOVE');
 		
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-							ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, false, ic.hover.bind(ic), ic.clearinfo.bind(ic));
+							ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, false, {"hover": ic.hover.bind(ic)}, ic.clearinfo.bind(ic));
 						} else {
 							console.warn(`infoclass customization unavailable, cannot hover / maptip feature`);			
 						}	
