@@ -437,6 +437,10 @@ export class TOC  extends MapPrintInRect {
 		}
 	}	
 
+	getHeight() {
+		return this.boxh[this.collapsedstate];
+	}
+
 	print(p_mapctx) {
 		const that = this;
 		// prevent drawing before configured fonts are available

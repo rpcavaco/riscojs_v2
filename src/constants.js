@@ -223,6 +223,19 @@ var GlobalConst = {
 		SN_INACTIVECOLOR: "grey",
 		SN_NORMALSZ_PX: 16,
 
+		// Edting management
+		EM_LEFTCOL_WIDTH: 50,
+		EM_NORMALSZ_PX: 16,
+		EM_BCKGRD: "#0b1d1fe0",
+		EM_ACTIVECOLOR: "white",
+		EM_INACTIVECOLOR: "grey",
+		EM_INUSE: "cyan",
+		EM_COLLAPSED_STRIPES_FILL: "rgba(220, 220, 220, 0.75)",
+		EM_START_COLLAPSED_CANVAS_MAXWIDTH: 800,
+
+		EM_BOXDIMS: [150, 50],
+		EM_ICONDIMS: [80,32],
+
 		// Segmentation
 		SEG_TEXTFILL: "white",
 		SEG_WIDTHS: [400, 1200], // min, max

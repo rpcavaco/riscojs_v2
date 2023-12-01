@@ -8,9 +8,14 @@ export class AnalysisMgr extends MapPrintInRect {
 	boxh;
 	boxw;
 	top;
-	fillStyleBack; 
-	fillStyleFront; 
-	font;
+
+	activeStyleFront;
+	enabledFillStyleFront;
+	inactiveStyleFront;
+	margin_offset;
+	normalszPX;
+	fontfamily;
+
 	leftcol_width;
 	print_attempts;
 	had_prev_interaction;

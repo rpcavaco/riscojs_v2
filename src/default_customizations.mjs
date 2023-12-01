@@ -1322,8 +1322,8 @@ export class MapCustomizations {
 		}
 
 		// Temporariamente sem navigator
-		this.mapcustom_controls_keys = ["basiccontrolsbox", "basemapctrl", "toc", "analysis", "slicing", "dashboard"]; // widgets exposing a 'print' method, just for display
-		this.mapcustom_controlsmgrs_keys = ["basiccontrolsbox", "basemapctrl", "analysis", "slicing", "dashboard"]; // controls manager widgets, exposing a generic 'interact' method
+		this.mapcustom_controls_keys = ["basiccontrolsbox", "basemapctrl", "toc", "analysis", "slicing", "dashboard", "editing"]; // widgets exposing a 'print' method, just for display
+		this.mapcustom_controlsmgrs_keys = ["basiccontrolsbox", "basemapctrl", "analysis", "slicing", "dashboard", "editing"]; // controls manager widgets, exposing a generic 'interact' method
 
 /* 		this.mapcustom_controls_keys = ["basiccontrolsbox", "basemapctrl", "toc", "navigator", "analysis"]; // widgets exposing a 'print' method, just for display
 		this.mapcustom_controlsmgrs_keys = ["basiccontrolsbox", "basemapctrl", "navigator", "analysis"]; // controls manager widgets, exposing a generic 'interact' method
