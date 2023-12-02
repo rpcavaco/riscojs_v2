@@ -362,12 +362,17 @@ export class Info {
 	}
 
 	hover(p_feature_dict, p_scrx, p_scry) {
+
+		// if on tablet mode, pass current features to editing manager
+		const editmgr = this.mapctx.getEditingManager();
+		if (editmgr != null && editmgr.isEditingEnabled() && this.mapctx.tabletFeatPreSelection.isActive) {
+			editmgr.setCurrentEditFeatures(p_feature_dict);
+		}
+
 		return this._showCallout(p_feature_dict, p_scrx, p_scry, true);
 	}
 
 	pick(p_feature_dict, p_scrx, p_scry) {
-
-		// setFixedtipPanelActive
 
 		let ret = false, opentippanel = false, layerklist = Object.keys(p_feature_dict);
 

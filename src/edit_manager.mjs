@@ -5,7 +5,7 @@ export class EditingMgr extends MapPrintInRect {
 
 	current_user;
 	current_user_canedit;
-	editing_is_enabled;
+	#editing_is_enabled;
 	editable_layers;
 
 	left;
@@ -29,6 +29,8 @@ export class EditingMgr extends MapPrintInRect {
 	std_boxdims;
 	// active_mode;
 
+	#current_edit_features;
+
 	constructor(p_mapctx, p_editable_layers, p_other_widgets) {
 
 		super();
@@ -38,7 +40,7 @@ export class EditingMgr extends MapPrintInRect {
 
 		this.editable_layers = p_editable_layers;
 		this.current_user_canedit = false;
-		this.editing_is_enabled = false;
+		this.#editing_is_enabled = false;
 
 		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.EM_BCKGRD;  // **
 		this.activeStyleFront = GlobalConst.CONTROLS_STYLES.EM_ACTIVECOLOR;
@@ -64,6 +66,8 @@ export class EditingMgr extends MapPrintInRect {
 
 		this.print_attempts = 0;
 		this.had_prev_interaction = false;
+
+		this.#current_edit_features = null;
 
 		p_mapctx.toolmgr.setEditingManager(this);
 	}
@@ -122,7 +126,7 @@ export class EditingMgr extends MapPrintInRect {
 			ctx.strokeRect(this.left, this.top, this.boxw, this.boxh);
 
 			let iconname = "edit_off";
-			if (this.editing_is_enabled) {
+			if (this.#editing_is_enabled) {
 				iconname = "edit_on";
 			}
 			const img = new Image();
@@ -173,7 +177,7 @@ export class EditingMgr extends MapPrintInRect {
 						topcnv.style.cursor = "pointer";
 						let msg;
 
-						if (this.editing_is_enabled) {
+						if (this.#editing_is_enabled) {
 							msg = p_mapctx.i18n.msg('STOPEDIT', true);
 						} else {
 							msg = p_mapctx.i18n.msg('STARTEDIT', true);
@@ -190,7 +194,7 @@ export class EditingMgr extends MapPrintInRect {
 							throw new Error("map context customization instance is missing")
 						}
 
-						this.editing_is_enabled = !this.editing_is_enabled;
+						this.#editing_is_enabled = !this.#editing_is_enabled;
 						this.print(p_mapctx);
 	
 						break;
@@ -234,6 +238,15 @@ export class EditingMgr extends MapPrintInRect {
 	}
 	
 	setEditingEnabled(p_editing_is_enabled) {
-		this.editing_is_enabled = p_editing_is_enabled;
-	}		
+		this.#editing_is_enabled = p_editing_is_enabled;
+	}	
+
+	isEditingEnabled() {
+		return this.#editing_is_enabled;
+	}
+	
+	setCurrentEditFeatures(p_feat_dict) {
+		console.log(p_feat_dict);
+		this.#current_edit_features = p_feat_dict;
+	}
 }

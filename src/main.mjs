@@ -832,7 +832,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		const ic = ci.instances["editing"];
 		if (ic) {
-			ret = null;
+			ret = ic;
 		}
 
 		return ret;
