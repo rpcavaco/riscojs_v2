@@ -821,5 +821,22 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		}
 	}
 
+	getEditingManager() {
+
+		let ret = null;
+
+		const ci = this.getCustomizationObject();
+		if (ci == null) {
+			throw new Error("getEditingManager, no customization object found")
+		}
+
+		const ic = ci.instances["editing"];
+		if (ic) {
+			ret = null;
+		}
+
+		return ret;
+	}
+
 }
 

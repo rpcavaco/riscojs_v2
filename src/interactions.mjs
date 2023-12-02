@@ -70,7 +70,7 @@ class DefaultTool extends BaseTool {
 	}	
 }
 
-async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_event, opt_actonselfeat_dict, opt_clearafterselfeat, opt_preselobj_for_tabletmode) {
+async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_event, opt_actonselfeat_dict, opt_clearafterselfeat) {
 	
 	let foundly = null, ref_x, ref_y, max_y, col, row, maxrow, sqrid;
 
@@ -324,24 +324,24 @@ async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_i
 			mode = "hover";
 			if (opt_actonselfeat_keys.length > 1) {
 
-				// if opt_actonselfeat_dict has methods for both 'hover' and 'pick' ...
+				// at this point, opt_actonselfeat_dict has methods for both 'hover' and 'pick' ...
 
-				if (opt_preselobj_for_tabletmode && opt_preselobj_for_tabletmode.isActive) {
+				if (p_mapctx.tabletFeatPreSelection.isActive) {
 
 					// if pre-selection object exists and is active ...
 
-					if (!opt_preselobj_for_tabletmode.isSet) {
+					if (!p_mapctx.tabletFeatPreSelection.isSet) {
 
 						// if pre-selection object is empty, lets 'hover' with current features
 
-						opt_preselobj_for_tabletmode.set(feats);
+						p_mapctx.tabletFeatPreSelection.set(feats);
 						usesel = feats;
 
 					} else {
 
 						// pre-selection object is not empty, lets retrieve pre-selected features.
 
-						usesel = opt_preselobj_for_tabletmode.get();
+						usesel = p_mapctx.tabletFeatPreSelection.get();
 
 						// Now, must check coincidence exists between preselected and current features
 						//  (by at least one feature).
@@ -377,13 +377,13 @@ async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_i
 						if (coincidence_found) {
 
 							//  ... pre-selection is cleared, and retrieved pre-selected features are used to 'pick',
-							opt_preselobj_for_tabletmode.reset();						
+							p_mapctx.tabletFeatPreSelection.reset();						
 							mode = "pick";
 
 						} else {
 
 							// Otherwise, current features are put in pre-sel and used to 'hover'
-							opt_preselobj_for_tabletmode.set(feats);
+							p_mapctx.tabletFeatPreSelection.set(feats);
 							usesel = feats;						
 							mode = "hover";
 
@@ -411,9 +411,7 @@ async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_i
 					opt_clearafterselfeat('INTERACTSRVLYR');
 				}			
 			} 
-
 		}
-
 	}
 
 	if (GlobalConst.getDebug("INTERACTION")) {
@@ -863,7 +861,7 @@ class InfoTool extends BaseTool {
 									"pick": ic.pick.bind(ic)
 
 								},
-								ic.clearinfo.bind(ic), p_mapctx.tabletFeatPreSelection);
+								ic.clearinfo.bind(ic));
 						}
 					} else {
 						console.warn(`infoclass customization unavailable, cannot pick feature`);			
