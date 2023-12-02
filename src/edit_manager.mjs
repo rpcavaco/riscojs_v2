@@ -41,6 +41,7 @@ export class EditingMgr extends MapPrintInRect {
 		this.other_widgets = p_other_widgets;
 
 		this.editable_layers = p_editable_layers;
+		this.#current_user = null;
 		this.#current_user_canedit = false;
 		this.#editing_is_enabled = false;
 		this.#editing_layer_key = null;
@@ -235,6 +236,30 @@ export class EditingMgr extends MapPrintInRect {
 
 		return ret;
 	} 
+
+	checkCanEditStatus(b_before_enable_editing) {
+		let ret = true;
+		if (this.#current_user == null) {
+			console.error("checkEditionStatus: no current user");
+			// TODO - REMOVE COMMENT !! ret = false;
+		};
+		if (!this.#current_user_canedit) {
+			console.error("checkEditionStatus: current user cannot edit");
+			// TODO - REMOVE COMMENT !! ret = false;
+		};		
+		if (!b_before_enable_editing && !this.#editing_is_enabled) {
+			console.error("checkEditionStatus: editing not enabled");
+			ret = false;
+		};	
+		if (this.#editing_layer_key == null) {
+			console.error("checkEditionStatus: not editing layer key defined");
+			ret = false;
+		};	
+		
+		console.info("[INFO] is edit status OK?:", ret);
+
+		return ret;
+	}
 	
 	setCurrentUser(p_username, b_user_canedit) {
 		this.#current_user = p_username;
@@ -301,10 +326,15 @@ export class EditingMgr extends MapPrintInRect {
 	}
 	
 	setEditingEnabled(p_mapctx, p_editing_is_enabled) {
+		
 		if (p_editing_is_enabled) {
 			this.setEditingLayer(p_mapctx);
-		}
-		this.#editing_is_enabled = p_editing_is_enabled;
+			if(this.checkCanEditStatus(true)) {
+				this.#editing_is_enabled = true;
+			}		
+		} else {
+			this.#editing_is_enabled = false;
+		}		
 	}	
 
 	isEditingEnabled() {
