@@ -113,6 +113,7 @@ export class Layer {
 	minscale = GlobalConst.MINSCALE;
 	maxscale = Number.MAX_SAFE_INTEGER;
 	layervisible = true;
+	layereditable = false;
 	mouseinteraction = false;
 	label = "none";
 	labelfield = "none";

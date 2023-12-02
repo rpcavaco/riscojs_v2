@@ -1,11 +1,13 @@
+import {I18n} from './i18n.mjs';
 import {GlobalConst} from './constants.js';
 import {ctrToolTip, MapPrintInRect} from './customization_canvas_baseclasses.mjs';
 
 export class EditingMgr extends MapPrintInRect {
 
-	current_user;
-	current_user_canedit;
+	#current_user;
+	#current_user_canedit;
 	#editing_is_enabled;
+	#editing_layer_key;
 	editable_layers;
 
 	left;
@@ -39,8 +41,9 @@ export class EditingMgr extends MapPrintInRect {
 		this.other_widgets = p_other_widgets;
 
 		this.editable_layers = p_editable_layers;
-		this.current_user_canedit = false;
+		this.#current_user_canedit = false;
 		this.#editing_is_enabled = false;
+		this.#editing_layer_key = null;
 
 		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.EM_BCKGRD;  // **
 		this.activeStyleFront = GlobalConst.CONTROLS_STYLES.EM_ACTIVECOLOR;
@@ -126,7 +129,7 @@ export class EditingMgr extends MapPrintInRect {
 			ctx.strokeRect(this.left, this.top, this.boxw, this.boxh);
 
 			let iconname = "edit_off";
-			if (this.#editing_is_enabled) {
+			if (this.isEditingEnabled()) {
 				iconname = "edit_on";
 			}
 			const img = new Image();
@@ -177,7 +180,7 @@ export class EditingMgr extends MapPrintInRect {
 						topcnv.style.cursor = "pointer";
 						let msg;
 
-						if (this.#editing_is_enabled) {
+						if (this.isEditingEnabled()) {
 							msg = p_mapctx.i18n.msg('STOPEDIT', true);
 						} else {
 							msg = p_mapctx.i18n.msg('STARTEDIT', true);
@@ -194,7 +197,8 @@ export class EditingMgr extends MapPrintInRect {
 							throw new Error("map context customization instance is missing")
 						}
 
-						this.#editing_is_enabled = !this.#editing_is_enabled;
+						// Toggle edit mode
+						this.setEditingEnabled(p_mapctx, !this.isEditingEnabled());
 						this.print(p_mapctx);
 	
 						break;
@@ -233,11 +237,73 @@ export class EditingMgr extends MapPrintInRect {
 	} 
 	
 	setCurrentUser(p_username, b_user_canedit) {
-		this.current_user = p_username;
-		this.current_user_canedit = b_user_canedit;
+		this.#current_user = p_username;
+		this.#current_user_canedit = b_user_canedit;
+	}
+
+	set editingLayerKey(p_key) {
+		this.#editing_layer_key = p_key;
+	}
+
+	get editingLayerKey() {
+		return this.#editing_layer_key;
+	}	
+
+	setEditingLayer(p_mapctx) {
+
+		const work_layerkeys = [], editables= {};
+		let lyr, constraints = null;
+
+		p_mapctx.tocmgr.getAllVectorLayerKeys(work_layerkeys);		
+
+		if (work_layerkeys.length > 0) {
+			for (const lyrk of work_layerkeys) {
+				lyr = p_mapctx.tocmgr.getLayer(lyrk);
+				if (lyr.layereditable) {
+					editables[lyrk] = (lyr.label == "none" ? lyrk : I18n.capitalize(lyr.label));
+				}
+			}
+		}
+
+		const lyrks = Object.keys(editables);
+		const sz = lyrks.length;
+		if (sz == 0) {
+
+			console.error("setEditingLayer: no editable layers, check all layer 'layereditable' attribute in layer config");
+
+		} else if (sz > 1) {
+
+			if (this.editingLayerKey) {
+				constraints = {
+					"selected": this.editingLayerKey
+				}
+			}
+
+			const that = this;
+
+			p_mapctx.getCustomizationObject().messaging_ctrlr.selectInputMessage(
+				p_mapctx.i18n.msg('SELEDITLYR', true), 
+				editables,
+				(evt, p_result, p_value) => { 
+					if (p_value) {
+						that.editingLayerKey = p_value;
+					}
+				},
+				constraints
+			);
+
+		} else {
+
+			this.editingLayerKey = lyrks[0];
+
+		}
+
 	}
 	
-	setEditingEnabled(p_editing_is_enabled) {
+	setEditingEnabled(p_mapctx, p_editing_is_enabled) {
+		if (p_editing_is_enabled) {
+			this.setEditingLayer(p_mapctx);
+		}
 		this.#editing_is_enabled = p_editing_is_enabled;
 	}	
 

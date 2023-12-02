@@ -817,7 +817,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		const ic = ci.instances["editing"];
 		if (ic) {
-			ic.setEditingEnabled(p_editing_is_enabled);
+			ic.setEditingEnabled(this, p_editing_is_enabled);
 		}
 	}
 
