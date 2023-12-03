@@ -213,10 +213,11 @@ export class EditingMgr extends MapPrintInRect {
 				ret = true;
 		}
 
+		// Clearinteractions, allowing only for wiping tooltip and not maptipped feature selections
 		if (ret) {
 
 			if (!this.had_prev_interaction) {
-				p_mapctx.clearInteractions('EDITMGR');
+				p_mapctx.clearInteractions('EDITMGR1', false, 'transientviz');
 			}
 			this.had_prev_interaction = true;
 
@@ -228,7 +229,7 @@ export class EditingMgr extends MapPrintInRect {
 				topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 				topcnv.style.cursor = "default";
 
-				p_mapctx.clearInteractions('EDITMGR');
+				p_mapctx.clearInteractions('EDITMGR2', false, 'transientviz');
 
 				this.had_prev_interaction = false;
 			}

@@ -34,7 +34,7 @@ export class TOCManager {
 	_refreshing;
 	after_refresh_procedure_list;
 	toccontrol;
-	prev_tocontrol_interaction_result;
+	//prev_tocontrol_interaction_result;
 	current_maplorder;
 	forced_lorder;
 	#base_raster_layer_key;
@@ -47,7 +47,7 @@ export class TOCManager {
 		this.drawlist = [];
 		this._refreshing = false;
 		this.after_refresh_procedure_list = [];
-		this.prev_tocontrol_interaction_result = null;
+		//this.prev_tocontrol_interaction_result = null;
 		this.#base_raster_layer_key = null;
 		this.current_maplorder = [];
 		this.forced_lorder = [];
@@ -715,9 +715,9 @@ export class TOCManager {
 
 		// console.trace("INT TOC");
 
-		const ret =  this.toccontrol.tocinteract(p_mapctx, p_evt);
+		/*const ret =  this.toccontrol.tocinteract(p_mapctx, p_evt);
 
-		if (this.prev_tocontrol_interaction_result !== null && this.prev_tocontrol_interaction_result != ret && !ret) {
+		If (this.prev_tocontrol_interaction_result !== null && this.prev_tocontrol_interaction_result != ret && !ret) {
 
 			// emulating mouseout
 
@@ -728,9 +728,9 @@ export class TOCManager {
 			
 		}
 
-		this.prev_tocontrol_interaction_result = ret;
+		this.prev_tocontrol_interaction_result = ret; */
 		
-		return ret;
+		return this.toccontrol.tocinteract(p_mapctx, p_evt);
 
 	}
 

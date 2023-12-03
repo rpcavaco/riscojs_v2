@@ -718,7 +718,16 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	}
 
 	
-	clearInteractions(opt_source_id, opt_clear_temp_also) { 
+	clearInteractions(opt_source_id, opt_clear_temp_also, opt_single_canvaslayer) { 
+
+		if (GlobalConst.getDebug("INTERACTION") || GlobalConst.getDebug("INTERACTIONCLEAR")) {
+			console.log(`[DBG:INTERACTIONCLEAR] Map context clearInteractions, source:'${opt_source_id}', also clear temp:${opt_clear_temp_also}', single layer:${opt_single_canvaslayer}'`);
+		}		
+
+		if (opt_single_canvaslayer) {
+			this.renderingsmgr.clearAll([opt_single_canvaslayer]);
+			return;
+		}
 
 		const ci = this.getCustomizationObject();
 		if (ci == null) {
@@ -734,6 +743,11 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		const ic = ci.instances["infoclass"];
 		if (ic) {
 			ic.clearinfo(opt_source_id);
+		}
+
+		// Clear up SIMPLE tablet mode preselected feature
+		if (this.tabletFeatPreSelection.isActive) {
+			this.tabletFeatPreSelection.reset();
 		}
 
 		if (opt_clear_temp_also) {

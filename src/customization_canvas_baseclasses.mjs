@@ -365,7 +365,7 @@ export class Info {
 
 		// if on tablet mode SIMPLE, pass current features to editing manager
 		const editmgr = this.mapctx.getEditingManager();
-		if (editmgr != null && editmgr.isEditingEnabled() && this.mapctx.tabletFeatPreSelection.isActive) {
+		if (editmgr != null && this.mapctx.tabletFeatPreSelection.isActive) {
 			editmgr.setCurrentEditFeatures(p_feature_dict);
 		}
 
