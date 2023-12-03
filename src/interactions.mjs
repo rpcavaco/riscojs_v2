@@ -874,7 +874,7 @@ class InfoTool extends BaseTool {
 					break;
 
 				case 'mousemove':
-					// if in tablet mode, igonore mouse move for info / maptip purposes
+					// if in tablet mode SIMPLE, ignore mouse move for info / maptip purposes
 					if (p_mapctx.tabletFeatPreSelection.isActive) {
 						ret = false;
 						break;

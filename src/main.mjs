@@ -88,10 +88,10 @@ export class RiscoMapOverlay {
 	 * @param {string} p_ctx_id - Identification of this context eg: 'left', 'right', 'single', 'base', etc.
 	 * @param {string} p_mode - Just 'canvas' for now
 	 * @param {boolean} b_wait_for_customization_avail - Flag - if true, customizations must be completely inited before first refresh of map
-	 * @param {boolean} b_in_tabletmode - Flag to activate 'tablet mode'
+	 * @param {string} p_tabletmode - Activate 'tablet mode': null or 'SIMPLE'
 	 * @returns - the context just created
 	 */
-	newMapCtx(p_config_var, p_ctx_id, p_mode, b_wait_for_customization_avail, b_in_tabletmode) {
+	newMapCtx(p_config_var, p_ctx_id, p_mode, b_wait_for_customization_avail, p_tabletmode) {
 
 		if (p_config_var == null) {
 			throw new Error("Class RiscoMapOverlay, newMapCtx, null config_var");
@@ -100,7 +100,7 @@ export class RiscoMapOverlay {
 			throw new Error("Class RiscoMapOverlay, newMapCtx, null context id");
 		}	
 
-		this.mapcontexts[p_ctx_id] = new RiscoMapCtx(p_config_var, this.panelwidget, p_mode, b_wait_for_customization_avail, b_in_tabletmode);
+		this.mapcontexts[p_ctx_id] = new RiscoMapCtx(p_config_var, this.panelwidget, p_mode, b_wait_for_customization_avail, p_tabletmode);
 
 		return this.mapcontexts[p_ctx_id];
 	}
@@ -171,6 +171,7 @@ class tabletFeatPreSelectionMgr {
 	}
 
 }
+
 /**
  * Class RiscoMapCtx
  * 
@@ -178,7 +179,10 @@ class tabletFeatPreSelectionMgr {
  * 
  * @param {object} p_config_var - Variable object containing configuration JSON dictionary
  * @param {object} p_paneldiv 	- String Id or object reference to HTML DIV element to act as RiscoJS map panel
- * 
+ * @param {string} p_mode - Just 'canvas' for now
+ * @param {string} p_tabletmode - Activate 'tablet mode': null or 'SIMPLE'
+ * @param {boolean} b_wait_for_customization_avail - Flag - if true, customizations must be completely inited before first refresh of map
+ * @param {string} p_tabletmode - Activate 'tablet mode': null or 'SIMPLE'
  */
 export class RiscoMapCtx {
 
@@ -193,7 +197,7 @@ export class RiscoMapCtx {
 	_timeout_ids = {};
 
 	// p_mode -- just 'canvas' for now
-	constructor(p_config_var, p_paneldiv, p_mode, b_wait_for_customization_avail, b_in_tabletmode) {
+	constructor(p_config_var, p_paneldiv, p_mode, b_wait_for_customization_avail, p_tabletmode) {
 
 		this.wait_for_customization_avail = b_wait_for_customization_avail;
 
@@ -226,10 +230,10 @@ export class RiscoMapCtx {
 
 		this.graphicsmode = p_mode;
 
-		// Tablet mode (tabletFeatPreSelection activated): changes mouse and touch interaction with features
+		// Tablet mode SIMPLE (tabletFeatPreSelection activated): changes mouse and touch interaction with features
 		// Keeps selected layer key and associated selected feature id
 		this.tabletFeatPreSelection = new tabletFeatPreSelectionMgr();
-		if (b_in_tabletmode) {
+		if (p_tabletmode == "SIMPLE") {
 			this.tabletFeatPreSelection.activate(true);
 		}
 
