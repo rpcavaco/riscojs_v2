@@ -247,7 +247,7 @@ export class RiscoMapCtx {
 
 		this.featureCollection = new FeatureCollection(this);
 		this.transformmgr = new Transform2DMgr(this, p_config_var["basic"]);	
-		this.toolmgr = new ToolManager(p_config_var["basic"]);
+		this.toolmgr = new ToolManager(this, p_config_var["basic"]);
 		this.tocmgr = new TOCManager(this, p_mode);
 		this.i18n = new I18n(p_config_var["text"]);
 		this.touchevtctrlr = new TouchController();
@@ -826,16 +826,16 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		}
 	}
 
-	setEditingEnabled(p_editing_is_enabled) {
+	setSimplePointEditingEnabled(p_editing_is_enabled) {
 
 		const ci = this.getCustomizationObject();
 		if (ci == null) {
-			throw new Error("setEditingEnabled, no customization object found")
+			throw new Error("setSimplePointEditingEnabled, no customization object found")
 		}
 
 		const ic = ci.instances["editing"];
 		if (ic) {
-			ic.setEditingEnabled(this, p_editing_is_enabled);
+			ic.setSimplePointEditingEnabled(this, p_editing_is_enabled);
 		}
 	}
 

@@ -8,7 +8,7 @@ export class BaseTool {
 	#enabled_flag = false;
 	start_time = null;
 	name = 'BaseTool';
-	constructor(p_joinstogglegroup, opt_defaultintoggle) {
+	constructor(p_mapctx, p_joinstogglegroup, opt_defaultintoggle) {
 		this.joinstogglegroup = p_joinstogglegroup;
 		if (this.joinstogglegroup) {
 			if (opt_defaultintoggle == null) {
@@ -16,12 +16,12 @@ export class BaseTool {
 			} else {
 				this.defaultintoggle = opt_defaultintoggle;
 				if (opt_defaultintoggle) {
-					this.enabled = true;
+					this.setEnabled(p_mapctx, true);
 				}
 			}
 		} else {
 			this.defaultintoggle = false;
-			this.enabled = true;
+			this.setEnabled(p_mapctx, true);
 		}
 	}
 
@@ -32,11 +32,17 @@ export class BaseTool {
 		return false;
 	}
 
-	set enabled(p_flag_value) {
+
+	setEnabled(p_mapctx, p_flag_value) {
 		
 		if (GlobalConst.getDebug("TOOLENABLE")) {
 			console.trace("[DBG:TOOLENABLE] enabled:", p_flag_value);
 		}
+
+		// if disabling and not already disabled ... 
+		if (!p_flag_value && this.#enabled_flag != p_flag_value && this['cleanUp'] !== undefined) {
+			this.cleanUp(p_mapctx);
+		}		
 
 		this.#enabled_flag = p_flag_value;
 	}
@@ -55,8 +61,8 @@ export class BaseTool {
 class DefaultTool extends BaseTool {
 
 	name = 'DefaultTool';
-	constructor() {
-		super(false);
+	constructor(p_mapctx) {
+		super(p_mapctx, false, false);
 	}
 
 	onEvent(p_mapctx, p_evt) {
@@ -552,8 +558,8 @@ class wheelEventCtrller {
 class MultiTool extends BaseTool {
 
 	name = 'MultiTool';
-	constructor() {
-		super(false, false); // not part of general toggle group, surely not default in toogle
+	constructor(p_mapctx) {
+		super(p_mapctx, false, false); // not part of general toggle group, surely not default in toogle
 		this.start_screen = null;
 		this.pending_pinch = null;
 		this.imgs_dict={};		
@@ -788,8 +794,8 @@ class InfoTool extends BaseTool {
 	pickpanel_active;
 	fixedtippanel_active;
 	toc_collapsed;
-	constructor() {
-		super(true, true); // part of general toggle group, default in toogle
+	constructor(p_mapctx) {
+		super(p_mapctx, true, true); // part of general toggle group, default in toogle
 		this.pickpanel_active = false;
 		this.fixedtippanel_active = false;
 		this.toc_collapsed = false;
@@ -803,13 +809,28 @@ class InfoTool extends BaseTool {
 	setTocCollapsed(p_is_collapsed) {
 		this.toc_collapsed = p_is_collapsed;
 	}
+	
+	cleanUp(p_mapctx) {
+
+		const ci = p_mapctx.getCustomizationObject();
+		if (ci == null) {
+			console.warn("[WARN] InfoTool cleanup, customization instance is missing - inocuous warning at startup")
+		} else {
+			const ic = ci.instances["infoclass"];
+			if (ic) {
+				console.log("INFO CLEANUP b");
+				ic.clearinfo(p_mapctx, 'INFOTOOLCLEANUP');
+			}
+		
+		}	
+	}
 
 	onEvent(p_mapctx, p_evt) {
 
 		let mxdist, ret = false; 
 		const ci = p_mapctx.getCustomizationObject();
 		if (ci == null) {
-			throw new Error("InfoTool, customization instance is missing")
+			throw new Error("InfoTool onEvent, customization instance is missing")
 		}
 
 		const ic = ci.instances["infoclass"];
@@ -850,7 +871,6 @@ class InfoTool extends BaseTool {
 				console.log("[DBG:INTERACTIONOUT] INFOTOOL, mouseout");
 			}				
 
-			let meth;
 			switch(p_evt.type) {
 
 				case 'touchstart':
@@ -967,8 +987,8 @@ class SimplePointEditTool extends BaseTool {
 	canvaslayer = 'interactive_viz';
 	toc_collapsed;
 	editmanager;
-	constructor() {
-		super(true, false); // part of general toggle group, default in toogle
+	constructor(p_mapctx) {
+		super(p_mapctx, true, false); // part of general toggle group, default in toogle
 		this.toc_collapsed = false;
 		this.editmanager = null;
 	}
@@ -983,13 +1003,32 @@ class SimplePointEditTool extends BaseTool {
 	}
 
 	setEditingManager(p_edit_manager) {
-		console.info("[init RISCO] SimplePointEditTool, edit manager is set");
-		this.editmanager = p_edit_manager;
+		if (p_edit_manager) {
+			console.info("[init RISCO] SimplePointEditTool, edit manager is set");
+			this.editmanager = p_edit_manager;
+		} else {
+			throw new Error("setEditingManager, no edit manager passed");
+		}
+	}
+
+	async init(p_mapctx) {
+
+		if (this.editmanager == null) {
+			throw new Error("SimplePointEditTool, mandatory previous use of 'setEditingManager' has not happened");
+		}
+
+		if (p_mapctx.tabletFeatPreSelection.isSet) {
+			const featid = this.setCurrentEditFeatures(p_mapctx.tabletFeatPreSelection.get());
+
+			if (featid) {
+				await p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, featid, {'normal': 'temporary', 'label': 'temporary' });		
+			}
+		}	
 	}
 
 	clearCanvas(p_mapctx, p_source_id) {
 
-		if (p_source_id == 'TOC' || p_source_id == 'TOCMGR') {
+		/*if (p_source_id == 'TOC' || p_source_id == 'TOCMGR') {
 			return;
 		}
 
@@ -997,8 +1036,8 @@ class SimplePointEditTool extends BaseTool {
 		const canvas_dims = [];		
 	
 		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
-		gfctx.clearRect(0, 0, ...canvas_dims); 		
-	}
+		gfctx.clearRect(0, 0, ...canvas_dims); 		*/
+	} 
 
 	hover(p_mapctx, p_feature_dict, p_scrx, p_scry){
 		console.log("tool hover", p_feature_dict);
@@ -1060,7 +1099,7 @@ class SimplePointEditTool extends BaseTool {
 					}
 
 					mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-					ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, false, {"hover": ic.hover.bind(ic)}, ic.clearinfo.bind(ic));
+					//ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, false, {"hover": ic.hover.bind(ic)}, ic.clearinfo.bind(ic));
 					break;
 
 			}
@@ -1083,9 +1122,8 @@ class MeasureTool extends BaseTool {
 	name = 'MeasureTool';
 	accumdist;
 	prevpt;
-	constructor() {
-		// TODO - remove default in toogle
-		super(true, true); // part of general toggle group, default in toogle
+	constructor(p_mapctx) {
+		super(p_mapctx, true, false); // part of general toggle group, default in toogle
 		this.accumdist = 0;
 		this.prevpt = null;
 	}
@@ -1145,7 +1183,7 @@ export class ToolManager {
 	maptools;
 	mapcontrolmgrs;
 
-	constructor(p_mapctx_config_var) {
+	constructor(p_mapctx, p_mapctx_config_var) {
 
 		if (p_mapctx_config_var == null) {
 			throw new Error("Class ToolManager, null mapctx_config_var");
@@ -1154,20 +1192,20 @@ export class ToolManager {
 		this.basic_config = p_mapctx_config_var;
 
 		// this.maptools = [new DefaultTool(), new MultiTool()];
-		this.maptools = [new MultiTool()];
+		this.maptools = [new MultiTool(p_mapctx)];
 		this.mapcontrolmgrs = [];
 		
 		if (p_mapctx_config_var["togglable_tools"] !== undefined) {
 			for (let i=0; i<p_mapctx_config_var["togglable_tools"].length; i++) {
 				switch (p_mapctx_config_var["togglable_tools"][i]) {
 					case "InfoTool":
-						this.addTool(new InfoTool());
+						this.addTool(new InfoTool(p_mapctx));
 						break;
 					case "MeasureTool":
-						this.addTool(new MeasureTool());
+						this.addTool(new MeasureTool(p_mapctx));
 						break;
 					case "SimplePointEditTool":
-						this.addTool(new SimplePointEditTool());
+						this.addTool(new SimplePointEditTool(p_mapctx));
 						break;
 					}
 			}
@@ -1183,27 +1221,44 @@ export class ToolManager {
 	}
 
 	setEditingManager(p_editmgr) {
+
+		if (p_editmgr == null) {
+			throw new Error("Class ToolManager, setEditingManager, null instance passed");
+		}
+
 		this.editmgr = p_editmgr;
+
+		for (const t of this.maptools) {
+			if (t['setEditingManager'] !== undefined && t.editmanager == null) {
+				t.setEditingManager(this.editmgr);
+				console.info(`[INFO] Delayed setting of edit mgr. for tool '${t.name}' is now completed`);
+			}
+		}
+
 	}
 
 	addTool(p_toolinstance) {
+
 		if (p_toolinstance == null) {
 			throw new Error("Class ToolManager, addTool, null tool instance passed");
 		}	
 
 		const existing_classnames = [], classname = p_toolinstance.constructor.name;
 		if (!(p_toolinstance instanceof BaseTool)) {
-			throw new Error(`Class ToolManager, addTool, tool is not a BaseTool instance: ${classname}`);
+			throw new Error(`Class ToolManager, addTool, tool is not a BaseTool instance: ${p_toolinstance.name}`);
 		}	
 		
 		if (p_toolinstance['setEditingManager'] !== undefined) {
-			p_toolinstance.setEditingManager(this.editmgr);
-
+			if (this.editmgr) {
+				p_toolinstance.setEditingManager(this.editmgr);
+			} else {
+				console.warn(`[WARN] ToolManager, no edit manager YET available for '${p_toolinstance.name}'; later when 'ToolManager.setEditingManager' will be called it will also set edit mgr. for this tool.`);
+			}
 		}
 
 		for (let i=0; i<this.maptools.length; i++) {
 			if (existing_classnames.indexOf(this.maptools[i].constructor.name) >= 0) {
-				throw new Error(`Class ToolManager, addTool, found duplicate tool instance of: ${this.maptools[i].constructor.name}`);
+				throw new Error(`Class ToolManager, addTool, found duplicate tool instance of: ${this.maptools[i].name}`);
 			}
 			existing_classnames.push(this.maptools[i].constructor.name); 
 		}	
@@ -1228,25 +1283,25 @@ export class ToolManager {
 		return foundtool;	
 	}
 
-	enableDefaultToolInToggleGroup() {
+	enableDefaultToolInToggleGroup(p_mapctx) {
 		for (let j=0; j<this.maptools.length; j++) {
 			if (!this.maptools[j].joinstogglegroup) {
 				continue;
 			}
 			if (this.maptools[j].defaultintoggle) {
-				this.maptools[j].enabled = true;
+				this.maptools[j].setEnabled(p_mapctx, true);
 			} else {
-				this.maptools[j].enabled = false;
+				this.maptools[j].setEnabled(p_mapctx, false);
 			}
 		}		
 	}
 
-	enableTool(p_classname, p_do_enable) {
+	enableTool(p_mapctx, p_classname, p_do_enable) {
 
 		let foundtool = this.findTool(p_classname);
 
 		if (foundtool == null) {
-			return;
+			return null;
 		}
 
 		if (GlobalConst.getDebug("TOOLENABLE")) {
@@ -1254,7 +1309,7 @@ export class ToolManager {
 		}		
 
 		if (!foundtool.joinstogglegroup) {
-			foundtool.enabled = p_do_enable;
+			foundtool.setEnabled(p_do_enable);
 		} else {
 			if (p_do_enable) {
 
@@ -1262,41 +1317,26 @@ export class ToolManager {
 				for (let j=0; j<this.maptools.length; j++) {
 					if (!this.maptools[j].joinstogglegroup) {
 						continue;
-					}
-					this.maptools[j].enabled = false;
+					}		
+					this.maptools[j].setEnabled(p_mapctx, false);
 				}	
 
 				// enable chosen tool
-				foundtool.enabled = true;	
+				foundtool.setEnabled(p_mapctx, true);	
 
 			} else {
-				let do_continue = true;
 
-				// Check if tool to disable is default in toggle group, in that case, stop
+				// Enable default tool, keeping all others disabled
 				for (let j=0; j<this.maptools.length; j++) {
-					if (this.maptools[j].defaultintoggle) {
-						if (this.maptools[j].constructor.name == p_classname) {
-							do_continue = false;
-							break;
-						}
+					if (!this.maptools[j].joinstogglegroup) {
+						continue;
 					}
-				}
-
-				// Dsiable all in toggle group and enable default tools
-				if (do_continue) {
-					for (let j=0; j<this.maptools.length; j++) {
-						if (!this.maptools[j].joinstogglegroup) {
-							continue;
-						}
-						if (this.maptools[j].defaultintoggle) {
-							this.maptools[j].enabled = true;
-						} else {
-							this.maptools[j].enabled = false;
-						}
-					}
+					this.maptools[j].setEnabled(p_mapctx, this.maptools[j].defaultintoggle);
 				}
 			}
 		}
+
+		return foundtool;
 	}
 
 	// event procedes from mxOnEvent

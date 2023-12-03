@@ -31,7 +31,7 @@ export class EditingMgr extends MapPrintInRect {
 	std_boxdims;
 	// active_mode;
 
-	#current_edit_features;
+	#current_edit_feature;
 
 	constructor(p_mapctx, p_editable_layers, p_other_widgets) {
 
@@ -71,7 +71,7 @@ export class EditingMgr extends MapPrintInRect {
 		this.print_attempts = 0;
 		this.had_prev_interaction = false;
 
-		this.#current_edit_features = null;
+		this.#current_edit_feature = null;
 
 		p_mapctx.toolmgr.setEditingManager(this);
 	}
@@ -199,7 +199,7 @@ export class EditingMgr extends MapPrintInRect {
 						}
 
 						// Toggle edit mode
-						this.setEditingEnabled(p_mapctx, !this.isEditingEnabled());
+						this.setSimplePointEditingEnabled(p_mapctx, !this.isEditingEnabled());
 						this.print(p_mapctx);
 	
 						break;
@@ -291,7 +291,7 @@ export class EditingMgr extends MapPrintInRect {
 		return this.#editing_layer_key;
 	}	
 
-	setEditingLayer(p_mapctx) {
+	defineEditingLayer(p_mapctx) {
 
 		const work_layerkeys = [], editables= {};
 		let lyr, constraints = null;
@@ -311,7 +311,7 @@ export class EditingMgr extends MapPrintInRect {
 		const sz = lyrks.length;
 		if (sz == 0) {
 
-			console.error("setEditingLayer: no editable layers, check all layer 'layereditable' attribute in layer config");
+			console.error("defineEditingLayer: no editable layers, check all layer 'layereditable' attribute in layer config");
 
 		} else if (sz > 1) {
 
@@ -342,31 +342,28 @@ export class EditingMgr extends MapPrintInRect {
 
 	}
 	
-	setEditingEnabled(p_mapctx, p_editing_tobe_enabled) {
+	setSimplePointEditingEnabled(p_mapctx, p_editing_tobe_enabled) {
 		
 		if (p_editing_tobe_enabled) {
 			if(this.precheckCanEditStatus()) {
 
-				this.setEditingLayer(p_mapctx);
+				this.defineEditingLayer(p_mapctx);
 
 				// adicionar presel feats
-				if (p_mapctx.tabletFeatPreSelection.isSet) {
-					this.setCurrentEditFeatures(p_mapctx.tabletFeatPreSelection.get());
-				}	
-				
 				if (!this.checkCanEditStatus(true)) {
 					throw new Error("Cannot enable editing");
 				}
 				this.#editing_is_enabled = true;
 
 				// ativar tool
-				p_mapctx.toolmgr.enableTool('SimplePointEditTool', true);
-
+				const tool = p_mapctx.toolmgr.enableTool(p_mapctx, 'SimplePointEditTool', true);
+				tool.init(p_mapctx);
+			
 			}		
 		} else {
 
 			// desativar tool
-			p_mapctx.toolmgr.enableTool('SimplePointEditTool', false);
+			p_mapctx.toolmgr.enableTool(p_mapctx, 'SimplePointEditTool', false);
 
 			this.#editing_is_enabled = false;
 		}		
@@ -376,8 +373,31 @@ export class EditingMgr extends MapPrintInRect {
 		return this.#editing_is_enabled;
 	}
 	
-	setCurrentEditFeatures(p_feat_dict) {
-		console.log(p_feat_dict);
-		this.#current_edit_features = p_feat_dict;
+	setCurrentEditFeature(p_feat_dict) {
+
+		const fd_keys = Object.keys(p_feat_dict);
+
+		let ret_id = null;
+
+		if (fd_keys.length == 0) {
+			console.warn("[WARN] setCurrentEditFeature, empty feat dict passed");
+			return;
+		}
+
+		if (p_feat_dict[this.editingLayerKey] === undefined) {
+			throw new Error(`editing layer ${this.editingLayerKey} not in edit features ${fd_keys}`);
+		}
+
+		if (p_feat_dict[this.editingLayerKey].length == 0) {
+			console.warn(`[WARN] setCurrentEditFeature, feat dict with no elements for editing layer '${this.editingLayerKey}'`);
+			return;
+		} else if (p_feat_dict[this.editingLayerKey].length > 1) {
+			throw new Error(`setCurrentEditFeature, feat dict with MORE THAN ONE element for editing layer '${this.editingLayerKey}'`);
+		} else {
+			ret_id = this.#current_edit_feature = p_feat_dict[this.editingLayerKey][0];
+		}
+		
+		return ret_id;
+
 	}
 }
