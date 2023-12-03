@@ -55,6 +55,10 @@ class DefaultTool extends BaseTool {
 			console.log("[DBG:INTERACTION] DEFTOOL, evt.type:", p_evt.type);
 		}
 
+		if (GlobalConst.getDebug("INTERACTIONOUT") && p_evt.type == "mouseout") {
+			console.log("[DBG:INTERACTIONOUT] DEFTOOL, mouseout");
+		}		
+		
 		if (p_evt.type == 'mousemove') {
 			p_mapctx.printMouseCoords(p_evt.offsetX, p_evt.offsetY);
 			ret = true;
@@ -655,6 +659,10 @@ class MultiTool extends BaseTool {
 			console.log("[DBG:INTERACTIONCLICKEND] MULTITOOL onEvent evt.type:", p_evt.type);
 		}
 
+		if (GlobalConst.getDebug("INTERACTIONOUT") && p_evt.type == "mouseout") {
+			console.log("[DBG:INTERACTIONOUT] MULTITOOL, mouseout");
+		}		
+
 		try {
 			orig = null;
 			switch(p_evt.type) {
@@ -825,6 +833,10 @@ class InfoTool extends BaseTool {
 			if (GlobalConst.getDebug("INTERACTIONCLICKEND") && ["touchstart", "touchend", "mousedown", "mouseup", "mouseleave", "mouseout"].indexOf(p_evt.type) >= 0) {
 				console.log("[DBG:INTERACTIONCLICKEND] INFOTOOL onEvent evt.type:", p_evt.type, "insideactivepanel:", insideainfoboxpanel, "insidefixedtippanel:", insidefixedtippanel);
 			}
+
+			if (GlobalConst.getDebug("INTERACTIONOUT") && p_evt.type == "mouseout") {
+				console.log("[DBG:INTERACTIONOUT] INFOTOOL, mouseout");
+			}				
 
 			let meth;
 			switch(p_evt.type) {
@@ -1201,6 +1213,10 @@ export class ToolManager {
 					if (GlobalConst.getDebug("INTERACTIONCLICKEND") && clickendevents.indexOf(p_evt.type) >= 0) {
 						console.log("[DBG:INTERACTIONCLICKEND] ToolManager tool", this.maptools[i].name, "onEvent, returned:", _ret, "togglegrp:", this.maptools[i].joinstogglegroup);
 					}
+
+					if (GlobalConst.getDebug("INTERACTIONOUT") && p_evt.type == "mouseout") {
+						console.log("[DBG:INTERACTIONOUT] ToolManager, mouseout tool", this.maptools[i].name, "onEvent, returned:", _ret, "togglegrp:", this.maptools[i].joinstogglegroup);
+					}	
 
 					if (_ret && this.maptools[i].joinstogglegroup) {
 						toggletool_already_interacted = true;

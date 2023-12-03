@@ -551,9 +551,16 @@ export class Info {
 			return;
 		}
 
+		if (GlobalConst.getDebug("INTERACTIONCLEAR")) {
+			console.log(`[DBG:INTERACTIONCLEAR] clearinfo, source:'${p_source_id}', this.callout:${this.callout}, this.ibox:${this.ibox}`);
+		}	
+
 		let panels_exist = false;
 
 		if (this.callout) {
+
+			// if in tablet SIMPLE mode, reset feature preselection (on clearing its tooltip) 
+			this.mapctx.tabletFeatPreSelection.reset();
 
 			this.callout.tipclear();
 			panels_exist = true;

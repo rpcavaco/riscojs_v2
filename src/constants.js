@@ -15,7 +15,7 @@ var GlobalConst = {
 	//
 	// User-serviceable, change with caution
 	// ------------------------------------------------------------------------
-	DEBUG: "INTERACTIONCLEAR",    // ALL, GEOM, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, VECTLOAD, RISCOFEATS, FEATMOUSESEL, INTERACTION, INTERACTIONCLICKEND, INTERACTIONCLEAR, none
+	DEBUG: "none",    // ALL, GEOM, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, VECTLOAD, RISCOFEATS, FEATMOUSESEL, INTERACTION, INTERACTIONCLICKEND, INTERACTIONCLEAR, INTERACTIONOUT, none
 	FEATMOUSESEL_MAXDIST_1K: 2, // Max distance of graphic selection with mouse, meters at 1:1000 scale
 	MARKERSIZE_SCALEFACTOR: 10.0,
 	IMGRELOAD_TIMEOUT_MSEC: 2000,  // Image loading time after which original request is discarded and a new image load is attempted 
