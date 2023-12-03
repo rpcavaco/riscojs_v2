@@ -238,6 +238,22 @@ export class EditingMgr extends MapPrintInRect {
 		return ret;
 	} 
 
+	precheckCanEditStatus() {
+		let ret = true;
+		if (this.#current_user == null) {
+			console.error("checkEditionStatus: no current user");
+			// TODO - REMOVE COMMENT !! ret = false;
+		};
+		if (!this.#current_user_canedit) {
+			console.error("checkEditionStatus: current user cannot edit");
+			// TODO - REMOVE COMMENT !! ret = false;
+		};		
+		
+		console.info("[INFO] is PRE edit status OK?:", ret);
+
+		return ret;
+	}
+
 	checkCanEditStatus(b_before_enable_editing) {
 		let ret = true;
 		if (this.#current_user == null) {
@@ -253,7 +269,7 @@ export class EditingMgr extends MapPrintInRect {
 			ret = false;
 		};	
 		if (this.#editing_layer_key == null) {
-			console.error("checkEditionStatus: not editing layer key defined");
+			console.error("checkEditionStatus: no editing layer key defined");
 			ret = false;
 		};	
 		
@@ -326,14 +342,32 @@ export class EditingMgr extends MapPrintInRect {
 
 	}
 	
-	setEditingEnabled(p_mapctx, p_editing_is_enabled) {
+	setEditingEnabled(p_mapctx, p_editing_tobe_enabled) {
 		
-		if (p_editing_is_enabled) {
-			this.setEditingLayer(p_mapctx);
-			if(this.checkCanEditStatus(true)) {
+		if (p_editing_tobe_enabled) {
+			if(this.precheckCanEditStatus()) {
+
+				this.setEditingLayer(p_mapctx);
+
+				// adicionar presel feats
+				if (p_mapctx.tabletFeatPreSelection.isSet) {
+					this.setCurrentEditFeatures(p_mapctx.tabletFeatPreSelection.get());
+				}	
+				
+				if (!this.checkCanEditStatus(true)) {
+					throw new Error("Cannot enable editing");
+				}
 				this.#editing_is_enabled = true;
+
+				// ativar tool
+				p_mapctx.toolmgr.enableTool('SimplePointEditTool', true);
+
 			}		
 		} else {
+
+			// desativar tool
+			p_mapctx.toolmgr.enableTool('SimplePointEditTool', false);
+
 			this.#editing_is_enabled = false;
 		}		
 	}	

@@ -1291,7 +1291,7 @@ export class MapCustomizations {
 			"mapscaleprint": new MapScalePrint(),
 			"loadingmsgprint": new LoadingPrint(),
 			"attributionprint": ap,
-			"overlay": new OverlayMgr(this.mapctx)
+			"overlay": new OverlayMgr()
 			// "analysis": new AnalysisMgr([ap]),
 			// "navigator": nav,
 			// "slicing": new SlicingPanel()

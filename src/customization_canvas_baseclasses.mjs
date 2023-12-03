@@ -361,18 +361,12 @@ export class Info {
 		return true;
 	}
 
-	hover(p_feature_dict, p_scrx, p_scry) {
-
-		// if on tablet mode SIMPLE, pass current features to editing manager
-		const editmgr = this.mapctx.getEditingManager();
-		if (editmgr != null && this.mapctx.tabletFeatPreSelection.isActive) {
-			editmgr.setCurrentEditFeatures(p_feature_dict);
-		}
+	hover(p_mapctx, p_feature_dict, p_scrx, p_scry) {
 
 		return this._showCallout(p_feature_dict, p_scrx, p_scry, true);
 	}
 
-	pick(p_feature_dict, p_scrx, p_scry) {
+	pick(p_mapctx, p_feature_dict, p_scrx, p_scry) {
 
 		let ret = false, opentippanel = false, layerklist = Object.keys(p_feature_dict);
 
@@ -386,12 +380,12 @@ export class Info {
 
 			if (this._showCallout(p_feature_dict, p_scrx, p_scry, false)) {
 		
-				const ci = this.mapctx.getCustomizationObject();
+				const ci = p_mapctx.getCustomizationObject();
 				if (ci == null) {
 					throw new Error("Info.pick, map context customization instance is missing")
 				}
 	
-				const itool = this.mapctx.toolmgr.findTool("InfoTool");
+				const itool = p_mapctx.toolmgr.findTool("InfoTool");
 				if (itool) {
 					itool.setFixedtipPanelActive(true);					
 				}
@@ -401,16 +395,16 @@ export class Info {
 			}
 
 		} else {
-			ret = this.pickfeature(layerklist[0], p_feature_dict[layerklist[0]][0], p_scrx, p_scry)
+			ret = this.pickfeature(p_mapctx, layerklist[0], p_feature_dict[layerklist[0]][0], p_scrx, p_scry)
 		}
 
 		return ret;
 
 	}
 
-	pickfeature(p_layerkey, p_feature, p_scrx, p_scry) {
+	pickfeature(p_mapctx, p_layerkey, p_feature, p_scrx, p_scry) {
 
-		const currlayer = this.mapctx.tocmgr.getLayer(p_layerkey);
+		const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
 		if (currlayer["infocfg"] === undefined) {
 			throw new Error(`Missing 'infocfg' config for layer '${p_layerkey}, cannot 'pick' features`);
 		}
@@ -423,7 +417,7 @@ export class Info {
 
 		if (currlayer["infocfg"]["function"] !== undefined) {
 
-			const ic = this.mapctx.getCustomizationObject().interactivity_ctrlr;
+			const ic = p_mapctx.getCustomizationObject().interactivity_ctrlr;
 
 			return currlayer["infocfg"]["function"](ic, p_layerkey, p_feature);
 
@@ -497,7 +491,7 @@ export class Info {
 			ret = true;
 
 			const that = this;
-			const lyr = this.mapctx.tocmgr.getLayer(p_layerkey);
+			const lyr = p_mapctx.tocmgr.getLayer(p_layerkey);
 	
 			// done - [MissingFeat 0002] - Obter este URL de configs
 			fetch(currlayer.url + "/doget", {
@@ -508,25 +502,25 @@ export class Info {
 			.then(
 				function(responsejson) {
 					// console.log("cust_canvas_baseclasses:828 - antes criação InfoBox");
-					const ctx = that.mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
-					const currlayer = that.mapctx.tocmgr.getLayer(p_layerkey);
-					that.ibox = new InfoBox(that.mapctx, that.mapctx.imgbuffer, currlayer, responsejson, that.styles, p_scrx, p_scry, Info.infobox_pick, Info.expand_image, ctx, that.max_textlines_height);
+					const ctx = p_mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
+					const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
+					that.ibox = new InfoBox(p_mapctx, p_mapctx.imgbuffer, currlayer, responsejson, that.styles, p_scrx, p_scry, Info.infobox_pick, Info.expand_image, ctx, that.max_textlines_height);
 					that.ibox.infoclear();
 					that.ibox.infodraw();	
 
-					const ci = that.mapctx.getCustomizationObject();
+					const ci = p_mapctx.getCustomizationObject();
 					if (ci == null) {
 						throw new Error("Info.pickfeature, map context customization instance is missing")
 					}
 			
 					const toc = ci.instances["toc"];
-					const itool = that.mapctx.toolmgr.findTool("InfoTool");
+					const itool = p_mapctx.toolmgr.findTool("InfoTool");
 					if (itool) {
 						itool.setPickPanelActive(true);					
-						itool.setTocCollapsed(toc.collapse(that.mapctx, 'INFO'));
+						itool.setTocCollapsed(toc.collapse(p_mapctx, 'INFO'));
 						for (let wdgk of ci.mapcustom_controlsmgrs_keys) {
 							if ( ci.instances[wdgk] !== undefined && ci.instances[wdgk]['collapse'] !== undefined) {
-								ci.instances[wdgk].collapse(that.mapctx);
+								ci.instances[wdgk].collapse(p_mapctx);
 							}
 						}
 					}
@@ -545,7 +539,7 @@ export class Info {
 
 	} 
 
-	clearinfo(p_source_id) {
+	clearinfo(p_mapctx, p_source_id) {
 
 		if (p_source_id == 'TOC' || p_source_id == 'TOCMGR') {
 			return;
@@ -560,7 +554,7 @@ export class Info {
 		if (this.callout) {
 
 			// if in tablet SIMPLE mode, reset feature preselection (on clearing its tooltip) 
-			this.mapctx.tabletFeatPreSelection.reset();
+			p_mapctx.tabletFeatPreSelection.reset();
 
 			this.callout.tipclear();
 			panels_exist = true;
@@ -574,28 +568,28 @@ export class Info {
 
 		if (panels_exist) {
 
-			const ci = this.mapctx.getCustomizationObject();
+			const ci = p_mapctx.getCustomizationObject();
 			if (ci == null) {
 				throw new Error("Info.pick, map context customization instance is missing");
 			}
 	
 			const toc = ci.instances["toc"];
-			const itool = this.mapctx.toolmgr.findTool("InfoTool");
+			const itool = p_mapctx.toolmgr.findTool("InfoTool");
 			if (itool) {
 				if (itool.getAnyPanelActive()) {
 					itool.setAllPanelsInactive();					
 				}
 				if (toc.isCollapsed()) {
-					itool.setTocCollapsed(toc.inflate(this.mapctx, 'INFO'));
+					itool.setTocCollapsed(toc.inflate(p_mapctx, 'INFO'));
 					for (let wdgk of ci.mapcustom_controlsmgrs_keys) {
 						if ( ci.instances[wdgk] !== undefined && ci.instances[wdgk]['inflate'] !== undefined) {
-							ci.instances[wdgk].inflate(this.mapctx);
+							ci.instances[wdgk].inflate(p_mapctx);
 						}
 					}					
 				}
 			}
 			//console.trace("clear all temporary");
-			this.mapctx.renderingsmgr.clearAll(['transientmap', 'transientviz', 'temporary']);
+			p_mapctx.renderingsmgr.clearAll(['transientmap', 'transientviz', 'temporary']);
 
 
 		}
@@ -605,8 +599,8 @@ export class Info {
 	}
 
 	// To be called from map context 'clearInteractions' method
-	customizClearInteractions() {
-		this.clearinfo("FROM_CLEARINTERACTIONS");
+	customizClearInteractions(p_mapctx) {
+		this.clearinfo(p_mapctx, "FROM_CLEARINTERACTIONS");
 	}
 
 	interactFixedtip(p_evt) {
@@ -627,21 +621,17 @@ export class Info {
 export class OverlayMgr {
 
 	canvaslayer = 'overlay_canvas';
-	mapctx;
 	is_active = false;
 	box = null;
-	constructor (p_mapctx) {
-		this.mapctx = p_mapctx;
-	}
 
-	clear() {
+	clear(p_mapctx) {
 
 		this.is_active = false;
 
-		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 
 		const mapdims = [];
-		this.mapctx.renderingsmgr.getCanvasDims(mapdims);
+		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
 
 		ctx.clearRect(0, 0, ...mapdims); 
 
@@ -649,19 +639,19 @@ export class OverlayMgr {
 	}
 
 	// To be called from map context 'clearInteractions' method
-	customizClearInteractions() {
-		this.clear();
+	customizClearInteractions(p_mapctx) {
+		this.clear(p_mapctx);
 	}
 
-	drawImage(p_imageobj) {
+	drawImage(p_mapctx, p_imageobj) {
 
 		this.is_active = true;
-		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 
 		ctx.save();
 
 		const mapdims = [];
-		this.mapctx.renderingsmgr.getCanvasDims(mapdims);
+		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
 
 		const rm = mapdims[0] / mapdims[1];
 		const ri = p_imageobj.width / p_imageobj.height;
@@ -693,7 +683,7 @@ export class OverlayMgr {
 		ctx.shadowOffsetX = 2; // integer
 		ctx.shadowOffsetY = 2; // integer
 		ctx.shadowBlur = 2; 
-		ctx.fillText(this.mapctx.i18n.msg('CLKIMG2CLOSE', false), mapdims[0]/2.0, oy+h-20);
+		ctx.fillText(p_mapctx.i18n.msg('CLKIMG2CLOSE', false), mapdims[0]/2.0, oy+h-20);
 
 		ctx.restore();
 	}

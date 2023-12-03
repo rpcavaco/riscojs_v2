@@ -5,9 +5,8 @@ import {dist2D} from './geom.mjs';
 
 export class BaseTool {
 
-	enabled = true;
+	#enabled_flag = false;
 	start_time = null;
-	editmanager = null;
 	name = 'BaseTool';
 	constructor(p_joinstogglegroup, opt_defaultintoggle) {
 		this.joinstogglegroup = p_joinstogglegroup;
@@ -16,9 +15,13 @@ export class BaseTool {
 				this.defaultintoggle = false;
 			} else {
 				this.defaultintoggle = opt_defaultintoggle;
+				if (opt_defaultintoggle) {
+					this.enabled = true;
+				}
 			}
 		} else {
 			this.defaultintoggle = false;
+			this.enabled = true;
 		}
 	}
 
@@ -29,8 +32,17 @@ export class BaseTool {
 		return false;
 	}
 
-	setEditingManager(p_edit_manager) {
-		this.editmanager = p_edit_manager;
+	set enabled(p_flag_value) {
+		
+		if (GlobalConst.getDebug("TOOLENABLE")) {
+			console.trace("[DBG:TOOLENABLE] enabled:", p_flag_value);
+		}
+
+		this.#enabled_flag = p_flag_value;
+	}
+
+	get enabled() {
+		return this.#enabled_flag;
 	}
 
 	concludePendingAction(p_mapctx, p_evt) {
@@ -407,12 +419,12 @@ async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_i
 
 			ret_dir_interact = false;
 			if (usesel != null && Object.keys(usesel).length > 0) {
-				ret_dir_interact = opt_actonselfeat_dict[mode](usesel, p_scrx, p_scry);
+				ret_dir_interact = opt_actonselfeat_dict[mode](p_mapctx, usesel, p_scrx, p_scry);
 			} 
 
 			if (!ret_dir_interact && p_is_end_event) {
 				if (opt_clearafterselfeat) {
-					opt_clearafterselfeat('INTERACTSRVLYR');
+					opt_clearafterselfeat(p_mapctx, 'INTERACTSRVLYR');
 				}			
 			} 
 		}
@@ -882,7 +894,7 @@ class InfoTool extends BaseTool {
 					break;
 
 				case 'mouseout':
-					ic.clearinfo('INFOTOOL_MOUSEOUT');
+					ic.clearinfo(p_mapctx, 'INFOTOOL_MOUSEOUT');
 					break;
 
 				case 'mousemove':
@@ -894,7 +906,7 @@ class InfoTool extends BaseTool {
 					if (!this.getAnyPanelActive()) {
 						if (ic.hover !== undefined) {
 
-							ic.clearinfo('INFOTOOL_MOUSEMOVE');
+							ic.clearinfo(p_mapctx, 'INFOTOOL_MOUSEMOVE');
 		
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
 							ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, false, {"hover": ic.hover.bind(ic)}, ic.clearinfo.bind(ic));
@@ -948,6 +960,123 @@ class InfoTool extends BaseTool {
 	}	
 
 }
+
+class SimplePointEditTool extends BaseTool {
+
+	name = 'SimplePointEditTool';
+	canvaslayer = 'interactive_viz';
+	toc_collapsed;
+	editmanager;
+	constructor() {
+		super(true, false); // part of general toggle group, default in toogle
+		this.toc_collapsed = false;
+		this.editmanager = null;
+	}
+
+	static mouseselMaxdist(p_mapctx) {
+		const mscale = p_mapctx.getScale();
+		return GlobalConst.FEATMOUSESEL_MAXDIST_1K * mscale / 1000.0;
+	}
+
+	setTocCollapsed(p_is_collapsed) {
+		this.toc_collapsed = p_is_collapsed;
+	}
+
+	setEditingManager(p_edit_manager) {
+		console.info("[init RISCO] SimplePointEditTool, edit manager is set");
+		this.editmanager = p_edit_manager;
+	}
+
+	clearCanvas(p_mapctx, p_source_id) {
+
+		if (p_source_id == 'TOC' || p_source_id == 'TOCMGR') {
+			return;
+		}
+
+		const gfctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const canvas_dims = [];		
+	
+		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+		gfctx.clearRect(0, 0, ...canvas_dims); 		
+	}
+
+	hover(p_mapctx, p_feature_dict, p_scrx, p_scry){
+		console.log("tool hover", p_feature_dict);
+	}
+
+	pick(p_mapctx, p_feature_dict, p_scrx, p_scry) {
+		console.log("tool pick", p_feature_dict);
+	}
+
+	onEvent(p_mapctx, p_evt) {
+
+		let mxdist, ret = false; 
+
+		try {
+	
+			if (GlobalConst.getDebug("INTERACTION")) {
+				console.log("[DBG:INTERACTION] SIMPLEPTEDITTOOL onEvent evt.type:", p_evt.type);
+			}
+			if (GlobalConst.getDebug("INTERACTIONCLICKEND") && ["touchstart", "touchend", "mousedown", "mouseup", "mouseleave", "mouseout"].indexOf(p_evt.type) >= 0) {
+				console.log("[DBG:INTERACTIONCLICKEND] SIMPLEPTEDITTOOL onEvent evt.type:", p_evt.type);
+			}
+
+			if (GlobalConst.getDebug("INTERACTIONOUT") && p_evt.type == "mouseout") {
+				console.log("[DBG:INTERACTIONOUT] SIMPLEPTEDITTOOL, mouseout");
+			}				
+
+			switch(p_evt.type) {
+
+				/*case 'touchstart':
+				case 'mousedown':
+					if (insidefixedtippanel || insideainfoboxpanel) {
+						ret = true; 
+					}
+					break; */
+
+				case 'touchend':
+				case 'mouseup':
+
+					mxdist = this.constructor.mouseselMaxdist(p_mapctx);
+					ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, true, 
+						{
+							"hover": this.hover.bind(this),
+							"pick": this.pick.bind(this)
+
+						},
+						this.clearCanvas.bind(this));
+				
+					break;
+
+				case 'mouseout':
+					this.clearCanvas.bind(this);
+					break;
+
+				case 'mousemove':
+					// if in tablet mode SIMPLE, ignore mouse move for info / maptip purposes
+					if (p_mapctx.tabletFeatPreSelection.isActive) {
+						ret = false;
+						break;
+					}
+
+					mxdist = this.constructor.mouseselMaxdist(p_mapctx);
+					ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, false, {"hover": ic.hover.bind(ic)}, ic.clearinfo.bind(ic));
+					break;
+
+			}
+		} catch(e) {
+			console.error(e);
+		}  
+
+		// has this tool interacted with event ?
+		return ret;
+		
+	}	
+
+
+
+}
+
 
 class MeasureTool extends BaseTool {
 
@@ -1037,6 +1166,9 @@ export class ToolManager {
 					case "MeasureTool":
 						this.addTool(new MeasureTool());
 						break;
+					case "SimplePointEditTool":
+						this.addTool(new SimplePointEditTool());
+						break;
 					}
 			}
 		}	
@@ -1064,7 +1196,10 @@ export class ToolManager {
 			throw new Error(`Class ToolManager, addTool, tool is not a BaseTool instance: ${classname}`);
 		}	
 		
-		p_toolinstance.setEditingManager(this.editmgr);
+		if (p_toolinstance['setEditingManager'] !== undefined) {
+			p_toolinstance.setEditingManager(this.editmgr);
+
+		}
 
 		for (let i=0; i<this.maptools.length; i++) {
 			if (existing_classnames.indexOf(this.maptools[i].constructor.name) >= 0) {
@@ -1088,9 +1223,22 @@ export class ToolManager {
 			}
 		}	
 		if (foundtool == null) {
-			throw new Error(`Class ToolManager, no instance of '${p_classname}' was found.`);
+			throw new Error(`Class ToolManager, no instance of '${p_classname}' was found. Must add it to 'togglable_tools' in basic config`);
 		}
 		return foundtool;	
+	}
+
+	enableDefaultToolInToggleGroup() {
+		for (let j=0; j<this.maptools.length; j++) {
+			if (!this.maptools[j].joinstogglegroup) {
+				continue;
+			}
+			if (this.maptools[j].defaultintoggle) {
+				this.maptools[j].enabled = true;
+			} else {
+				this.maptools[j].enabled = false;
+			}
+		}		
 	}
 
 	enableTool(p_classname, p_do_enable) {
@@ -1100,6 +1248,10 @@ export class ToolManager {
 		if (foundtool == null) {
 			return;
 		}
+
+		if (GlobalConst.getDebug("TOOLENABLE")) {
+			console.info("[DBG:TOOLENABLE] enableTool, tool:", foundtool.name, "enabled:", p_do_enable);
+		}		
 
 		if (!foundtool.joinstogglegroup) {
 			foundtool.enabled = p_do_enable;

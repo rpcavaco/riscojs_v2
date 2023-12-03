@@ -736,13 +736,13 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		for (let k in ci.instances) {
 			if (ci.instances[k]["customizClearInteractions"] !== undefined) {
-				ci.instances[k].customizClearInteractions();
+				ci.instances[k].customizClearInteractions(this);
 			}
 		}
 
 		const ic = ci.instances["infoclass"];
 		if (ic) {
-			ic.clearinfo(opt_source_id);
+			ic.clearinfo(this, opt_source_id);
 		}
 
 		// Clear up SIMPLE tablet mode preselected feature
