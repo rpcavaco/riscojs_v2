@@ -553,8 +553,10 @@ export class Info {
 
 		if (this.callout) {
 
-			// if in tablet SIMPLE mode, reset feature preselection (on clearing its tooltip) 
-			p_mapctx.tabletFeatPreSelection.reset();
+			// reset feature preselection for tablet SIMPLE mode (if ective) (on clearing its tooltip, etc. except when changing from INFO to other tool) 
+			if (p_source_id != "INFOTOOLCLEANUP") {
+				p_mapctx.tabletFeatPreSelection.reset();
+			}
 
 			this.callout.tipclear();
 			panels_exist = true;

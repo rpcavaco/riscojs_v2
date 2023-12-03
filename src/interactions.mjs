@@ -818,7 +818,6 @@ class InfoTool extends BaseTool {
 		} else {
 			const ic = ci.instances["infoclass"];
 			if (ic) {
-				console.log("INFO CLEANUP b");
 				ic.clearinfo(p_mapctx, 'INFOTOOLCLEANUP');
 			}
 		
@@ -1018,10 +1017,9 @@ class SimplePointEditTool extends BaseTool {
 		}
 
 		if (p_mapctx.tabletFeatPreSelection.isSet) {
-			const featid = this.setCurrentEditFeatures(p_mapctx.tabletFeatPreSelection.get());
-
-			if (featid) {
-				await p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, featid, {'normal': 'temporary', 'label': 'temporary' });		
+			const feat = this.editmanager.setCurrentEditFeature(p_mapctx.tabletFeatPreSelection.get());
+			if (feat) {
+				await p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, feat.id, {'normal': 'temporary', 'label': 'temporary' });		
 			}
 		}	
 	}
