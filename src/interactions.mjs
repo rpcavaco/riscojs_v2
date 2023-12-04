@@ -984,7 +984,7 @@ class InfoTool extends BaseTool {
 class SimplePointEditTool extends BaseTool {
 
 	name = 'SimplePointEditTool';
-	canvaslayer = 'interactive_viz';
+	canvaslayers = ['temporary'];
 	toc_collapsed;
 	editmanager;
 	constructor(p_mapctx) {
@@ -1017,6 +1017,7 @@ class SimplePointEditTool extends BaseTool {
 			throw new Error("SimplePointEditTool, mandatory previous use of 'setEditingManager' has not happened");
 		}
 
+		// If tabletFeatPreSelection is set, meaning tablet mode SIMPLE is enabled and there is a presel feature
 		if (p_mapctx.tabletFeatPreSelection.isSet) {
 			const feat = this.editmanager.setCurrentEditFeature(p_mapctx.tabletFeatPreSelection.get());
 			if (feat) {
@@ -1027,42 +1028,62 @@ class SimplePointEditTool extends BaseTool {
 
 	clearCanvas(p_mapctx, p_source_id) {
 
-		/*if (p_source_id == 'TOC' || p_source_id == 'TOCMGR') {
+		if (p_source_id == 'TOC' || p_source_id == 'TOCMGR') {
 			return;
 		}
 
-		const gfctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
-		const canvas_dims = [];		
-	
+		let gfctx;
+		const canvas_dims = [];			
 		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
-		gfctx.clearRect(0, 0, ...canvas_dims); 		*/
+
+		for (const cl of this.canvaslayers) {
+			gfctx = p_mapctx.renderingsmgr.getDrwCtx(cl, '2d');
+			gfctx.clearRect(0, 0, ...canvas_dims); 	
+		}
 	} 
 
 	hover(p_mapctx, p_feature_dict, p_scrx, p_scry){
 
-		const layerklist = Object.keys(p_feature_dict);
-		const ret = true;
+		let feat, layerklist, doDrawFeat = false, ret = null;
 
-		if (ret) {
-			p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDIT", {'normal': 'temporary', 'label': 'temporary' })
+		// If tabletFeatPreSelection is active, meaning tablet mode SIMPLE is enabled, lets act as pick method
+		if (p_mapctx.tabletFeatPreSelection.isActive) {
+			feat = this.editmanager.setCurrentEditFeature(p_feature_dict);
+			if (feat!=null) {
+				doDrawFeat = true;
+			}
+		} else {
+			doDrawFeat = true;
 		}
 
-		console.log("tool hover", p_feature_dict);
+		if (doDrawFeat) {
+			layerklist = Object.keys(p_feature_dict);
+			ret = p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDIT", {'normal': 'temporary', 'label': 'temporary' });	
+		}
+
+		return ret;
 	}
 
 	pick(p_mapctx, p_feature_dict, p_scrx, p_scry) {
 
-		const layerklist = Object.keys(p_feature_dict);
-		const ret = true;
+		let feat, layerklist, doDrawFeat = false;
 
-		if (ret) {
-			p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDIT", {'normal': 'temporary', 'label': 'temporary' })
+		// If NOT tabletFeatPreSelection is active, meaning tablet mode is DISBALED, lets act as expected in pick method
+		if (!p_mapctx.tabletFeatPreSelection.isActive) {
+			feat = this.editmanager.setCurrentEditFeature(p_feature_dict);
+			if (feat) {
+				doDrawFeat = true;
+			}
 		}
 
-		console.log("tool pick", p_feature_dict);
+		if (doDrawFeat) {
+			layerklist = Object.keys(p_feature_dict);
+			p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDIT", {'normal': 'temporary', 'label': 'temporary' });	
+		}
+		
 	}
 
-	onEvent(p_mapctx, p_evt) {
+	async onEvent(p_mapctx, p_evt) {
 
 		let mxdist, ret = false; 
 
@@ -1099,7 +1120,7 @@ class SimplePointEditTool extends BaseTool {
 
 						},
 						this.clearCanvas.bind(this));
-				
+
 					break;
 
 				case 'mouseout':

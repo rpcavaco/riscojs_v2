@@ -531,11 +531,23 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				Object.assign(lsymb, opt_geomtype_keyed_symbdict['label']);
 			}
 
+			if (GlobalConst.getDebug("DRAWASSELECTED")) {
+				console.log(`[DBG:DRAWASSELECTED] drawSingleFeature graphicsymb: ${JSON.stringify(symb)}, label: ${JSON.stringify(lsymb)}`);
+				console.log(`[DBG:DRAWASSELECTED] drawSingleFeature lkey:${p_layer_key}, oid:${p_obj_id}, canvaskeys:${JSON.stringify(opt_alt_canvaskeys_dict)}`);
+			}
+
 			return new Promise((resolve,reject) => {
 				const env = [];
 				this.getMapBounds(env);
 				this.featureCollection.featuredraw(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict, { "graphic": symb, 'label': lsymb }, null, env ).then(
-					(feat) => { resolve(feat); }
+					(feat) => { 
+
+						if (GlobalConst.getDebug("DRAWASSELECTED")) {
+							console.log(`[DBG:DRAWASSELECTED] drawSingleFeature featuredraw, feat!=null: ${feat!=null}`);
+						}
+
+						resolve(feat); 
+					}
 				).catch((e) => {
 					reject(e);
 				});
@@ -589,6 +601,12 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			d[ly.geomtype] = ly.selectionsymbol;
 			hlStyles = mergeDeep(hlStyles, d);
 		}
+
+		if (GlobalConst.getDebug("DRAWASSELECTED")) {
+			console.log(`[DBG:DRAWASSELECTED] drawFeatureAsMouseSelected hstyles: ${JSON.stringify(hlStyles)}`);
+		}
+
+		//drawSingleFeature(p_layer_key, p_obj_id, b_is_sel, opt_geomtype_keyed_symbdict, opt_alt_canvaskeys_dict) {
 
 		return this.drawSingleFeature(p_layer_key, p_obj_id, true, hlStyles, opt_alt_canvaskeys_dict);
 	}

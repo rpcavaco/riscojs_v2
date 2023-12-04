@@ -377,7 +377,7 @@ export class EditingMgr extends MapPrintInRect {
 
 		const fd_keys = Object.keys(p_feat_dict);
 
-		let ret_id = null;
+		let ret = null;
 
 		if (fd_keys.length == 0) {
 			console.warn("[WARN] setCurrentEditFeature, empty feat dict passed");
@@ -394,10 +394,11 @@ export class EditingMgr extends MapPrintInRect {
 		} else if (p_feat_dict[this.editingLayerKey].length > 1) {
 			throw new Error(`setCurrentEditFeature, feat dict with MORE THAN ONE element for editing layer '${this.editingLayerKey}'`);
 		} else {
-			ret_id = this.#current_edit_feature = p_feat_dict[this.editingLayerKey][0];
+			this.#current_edit_feature = p_feat_dict[this.editingLayerKey][0];
+			ret = this.#current_edit_feature;
 		}
 		
-		return ret_id;
+		return ret;
 
 	}
 }
