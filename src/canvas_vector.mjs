@@ -146,7 +146,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	
 	canvasKey = 'normal';
 	canvasKeyLabels = 'label';
-	default_symbol;	
+	default_symbol = "none";	
 	default_sel_symbol = "none";	
 	varstyles_symbols = [];
 	msgsdict = {};
@@ -323,6 +323,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				// _GLOBAL_SAVE_RESTORE_CTR++;
 				try {
 					opt_symb.setStyle(this._gfctx);
+
 					opt_symb.drawsymb(p_mapctxt, this, pt);
 					ret_promise = Promise.resolve();
 				} finally {

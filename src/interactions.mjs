@@ -197,7 +197,7 @@ async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_i
 						} else {
 							canvas_layers = {'normal': 'transientmap', 'label': 'transientmap' };
 						}
-						p_mapctx.drawSingleFeature(foundly.key, sqrid, GlobalConst.DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB, false, canvas_layers);
+						p_mapctx.drawSingleFeature(foundly.key, sqrid, false, GlobalConst.DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB, canvas_layers);
 					} catch (e) {
 						console.error(`[DBG:FEATMOUSESEL] feature error '${e}'`);
 					}
@@ -255,7 +255,7 @@ async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_i
 								canvas_layers = {'normal': 'transientmap', 'label': 'transientmap' };
 							}
 
-							p_mapctx.drawSingleFeature(to_lyrk, r, GlobalConst.DEBUG_FEATMOUSESEL_SELUNDERMASK_SYMB, false, canvas_layers);
+							p_mapctx.drawSingleFeature(to_lyrk, r, false, GlobalConst.DEBUG_FEATMOUSESEL_SELUNDERMASK_SYMB, canvas_layers);
 						}
 					}
 				}
@@ -321,7 +321,7 @@ async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_i
 
 					let f;
 					for (let id of findings[lyrk].ids) {
-						feat = await p_mapctx.drawFeatureAsMouseSelected(lyrk, id, canvas_layers);
+						feat = await p_mapctx.drawFeatureAsMouseSelected(lyrk, id, "NORMAL", canvas_layers);
 						if (feat!=null && opt_actonselfeat_ok) {
 
 							if (feats[lyrk] === undefined) {
@@ -1019,7 +1019,7 @@ class SimplePointEditTool extends BaseTool {
 		if (p_mapctx.tabletFeatPreSelection.isSet) {
 			const feat = this.editmanager.setCurrentEditFeature(p_mapctx.tabletFeatPreSelection.get());
 			if (feat) {
-				await p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, feat.id, {'normal': 'temporary', 'label': 'temporary' });		
+				await p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, feat.id, "EDIT", {'normal': 'temporary', 'label': 'temporary' });		
 			}
 		}	
 	}

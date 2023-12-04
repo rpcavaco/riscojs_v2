@@ -15,7 +15,7 @@ var GlobalConst = {
 	//
 	// User-serviceable, change with caution
 	// ------------------------------------------------------------------------
-	DEBUG: "none",    // ALL, GEOM, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, VECTLOAD, RISCOFEATS, FEATMOUSESEL, INTERACTION, INTERACTIONCLICKEND, INTERACTIONCLEAR, INTERACTIONOUT, TOOLENABLE, none
+	DEBUG: "none",    // ALL, GEOM, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, VECTLOAD, RISCOFEATS, FEATMOUSESEL, INTERACTION, INTERACTIONCLICKEND, INTERACTIONCLEAR, INTERACTIONOUT, TOOLENABLE, DYNSYMBOLOGY, none
 	FEATMOUSESEL_MAXDIST_1K: 2, // Max distance of graphic selection with mouse, meters at 1:1000 scale
 	MARKERSIZE_SCALEFACTOR: 10.0,
 	IMGRELOAD_TIMEOUT_MSEC: 2000,  // Image loading time after which original request is discarded and a new image load is attempted 
@@ -93,10 +93,30 @@ var GlobalConst = {
 			"lineWidth": 2
 		},
 		"point" : { 
-			"fillStyle": "#11fbff2f",
-			"strokeStyle": "#62efff",
+			"marker": "circle",
+			"markersize": 3,
+			"fillStyle": "none",
+			"strokeStyle": "yellow",
+			"lineWidth": 4
+		}
+	},
+
+	FEATMOUSESEL_HIGHLIGHT_EDIT: {
+		"poly" : { 
+			"fillStyle": "#11fbff7f",
+			"strokeStyle": "#11caff",
+			"lineWidth": 2
+		 },
+		"line" : { 
+			"strokeStyle": "#11fbff",
+			"lineWidth": 2
+		},
+		"point" : { 
+			"marker": "diamond",
+			"fillStyle": "none",
+			"strokeStyle": "#ff2020",
 			"lineWidth": 3,
-			"markersize": 4
+			"markersize": 6
 		}
 	},
 

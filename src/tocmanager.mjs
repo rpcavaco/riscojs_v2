@@ -13,7 +13,7 @@ class DynamicLayer {
    }
 }
 
-class DynamicSymbol {
+export class DynamicSymbol {
 	// p_mode: only 'canvas' for now
     constructor (p_mode, p_classkey, opt_variablesymb_idx, opts) {
 		try {
@@ -238,17 +238,23 @@ export class TOCManager {
 
 				} else {
 
-					let classkey;
+					let classkey, subclasskey;
 					if (currentLayer.marker !== undefined && currentLayer.marker != "none") { 
 						classkey = currentLayer.marker;
 					} else {
 						classkey = currentLayer.geomtype;
+					}
+					if (GlobalConst.getDebug("DYNSYMBOLOGY")) {
+						console.log(`[DBG:DYNSYMBOLOGY] Default symbol '${p_layerkey}' mode:'${this.mode}' classkey:'${classkey}'  currlyr_mrkr:'${currentLayer.marker}'`);
 					}
 					currentLayer.default_symbol = new DynamicSymbol(this.mode, classkey);
 					scaneables.push(currentLayer.default_symbol);	
 
 					if (p_layercfg_entry.varstyles) {
 						for (let vi=0; vi<p_layercfg_entry.varstyles.length; vi++) {	
+							if (GlobalConst.getDebug("DYNSYMBOLOGY")) {
+								console.log(`[DBG:DYNSYMBOLOGY] Varstyle symbol '${p_layerkey}' varstyle:${vi} mode:'${this.mode}' classkey:'${classkey}'`);
+							}
 							currentLayer.varstyles_symbols[vi] = new DynamicSymbol(this.mode, classkey, vi);
 							scaneables.push(currentLayer.varstyles_symbols[vi]);
 						}
@@ -257,12 +263,22 @@ export class TOCManager {
 					if (p_layercfg_entry["selectionsymbol"] !== undefined) {
 
 						if (p_layercfg_entry["selectionsymbol"]["marker"] !== undefined && p_layercfg_entry["selectionsymbol"]["marker"] != "none") { 
-							classkey = p_layercfg_entry["selectionsymbol"]["marker"];
+							subclasskey = p_layercfg_entry["selectionsymbol"]["marker"];
 						} else {
-							classkey = currentLayer.geomtype;
+							subclasskey = currentLayer.geomtype;
 						}
 
-						currentLayer.default_sel_symbol = new DynamicSymbol(this.mode, classkey);
+						if (subclasskey == "point") {
+							subclasskey  = classkey;
+						}
+
+						if (GlobalConst.getDebug("DYNSYMBOLOGY")) {
+							console.log(`[DBG:DYNSYMBOLOGY] Default SEL symbol '${p_layerkey}' mode:'${this.mode}' classkey:'${classkey}'  subclasskey:'${subclasskey}'`);
+						}
+						currentLayer.default_sel_symbol = new DynamicSymbol(this.mode, subclasskey);
+						if (GlobalConst.getDebug("DYNSYMBOLOGY")) {
+							console.log(currentLayer.default_sel_symbol);
+						}						
 						scaneables.push(currentLayer.selectionsymbol);		
 					}
 				}

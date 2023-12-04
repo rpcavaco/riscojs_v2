@@ -78,8 +78,8 @@ export class GrSymbol {
 }
 
 const strokeSymbolMixin = (Base) => class extends Base {
-	strokeStyle;
-	lineWidth;	
+	strokeStyle = "none";
+	lineWidth = "none";	
 	lineDash = [];
 }
 
@@ -110,7 +110,7 @@ const labelSymbolMixin = (Base) => class extends Base {
 }
 
 const fillSymbolMixin = (Base) => class extends Base {
-	fillStyle;
+	fillStyle = "none";
 }
 
 export class CanvasLineSymbol extends labelSymbolMixin(strokeSymbolMixin(GrSymbol)) { 
@@ -185,7 +185,7 @@ export class CanvasPolygonSymbol extends labelSymbolMixin(fillSymbolMixin(stroke
 }
 
 class MarkerSymbol extends labelSymbolMixin(GrSymbol) {
-	markersize; 
+	markersize = 1; 
 	position_shift = [];
 	iconmarkervalue = "none";
 	_variablesymb_idx;
@@ -201,6 +201,7 @@ class MarkerSymbol extends labelSymbolMixin(GrSymbol) {
 		return this._variablesymb_idx;
 	}	
 	drawsymb(p_mapctxt, p_layer, p_coords) {
+		console.trace("MarkerSymbol: calling abstract 'drawsymb'");
 		// asbtract, to be implemented by subclasses
 	}
 	
@@ -213,6 +214,7 @@ export class CanvasVertCross extends strokeSymbolMixin(MarkerSymbol) {
 	constructor(opt_variablesymb_idx) {
 		super(opt_variablesymb_idx);
 		this.symbname = "VertCross";
+		this.marker = "vertcross";
 	}
 	drawsymb(p_mapctxt, p_layer, p_coords) {
 
@@ -251,6 +253,7 @@ export class CanvasCircle extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol
 	constructor(opt_variablesymb_idx) {
 		super(opt_variablesymb_idx);
 		this.symbname = "Circle";
+		this.marker = "circle";
 	}
 	drawsymb(p_mapctxt, p_layer, p_coords) {
 
@@ -308,6 +311,7 @@ export class CanvasConcentricCircles extends fillSymbolMixin(strokeSymbolMixin(M
 	constructor(opt_variablesymb_idx) {
 		super(opt_variablesymb_idx);
 		this.symbname = "ConcentricCircles";
+		this.marker = "conc_circles";
 	}
 	drawsymb(p_mapctxt, p_layer, p_coords) {
 
@@ -372,6 +376,7 @@ export class CanvasDiamond extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbo
 	constructor(opt_variablesymb_idx) {
 		super(opt_variablesymb_idx);
 		this.symbname = "Diamond";
+		this.marker = "diamond";
 	}
 	drawsymb(p_mapctxt, p_layer, p_coords) {
 
@@ -433,6 +438,7 @@ export class CanvasSquare extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol
 	constructor(opt_variablesymb_idx) {
 		super(opt_variablesymb_idx);
 		this.symbname = "Square";
+		this.marker = "square";
 	}
 
 	drawsymb(p_mapctxt, p_layer, p_coords) {
@@ -497,6 +503,7 @@ export class CanvasIcon extends MarkerSymbol {
 	constructor(opt_variablesymb_idx) {
 		super(opt_variablesymb_idx);
 		this.symbname = "Icon";
+		this.marker = "icon";
 	}
 
 	drawsymbAsync(p_mapctxt, p_layer, p_coords, p_args, b_from_dataurl) {
