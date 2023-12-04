@@ -321,7 +321,8 @@ async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_i
 
 					let f;
 					for (let id of findings[lyrk].ids) {
-						feat = await p_mapctx.drawFeatureAsMouseSelected(lyrk, id, "NORMAL", canvas_layers);
+						feat = p_mapctx.featureCollection.get(lyrk, id)
+						// feat = await p_mapctx.drawFeatureAsMouseSelected(lyrk, id, "NORMAL", canvas_layers);
 						if (feat!=null && opt_actonselfeat_ok) {
 
 							if (feats[lyrk] === undefined) {
@@ -1038,10 +1039,26 @@ class SimplePointEditTool extends BaseTool {
 	} 
 
 	hover(p_mapctx, p_feature_dict, p_scrx, p_scry){
+
+		const layerklist = Object.keys(p_feature_dict);
+		const ret = true;
+
+		if (ret) {
+			p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDIT", {'normal': 'temporary', 'label': 'temporary' })
+		}
+
 		console.log("tool hover", p_feature_dict);
 	}
 
 	pick(p_mapctx, p_feature_dict, p_scrx, p_scry) {
+
+		const layerklist = Object.keys(p_feature_dict);
+		const ret = true;
+
+		if (ret) {
+			p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDIT", {'normal': 'temporary', 'label': 'temporary' })
+		}
+
 		console.log("tool pick", p_feature_dict);
 	}
 

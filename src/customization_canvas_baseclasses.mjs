@@ -363,7 +363,14 @@ export class Info {
 
 	hover(p_mapctx, p_feature_dict, p_scrx, p_scry) {
 
-		return this._showCallout(p_feature_dict, p_scrx, p_scry, true);
+		const layerklist = Object.keys(p_feature_dict);
+		const ret = this._showCallout(p_feature_dict, p_scrx, p_scry, true);
+
+		if (ret) {
+			p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "NORMAL", {'normal': 'temporary', 'label': 'temporary' })
+		}
+
+		return ret;
 	}
 
 	pick(p_mapctx, p_feature_dict, p_scrx, p_scry) {
@@ -398,8 +405,11 @@ export class Info {
 			ret = this.pickfeature(p_mapctx, layerklist[0], p_feature_dict[layerklist[0]][0], p_scrx, p_scry)
 		}
 
-		return ret;
+		if (ret) {
+			p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "NORMAL", {'normal': 'temporary', 'label': 'temporary' })
+		}
 
+		return ret;
 	}
 
 	pickfeature(p_mapctx, p_layerkey, p_feature, p_scrx, p_scry) {

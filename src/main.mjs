@@ -555,6 +555,10 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		let hlStyles, basestyle, layercfgkey;
 
+		if (GlobalConst.getDebug("DRAWASSELECTED")) {
+			console.trace(`[DBG:DRAWASSELECTED]`);
+		}
+
 		switch (p_mode) {
 
 			case "NORMAL":

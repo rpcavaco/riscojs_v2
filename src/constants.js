@@ -15,7 +15,7 @@ var GlobalConst = {
 	//
 	// User-serviceable, change with caution
 	// ------------------------------------------------------------------------
-	DEBUG: "none",    // ALL, GEOM, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, VECTLOAD, RISCOFEATS, FEATMOUSESEL, INTERACTION, INTERACTIONCLICKEND, INTERACTIONCLEAR, INTERACTIONOUT, TOOLENABLE, DYNSYMBOLOGY, none
+	DEBUG: "none",    // ALL, GEOM, I18N, LAYERS, WMS, DISENG_WHEEL, AGSMAP, AGSQRY, IMGLOAD, VECTLOAD, RISCOFEATS, FEATMOUSESEL, INTERACTION, INTERACTIONCLICKEND, INTERACTIONCLEAR, INTERACTIONOUT, TOOLENABLE, DYNSYMBOLOGY, DRAWASSELECTED, none
 	FEATMOUSESEL_MAXDIST_1K: 2, // Max distance of graphic selection with mouse, meters at 1:1000 scale
 	MARKERSIZE_SCALEFACTOR: 10.0,
 	IMGRELOAD_TIMEOUT_MSEC: 2000,  // Image loading time after which original request is discarded and a new image load is attempted 
@@ -114,9 +114,9 @@ var GlobalConst = {
 		"point" : { 
 			"marker": "diamond",
 			"fillStyle": "none",
-			"strokeStyle": "#ff2020",
+			"strokeStyle": "#20ffff",
 			"lineWidth": 3,
-			"markersize": 6
+			"markersize": 8
 		}
 	},
 
