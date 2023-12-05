@@ -1068,7 +1068,7 @@ class SimplePointEditTool extends BaseTool {
 			ret = p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });	
 		}
 
-		console.log("hover");
+		console.log("hover, doDrawFeat:", doDrawFeat);
 
 		return ret;
 	}

@@ -161,6 +161,40 @@ class tabletFeatPreSelectionMgr {
 		}
 	}
 
+	/*
+	featsAreEqualtoSetFeat(p_feats_dict) {
+
+		let objks, res = true;
+
+		if (this.#active) {
+			res = true;
+			objks = Object.keys(this.#feats_dict);
+			for (let k in p_feats_dict) {
+				if (p_feats_dict.hasOwnProperty(k)) {
+					if (objks.indexOf(k) < 0) {
+						res = false;
+						break;
+					}
+					for (const from_feat of p_feats_dict[k]) {
+						for (const to_feat of this.#feats_dict[k]) {
+							if (from_feat.id != to_feat.id) {
+								res = false;
+								break;								
+							}
+						}
+						if (!res) {
+							break;
+						}
+					}
+				}
+
+			}
+		}
+
+		return res;
+	}
+	*/
+
 	get isSet() {
 		let ret = false;
 		if (this.#active) {
@@ -584,8 +618,9 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				break;
 
 			case "EDITENGAGE":
-				layercfgkey = "editsymbol_engaged"				
-				basestyle = mergeDeep(GlobalConst.FEATMOUSESEL_HIGHLIGHT_EDIT["selected"], GlobalConst.FEATMOUSESEL_HIGHLIGHT_EDIT["engaged"]);
+				layercfgkey = "editsymbol_engaged"	
+				basestyle = {}			
+				mergeDeep(basestyle, GlobalConst.FEATMOUSESEL_HIGHLIGHT_EDIT["selected"], GlobalConst.FEATMOUSESEL_HIGHLIGHT_EDIT["engaged"]);
 				break;
 		
 			default:
