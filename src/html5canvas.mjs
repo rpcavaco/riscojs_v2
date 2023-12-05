@@ -249,6 +249,86 @@
 				createImageBitmap(p_imgdata_dict[key]).then(f);
 			}
 		}
+	}
+	
+	drawSimpleMarker(p_ctx, p_rendering_coords_pt, p_canvas_key, p_symb, opt_dim) {
+
+		if (p_rendering_coords_pt.length != 2 || typeof p_rendering_coords_pt[0] != 'number') {
+			console.error("pc:", p_rendering_coords_pt);
+			throw new Error("drawSimpleMarker, p_rendering_coords_pt doesn't contain point");
+		}
+
+		let ret_promise = null, ctx=null;
+
+		try {
+			ctx = this.canvases[p_canvas_key].getContext('2d');
+			ctx.save();
+			// _GLOBAL_SAVE_RESTORE_CTR++;
+			p_symb.drawSimpleSymb(p_ctx, p_rendering_coords_pt, opt_dim);
+			ret_promise = Promise.resolve();
+
+		} catch(e) {
+			console.error(this,  p_rendering_coords_pt);
+			console.error(p_symb);
+			console.log("error:", e)
+			throw e;
+		} finally {
+			if (ctx) {
+/* 					_GLOBAL_SAVE_RESTORE_CTR--;
+				if (_GLOBAL_SAVE_RESTORE_CTR < 0) {
+					console.log("Neg _GLOBAL_SAVE_RESTORE_CTR, canvas_vector drawMarker drawsymb:", _GLOBAL_SAVE_RESTORE_CTR);
+				} */
+				ctx.restore();
+			}
+		}
+
+	}
+
+	drawSimpleMarkerAsync(p_ctx, p_rendering_coords_pt, p_canvas_key, p_symb, p_img_buffer, p_imgnamekey, p_imgurl, p_dim, b_from_dataurl) {
+
+		if (p_rendering_coords_pt.length != 2 || typeof p_rendering_coords_pt[0] != 'number') {
+			console.error("pc:", p_rendering_coords_pt);
+			return Promise.reject(new Error("drawSimpleMarkerAsync, p_rendering_coords_pt doesn't contain point"));
+		}
+
+		let ret_promise = null, ctx="";
+
+		try {
+
+			ctx = this.canvases[p_canvas_key].getContext('2d');
+			ctx.save();
+
+			ret_promise = new Promise((resolve, reject) => {
+				p_symb.drawSimpleSymbAsync(p_ctx, p_img_buffer, p_rendering_coords_pt, p_imgnamekey, p_imgurl, p_dim, b_from_dataurl).then(
+					() => {
+						resolve();
+					}
+				).catch((e) => {
+					reject(e);
+				});
+			});
+
+		} catch(e) {
+			console.error(this,  p_rendering_coords_pt);
+			console.error(p_symb);
+			console.log("error:", e)
+			throw e;
+		} finally {
+			if (ctx) {
+		/* 					_GLOBAL_SAVE_RESTORE_CTR--;
+				if (_GLOBAL_SAVE_RESTORE_CTR < 0) {
+					console.log("Neg _GLOBAL_SAVE_RESTORE_CTR, canvas_vector drawMarker drawsymb:", _GLOBAL_SAVE_RESTORE_CTR);
+				} */
+				ctx.restore();
+			}
+		}
+
+		if (ret_promise) {
+			return ret_promise;
+		} else {
+			return Promise.reject(new Error("internal error, drawSimpleMarkerAsync, no promise received"));
+		}
+			
 	}	
 }	
 

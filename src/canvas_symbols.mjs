@@ -534,6 +534,101 @@ export class CanvasIcon extends MarkerSymbol {
 		this.marker = "icon";
 	}
 
+	drawSimpleSymbAsync(p_ctx, p_imgbuffer, p_coords, p_imgnamekey, p_imgurl, opt_dim, b_from_dataurl) {
+
+		let dim;
+		if (opt_dim) {
+			dim = opt_dim;
+		} else {
+			dim = this.markersize;
+		}
+
+		let prom, isfresult;
+
+		if (b_from_dataurl) {
+
+			prom = new Promise((resolve, reject) => {
+
+				const img = new Image();
+				img.crossOrigin = "anonymous";
+				img.decoding = "async";
+				img.src = p_imgurl;
+
+				img
+				.decode()
+				.then(() => {
+					if (img.complete) {
+
+						const r = img.width / img.height;
+						let w, h;
+						if (r > 1.5) {
+							w = 1.5 * dim;
+							h = w / r;
+						} else if (r > 1) { 
+							h = dim;
+							w = h * r;
+						} else if (r < 0.67) { 
+							h = 1.5 * dim;
+							w = h * r;
+						} else {
+							w = dim;
+							h = w / r;
+						}
+
+						p_ctx.drawImage(img, p_coords[0]-(w/2), p_coords[1]-(h/2), w, h);
+		
+						resolve();
+					} else {
+						reject(new Error(`[WARN] drawsymbAsync: img NOT complete.`));
+					}
+				})
+				.catch((e) => {
+					reject(new Error(`[WARN] drawsymbAsync error '${e}'.`));
+				});
+			});
+			
+		} else {
+			prom = new Promise((resolve, reject) =>  {
+
+				function fetchimg(img) {
+	
+						const r = img.width / img.height;
+						let w, h;
+						if (r > 1.5) {
+							w = 1.5 * dim;
+							h = w / r;
+						} else if (r > 1) { 
+							h = dim;
+							w = h * r;
+						} else if (r < 0.67) { 
+							h = 1.5 * dim;
+							w = h * r;
+						} else {
+							w = dim;
+							h = w / r;
+						}
+						//console.log("    >>> drawimage", p_layer.key, opt_feat_id, p_layer._gfctx == null, img);
+						p_ctx.drawImage(img, p_coords[0]-(w/2), p_coords[1]-(h/2), w, h);
+						//console.log("    <<< drawimage end", p_layer.key, opt_feat_id);
+	
+						resolve();
+				
+				};
+
+				if (this.iconmarkervalue !== undefined && this.iconmarkervalue != 'none') {
+					p_imgbuffer.asyncFetchImage([p_imgnamekey, p_imgurl]).then(fetchimg).catch(reject);
+				} else {
+					p_imgbuffer.asyncFetchImage([p_imgnamekey, p_imgurl]).then(fetchimg).catch(reject);
+				}
+
+			});
+		}
+
+
+
+		return prom;
+	}
+
 	drawsymbAsync(p_mapctxt, p_layer, p_coords, p_args, b_from_dataurl) {
 
 		const sclval = p_mapctxt.getScale();
