@@ -401,4 +401,8 @@ export class EditingMgr extends MapPrintInRect {
 		return ret;
 
 	}
+
+	getCurrentEditFeature() {
+		return this.#current_edit_feature;
+	}
 }

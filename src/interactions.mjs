@@ -424,10 +424,15 @@ async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_i
 				usesel = feats;
 			}
 
+			console.log("usesel:", usesel, "mode:", mode);
+
 			ret_dir_interact = false;
 			if (usesel != null && Object.keys(usesel).length > 0) {
 				ret_dir_interact = opt_actonselfeat_dict[mode](p_mapctx, usesel, p_scrx, p_scry);
 			} 
+
+			console.log("ret_dir_interact:", ret_dir_interact);
+
 
 			if (!ret_dir_interact && p_is_end_event) {
 				if (opt_clearafterselfeat) {
@@ -1021,7 +1026,7 @@ class SimplePointEditTool extends BaseTool {
 		if (p_mapctx.tabletFeatPreSelection.isSet) {
 			const feat = this.editmanager.setCurrentEditFeature(p_mapctx.tabletFeatPreSelection.get());
 			if (feat) {
-				await p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, feat.id, "EDIT", {'normal': 'temporary', 'label': 'temporary' });		
+				await p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, feat.id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });		
 			}
 		}	
 	}
@@ -1040,6 +1045,8 @@ class SimplePointEditTool extends BaseTool {
 			gfctx = p_mapctx.renderingsmgr.getDrwCtx(cl, '2d');
 			gfctx.clearRect(0, 0, ...canvas_dims); 	
 		}
+
+		console.trace("clear");
 	} 
 
 	hover(p_mapctx, p_feature_dict, p_scrx, p_scry){
@@ -1058,29 +1065,32 @@ class SimplePointEditTool extends BaseTool {
 
 		if (doDrawFeat) {
 			layerklist = Object.keys(p_feature_dict);
-			ret = p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDIT", {'normal': 'temporary', 'label': 'temporary' });	
+			ret = p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });	
 		}
+
+		console.log("hover");
 
 		return ret;
 	}
 
 	pick(p_mapctx, p_feature_dict, p_scrx, p_scry) {
 
-		let feat, layerklist, doDrawFeat = false;
+		let layerklist, ret = null;
 
 		// If NOT tabletFeatPreSelection is active, meaning tablet mode is DISBALED, lets act as expected in pick method
 		if (!p_mapctx.tabletFeatPreSelection.isActive) {
-			feat = this.editmanager.setCurrentEditFeature(p_feature_dict);
-			if (feat) {
-				doDrawFeat = true;
-			}
+			this.editmanager.setCurrentEditFeature(p_feature_dict);
 		}
 
-		if (doDrawFeat) {
+		if (this.editmanager.getCurrentEditFeature() != null) {
 			layerklist = Object.keys(p_feature_dict);
-			p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDIT", {'normal': 'temporary', 'label': 'temporary' });	
+			ret = p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDITENGAGE", {'normal': 'temporary', 'label': 'temporary' });	
 		}
-		
+
+		console.log("pick, ret:", ret);
+
+		return ret;
+
 	}
 
 	async onEvent(p_mapctx, p_evt) {

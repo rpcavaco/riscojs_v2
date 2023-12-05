@@ -102,23 +102,46 @@ var GlobalConst = {
 	},
 
 	FEATMOUSESEL_HIGHLIGHT_EDIT: {
-		"poly" : { 
-			"fillStyle": "#11fbff7f",
-			"strokeStyle": "#11caff",
-			"lineWidth": 2
-		 },
-		"line" : { 
-			"strokeStyle": "#11fbff",
-			"lineWidth": 2
+		"selected": {
+			"poly" : { 
+				"fillStyle": "#11fbff7f",
+				"strokeStyle": "#11caff",
+				"lineWidth": 2
+			 },
+			"line" : { 
+				"strokeStyle": "#11fbff",
+				"lineWidth": 2
+			},
+			"point" : { 
+				"marker": "diamond",
+				"fillStyle": "none",
+				"strokeStyle": "#20ffff",
+				"lineWidth": 3,
+				"markersize": 8
+			}	
 		},
-		"point" : { 
-			"marker": "diamond",
-			"fillStyle": "none",
-			"strokeStyle": "#20ffff",
-			"lineWidth": 3,
-			"markersize": 8
-		}
+		"engaged": {
+			"poly" : { 
+				"lineWidth": 3
+			 },
+			"line" : { 
+				"lineWidth": 3
+			},
+			"point" : { 
+				"marker": "square",
+				"markersize": 8
+			}	
+		},		
 	},
+
+	FEATURE_EDIT_VERTEX: {
+		"marker": "diamond",
+		"fillStyle": "none",
+		"strokeStyle": "#20ffff",
+		"lineWidth": 3,
+		"markersize": 8
+	},
+
 
 	INFO_MAPTIPS_BOXSTYLE: {
 

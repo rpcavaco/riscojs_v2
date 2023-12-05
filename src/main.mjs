@@ -578,11 +578,16 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				basestyle = GlobalConst.FEATMOUSESEL_HIGHLIGHT
 				break;
 
-			case "EDIT":
-				layercfgkey = "editsymbol"				
-				basestyle = GlobalConst.FEATMOUSESEL_HIGHLIGHT_EDIT
+			case "EDITSEL":
+				layercfgkey = "editsymbol_selected"				
+				basestyle = GlobalConst.FEATMOUSESEL_HIGHLIGHT_EDIT["selected"]
 				break;
-	
+
+			case "EDITENGAGE":
+				layercfgkey = "editsymbol_engaged"				
+				basestyle = mergeDeep(GlobalConst.FEATMOUSESEL_HIGHLIGHT_EDIT["selected"], GlobalConst.FEATMOUSESEL_HIGHLIGHT_EDIT["engaged"]);
+				break;
+		
 			default:
 				throw new Error(`drawFeatureAsMouseSelected, invalid mode: ${p_mode}`);
 
