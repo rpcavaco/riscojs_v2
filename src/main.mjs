@@ -1,6 +1,6 @@
 import {HTML5CanvasMgr} from './html5canvas.mjs';
 import {Transform2DMgr} from './transformations.mjs';
-import {ToolManager} from './interactions.mjs';
+import {ToolManager} from './tools.mjs';
 import {TOCManager, DynamicSymbol} from './tocmanager.mjs';
 import {FeatureCollection} from './feature_collection.mjs';
 import {I18n} from './i18n.mjs';
