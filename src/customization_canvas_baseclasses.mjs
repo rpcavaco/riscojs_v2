@@ -293,14 +293,14 @@ export async function drawTOCSymb(p_mapctx, p_lyr, p_ctx, p_symbxcenter, p_cota,
 		if (symb == null) {
 			throw new Error(`Missing symb for ${p_lyr.key}`);
 		}
-		if (symb['drawfreeSymb'] === undefined && symb['drawfreeSymbAsync'] === undefined) {
-			console.trace(`[WARN] No 'drawfreeSymb' method in ${JSON.stringify(symb)}`);
+		if (symb['drawFreeSymb'] === undefined && symb['drawfreeSymbAsync'] === undefined) {
+			console.trace(`[WARN] No 'drawFreeSymb' method in ${JSON.stringify(symb)}`);
 		} else {
 			symb.setStyle(p_ctx);
 			if (symb['drawfreeSymbAsync'] !== undefined) {
 				await symb.drawfreeSymbAsync(p_mapctx, p_ctx, [p_symbxcenter, p_cota], p_vert_step, p_lyr);
 			} else {
-				symb.drawfreeSymb(p_mapctx, p_ctx, [p_symbxcenter, p_cota], p_vert_step, p_lyr);
+				symb.drawFreeSymb(p_mapctx, p_ctx, [p_symbxcenter, p_cota], p_vert_step, p_lyr);
 			}
 		}
 
