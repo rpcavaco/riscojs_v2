@@ -255,7 +255,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				this._currentsymb.setStyle(this._gfctx);
 			} catch(e) {
 				console.error(e);
-				console.log(this._currentsymb.symbname);
+				console.log(this._currentsymb.constructor.name);
 			}
 
 		}
@@ -323,7 +323,6 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 				// _GLOBAL_SAVE_RESTORE_CTR++;
 				try {
 					opt_symb.setStyle(this._gfctx);
-
 					opt_symb.drawsymb(p_mapctxt, this, pt);
 					ret_promise = Promise.resolve();
 				} finally {

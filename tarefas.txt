@@ -125,6 +125,7 @@ PASSAR PARA OS ISSUES DO GITHUB
 
 -------------------------------- Nice to Have -------------------------------
 
+- importação dinamica
 - HDR
 - rotação
 -  ?  offline bitmap
