@@ -517,7 +517,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		// opt_alt_canvaskeys_dict  example: {'normal': 'temporary', 'label': 'temporary' }
 
-		let symb, tempsymb;
+		let symb, classkey;
 		let lsymb = new GrSymbol();
 
 		const ly = this.tocmgr.getLayer(p_layer_key);
@@ -525,45 +525,44 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		if (ly != null && ly.layervisible) {
 
 			if (opt_geomtype_keyed_symbdict!=null && opt_geomtype_keyed_symbdict[ly.geomtype] === undefined) {
+				console.error("==== opt_geomtype_keyed_symbdict ====");
+				console.error(opt_geomtype_keyed_symbdict);
 				throw new Error(`opt_geomtype_keyed_symbdict has no ${ly.geomtype} content`);
 			}
 
-			let classkey = ly.geomtype;
-			if (opt_geomtype_keyed_symbdict != null && opt_geomtype_keyed_symbdict[ly.geomtype].marker !== undefined) {
-				classkey = opt_geomtype_keyed_symbdict[ly.geomtype].marker;
-			}
-
 			if (b_is_sel && ly.default_sel_symbol!='none') {
-				symb = ly.default_sel_symbol;
+				Object.assign(lsymb, ly.default_sel_symbol);
 			} else {
-				symb = ly.default_symbol;
+				Object.assign(lsymb, ly.default_symbol);
 			}
 
-			if (classkey == "point" && symb.marker !== undefined && symb.marker != "none") {
-				classkey = symb.marker;
+			if (ly.geomtype == "point") {
+				if (opt_geomtype_keyed_symbdict != null && opt_geomtype_keyed_symbdict[ly.geomtype].marker !== undefined) {
+					// opt_geomtype_keyed_symbdict[ly.geomtype] is symbol config dictionary
+					classkey = opt_geomtype_keyed_symbdict[ly.geomtype].marker;					
+				} else {
+					// symb is symbol object
+					if (b_is_sel && ly.default_sel_symbol!='none') {
+						symb = ly.default_sel_symbol;
+					} else {
+						symb = ly.default_symbol;
+					}
+					classkey = symb.marker;					
+				}
+			} else {
+				classkey = ly.geomtype;
 			}
-
+			
 			if (opt_geomtype_keyed_symbdict != null) {
-				tempsymb = new DynamicSymbol(this.tocmgr.mode, classkey);
-				Object.assign(tempsymb, opt_geomtype_keyed_symbdict[ly.geomtype]);
-				Object.assign(symb, tempsymb);
-				if (tempsymb['drawsymb'] !== undefined) {
-					symb['drawsymb'] = tempsymb['drawsymb'];
+
+				symb = new DynamicSymbol(this.tocmgr.mode, classkey);
+				Object.assign(symb, opt_geomtype_keyed_symbdict[ly.geomtype]);
+				if (opt_geomtype_keyed_symbdict['label'] !== undefined) {
+					Object.assign(lsymb, opt_geomtype_keyed_symbdict['label']);
 				}
 			}
 
-			if (symb['drawsymb'] === undefined) {
-				if (b_is_sel && ly.default_sel_symbol != "none") {
-					symb.drawsymb = ly.default_sel_symbol.drawsymb;
-				} else {
-					symb.drawsymb = ly.default_symbol.drawsymb;
-				}				
-			}
-
-			Object.assign(lsymb, ly.default_symbol);
-			if (opt_geomtype_keyed_symbdict['label'] !== undefined) {
-				Object.assign(lsymb, opt_geomtype_keyed_symbdict['label']);
-			}
+			console.assert(symb != null, `drawSingleFeature, no 'symb' defined for ${p_layer_key}, on selections:${b_is_sel}`);
 
 			if (GlobalConst.getDebug("DRAWASSELECTED")) {
 				console.log(`[DBG:DRAWASSELECTED] drawSingleFeature graphicsymb: ${JSON.stringify(symb)}, label: ${JSON.stringify(lsymb)}`);
@@ -593,6 +592,66 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			} else {
 				return Promise.reject(new Error(`[WARN] drawSingleFeature: layer found but not visible for id ${p_layer_key}`));
 			}
+		}
+	}
+
+	drawVertex(p_scrx, p_scry, p_canvaslayer) {
+
+		const style = GlobalConst.FEATUREEDIT_VERTEX_MOVE;
+		const canvas_dims = [];		
+		
+		let ctx, usestylecfg, ret_promise = null;
+		if (this.cfgvar['basic']['featureedit_vertex_move'] !== undefined) {
+			usestylecfg = mergeDeep(style, this.cfgvar['basic']['featureedit_vertex_move']);
+		} else {
+			usestylecfg = style;
+		}
+
+		if (usestylecfg.marker === undefined || usestylecfg.marker == "none") { 
+			throw new Error("mapctxt drawVertex, 'featureedit_vertex_move' config has no 'marker' attribute");
+		}
+
+		let symbol = new DynamicSymbol(this.graphicsmode, usestylecfg.marker);
+		mergeDeep(symbol, usestylecfg)
+		console.assert(symbol != null, `mapctxt drawVertex, null symbol for mode ${this.graphicsmode} and marker ${usestylecfg.marker}`);
+
+		ctx = this.renderingsmgr.getDrwCtx(p_canvaslayer, '2d');
+		this.renderingsmgr.getCanvasDims(canvas_dims);
+		ctx.clearRect(0, 0, ...canvas_dims); 	
+
+		try {
+			ctx.save();
+
+			if (symbol['drawSimpleSymbAsync'] !== undefined) {
+
+				console.assert(usestylecfg['imgname'] === undefined, `mapctxt drawVertex, null 'imgname' cfg attrib for vertex marker ${usestylecfg.marker}`);
+				console.assert(usestylecfg['imgurl'] === undefined, `mapctxt drawVertex, null 'imgurl' cfg attrib for vertex marker ${usestylecfg.marker}`);
+
+				ret_promise = new Promise((resolve, reject) =>  {
+					symbol.drawSimpleSymbAsync(ctx, this.imgbuffer, [p_scrx, p_scry], usestylecfg['imgname'], usestylecfg['imgurl']).then(
+						() => {
+							resolve();
+						}
+					).catch((e) => {
+						reject(e);
+					});
+				});
+
+			} else {
+
+				symbol.setStyle(ctx);
+				symbol.drawSimpleSymb(ctx, [p_scrx, p_scry]);
+				ret_promise = Promise.resolve();
+			}
+
+		} finally {
+			ctx.restore();
+		}
+
+		if (ret_promise) {
+			return ret_promise;
+		} else {
+			return Promise.reject(new Error("internal error, drawVertex, no promise received"));
 		}
 	}
 
@@ -628,10 +687,18 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		}
 
-		if (this.cfgvar['basic']['featmousesel_highlight'] !== undefined) {
-			hlStyles = mergeDeep(basestyle, this.cfgvar['basic']['featmousesel_highlight']);
+		if (layercfgkey != "vertexmove") {
+			if (this.cfgvar['basic']['featmousesel_highlight'] !== undefined) {
+				hlStyles = mergeDeep(basestyle, this.cfgvar['basic']['featmousesel_highlight']);
+			} else {
+				hlStyles = basestyle;
+			}
 		} else {
-			hlStyles = basestyle;
+			if (this.cfgvar['basic']['featureedit_vertex_move'] !== undefined) {
+				hlStyles = mergeDeep(basestyle, this.cfgvar['basic']['featureedit_vertex_move']);
+			} else {
+				hlStyles = basestyle;
+			}
 		}
 
 		const ly = this.tocmgr.getLayer(p_layer_key);
@@ -639,7 +706,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		if (ly[layercfgkey] !== undefined) {
 			const d = {};
 			d[ly.geomtype] = ly.selectionsymbol;
-			hlStyles = mergeDeep(hlStyles, d);
+			mergeDeep(hlStyles[ly.geomtype], d);
 		}
 
 		if (GlobalConst.getDebug("DRAWASSELECTED")) {
@@ -812,7 +879,6 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		this.transformmgr.zoomToRect(...p_env);		
 	}
 
-	
 	clearInteractions(opt_source_id, opt_clear_temp_also, opt_single_canvaslayer) { 
 
 		if (GlobalConst.getDebug("INTERACTION") || GlobalConst.getDebug("INTERACTIONCLEAR")) {
@@ -866,7 +932,6 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		}
 
 	}
-
 
 	setScaleCenteredAtPoint(p_scaleval, p_terrain_pt, do_store, opt_after_refresh_paramless_procedure, opt_prevseqattempts_or_null) {
 

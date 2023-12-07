@@ -57,7 +57,7 @@ export class BaseTool {
 
 }
 
-export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_event, opt_actonselfeat_dict, opt_clearafterselfeat) {
+export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_event, opt_actonselfeat_dict, opt_clickonemptyspace, opt_hoveronemptyspace) {
 	
 	let foundly = null, ref_x, ref_y, max_y, col, row, maxrow, sqrid;
 
@@ -275,12 +275,14 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 
 					//p_mapctx.renderingsmgr.clearAll(['temporary','transientmap']);
 
+					/*
 					let canvas_layers;
 					if (p_is_end_event) {
 						canvas_layers = {'normal': 'temporary', 'label': 'temporary' };
 					} else {
 						canvas_layers = {'normal': 'transientmap', 'label': 'transientmap' };
 					}
+					*/
 
 					// console.log(">> found k:", lyrk, "ids:", findings[lyrk].ids, "dist:", findings[lyrk].dist);
 
@@ -288,7 +290,7 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 					for (let id of findings[lyrk].ids) {
 						feat = p_mapctx.featureCollection.get(lyrk, id)
 						// feat = await p_mapctx.drawFeatureAsMouseSelected(lyrk, id, "NORMAL", canvas_layers);
-						if (feat!=null && opt_actonselfeat_ok) {
+						if (feat!=null && (opt_actonselfeat_ok || opt_hoveronemptyspace!=null)) {
 
 							if (feats[lyrk] === undefined) {
 								feats[lyrk] = [];
@@ -304,12 +306,12 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 			}
 		}
 
-		let usesel = null, mode, coincidence_found;
+		let usesel = null, coincidence_found;
 		if (opt_actonselfeat_ok) {
 
 			// at this point, opt_actonselfeat_dict contains methods to execute just on 'hover' or on 'hover' and on 'pick'
 
-			mode = "hover";
+			let mode = "hover";
 			if (opt_actonselfeat_keys.length > 1) {
 
 				// at this point, opt_actonselfeat_dict has methods for both 'hover' and 'pick' ...
@@ -376,11 +378,8 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 							mode = "hover";
 
 						}
-
 					}
-
 				} else {
-
 					// no pre-selection, no decision to make, just 'pick'
 					mode = "pick";
 				}
@@ -389,21 +388,28 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 				usesel = feats;
 			}
 
-			console.log("usesel:", usesel, "mode:", mode);
+			// console.log("usesel:", usesel, "mode:", mode);
 
 			ret_dir_interact = false;
 			if (usesel != null && Object.keys(usesel).length > 0) {
 				ret_dir_interact = opt_actonselfeat_dict[mode](p_mapctx, usesel, p_scrx, p_scry);
 			} 
 
-			console.log("ret_dir_interact:", ret_dir_interact);
+			// console.log("ret_dir_interact:", ret_dir_interact);
 
-
-			if (!ret_dir_interact && p_is_end_event) {
-				if (opt_clearafterselfeat) {
-					opt_clearafterselfeat(p_mapctx, 'INTERACTSRVLYR');
+			if (!ret_dir_interact) {
+				if (p_is_end_event) {
+					if (opt_clickonemptyspace) {
+						opt_clickonemptyspace(p_mapctx, 'INTERACTSPIDXLYR', p_scrx, p_scry);
+					}
 				}			
 			} 
+		} else if (opt_hoveronemptyspace!=null) {
+
+			if (feats == null || Object.keys(feats).length < 1) {
+				ret_dir_interact =  opt_hoveronemptyspace(p_mapctx, 'INTERACTSPIDXLYR', p_scrx, p_scry);
+			}
+
 		}
 	}
 

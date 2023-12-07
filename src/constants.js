@@ -134,12 +134,12 @@ var GlobalConst = {
 		},		
 	},
 
-	FEATURE_EDIT_VERTEX: {
-		"marker": "diamond",
+	FEATUREEDIT_VERTEX_MOVE: {
+		"marker": "vertcross",
 		"fillStyle": "none",
-		"strokeStyle": "#20ffff",
+		"strokeStyle": "#60ff90",
 		"lineWidth": 3,
-		"markersize": 8
+		"markersize": 12
 	},
 
 

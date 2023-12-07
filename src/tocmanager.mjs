@@ -16,6 +16,14 @@ class DynamicLayer {
 export class DynamicSymbol {
 	// p_mode: only 'canvas' for now
     constructor (p_mode, p_classkey, opt_variablesymb_idx, opts) {
+
+		if (symbClassAdapter[p_mode] === undefined) {
+			throw new Error(`DynamicSymbol, no symbol classes for mode ${p_mode}`);
+		}
+		if (symbClassAdapter[p_mode][p_classkey] === undefined) {
+			throw new Error(`DynamicSymbol, no symbol class for mode '${p_mode}', class '${p_classkey}'`);
+		}		
+
 		try {
 			return new symbClassAdapter[p_mode][p_classkey](opt_variablesymb_idx, opts);
 		} catch (e) {

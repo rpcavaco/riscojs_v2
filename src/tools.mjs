@@ -435,6 +435,7 @@ class SimplePointEditTool extends BaseTool {
 	canvaslayers = ['temporary'];
 	toc_collapsed;
 	editmanager;
+	editfeat_engaged = false;
 	constructor(p_mapctx) {
 		super(p_mapctx, true, false); // part of general toggle group, default in toogle
 		this.toc_collapsed = false;
@@ -474,27 +475,35 @@ class SimplePointEditTool extends BaseTool {
 		}	
 	}
 
-	clearCanvas(p_mapctx, p_source_id) {
+	clickOnEmpty(p_mapctx, p_source_id) {
 
 		if (p_source_id == 'TOC' || p_source_id == 'TOCMGR') {
 			return;
 		}
 
 		let gfctx;
-		const canvas_dims = [];			
-		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+		const canvas_dims = [];		
+		
+		if (!this.editfeat_engaged) {
+			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
-		for (const cl of this.canvaslayers) {
-			gfctx = p_mapctx.renderingsmgr.getDrwCtx(cl, '2d');
-			gfctx.clearRect(0, 0, ...canvas_dims); 	
+			for (const cl of this.canvaslayers) {
+				gfctx = p_mapctx.renderingsmgr.getDrwCtx(cl, '2d');
+				gfctx.clearRect(0, 0, ...canvas_dims); 	
+			}	
+		} else {
+			console.warn("LUGAR MARCADO");
 		}
 
-		console.trace("clear");
+		this.editfeat_engaged = false;
+		console.trace("clickOnEmpty");
 	} 
 
 	hover(p_mapctx, p_feature_dict, p_scrx, p_scry){
 
 		let feat, layerklist, doDrawFeat = false, ret = null;
+
+		this.editfeat_engaged = false;
 
 		// If tabletFeatPreSelection is active, meaning tablet mode SIMPLE is enabled, lets act as pick method
 		if (p_mapctx.tabletFeatPreSelection.isActive) {
@@ -511,7 +520,7 @@ class SimplePointEditTool extends BaseTool {
 			ret = p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });	
 		}
 
-		console.log("hover, doDrawFeat:", doDrawFeat);
+		// console.log("hover, doDrawFeat:", doDrawFeat);
 
 		return ret;
 	}
@@ -528,12 +537,20 @@ class SimplePointEditTool extends BaseTool {
 		if (this.editmanager.getCurrentEditFeature() != null) {
 			layerklist = Object.keys(p_feature_dict);
 			ret = p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDITENGAGE", {'normal': 'temporary', 'label': 'temporary' });	
+			if (ret) {
+				this.editfeat_engaged = true;
+			}
 		}
 
-		console.log("pick, ret:", ret);
+		// console.log("pick, ret:", ret);
 
 		return ret;
 
+	}
+
+	hoverEditVertex(p_mapctx, p_source_id, p_scrx, p_scry) {
+
+		p_mapctx.drawVertex(p_scrx, p_scry, 'transientmap');
 	}
 
 	async onEvent(p_mapctx, p_evt) {
@@ -572,7 +589,7 @@ class SimplePointEditTool extends BaseTool {
 							"pick": this.pick.bind(this)
 
 						},
-						this.clearCanvas.bind(this));
+						this.clickOnEmpty.bind(this));
 
 					break;
 
@@ -581,15 +598,27 @@ class SimplePointEditTool extends BaseTool {
 					break;
 
 				case 'mousemove':
-					// if in tablet mode SIMPLE, ignore mouse move for info / maptip purposes
-					if (p_mapctx.tabletFeatPreSelection.isActive) {
-						ret = false;
+					// if in tablet mode SIMPLE, ignore mouse move for info / maptip purposes , EXCEPT whe feature engaged
+					if (this.editfeat_engaged) {
+
+						mxdist = this.constructor.mouseselMaxdist(p_mapctx);
+						ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, false, null, null, this.hoverEditVertex.bind(this));
+
+					} else {
+
+						if (p_mapctx.tabletFeatPreSelection.isActive) {
+							ret = false;
+							break;
+						}
+
+						// TODO
+						// mxdist = this.constructor.mouseselMaxdist(p_mapctx);
+						// ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, false, {"hover": ic.hover.bind(ic)}, ic.clearinfo.bind(ic));
 						break;
+							
 					}
 
-					mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-					//ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, false, {"hover": ic.hover.bind(ic)}, ic.clearinfo.bind(ic));
-					break;
+
 
 			}
 		} catch(e) {
@@ -600,9 +629,6 @@ class SimplePointEditTool extends BaseTool {
 		return ret;
 		
 	}	
-
-
-
 }
 
 

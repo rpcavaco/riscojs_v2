@@ -518,7 +518,7 @@ export class CanvasIcon extends MarkerSymbol {
 		this.marker = "icon";
 	}
 
-	drawSimpleSymbAsync(p_ctx, p_imgbuffer, p_coords, p_imgnamekey, p_imgurl, opt_dim, b_from_dataurl) {
+	drawSimpleSymbAsync(p_ctx, p_imgbuffer, p_coords, p_imgnamekey, p_imgurl, opt_dim) {
 
 		let dim;
 		if (opt_dim) {
@@ -528,8 +528,7 @@ export class CanvasIcon extends MarkerSymbol {
 		}
 
 		let prom, isfresult;
-
-		if (b_from_dataurl) {
+		if (p_imgurl.slice(0,5) == "data:") {
 
 			prom = new Promise((resolve, reject) => {
 
