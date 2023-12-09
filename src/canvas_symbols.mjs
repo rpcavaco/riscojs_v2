@@ -256,6 +256,73 @@ export class CanvasVertCross extends strokeSymbolMixin(MarkerSymbol) {
 	}
 }
 
+export class CanvasStar extends strokeSymbolMixin(MarkerSymbol) { 
+
+	points = 4;
+	rotation_degrees = 0;
+	thickness = 0;
+	constructor(opt_variablesymb_idx) {
+		super(opt_variablesymb_idx);
+		this.marker = "star";
+	}
+
+	drawSimpleSymb(p_ctx, p_coords, opt_dim) {
+
+		let exterior_radius;
+		
+		if (opt_dim) {
+			exterior_radius = opt_dim;
+		} else {
+			exterior_radius = this.markersize;
+		}
+
+		let cx, cy;
+		if (this.position_shift.length >= 2) {
+			cx = this.position_shift[0] + p_coords[0];
+			cy = this.position_shift[1] + p_coords[1];
+		} else {
+			cx = p_coords[0];
+			cy = p_coords[1];
+		}
+
+		let ang, co,se, xi, yi, xe, ye, r;
+		const step = (2 * Math.PI) / this.points;
+
+		for (let stepi = 0; stepi < this.points; stepi++) {
+
+			ang = (stepi * step) + ((this.rotation_degrees * Math.PI) / 180.0) ;
+
+			co = Math.cos(ang);
+			se = Math.sin(ang);
+
+			r = exterior_radius - this.thickness;
+	
+			xi = cx + co * r;
+			yi = cy + se * r;
+
+			r = exterior_radius;
+
+			xe = cx + co * r;
+			ye = cy + se * r;
+
+			p_ctx.beginPath();
+			p_ctx.moveTo(xi, yi);
+			p_ctx.lineTo(xe, ye);
+			p_ctx.stroke();			
+		}
+
+	}
+
+	drawsymb(p_mapctxt, p_layer, p_coords) {
+
+		const sclval = p_mapctxt.getScale();
+		const dim = this.markersize * GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval);
+
+		this.drawSimpleSymb(p_layer._gfctx, p_coords), dim;
+
+	}
+}
+
 export class CanvasCircle extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol)) { 
 
 	constructor(opt_variablesymb_idx) {
