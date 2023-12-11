@@ -34,6 +34,7 @@ export class EditingMgr extends MapPrintInRect {
 	#current_edit_feature;
 	#current_edit_partidx;
 	#current_edit_vertexidx;
+	#current_tool;
 
 	constructor(p_mapctx, p_editable_layers, p_other_widgets) {
 
@@ -47,6 +48,7 @@ export class EditingMgr extends MapPrintInRect {
 		this.#current_user_canedit = false;
 		this.#editing_is_enabled = false;
 		this.#editing_layer_key = null;
+		this.#current_tool = null;
 
 		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.EM_BCKGRD;  // **
 		this.activeStyleFront = GlobalConst.CONTROLS_STYLES.EM_ACTIVECOLOR;
@@ -295,7 +297,7 @@ export class EditingMgr extends MapPrintInRect {
 
 	defineEditingLayer(p_mapctx) {
 
-		const work_layerkeys = [], editables= {};
+		const work_layerkeys = [], editables= {}, types=[];
 		let lyr, constraints = null;
 
 		p_mapctx.tocmgr.getAllVectorLayerKeys(work_layerkeys);		
@@ -305,6 +307,7 @@ export class EditingMgr extends MapPrintInRect {
 				lyr = p_mapctx.tocmgr.getLayer(lyrk);
 				if (lyr.layereditable) {
 					editables[lyrk] = (lyr.label == "none" ? lyrk : I18n.capitalize(lyr.label));
+					types[lyrk] = lyr.geomtype
 				}
 			}
 		}
@@ -342,6 +345,17 @@ export class EditingMgr extends MapPrintInRect {
 
 		}
 
+		if (this.editingLayerKey) {
+			switch (types[this.editingLayerKey]) {
+
+				case "point":
+					this.#current_tool = 'SimplePointEditTool';
+					break;
+
+				default:
+					throw new Error(`geom type '${types[this.editingLayerKey]}', for layer key '${this.editingLayerKey}', has no edit tool associated for now`);
+			}
+		}
 	}
 	
 	setEditingEnabled(p_mapctx, p_editing_tobe_enabled) {
@@ -358,16 +372,21 @@ export class EditingMgr extends MapPrintInRect {
 				this.#editing_is_enabled = true;
 
 				// ativar tool
-				const tool = p_mapctx.toolmgr.enableTool(p_mapctx, 'SimplePointEditTool', true);
+				const tool = p_mapctx.toolmgr.enableTool(p_mapctx, this.#current_tool, true);
 				tool.init(p_mapctx);
 			
 			}		
 		} else {
 
+			console.assert(this.#current_tool != null, "current_tool not defined");
+
 			// desativar tool
-			p_mapctx.toolmgr.enableTool(p_mapctx, 'SimplePointEditTool', false);
+			p_mapctx.toolmgr.enableTool(p_mapctx, this.#current_tool, false);
+			this.#current_tool = null;
 
 			this.#editing_is_enabled = false;
+
+			p_mapctx.clearInteractions('EDITMGR3', true);
 		}		
 	}	
 

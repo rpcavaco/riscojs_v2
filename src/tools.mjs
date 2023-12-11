@@ -507,9 +507,8 @@ class SimplePointEditTool extends BaseTool {
 		this.clearCanvas(p_mapctx);
 
 		if (this.editfeat_engaged) {
-			console.warn("LUGAR MARCADO");
-			p_mapctx.drawVertex("NEW", p_scrx, p_scry, 'temporary');
 
+			p_mapctx.drawVertex("NEW", p_scrx, p_scry, 'temporary');
 			this.editmanager.editCurrentVertex(p_mapctx, p_scrx, p_scry);
 			// console.log("pick, ret:", ret);
 	
