@@ -32,6 +32,8 @@ export class EditingMgr extends MapPrintInRect {
 	// active_mode;
 
 	#current_edit_feature;
+	#current_edit_partidx;
+	#current_edit_vertexidx;
 
 	constructor(p_mapctx, p_editable_layers, p_other_widgets) {
 
@@ -199,7 +201,7 @@ export class EditingMgr extends MapPrintInRect {
 						}
 
 						// Toggle edit mode
-						this.setSimplePointEditingEnabled(p_mapctx, !this.isEditingEnabled());
+						this.setEditingEnabled(p_mapctx, !this.isEditingEnabled());
 						this.print(p_mapctx);
 	
 						break;
@@ -342,7 +344,7 @@ export class EditingMgr extends MapPrintInRect {
 
 	}
 	
-	setSimplePointEditingEnabled(p_mapctx, p_editing_tobe_enabled) {
+	setEditingEnabled(p_mapctx, p_editing_tobe_enabled) {
 		
 		if (p_editing_tobe_enabled) {
 			if(this.precheckCanEditStatus()) {
@@ -376,7 +378,6 @@ export class EditingMgr extends MapPrintInRect {
 	setCurrentEditFeature(p_feat_dict) {
 
 		const fd_keys = Object.keys(p_feat_dict);
-
 		let ret = null;
 
 		if (fd_keys.length == 0) {
@@ -397,12 +398,60 @@ export class EditingMgr extends MapPrintInRect {
 			this.#current_edit_feature = p_feat_dict[this.editingLayerKey][0];
 			ret = this.#current_edit_feature;
 		}
-		
+
 		return ret;
 
 	}
 
+	setCurrentEditVertex(p_geompartidx, p_vertorderidx) {
+
+		this.#current_edit_partidx = p_geompartidx;
+		this.#current_edit_vertexidx = p_vertorderidx;
+	}
+
+	editCurrentVertex(p_mapctx, p_scrx, p_scry) {
+
+		if (this.#current_edit_feature == null) {
+			throw new Error("editCurrentVertex, no current editing feature");
+		}
+		if (this.#current_edit_partidx == null) {
+			throw new Error("editCurrentVertex, no current editing feature part index");
+		}
+		if (this.#current_edit_vertexidx == null) {
+			throw new Error("editCurrentVertex, no current editing vertex index");
+		}	
+	
+		const feat = this.#current_edit_feature.feat;
+		
+		if (feat.gt == "point") { // }.g.length == 2 && typeof feat.g[0] === 'number') {
+			// point
+
+			if (feat.g.length != 1 || feat.g[0].length != 2 || typeof feat.g[0][0] !== 'number') {
+				throw new Error("editCurrentVertex, current editing feature - invalid point feature");
+			}
+			if (this.#current_edit_partidx != 0) {
+				throw new Error("editCurrentVertex, current editing feature part index non-zero for point feature");
+			}
+			if (this.#current_edit_vertexidx != 0) {
+				throw new Error("editCurrentVertex, current editing vertex index non-zero for point feature");
+			}	
+			
+			const terr_pt = [];
+			p_mapctx.transformmgr.getTerrainPt([p_scrx, p_scry], terr_pt);
+	
+			feat.g[0][0] = terr_pt[0];
+			feat.g[0][1] = terr_pt[1];
+				
+		}
+
+	}
+
+
 	getCurrentEditFeature() {
 		return this.#current_edit_feature;
 	}
+
+	resetCurrentEditFeature() {
+		this.#current_edit_feature = null;
+	}	
 }

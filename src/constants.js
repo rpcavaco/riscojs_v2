@@ -134,14 +134,49 @@ var GlobalConst = {
 		},		
 	},
 
-	FEATUREEDIT_VERTEX_MOVE: {
-		"marker": "vertcross",
-		"fillStyle": "none",
-		"strokeStyle": "#60ff90",
-		"lineWidth": 3,
-		"markersize": 12
-	},
+	FEATUREEDIT_VERTEX_MOVE: [
+		{
+			"marker": "star",
+			"strokeStyle": "#187735",
+			"lineWidth": 5,
+			"markersize": 18,
+			"thickness": 14
+		},
+		{
+			"marker": "star",
+			"strokeStyle": "#85ffaa",
+			"lineWidth": 2,
+			"markersize": 16,
+			"thickness": 12
+		},	
+		{
+			"marker": "circle",
+			"fillStyle": "#85ffaa",
+			"markersize": 1
+		}		
+	],
 
+	FEATUREEDIT_VERTEX_NEW: [
+		{
+			"marker": "circle",
+			"markersize": 12,
+			"strokeStyle": "yellow",
+			"lineWidth": 4
+		},
+		{
+			"marker": "circle",
+			"markersize": 14,
+			"strokeStyle": "orange",
+			"lineWidth": 2
+		},		
+		{
+			"marker": "star",
+			"strokeStyle": "yellow",
+			"lineWidth": 3,
+			"markersize": 24,
+			"thickness": 6
+		}		
+	],	
 
 	INFO_MAPTIPS_BOXSTYLE: {
 

@@ -286,18 +286,14 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 
 					// console.log(">> found k:", lyrk, "ids:", findings[lyrk].ids, "dist:", findings[lyrk].dist);
 
-					let f;
 					for (let id of findings[lyrk].ids) {
-						feat = p_mapctx.featureCollection.get(lyrk, id)
+						feat = p_mapctx.featureCollection.get(lyrk, id);
 						// feat = await p_mapctx.drawFeatureAsMouseSelected(lyrk, id, "NORMAL", canvas_layers);
 						if (feat!=null && (opt_actonselfeat_ok || opt_hoveronemptyspace!=null)) {
-
 							if (feats[lyrk] === undefined) {
 								feats[lyrk] = [];
 							}
-							f = JSON.parse(JSON.stringify(feat));
-							f['id'] = id;
-							feats[lyrk].push(JSON.parse(JSON.stringify(f)));
+							feats[lyrk].push({"feat": feat, "id": id });
 
 						}
 					}	
@@ -346,10 +342,10 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 								}	
 
 								if (usesel[lyrk] !== undefined) {
+									if (!usesel.hasOwnProperty(lyrk)) {
+										continue;
+									}		
 									for (const to_feat of usesel[lyrk]) {
-										if (!usesel.hasOwnProperty(lyrk)) {
-											continue;
-										}		
 										if (from_feat.id == to_feat.id) {
 											coincidence_found = true;
 											break;
@@ -387,8 +383,6 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 			if (usesel == null) {
 				usesel = feats;
 			}
-
-			// console.log("usesel:", usesel, "mode:", mode);
 
 			ret_dir_interact = false;
 			if (usesel != null && Object.keys(usesel).length > 0) {

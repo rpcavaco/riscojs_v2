@@ -149,13 +149,13 @@ class tabletFeatPreSelectionMgr {
 
 	set(p_feats_dict) {
 		if (this.#active) {
-			this.#feats_dict = JSON.parse(JSON.stringify(p_feats_dict));
+			this.#feats_dict = p_feats_dict;
 		}
 	}
 
 	get() {
 		if (this.#active) {
-			return JSON.parse(JSON.stringify(this.#feats_dict));
+			return this.#feats_dict;
 		} else {
 			return null;
 		}
@@ -595,53 +595,72 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		}
 	}
 
-	drawVertex(p_scrx, p_scry, p_canvaslayer) {
+	drawVertex(p_vertex_type, p_scrx, p_scry, p_canvaslayer) {
 
-		const style = GlobalConst.FEATUREEDIT_VERTEX_MOVE;
+		let styles;
 		const canvas_dims = [];		
+
+		switch(p_vertex_type) {
+
+			case "MOVE":
+				styles = GlobalConst.FEATUREEDIT_VERTEX_MOVE;
+				break;
+
+			case "NEW":
+				styles = GlobalConst.FEATUREEDIT_VERTEX_NEW;
+				break;
+
+		}
 		
 		let ctx, usestylecfg, ret_promise = null;
 		if (this.cfgvar['basic']['featureedit_vertex_move'] !== undefined) {
-			usestylecfg = mergeDeep(style, this.cfgvar['basic']['featureedit_vertex_move']);
+			usestylecfg = mergeDeep(styles, this.cfgvar['basic']['featureedit_vertex_move']);
 		} else {
-			usestylecfg = style;
+			usestylecfg = styles;
 		}
-
-		if (usestylecfg.marker === undefined || usestylecfg.marker == "none") { 
-			throw new Error("mapctxt drawVertex, 'featureedit_vertex_move' config has no 'marker' attribute");
-		}
-
-		let symbol = new DynamicSymbol(this.graphicsmode, usestylecfg.marker);
-		mergeDeep(symbol, usestylecfg)
-		console.assert(symbol != null, `mapctxt drawVertex, null symbol for mode ${this.graphicsmode} and marker ${usestylecfg.marker}`);
-
-		ctx = this.renderingsmgr.getDrwCtx(p_canvaslayer, '2d');
-		this.renderingsmgr.getCanvasDims(canvas_dims);
-		ctx.clearRect(0, 0, ...canvas_dims); 	
 
 		try {
+
+			ctx = this.renderingsmgr.getDrwCtx(p_canvaslayer, '2d');
+			this.renderingsmgr.getCanvasDims(canvas_dims);
+			ctx.clearRect(0, 0, ...canvas_dims); 	
+
 			ctx.save();
 
-			if (symbol['drawSimpleSymbAsync'] !== undefined) {
+			for (let symbol, currstyle, ci=0; ci<usestylecfg.length; ci++) {
 
-				console.assert(usestylecfg['imgname'] === undefined, `mapctxt drawVertex, null 'imgname' cfg attrib for vertex marker ${usestylecfg.marker}`);
-				console.assert(usestylecfg['imgurl'] === undefined, `mapctxt drawVertex, null 'imgurl' cfg attrib for vertex marker ${usestylecfg.marker}`);
+				currstyle = usestylecfg[ci];
 
-				ret_promise = new Promise((resolve, reject) =>  {
-					symbol.drawSimpleSymbAsync(ctx, this.imgbuffer, [p_scrx, p_scry], usestylecfg['imgname'], usestylecfg['imgurl']).then(
-						() => {
-							resolve();
-						}
-					).catch((e) => {
-						reject(e);
+				if (currstyle.marker === undefined || currstyle.marker == "none") { 
+					throw new Error(`mapctxt drawVertex, 'featureedit_vertex_move' config ${ci} has no 'marker' attribute`);
+				}
+
+				symbol = new DynamicSymbol(this.graphicsmode, currstyle.marker);
+				mergeDeep(symbol, currstyle)
+				console.assert(symbol != null, `mapctxt drawVertex, config ${ci}, null symbol for mode ${this.graphicsmode} and marker ${currstyle.marker}`);
+
+				if (symbol['drawSimpleSymbAsync'] !== undefined) {
+
+					console.assert(currstyle['imgname'] === undefined, `mapctxt drawVertex, config ${ci}, null 'imgname' cfg attrib for vertex marker ${currstyle.marker}`);
+					console.assert(currstyle['imgurl'] === undefined, `mapctxt drawVertex, config ${ci}, null 'imgurl' cfg attrib for vertex marker ${currstyle.marker}`);
+
+					ret_promise = new Promise((resolve, reject) =>  {
+						symbol.drawSimpleSymbAsync(ctx, this.imgbuffer, [p_scrx, p_scry], currstyle['imgname'], currstyle['imgurl']).then(
+							() => {
+								resolve();
+							}
+						).catch((e) => {
+							reject(e);
+						});
 					});
-				});
 
-			} else {
+				} else {
 
-				symbol.setStyle(ctx);
-				symbol.drawSimpleSymb(ctx, [p_scrx, p_scry]);
-				ret_promise = Promise.resolve();
+					symbol.setStyle(ctx);
+					symbol.drawSimpleSymb(ctx, [p_scrx, p_scry]);
+					ret_promise = Promise.resolve();
+				}
+
 			}
 
 		} finally {
@@ -986,16 +1005,16 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		}
 	}
 
-	setSimplePointEditingEnabled(p_editing_is_enabled) {
+	setEditingEnabled(p_editing_is_enabled) {
 
 		const ci = this.getCustomizationObject();
 		if (ci == null) {
-			throw new Error("setSimplePointEditingEnabled, no customization object found")
+			throw new Error("Map context setEditingEnabled, no customization object found")
 		}
 
 		const ic = ci.instances["editing"];
 		if (ic) {
-			ic.setSimplePointEditingEnabled(this, p_editing_is_enabled);
+			ic.setEditingEnabled(this, p_editing_is_enabled);
 		}
 	}
 

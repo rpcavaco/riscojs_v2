@@ -431,8 +431,7 @@ class InfoTool extends BaseTool {
 
 class SimplePointEditTool extends BaseTool {
 
-	name = 'SimplePointEditTool';
-	canvaslayers = ['temporary'];
+	canvaslayers = ['temporary', 'transientmap'];
 	toc_collapsed;
 	editmanager;
 	editfeat_engaged = false;
@@ -475,33 +474,57 @@ class SimplePointEditTool extends BaseTool {
 		}	
 	}
 
-	clickOnEmpty(p_mapctx, p_source_id) {
+	clearCanvas(p_mapctx) {
+
+		let gfctx;
+		const canvas_dims = [];		
+		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+		for (const cl of this.canvaslayers) {
+			gfctx = p_mapctx.renderingsmgr.getDrwCtx(cl, '2d');
+			gfctx.clearRect(0, 0, ...canvas_dims); 	
+		}	
+
+	}
+
+	clearCanvasAndResetEditFeat(p_mapctx) {
+
+		this.clearCanvas(p_mapctx);	
+		this.editmanager.resetCurrentEditFeature();
+
+	}	
+
+	clickOnEmpty(p_mapctx, p_source_id, p_scrx, p_scry) {
+
+		// ... and create set / create vertex or new point object
 
 		if (p_source_id == 'TOC' || p_source_id == 'TOCMGR') {
 			return;
 		}
 
-		let gfctx;
-		const canvas_dims = [];		
-		
-		if (!this.editfeat_engaged) {
-			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
-			for (const cl of this.canvaslayers) {
-				gfctx = p_mapctx.renderingsmgr.getDrwCtx(cl, '2d');
-				gfctx.clearRect(0, 0, ...canvas_dims); 	
-			}	
-		} else {
+		console.log("this.editfeat_engaged:", this.editfeat_engaged);
+		
+		this.clearCanvas(p_mapctx);
+
+		if (this.editfeat_engaged) {
 			console.warn("LUGAR MARCADO");
+			p_mapctx.drawVertex("NEW", p_scrx, p_scry, 'temporary');
+
+			this.editmanager.editCurrentVertex(p_mapctx, p_scrx, p_scry);
+			// console.log("pick, ret:", ret);
+	
+			p_mapctx.featureCollection.redrawAllVectorLayers();
+	
+	
 		}
 
 		this.editfeat_engaged = false;
-		console.trace("clickOnEmpty");
+		//console.trace("clickOnEmpty");
 	} 
 
 	hover(p_mapctx, p_feature_dict, p_scrx, p_scry){
 
-		let feat, layerklist, doDrawFeat = false, ret = null;
+		let feat=null, layerklist, doDrawFeat = false, ret = null;
 
 		this.editfeat_engaged = false;
 
@@ -516,8 +539,13 @@ class SimplePointEditTool extends BaseTool {
 		}
 
 		if (doDrawFeat) {
-			layerklist = Object.keys(p_feature_dict);
-			ret = p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });	
+			if (feat) {
+				layerklist = Object.keys(p_feature_dict);
+				ret = p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, feat.id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });		
+			} else {
+				layerklist = Object.keys(p_feature_dict);
+				ret = p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });	
+			}
 		}
 
 		// console.log("hover, doDrawFeat:", doDrawFeat);
@@ -542,15 +570,18 @@ class SimplePointEditTool extends BaseTool {
 			}
 		}
 
-		// console.log("pick, ret:", ret);
+		// TODO - usar p_scrx, p_scry para 'apanhar' o vértice da geometria amover, zero para o ponto
+
+		if (p_feature_dict[layerklist[0]][0].feat.gt == "point") {
+			this.editmanager.setCurrentEditVertex(0, 0);
+		}
 
 		return ret;
 
 	}
 
 	hoverEditVertex(p_mapctx, p_source_id, p_scrx, p_scry) {
-
-		p_mapctx.drawVertex(p_scrx, p_scry, 'transientmap');
+		p_mapctx.drawVertex("MOVE", p_scrx, p_scry, 'transientmap');
 	}
 
 	async onEvent(p_mapctx, p_evt) {
@@ -594,7 +625,7 @@ class SimplePointEditTool extends BaseTool {
 					break;
 
 				case 'mouseout':
-					this.clearCanvas.bind(this);
+					this.clearCanvasAndResetEditFeat(p_mapctx);
 					break;
 
 				case 'mousemove':

@@ -307,7 +307,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			return Promise.reject(new Error(`graphics context was not previously grabbed for layer '${this.key}'`));
 		}
 
-		if (p_coords.length != 2 || typeof p_coords[0] != 'number') {
+		if (!Array.isArray(p_coords) ||  p_coords.length != 2 || typeof p_coords[0] != 'number') {
 			console.error("pc:", p_coords);
 			return Promise.reject(new Error(`p_coords doesn't contain point, for layer '${this.key}'`));
 		}
