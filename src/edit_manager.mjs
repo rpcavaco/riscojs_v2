@@ -35,6 +35,7 @@ export class EditingMgr extends MapPrintInRect {
 	#current_edit_partidx;
 	#current_edit_vertexidx;
 	#current_tool;
+	#pending_changes_to_save;
 
 	constructor(p_mapctx, p_editable_layers, p_other_widgets) {
 
@@ -49,6 +50,7 @@ export class EditingMgr extends MapPrintInRect {
 		this.#editing_is_enabled = false;
 		this.#editing_layer_key = null;
 		this.#current_tool = null;
+		this.#pending_changes_to_save = false;
 
 		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.EM_BCKGRD;  // **
 		this.activeStyleFront = GlobalConst.CONTROLS_STYLES.EM_ACTIVECOLOR;
@@ -205,6 +207,10 @@ export class EditingMgr extends MapPrintInRect {
 						// Toggle edit mode
 						this.setEditingEnabled(p_mapctx, !this.isEditingEnabled());
 						this.print(p_mapctx);
+
+						if (!this.isEditingEnabled()) {
+							this.save(p_mapctx);
+						}
 	
 						break;
 
@@ -293,6 +299,14 @@ export class EditingMgr extends MapPrintInRect {
 
 	get editingLayerKey() {
 		return this.#editing_layer_key;
+	}
+	
+	get hasPendingChangesToSave() {
+		return this.#pending_changes_to_save;
+	}
+
+	clearPendingChangesToSave() {
+		this.#pending_changes_to_save = false;
 	}	
 
 	defineEditingLayer(p_mapctx) {
@@ -460,11 +474,12 @@ export class EditingMgr extends MapPrintInRect {
 	
 			feat.g[0][0] = terr_pt[0];
 			feat.g[0][1] = terr_pt[1];
+
+			this.#pending_changes_to_save = true;
 				
 		}
 
 	}
-
 
 	getCurrentEditFeature() {
 		return this.#current_edit_feature;
@@ -472,5 +487,27 @@ export class EditingMgr extends MapPrintInRect {
 
 	resetCurrentEditFeature() {
 		this.#current_edit_feature = null;
+	}	
+
+	save(p_mapctx) {
+
+		if (!this.hasPendingChangesToSave) {
+			return;
+		}
+
+		let that = this;
+		// publish confirm save message
+		p_mapctx.getCustomizationObject().messaging_ctrlr.confirmMessage(
+			p_mapctx.i18n.msg('WANT2SAVE', true), 
+			true,
+			(p_evt, p_result, p_value) => { 
+				if (p_result) {
+					console.log("SALVAR!");
+				} else {
+					that.clearPendingChangesToSave();
+					p_mapctx.maprefresh();
+				}
+			}
+		);		
 	}	
 }
