@@ -294,7 +294,6 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 								feats[lyrk] = [];
 							}
 							feats[lyrk].push({"feat": feat, "id": id });
-
 						}
 					}	
 

@@ -992,7 +992,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 	}
 
-	enableEditUser(p_logging_name, b_can_edit) {
+	enableEditUser(p_sessionid, p_logging_name, b_can_edit) {
 
 		const ci = this.getCustomizationObject();
 		if (ci == null) {
@@ -1001,7 +1001,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		const ic = ci.instances["editing"];
 		if (ic) {
-			ic.setCurrentUser(p_logging_name, b_can_edit);
+			ic.setCurrentUser(p_sessionid, p_logging_name, b_can_edit);
 		}
 	}
 

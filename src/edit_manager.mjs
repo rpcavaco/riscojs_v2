@@ -4,10 +4,12 @@ import {ctrToolTip, MapPrintInRect} from './customization_canvas_baseclasses.mjs
 
 export class EditingMgr extends MapPrintInRect {
 
+	#current_sessionid;
 	#current_user;
 	#current_user_canedit;
 	#editing_is_enabled;
 	#editing_layer_key;
+	#editing_layer_url;
 	editable_layers;
 
 	left;
@@ -36,6 +38,7 @@ export class EditingMgr extends MapPrintInRect {
 	#current_edit_vertexidx;
 	#current_tool;
 	#pending_changes_to_save;
+	#layeredit_cfg_attribs;
 
 	constructor(p_mapctx, p_editable_layers, p_other_widgets) {
 
@@ -45,12 +48,15 @@ export class EditingMgr extends MapPrintInRect {
 		this.other_widgets = p_other_widgets;
 
 		this.editable_layers = p_editable_layers;
+		this.#current_sessionid = null;
 		this.#current_user = null;
 		this.#current_user_canedit = false;
 		this.#editing_is_enabled = false;
 		this.#editing_layer_key = null;
+		this.#editing_layer_url = null;
 		this.#current_tool = null;
-		this.#pending_changes_to_save = false;
+		this.#pending_changes_to_save = "none";
+		this.#layeredit_cfg_attribs = {};
 
 		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.EM_BCKGRD;  // **
 		this.activeStyleFront = GlobalConst.CONTROLS_STYLES.EM_ACTIVECOLOR;
@@ -252,11 +258,11 @@ export class EditingMgr extends MapPrintInRect {
 		let ret = true;
 		if (this.#current_user == null) {
 			console.error("checkEditionStatus: no current user");
-			// TODO - REMOVE COMMENT !! ret = false;
+			ret = false;
 		};
 		if (!this.#current_user_canedit) {
 			console.error("checkEditionStatus: current user cannot edit");
-			// TODO - REMOVE COMMENT !! ret = false;
+			ret = false;
 		};		
 		
 		console.info("[INFO] is PRE edit status OK?:", ret);
@@ -266,13 +272,17 @@ export class EditingMgr extends MapPrintInRect {
 
 	checkCanEditStatus(b_before_enable_editing) {
 		let ret = true;
+
+		if (this.#current_sessionid == null) {
+			console.error("checkEditionStatus: no current session id");
+			ret = false;
+		};
+
 		if (this.#current_user == null) {
-			console.error("checkEditionStatus: no current user");
-			// TODO - REMOVE COMMENT !! ret = false;
+			console.warn("[WARN] checkEditionStatus: no current user");
 		};
 		if (!this.#current_user_canedit) {
-			console.error("checkEditionStatus: current user cannot edit");
-			// TODO - REMOVE COMMENT !! ret = false;
+			console.warn("[WARN] checkEditionStatus: current user cannot edit");
 		};		
 		if (!b_before_enable_editing && !this.#editing_is_enabled) {
 			console.error("checkEditionStatus: editing not enabled");
@@ -288,7 +298,8 @@ export class EditingMgr extends MapPrintInRect {
 		return ret;
 	}
 	
-	setCurrentUser(p_username, b_user_canedit) {
+	setCurrentUser(p_sessionid, p_username, b_user_canedit) {
+		this.#current_sessionid = p_sessionid;
 		this.#current_user = p_username;
 		this.#current_user_canedit = b_user_canedit;
 	}
@@ -306,20 +317,20 @@ export class EditingMgr extends MapPrintInRect {
 	}
 
 	clearPendingChangesToSave() {
-		this.#pending_changes_to_save = false;
+		this.#pending_changes_to_save = "none";
 	}	
 
 	defineEditingLayer(p_mapctx) {
 
 		const work_layerkeys = [], editables= {}, types=[];
-		let lyr, constraints = null;
+		let lyr, constraints = null, tmp;
 
 		p_mapctx.tocmgr.getAllVectorLayerKeys(work_layerkeys);		
 
 		if (work_layerkeys.length > 0) {
 			for (const lyrk of work_layerkeys) {
 				lyr = p_mapctx.tocmgr.getLayer(lyrk);
-				if (lyr.layereditable) {
+				if (lyr.layereditable != "none") {
 					editables[lyrk] = (lyr.label == "none" ? lyrk : I18n.capitalize(lyr.label));
 					types[lyrk] = lyr.geomtype
 				}
@@ -328,6 +339,11 @@ export class EditingMgr extends MapPrintInRect {
 
 		const lyrks = Object.keys(editables);
 		const sz = lyrks.length;
+
+		// temp_layer_key here works as variable passed by reference
+		const temp_layer_key = [];
+		const layeredit_cfg_attrib_names = ["gisid", "attribs_to_save"];
+
 		if (sz == 0) {
 
 			console.error("defineEditingLayer: no editable layers, check all layer 'layereditable' attribute in layer config");
@@ -340,14 +356,12 @@ export class EditingMgr extends MapPrintInRect {
 				}
 			}
 
-			const that = this;
-
 			p_mapctx.getCustomizationObject().messaging_ctrlr.selectInputMessage(
 				p_mapctx.i18n.msg('SELEDITLYR', true), 
 				editables,
 				(evt, p_result, p_value) => { 
 					if (p_value) {
-						that.editingLayerKey = p_value;
+						temp_layer_key.push(p_value);
 					}
 				},
 				constraints
@@ -355,20 +369,49 @@ export class EditingMgr extends MapPrintInRect {
 
 		} else {
 
-			this.editingLayerKey = lyrks[0];
+			// this.editingLayerKey = lyrks[0];
+			temp_layer_key.push(lyrks[0]);
 
 		}
 
-		if (this.editingLayerKey) {
-			switch (types[this.editingLayerKey]) {
+		if (temp_layer_key.length > 0) {
+
+			lyr = p_mapctx.tocmgr.getLayer(temp_layer_key[0]);
+			if (lyr == null) {
+				throw new Error(`defineEditingLayer, layer '${temp_layer_key[0]}' not defined`);
+			}
+
+			const missing_attribs = [];
+			for (let k of layeredit_cfg_attrib_names) {
+				if (lyr.layereditable[k] === undefined) {
+					missing_attribs.push(k);
+				}
+			}
+
+			if (missing_attribs.length > 0) {
+				temp_layer_key.length = 0;
+				throw new Error(`defineEditingLayer failed for layer '${temp_layer_key[0]}', missing 'layereditable' attribs (in layer config): ${missing_attribs}`);
+			}
+
+			switch (types[temp_layer_key[0]]) {
 
 				case "point":
 					this.#current_tool = 'SimplePointEditTool';
 					break;
 
 				default:
-					throw new Error(`geom type '${types[this.editingLayerKey]}', for layer key '${this.editingLayerKey}', has no edit tool associated for now`);
+					throw new Error(`geom type '${types[temp_layer_key[0]]}', for layer key '${temp_layer_key[0]}', has no edit tool associated for now`);
 			}
+
+			for (let k of layeredit_cfg_attrib_names) {
+				this.#layeredit_cfg_attribs[k] = lyr.layereditable[k];
+			}			
+
+			this.editingLayerKey = temp_layer_key[0];
+			temp_layer_key.length = 0;
+
+			this.#editing_layer_url = (lyr.url.endsWith("/") ? lyr.url : lyr.url + "/") + "save";
+
 		}
 	}
 	
@@ -432,6 +475,8 @@ export class EditingMgr extends MapPrintInRect {
 			ret = this.#current_edit_feature;
 		}
 
+		console.log("464 >", this.#current_edit_feature);
+
 		return ret;
 
 	}
@@ -475,7 +520,7 @@ export class EditingMgr extends MapPrintInRect {
 			feat.g[0][0] = terr_pt[0];
 			feat.g[0][1] = terr_pt[1];
 
-			this.#pending_changes_to_save = true;
+			this.#pending_changes_to_save = "GEO";
 				
 		}
 
@@ -489,9 +534,73 @@ export class EditingMgr extends MapPrintInRect {
 		this.#current_edit_feature = null;
 	}	
 
+	serialize2JSON(p_crs) {
+
+		if (this.#current_edit_feature == null) {
+			throw new Error("serialize2GeoJSONLike, no current_edit_feature defined");
+		}
+
+		let ret = {};
+
+		if (this.hasPendingChangesToSave != "none") {
+
+			let cef = this.#current_edit_feature["feat"];
+			ret["type"] = "Feature";
+
+			if (this.#layeredit_cfg_attribs["attribs_to_save"].length > 0 && (this.hasPendingChangesToSave == "ALL" || this.hasPendingChangesToSave == "ALPHA")) {
+				ret["properties"] = {};
+				for (let la of this.#layeredit_cfg_attribs["attribs_to_save"]) {
+					if (cef.a[la] != null) {
+						ret["properties"][la] = cef.a[la];
+					}
+				}
+			}
+
+			if (this.hasPendingChangesToSave == "ALL" || this.hasPendingChangesToSave == "GEO") {
+				
+				switch (cef.gt) {
+
+					case "point":
+						ret["geometry"] = {
+								"type": "Point",
+								"coordinates": [...cef.g[0]]
+						};
+						break;
+
+					default:
+						throw new Error(`serialize2GeoJSONLike, geom type '${cef.gt}' still not supported`);
+
+				}
+
+				if (ret["geometry"] !== undefined) {
+					ret["geometry"]["crs"] = p_crs;
+				}
+			}
+
+		}
+
+		return ret;		
+	}
+
+	genSavePayload(p_mapctx) {
+
+		if (this.#current_edit_feature == null) {
+			throw new Error("genSavePayload, no current_edit_feature defined");
+		}
+
+		return {
+			lname: this.editingLayerKey,
+			gisid: this.#current_edit_feature["feat"].a[this.#layeredit_cfg_attribs["gisid"]],
+			featjson: this.serialize2JSON(p_mapctx.cfgvar.basic["crs"]),
+			sessionid: this.#current_sessionid,
+			mapname: p_mapctx.cfgvar.basic["mapname"]
+		};
+
+	}
+
 	save(p_mapctx) {
 
-		if (!this.hasPendingChangesToSave) {
+		if (this.hasPendingChangesToSave == "none") {
 			return;
 		}
 
@@ -503,6 +612,20 @@ export class EditingMgr extends MapPrintInRect {
 			(p_evt, p_result, p_value) => { 
 				if (p_result) {
 					console.log("SALVAR!");
+					fetch(this.#editing_layer_url,
+						{
+							method: "POST",
+							body: JSON.stringify(that.genSavePayload(p_mapctx))
+						}
+					).then(
+						response => response.json()
+					).then(
+						(responsejson) => {
+							console.log("----- resposta responsejson -----");
+							console.log(responsejson);
+						}						
+					).catch();
+
 				} else {
 					that.clearPendingChangesToSave();
 					p_mapctx.maprefresh();
