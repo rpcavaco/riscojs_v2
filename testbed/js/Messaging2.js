@@ -263,7 +263,7 @@ let MessagesController2 = {
 					}
 				}
 			}
-			
+
 			msgsdiv.style.display = 'block';
 			msgsdiv.style.opacity = 1;
 			msgsdiv.style.filter = 'none';
@@ -309,7 +309,7 @@ let MessagesController2 = {
 
 						(function(p_this, p_btn, pp_type, pp_callback) {
 							p_btn.addEventListener('click', function(ev) {
-								p_this.hideMessage(true);
+								p_this.hideMessage(false);
 								let ret = null;
 								if (contentelem) {
 									ret = contentelem.value;
@@ -491,8 +491,10 @@ let MessagesController2 = {
 		if (!this.isvisible) {
 			return;
 		}
+
 		this.timer = null;
 		let msgsdiv = document.getElementById(this.elemid);
+
 		this.isvisible = false;
 		if (do_fadeout) 
 		{
@@ -501,6 +503,7 @@ let MessagesController2 = {
 		else 
 		{
 			if (msgsdiv!=null) {
+
 				msgsdiv.style.display = 'none';
 			}
 		}

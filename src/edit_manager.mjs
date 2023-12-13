@@ -605,13 +605,14 @@ export class EditingMgr extends MapPrintInRect {
 		}
 
 		let that = this;
+		let msgsctrlr = p_mapctx.getCustomizationObject().messaging_ctrlr;
+
 		// publish confirm save message
-		p_mapctx.getCustomizationObject().messaging_ctrlr.confirmMessage(
+		msgsctrlr.confirmMessage(
 			p_mapctx.i18n.msg('WANT2SAVE', true), 
 			true,
 			(p_evt, p_result, p_value) => { 
 				if (p_result) {
-					console.log("SALVAR!");
 					fetch(this.#editing_layer_url,
 						{
 							method: "POST",
@@ -621,10 +622,25 @@ export class EditingMgr extends MapPrintInRect {
 						response => response.json()
 					).then(
 						(responsejson) => {
-							console.log("----- resposta responsejson -----");
-							console.log(responsejson);
+							if (responsejson['state'] == 'req_not_ok') {
+								console.error(responsejson['reason']);
+								msgsctrlr.warn(p_mapctx.i18n.msg('EDITSAVEERROR',true));
+								p_mapctx.maprefresh();
+							} else if (responsejson['state'] == 'req_ok') {
+								console.log("!! OK !!")
+								console.log(responsejson);
+							} else {
+								console.error("Unexpected edit save result:", responsejson);
+								p_mapctx.maprefresh();
+							}
 						}						
-					).catch();
+					).catch(
+						(error) => {
+							console.error(`HTTP error on saving edits: ${error}'`);
+							p_mapctx.maprefresh();
+							throw new Error(error);
+						}						
+					);
 
 				} else {
 					that.clearPendingChangesToSave();
