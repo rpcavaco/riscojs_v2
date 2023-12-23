@@ -342,7 +342,7 @@ export class EditingMgr extends MapPrintInRect {
 
 		// temp_layer_key here works as variable passed by reference
 		const temp_layer_key = [];
-		const layeredit_cfg_attrib_names = ["gisid", "attribs_to_save"];
+		const layeredit_cfg_attrib_names = ["attribs_to_save"];
 
 		if (sz == 0) {
 
@@ -381,6 +381,10 @@ export class EditingMgr extends MapPrintInRect {
 				throw new Error(`defineEditingLayer, layer '${temp_layer_key[0]}' not defined`);
 			}
 
+			if (lyr._gisid_field == null) {
+				throw new Error(`defineEditingLayer, layer '${temp_layer_key[0]}' has no gisid_field defined, cannot edit`);
+			}
+
 			const missing_attribs = [];
 			for (let k of layeredit_cfg_attrib_names) {
 				if (lyr.layereditable[k] === undefined) {
@@ -405,7 +409,9 @@ export class EditingMgr extends MapPrintInRect {
 
 			for (let k of layeredit_cfg_attrib_names) {
 				this.#layeredit_cfg_attribs[k] = lyr.layereditable[k];
-			}			
+			}		
+			
+			this.#layeredit_cfg_attribs["gisid_field"] = lyr._gisid_field;
 
 			this.editingLayerKey = temp_layer_key[0];
 			temp_layer_key.length = 0;
@@ -540,18 +546,21 @@ export class EditingMgr extends MapPrintInRect {
 			throw new Error("serialize2GeoJSONLike, no current_edit_feature defined");
 		}
 
-		let ret = {};
+		let ret = [];
+		let currfeat = null;
 
 		if (this.hasPendingChangesToSave != "none") {
 
+			let currfeat = { "feat": {} };
+
 			let cef = this.#current_edit_feature["feat"];
-			ret["type"] = "Feature";
+			currfeat["feat"]["type"] = "Feature";
 
 			if (this.#layeredit_cfg_attribs["attribs_to_save"].length > 0 && (this.hasPendingChangesToSave == "ALL" || this.hasPendingChangesToSave == "ALPHA")) {
-				ret["properties"] = {};
+				currfeat["feat"]["properties"] = {};
 				for (let la of this.#layeredit_cfg_attribs["attribs_to_save"]) {
 					if (cef.a[la] != null) {
-						ret["properties"][la] = cef.a[la];
+						currfeat["feat"]["properties"][la] = cef.a[la];
 					}
 				}
 			}
@@ -561,7 +570,7 @@ export class EditingMgr extends MapPrintInRect {
 				switch (cef.gt) {
 
 					case "point":
-						ret["geometry"] = {
+						currfeat["feat"]["geometry"] = {
 								"type": "Point",
 								"coordinates": [...cef.g[0]]
 						};
@@ -572,10 +581,14 @@ export class EditingMgr extends MapPrintInRect {
 
 				}
 
-				if (ret["geometry"] !== undefined) {
-					ret["geometry"]["crs"] = p_crs;
+				if (currfeat["feat"]["geometry"] !== undefined) {
+					currfeat["feat"]["geometry"]["crs"] = p_crs;
 				}
+
+				currfeat["gisid"] = this.#current_edit_feature["feat"].a[this.#layeredit_cfg_attribs["gisid_field"]];
 			}
+
+			ret.push(currfeat)
 
 		}
 
@@ -590,8 +603,8 @@ export class EditingMgr extends MapPrintInRect {
 
 		return {
 			lname: this.editingLayerKey,
-			gisid: this.#current_edit_feature["feat"].a[this.#layeredit_cfg_attribs["gisid"]],
-			featjson: this.serialize2JSON(p_mapctx.cfgvar.basic["crs"]),
+			//gisid: this.#current_edit_feature["feat"].a[this.#layeredit_cfg_attribs["gisid_field"]],
+			featholders: this.serialize2JSON(p_mapctx.cfgvar.basic["crs"]),
 			sessionid: this.#current_sessionid,
 			mapname: p_mapctx.cfgvar.basic["mapname"]
 		};
@@ -622,11 +635,11 @@ export class EditingMgr extends MapPrintInRect {
 						response => response.json()
 					).then(
 						(responsejson) => {
-							if (responsejson['state'] == 'req_not_ok') {
+							if (responsejson['state'] == 'NOTOK') {
 								console.error(responsejson['reason']);
 								msgsctrlr.warn(p_mapctx.i18n.msg('EDITSAVEERROR',true));
 								p_mapctx.maprefresh();
-							} else if (responsejson['state'] == 'req_ok') {
+							} else if (responsejson['state'] == 'OK') {
 								console.log("!! OK !!")
 								console.log(responsejson);
 							} else {

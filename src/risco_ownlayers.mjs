@@ -206,6 +206,7 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 
 	url;     // https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer
 	_name = "RiscoFeatsLayer";
+	_gisid_field;
 
 	constructor() { 
 		super();
@@ -318,6 +319,10 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 								"nchunks": responsejson.stats[that.key]['nchunks'],
 								"nvert": responsejson.stats[that.key]['nvert']
 							});
+
+							if (responsejson.stats[that.key]['gisid_field']) {
+								that._gisid_field = responsejson.stats[that.key]['gisid_field'];
+							}
 						}
 					}
 				}
