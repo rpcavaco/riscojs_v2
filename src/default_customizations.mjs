@@ -1318,7 +1318,7 @@ export class MapCustomizations {
 		}
 
 		if (editable_layers.length > 0) {
-			this.instances["editing"] = new EditingMgr(this.mapctx, editable_layers, [toc]);
+			this.instances["editing"] = new EditingMgr(this.mapctx, editable_layers, [toc], this.mapctx.cfgvar["basic"]["single_feat_editing_mode"]);
 		}
 
 		// Temporariamente sem navigator

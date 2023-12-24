@@ -36,14 +36,15 @@ export class EditingMgr extends MapPrintInRect {
 	#current_edit_feature;
 	#current_edit_partidx;
 	#current_edit_vertexidx;
+	#edit_features;
 	#current_tool;
 	#pending_changes_to_save;
 	#layeredit_cfg_attribs;
+	#single_feat_editing;
 
-	constructor(p_mapctx, p_editable_layers, p_other_widgets) {
+	constructor(p_mapctx, p_editable_layers, p_other_widgets, b_single_feat_editing) {
 
 		super();
-		this.name = "EditingMgr";
 
 		this.other_widgets = p_other_widgets;
 
@@ -55,6 +56,8 @@ export class EditingMgr extends MapPrintInRect {
 		this.#editing_layer_key = null;
 		this.#editing_layer_url = null;
 		this.#current_tool = null;
+		this.#edit_features = [];
+		this.#single_feat_editing = b_single_feat_editing;
 		this.#pending_changes_to_save = "none";
 		this.#layeredit_cfg_attribs = {};
 
@@ -265,7 +268,7 @@ export class EditingMgr extends MapPrintInRect {
 			ret = false;
 		};		
 		
-		console.info("[INFO] is PRE edit status OK?:", ret);
+		console.info("[INFO] is PRE edit status (edit user defned) OK?:", ret);
 
 		return ret;
 	}
@@ -278,12 +281,12 @@ export class EditingMgr extends MapPrintInRect {
 			ret = false;
 		};
 
-		if (this.#current_user == null) {
+		/*if (this.#current_user == null) {
 			console.warn("[WARN] checkEditionStatus: no current user");
 		};
 		if (!this.#current_user_canedit) {
 			console.warn("[WARN] checkEditionStatus: current user cannot edit");
-		};		
+		};	*/	
 		if (!b_before_enable_editing && !this.#editing_is_enabled) {
 			console.error("checkEditionStatus: editing not enabled");
 			ret = false;
@@ -478,6 +481,11 @@ export class EditingMgr extends MapPrintInRect {
 			throw new Error(`setCurrentEditFeature, feat dict with MORE THAN ONE element for editing layer '${this.editingLayerKey}'`);
 		} else {
 			this.#current_edit_feature = p_feat_dict[this.editingLayerKey][0];
+			if (this.#single_feat_editing) {
+				this.#edit_features = [this.#current_edit_feature];
+			} else {
+				this.#edit_features.push(JSON.parse(JSON.stringify(this.#current_edit_feature)));
+			}
 			ret = this.#current_edit_feature;
 		}
 
@@ -519,16 +527,46 @@ export class EditingMgr extends MapPrintInRect {
 			if (this.#current_edit_vertexidx != 0) {
 				throw new Error("editCurrentVertex, current editing vertex index non-zero for point feature");
 			}	
-			
-			const terr_pt = [];
-			p_mapctx.transformmgr.getTerrainPt([p_scrx, p_scry], terr_pt);
-	
-			feat.g[0][0] = terr_pt[0];
-			feat.g[0][1] = terr_pt[1];
 
-			this.#pending_changes_to_save = "GEO";
-				
 		}
+			
+		const terr_pt = [];
+		p_mapctx.transformmgr.getTerrainPt([p_scrx, p_scry], terr_pt);
+
+		feat.g[this.#current_edit_vertexidx][0] = terr_pt[0];
+		feat.g[this.#current_edit_vertexidx][1] = terr_pt[1];
+
+		this.#pending_changes_to_save = "GEO";
+				
+	}
+
+	addNewVertex(p_mapctx, p_feat_geomtype, p_scrx, p_scry) {
+
+		const terr_pt = [];
+		p_mapctx.transformmgr.getTerrainPt([p_scrx, p_scry], terr_pt);
+
+		switch(p_feat_geomtype.toLowerCase()) {
+
+			case "point":
+				this.#current_edit_feature = {
+					"feat": {
+						gt: "point",
+						l: 1,
+						g: [[...terr_pt]],
+						a: {}
+					}
+				}
+				break;
+
+		}
+
+		if (this.#single_feat_editing) {
+			this.#edit_features = [this.#current_edit_feature];
+		} else {
+			this.#edit_features.push(JSON.parse(JSON.stringify(this.#current_edit_feature)));
+		}
+
+		this.#pending_changes_to_save = "GEO";
 
 	}
 
@@ -547,49 +585,51 @@ export class EditingMgr extends MapPrintInRect {
 		}
 
 		let ret = [];
-		let currfeat = null;
 
-		if (this.hasPendingChangesToSave != "none") {
+		if (this.#edit_features.length > 0 && this.hasPendingChangesToSave != "none") {
 
-			let currfeat = { "feat": {} };
+			let currfeat, cef_feat;
+			for (const cef of this.#edit_features) {
 
-			let cef = this.#current_edit_feature["feat"];
-			currfeat["feat"]["type"] = "Feature";
+				currfeat = { "feat": { "type": "Feature"} };
 
-			if (this.#layeredit_cfg_attribs["attribs_to_save"].length > 0 && (this.hasPendingChangesToSave == "ALL" || this.hasPendingChangesToSave == "ALPHA")) {
-				currfeat["feat"]["properties"] = {};
-				for (let la of this.#layeredit_cfg_attribs["attribs_to_save"]) {
-					if (cef.a[la] != null) {
-						currfeat["feat"]["properties"][la] = cef.a[la];
+				cef_feat = cef["feat"];
+
+				if (this.#layeredit_cfg_attribs["attribs_to_save"].length > 0 && (this.hasPendingChangesToSave == "ALL" || this.hasPendingChangesToSave == "ALPHA")) {
+					currfeat["feat"]["properties"] = {};
+					for (let la of this.#layeredit_cfg_attribs["attribs_to_save"]) {
+						if (cef_feat.a[la] != null) {
+							currfeat["feat"]["properties"][la] = cef_feat.a[la];
+						}
 					}
 				}
-			}
 
-			if (this.hasPendingChangesToSave == "ALL" || this.hasPendingChangesToSave == "GEO") {
-				
-				switch (cef.gt) {
+				if (this.hasPendingChangesToSave == "ALL" || this.hasPendingChangesToSave == "GEO") {
+					
+					switch (cef_feat.gt) {
 
-					case "point":
-						currfeat["feat"]["geometry"] = {
-								"type": "Point",
-								"coordinates": [...cef.g[0]]
-						};
-						break;
+						case "point":
+							currfeat["feat"]["geometry"] = {
+									"type": "Point",
+									"coordinates": [...cef_feat.g[0]]
+							};
+							break;
 
-					default:
-						throw new Error(`serialize2GeoJSONLike, geom type '${cef.gt}' still not supported`);
+						default:
+							throw new Error(`serialize2GeoJSONLike, geom type '${cef_feat.gt}' still not supported`);
 
+					}
+
+					if (currfeat["feat"]["geometry"] !== undefined) {
+						currfeat["feat"]["geometry"]["crs"] = p_crs;
+					}
+
+					currfeat["gisid"] = cef["feat"].a[this.#layeredit_cfg_attribs["gisid_field"]];
 				}
 
-				if (currfeat["feat"]["geometry"] !== undefined) {
-					currfeat["feat"]["geometry"]["crs"] = p_crs;
-				}
+				ret.push(currfeat)
 
-				currfeat["gisid"] = this.#current_edit_feature["feat"].a[this.#layeredit_cfg_attribs["gisid_field"]];
 			}
-
-			ret.push(currfeat)
-
 		}
 
 		return ret;		

@@ -506,15 +506,15 @@ class SimplePointEditTool extends BaseTool {
 		
 		this.clearCanvas(p_mapctx);
 
-		if (this.editfeat_engaged) {
+		p_mapctx.drawVertex("NEW", p_scrx, p_scry, 'temporary');
 
-			p_mapctx.drawVertex("NEW", p_scrx, p_scry, 'temporary');
+		if (this.editfeat_engaged) {
+			// edit current vertex in current feature
 			this.editmanager.editCurrentVertex(p_mapctx, p_scrx, p_scry);
-			// console.log("pick, ret:", ret);
-	
+			// console.log("pick, ret:", ret);	
 			p_mapctx.featureCollection.redrawAllVectorLayers();
-	
-	
+		} else {
+			this.editmanager.addNewVertex(p_mapctx, "point", p_scrx, p_scry);
 		}
 
 		this.editfeat_engaged = false;

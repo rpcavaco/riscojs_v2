@@ -17,6 +17,7 @@ var RISCOJS_BASIC_CFG = {
 	"style_override": {
 		"toc_bckgrd": "#5a6668e0"
 	},
+	"single_feat_editing_mode": true,
 	"locquery": {
 		"url": "https://loc.cm-porto.net/loc/c/lq",
 		"zoomto": 500,
