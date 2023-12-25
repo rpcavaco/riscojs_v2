@@ -429,7 +429,7 @@ class InfoTool extends BaseTool {
 
 }
 
-class SimplePointEditTool extends BaseTool {
+class PointEditTool extends BaseTool {
 
 	canvaslayers = ['temporary', 'transientmap'];
 	toc_collapsed;
@@ -452,7 +452,7 @@ class SimplePointEditTool extends BaseTool {
 
 	setEditingManager(p_edit_manager) {
 		if (p_edit_manager) {
-			console.info("[init RISCO] SimplePointEditTool, edit manager is set");
+			console.info("[init RISCO] PointEditTool, edit manager is set");
 			this.editmanager = p_edit_manager;
 		} else {
 			throw new Error("setEditingManager, no edit manager passed");
@@ -462,7 +462,7 @@ class SimplePointEditTool extends BaseTool {
 	async init(p_mapctx) {
 
 		if (this.editmanager == null) {
-			throw new Error("SimplePointEditTool, mandatory previous use of 'setEditingManager' has not happened");
+			throw new Error("PointEditTool, mandatory previous use of 'setEditingManager' has not happened");
 		}
 
 		// If tabletFeatPreSelection is set, meaning tablet mode SIMPLE is enabled and there is a presel feature
@@ -749,8 +749,8 @@ export class ToolManager {
 					case "MeasureTool":
 						this.addTool(new MeasureTool(p_mapctx));
 						break;
-					case "SimplePointEditTool":
-						this.addTool(new SimplePointEditTool(p_mapctx));
+					case "PointEditTool":
+						this.addTool(new PointEditTool(p_mapctx));
 						break;
 					}
 			}

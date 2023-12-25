@@ -403,7 +403,7 @@ export class EditingMgr extends MapPrintInRect {
 			switch (types[temp_layer_key[0]]) {
 
 				case "point":
-					this.#current_tool = 'SimplePointEditTool';
+					this.#current_tool = 'PointEditTool';
 					break;
 
 				default:
