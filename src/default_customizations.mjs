@@ -1318,7 +1318,15 @@ export class MapCustomizations {
 		}
 
 		if (editable_layers.length > 0) {
-			this.instances["editing"] = new EditingMgr(this.mapctx, editable_layers, [toc], this.mapctx.cfgvar["basic"]["single_feat_editing_mode"]);
+
+			let sfem;
+			if (this.mapctx.cfgvar["basic"]["single_feat_editing_mode"] === undefined) {
+				sfem = false; 
+			} else {
+				sfem = this.mapctx.cfgvar["basic"]["single_feat_editing_mode"]; 
+			}
+
+			this.instances["editing"] = new EditingMgr(this.mapctx, editable_layers, [toc], sfem);
 		}
 
 		// Temporariamente sem navigator
