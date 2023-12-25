@@ -676,7 +676,13 @@ export class EditingMgr extends MapPrintInRect {
 					).then(
 						(responsejson) => {
 							if (responsejson['state'] == 'NOTOK') {
-								console.error(responsejson['reason']);
+								if (responsejson['reason'] !== undefined) {
+									// saving process oreoaration failed
+									console.error(responsejson['reason']);
+								} else {
+									// a batch of just one save operation failed
+									console.error("error in save operation -- check risco server debug msgs table");
+								}
 								msgsctrlr.warn(p_mapctx.i18n.msg('EDITSAVEERROR',true));
 								p_mapctx.maprefresh();
 							} else if (responsejson['state'] == 'OK') {
