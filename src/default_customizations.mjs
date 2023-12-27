@@ -1233,12 +1233,12 @@ export class MapCustomizations {
 
 	mapctx;
 	messaging_ctrlr; // object with info, warn and error methods
-	interactivity_ctrlr; // execution context for Info-like interactivity
+	interoperability_ctrlr; // OPTIONAL execution context for Info-like interactivity and interoperability with other (custom defined) apps and services
 	mapcustom_controls_keys; // custom. instances containing interactive controls
 	mapcustom_controlsmgrs_keys; // custom. instances containing interactive controls, acting as controls managers
 	overlay_keys; // custom. instances directly interacting with default tool
 
-	constructor(p_mapctx, p_messaging_ctrlr, p_interactivity_ctrlr) {
+	constructor(p_mapctx, p_messaging_ctrlr, opt_interoperability_ctrlr) {
 
 		let max_textlines_height;
 		this.mapctx = p_mapctx;
@@ -1261,7 +1261,7 @@ export class MapCustomizations {
 		this.messaging_ctrlr = p_messaging_ctrlr;
 		this.messaging_ctrlr.setI18n(this.mapctx.i18n);
 
-		this.interactivity_ctrlr = p_interactivity_ctrlr;
+		this.interoperability_ctrlr = opt_interoperability_ctrlr;
 
 		// widget which presence impacts others, at least through display area occupied
 		const ap = new AttributionPrint();

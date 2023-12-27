@@ -427,7 +427,7 @@ export class Info {
 
 		if (currlayer["infocfg"]["function"] !== undefined) {
 
-			const ic = p_mapctx.getCustomizationObject().interactivity_ctrlr;
+			const ic = p_mapctx.getCustomizationObject().interoperability_ctrlr;
 
 			return currlayer["infocfg"]["function"](ic, currlayer, p_feature);
 
