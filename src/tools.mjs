@@ -514,7 +514,6 @@ class PointEditTool extends BaseTool {
 			// console.log("pick, ret:", ret);	
 			p_mapctx.featureCollection.redrawAllVectorLayers();
 		} else {
-			console.log(":: 517 ::");
 			this.editmanager.addNewVertex(p_mapctx, "point", p_scrx, p_scry);
 		}
 

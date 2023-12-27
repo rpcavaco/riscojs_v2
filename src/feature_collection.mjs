@@ -2,7 +2,7 @@ import {GlobalConst} from './constants.js';
 import {distanceToPoly, distanceToLine, dist2D, bbTouch} from './geom.mjs'
 import {Layer} from './layers.mjs'
 import { isSuperset, setEquality} from './utils.mjs'
-import { diffDays } from './utils.mjs';  // Can be called in 'varstyles' on 'iconsrcfunc' functions
+import { diffDays, uuidv4 } from './utils.mjs';  // Can be called in 'varstyles' on 'iconsrcfunc' functions
 
 export class FeatureCollection {
 
@@ -200,6 +200,11 @@ export class FeatureCollection {
 		return id;
 	}
 
+	addTempFeature(p_layerkey, p_geom, p_attrs, p_geom_type, p_path_levels) {
+		const tempid = "_temp_" + uuidv4();
+		return this.addfeature(p_layerkey, p_geom, p_attrs, p_geom_type, p_path_levels, tempid);
+	}
+
 	// TODO p_op: 'EQ', 'LT', 'GT', 'LE', 'GE' -- To complete implementation of all ops
 	find(p_layerkey, p_op, p_name_value_dict, out_id_list) {
 		out_id_list.length = 0;
@@ -285,7 +290,7 @@ export class FeatureCollection {
 		//this.spIndex.invalidate();
 	}
 
-	featuredraw(p_layerkey, p_featid, p_alt_canvaskey, opt_symbs, opt_checkfeatattrsfunc, opt_terrain_env) {
+	featuredraw(p_layerkey, p_featid, opt_alt_canvaskey, opt_symbs, opt_checkfeatattrsfunc, opt_terrain_env) {
 
 		if (this.featList[p_layerkey] === undefined) {
 			return Promise.reject(new Error(`featuredraw, layer '${p_layerkey}' was not set through 'setLayer' method`));
@@ -311,7 +316,7 @@ export class FeatureCollection {
 
 			try {
 				if (opt_checkfeatattrsfunc==null || opt_checkfeatattrsfunc(feat.a)) {
-					that.layers[p_layerkey].refreshitem(that.mapctx, feat.g, feat.a, feat.l, p_featid, p_alt_canvaskey, opt_symbs, opt_terrain_env).then(
+					that.layers[p_layerkey].refreshitem(that.mapctx, feat.g, feat.a, feat.l, p_featid, opt_alt_canvaskey, opt_symbs, opt_terrain_env).then(
 						() => { resolve(feat); }
 					).catch(
 						(e) => { reject(e); }

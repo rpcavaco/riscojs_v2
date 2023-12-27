@@ -36,7 +36,7 @@ export class EditingMgr extends MapPrintInRect {
 	#current_edit_feature_holder;
 	#current_edit_partidx;
 	#current_edit_vertexidx;
-	#edit_features;
+	#edit_feature_holders;
 	#current_tool;
 	#pending_changes_to_save;
 	#layeredit_cfg_attribs;
@@ -56,7 +56,7 @@ export class EditingMgr extends MapPrintInRect {
 		this.#editing_layer_key = null;
 		this.#editing_layer_url = null;
 		this.#current_tool = null;
-		this.#edit_features = [];
+		this.#edit_feature_holders = [];
 		this.#single_feat_editing = b_single_feat_editing;
 		this.#pending_changes_to_save = "none";
 		this.#layeredit_cfg_attribs = {};
@@ -482,9 +482,9 @@ export class EditingMgr extends MapPrintInRect {
 		} else {
 			this.#current_edit_feature_holder = p_feat_dict[this.editingLayerKey][0];
 			if (this.#single_feat_editing) {
-				this.#edit_features = [this.#current_edit_feature_holder];
+				this.#edit_feature_holders = [this.#current_edit_feature_holder];
 			} else {
-				this.#edit_features.push(JSON.parse(JSON.stringify(this.#current_edit_feature_holder)));
+				this.#edit_feature_holders.push(JSON.parse(JSON.stringify(this.#current_edit_feature_holder)));
 			}
 			ret = this.#current_edit_feature_holder;
 		}
@@ -543,32 +543,27 @@ export class EditingMgr extends MapPrintInRect {
 	addNewVertex(p_mapctx, p_feat_geomtype, p_scrx, p_scry) {
 
 		const terr_pt = [];
+		let id;
 		p_mapctx.transformmgr.getTerrainPt([p_scrx, p_scry], terr_pt);
-
-		console.log(":: Editmgr 548 ::", p_feat_geomtype);
 
 		switch(p_feat_geomtype.toLowerCase()) {
 
 			case "point":
-				this.#current_edit_feature_holder = {
-					"feat": {
-						gt: "point",
-						l: 1,
-						g: [[...terr_pt]],
-						a: {}
-					}
-				}
+
+				id = p_mapctx.featureCollection.addTempFeature(this.editingLayerKey, [[...terr_pt]], {}, "point", 1)
+				this.#current_edit_feature_holder = { "feat": p_mapctx.featureCollection.get(this.editingLayerKey, id) };
+
+				p_mapctx.featureCollection.featuredraw(this.editingLayerKey, id);
+
 				break;
 
 		}
 
 		if (this.#single_feat_editing) {
-			this.#edit_features = [this.#current_edit_feature_holder];
+			this.#edit_feature_holders = [this.#current_edit_feature_holder];
 		} else {
-			this.#edit_features.push(JSON.parse(JSON.stringify(this.#current_edit_feature_holder)));
+			this.#edit_feature_holders.push(JSON.parse(JSON.stringify(this.#current_edit_feature_holder)));
 		}
-
-		console.log(":: Editmgr 571 :: edit feats:", this.#edit_features);
 
 		this.#pending_changes_to_save = "GEO";
 
@@ -590,10 +585,10 @@ export class EditingMgr extends MapPrintInRect {
 
 		let ret = [];
 
-		if (this.#edit_features.length > 0 && this.hasPendingChangesToSave != "none") {
+		if (this.#edit_feature_holders.length > 0 && this.hasPendingChangesToSave != "none") {
 
 			let currfeat, cef_feat;
-			for (const cef of this.#edit_features) {
+			for (const cef of this.#edit_feature_holders) {
 
 				currfeat = { "feat": { "type": "Feature"} };
 
