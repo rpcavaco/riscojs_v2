@@ -152,6 +152,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 	msgsdict = {};
 	maptipfields = {}; // 'add' and 'remove'
 	infocfg = {};
+	editcfg = {};
 	// _gfctx, _gfctxlbl, _currentsymb has underscore to protect from automatic attribute collection from config files
 	_gfctx = null;  // current graphics context to be always updated at each refreshing / drawing
 	_gfctxlbl = null;

@@ -688,6 +688,7 @@ export class EditingMgr extends MapPrintInRect {
 							} else if (responsejson['state'] == 'OK') {
 								console.log("!! OK !!")
 								console.log(responsejson);
+								that.execAfterSave(p_mapctx, responsejson);
 							} else {
 								console.error("Unexpected edit save result:", responsejson);
 								p_mapctx.maprefresh();
@@ -707,5 +708,24 @@ export class EditingMgr extends MapPrintInRect {
 				}
 			}
 		);		
-	}	
+	}
+
+	execAfterSave(p_mapctx, p_responsejson) {
+
+		console.assert(this.editingLayerKey != null, "editingLayerKey not defined at 'execAfterSave'");
+
+		const lyr = p_mapctx.tocmgr.getLayer(this.editingLayerKey);
+
+		if (Object.keys(lyr.editcfg) < 1) {
+			console.warn(`[WARN] edit layer '${this.editingLayerKey}' has no 'editcfg' defined in layer configs`);
+		}
+
+		if (lyr.editcfg["aftersave_func"] !== undefined) {
+			const ic = p_mapctx.getCustomizationObject().interactivity_ctrlr;
+			lyr.editcfg.aftersave_func(p_mapctx, this, lyr, ic, p_responsejson);
+		} else {
+			console.warn(`[WARN] edit layer '${this.editingLayerKey}' has no 'editcfg.aftersave_func' defined in layer configs`);
+		}
+	}
+
 }

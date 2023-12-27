@@ -429,7 +429,7 @@ export class Info {
 
 			const ic = p_mapctx.getCustomizationObject().interactivity_ctrlr;
 
-			return currlayer["infocfg"]["function"](ic, p_layerkey, p_feature);
+			return currlayer["infocfg"]["function"](ic, currlayer, p_feature);
 
 		} else if (currlayer["infocfg"]["keyfield"] !== undefined) {
 

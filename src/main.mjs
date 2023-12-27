@@ -344,7 +344,7 @@ export class RiscoMapCtx {
 	setCustomizationObj(p_object, p_setmapctx_func) {
 
 		this.#customization_object = p_object;
-		p_setmapctx_func(p_object);
+		p_setmapctx_func(this, p_object);
 
 		for (let objid of this.#customization_object.mapcustom_controlsmgrs_keys) {
 			if (p_object.instances[objid] !== undefined) {
