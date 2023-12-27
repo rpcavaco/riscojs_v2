@@ -486,12 +486,14 @@ class PointEditTool extends BaseTool {
 
 	}
 
+	/*
 	clearCanvasAndResetEditFeat(p_mapctx) {
 
 		this.clearCanvas(p_mapctx);	
 		this.editmanager.resetCurrentEditFeatureHolder();
 
 	}	
+	*/
 
 	clickOnEmpty(p_mapctx, p_source_id, p_scrx, p_scry) {
 
@@ -624,7 +626,7 @@ class PointEditTool extends BaseTool {
 					break;
 
 				case 'mouseout':
-					this.clearCanvasAndResetEditFeat(p_mapctx);
+					this.clearCanvas(p_mapctx);
 					break;
 
 				case 'mousemove':
