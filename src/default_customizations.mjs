@@ -1233,7 +1233,7 @@ export class MapCustomizations {
 
 	mapctx;
 	messaging_ctrlr; // object with info, warn and error methods
-	interoperability_ctrlr; // OPTIONAL execution context for Info-like interactivity and interoperability with other (custom defined) apps and services
+	interoperability_ctrlr; // OPTIONAL execution context for extending Info-like interactivity and provide interoperability with other (custom defined) apps and services
 	mapcustom_controls_keys; // custom. instances containing interactive controls
 	mapcustom_controlsmgrs_keys; // custom. instances containing interactive controls, acting as controls managers
 	overlay_keys; // custom. instances directly interacting with default tool
