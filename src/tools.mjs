@@ -514,7 +514,8 @@ class PointEditTool extends BaseTool {
 			// edit current vertex in current feature
 			this.editmanager.editCurrentVertex(p_mapctx, p_scrx, p_scry);
 			// console.log("pick, ret:", ret);	
-			p_mapctx.featureCollection.redrawAllVectorLayers();
+			//p_mapctx.featureCollection.redrawAllVectorLayers();
+			this.editmanager.paintCurrentEditFeature(p_mapctx);
 		} else {
 			this.editmanager.addNewVertex(p_mapctx, "point", p_scrx, p_scry);
 		}

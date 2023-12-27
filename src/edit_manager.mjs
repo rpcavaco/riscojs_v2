@@ -489,8 +489,6 @@ export class EditingMgr extends MapPrintInRect {
 			ret = this.#current_edit_feature_holder;
 		}
 
-		console.log("464 >", this.#current_edit_feature_holder);
-
 		return ret;
 
 	}
@@ -551,9 +549,10 @@ export class EditingMgr extends MapPrintInRect {
 			case "point":
 
 				id = p_mapctx.featureCollection.addTempFeature(this.editingLayerKey, [[...terr_pt]], {}, "point", 1)
-				this.#current_edit_feature_holder = { "feat": p_mapctx.featureCollection.get(this.editingLayerKey, id) };
+				this.#current_edit_feature_holder = { "feat": p_mapctx.featureCollection.get(this.editingLayerKey, id), "id": id};
 
-				p_mapctx.featureCollection.featuredraw(this.editingLayerKey, id);
+				// p_mapctx.featureCollection.featuredraw(this.editingLayerKey, id);
+				this.paintCurrentEditFeature(p_mapctx);
 
 				break;
 
@@ -576,6 +575,11 @@ export class EditingMgr extends MapPrintInRect {
 	resetCurrentEditFeatureHolder() {
 		this.#current_edit_feature_holder = null;
 	}	
+
+	paintCurrentEditFeature(p_mapctx) {
+		const id = this.#current_edit_feature_holder["id"];
+		p_mapctx.featureCollection.featuredraw(this.editingLayerKey, id);
+	}
 
 	serialize2JSON(p_crs) {
 
