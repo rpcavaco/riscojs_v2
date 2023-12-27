@@ -33,7 +33,7 @@ export class EditingMgr extends MapPrintInRect {
 	std_boxdims;
 	// active_mode;
 
-	#current_edit_feature;
+	#current_edit_feature_holder;
 	#current_edit_partidx;
 	#current_edit_vertexidx;
 	#edit_features;
@@ -86,7 +86,7 @@ export class EditingMgr extends MapPrintInRect {
 		this.print_attempts = 0;
 		this.had_prev_interaction = false;
 
-		this.#current_edit_feature = null;
+		this.#current_edit_feature_holder = null;
 
 		p_mapctx.toolmgr.setEditingManager(this);
 	}
@@ -480,16 +480,16 @@ export class EditingMgr extends MapPrintInRect {
 		} else if (p_feat_dict[this.editingLayerKey].length > 1) {
 			throw new Error(`setCurrentEditFeature, feat dict with MORE THAN ONE element for editing layer '${this.editingLayerKey}'`);
 		} else {
-			this.#current_edit_feature = p_feat_dict[this.editingLayerKey][0];
+			this.#current_edit_feature_holder = p_feat_dict[this.editingLayerKey][0];
 			if (this.#single_feat_editing) {
-				this.#edit_features = [this.#current_edit_feature];
+				this.#edit_features = [this.#current_edit_feature_holder];
 			} else {
-				this.#edit_features.push(JSON.parse(JSON.stringify(this.#current_edit_feature)));
+				this.#edit_features.push(JSON.parse(JSON.stringify(this.#current_edit_feature_holder)));
 			}
-			ret = this.#current_edit_feature;
+			ret = this.#current_edit_feature_holder;
 		}
 
-		console.log("464 >", this.#current_edit_feature);
+		console.log("464 >", this.#current_edit_feature_holder);
 
 		return ret;
 
@@ -503,7 +503,7 @@ export class EditingMgr extends MapPrintInRect {
 
 	editCurrentVertex(p_mapctx, p_scrx, p_scry) {
 
-		if (this.#current_edit_feature == null) {
+		if (this.#current_edit_feature_holder == null) {
 			throw new Error("editCurrentVertex, no current editing feature");
 		}
 		if (this.#current_edit_partidx == null) {
@@ -513,7 +513,7 @@ export class EditingMgr extends MapPrintInRect {
 			throw new Error("editCurrentVertex, no current editing vertex index");
 		}	
 	
-		const feat = this.#current_edit_feature.feat;
+		const feat = this.#current_edit_feature_holder.feat;
 		
 		if (feat.gt == "point") { // }.g.length == 2 && typeof feat.g[0] === 'number') {
 			// point
@@ -545,10 +545,12 @@ export class EditingMgr extends MapPrintInRect {
 		const terr_pt = [];
 		p_mapctx.transformmgr.getTerrainPt([p_scrx, p_scry], terr_pt);
 
+		console.log(":: Editmgr 548 ::", p_feat_geomtype);
+
 		switch(p_feat_geomtype.toLowerCase()) {
 
 			case "point":
-				this.#current_edit_feature = {
+				this.#current_edit_feature_holder = {
 					"feat": {
 						gt: "point",
 						l: 1,
@@ -561,26 +563,28 @@ export class EditingMgr extends MapPrintInRect {
 		}
 
 		if (this.#single_feat_editing) {
-			this.#edit_features = [this.#current_edit_feature];
+			this.#edit_features = [this.#current_edit_feature_holder];
 		} else {
-			this.#edit_features.push(JSON.parse(JSON.stringify(this.#current_edit_feature)));
+			this.#edit_features.push(JSON.parse(JSON.stringify(this.#current_edit_feature_holder)));
 		}
+
+		console.log(":: Editmgr 571 :: edit feats:", this.#edit_features);
 
 		this.#pending_changes_to_save = "GEO";
 
 	}
 
-	getCurrentEditFeature() {
-		return this.#current_edit_feature;
+	getCurrentEditFeatureHolder() {
+		return this.#current_edit_feature_holder;
 	}
 
-	resetCurrentEditFeature() {
-		this.#current_edit_feature = null;
+	resetCurrentEditFeatureHolder() {
+		this.#current_edit_feature_holder = null;
 	}	
 
 	serialize2JSON(p_crs) {
 
-		if (this.#current_edit_feature == null) {
+		if (this.#current_edit_feature_holder == null) {
 			throw new Error("serialize2GeoJSONLike, no current_edit_feature defined");
 		}
 
@@ -637,13 +641,13 @@ export class EditingMgr extends MapPrintInRect {
 
 	genSavePayload(p_mapctx) {
 
-		if (this.#current_edit_feature == null) {
+		if (this.#current_edit_feature_holder == null) {
 			throw new Error("genSavePayload, no current_edit_feature defined");
 		}
 
 		return {
 			lname: this.editingLayerKey,
-			//gisid: this.#current_edit_feature["feat"].a[this.#layeredit_cfg_attribs["gisid_field"]],
+			//gisid: this.#current_edit_feature_holder["feat"].a[this.#layeredit_cfg_attribs["gisid_field"]],
 			featholders: this.serialize2JSON(p_mapctx.cfgvar.basic["crs"]),
 			sessionid: this.#current_sessionid,
 			mapname: p_mapctx.cfgvar.basic["mapname"]
@@ -696,7 +700,7 @@ export class EditingMgr extends MapPrintInRect {
 						}						
 					).catch(
 						(error) => {
-							console.error(`HTTP error on saving edits: ${error}'`);
+							console.error(`Error on saving edits: ${error}'`);
 							p_mapctx.maprefresh();
 							throw new Error(error);
 						}						

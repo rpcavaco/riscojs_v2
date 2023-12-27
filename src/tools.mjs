@@ -489,7 +489,7 @@ class PointEditTool extends BaseTool {
 	clearCanvasAndResetEditFeat(p_mapctx) {
 
 		this.clearCanvas(p_mapctx);	
-		this.editmanager.resetCurrentEditFeature();
+		this.editmanager.resetCurrentEditFeatureHolder();
 
 	}	
 
@@ -514,6 +514,7 @@ class PointEditTool extends BaseTool {
 			// console.log("pick, ret:", ret);	
 			p_mapctx.featureCollection.redrawAllVectorLayers();
 		} else {
+			console.log(":: 517 ::");
 			this.editmanager.addNewVertex(p_mapctx, "point", p_scrx, p_scry);
 		}
 
@@ -561,7 +562,7 @@ class PointEditTool extends BaseTool {
 			this.editmanager.setCurrentEditFeature(p_feature_dict);
 		}
 
-		if (this.editmanager.getCurrentEditFeature() != null) {
+		if (this.editmanager.getCurrentEditFeatureHolder() != null) {
 			layerklist = Object.keys(p_feature_dict);
 			ret = p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDITENGAGE", {'normal': 'temporary', 'label': 'temporary' });	
 			if (ret) {
