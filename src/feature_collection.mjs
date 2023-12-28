@@ -30,6 +30,10 @@ export class FeatureCollection {
 		
 	}
 
+	static checkIdIsTemp(p_id) {
+		return p_id.startsWith('_temp_');
+	}
+
 
 	setLayer(p_layerkey, p_layerobj, opt_exclude_from_redraw) {
 
@@ -237,6 +241,7 @@ export class FeatureCollection {
 	}
 
 	remove(p_layerkey, p_id) {
+		//console.trace("REMOVING", p_layerkey, p_id);
 		if (this.featList[p_layerkey] !== undefined) {
 			if (this.featList[p_layerkey][p_id] !== undefined) {
 				delete this.featList[p_layerkey][p_id];

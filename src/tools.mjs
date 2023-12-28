@@ -467,7 +467,7 @@ class PointEditTool extends BaseTool {
 
 		// If tabletFeatPreSelection is set, meaning tablet mode SIMPLE is enabled and there is a presel feature
 		if (p_mapctx.tabletFeatPreSelection.isSet) {
-			const feat = this.editmanager.setCurrentEditFeature(p_mapctx.tabletFeatPreSelection.get());
+			const feat = this.editmanager.setCurrentEditFeature(p_mapctx, p_mapctx.tabletFeatPreSelection.get());
 			if (feat) {
 				await p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, feat.id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });		
 			}
@@ -503,9 +503,6 @@ class PointEditTool extends BaseTool {
 			return;
 		}
 
-
-		console.log("this.editfeat_engaged:", this.editfeat_engaged);
-		
 		this.clearCanvas(p_mapctx);
 
 		p_mapctx.drawVertex("NEW", p_scrx, p_scry, 'temporary');
@@ -513,15 +510,11 @@ class PointEditTool extends BaseTool {
 		if (this.editfeat_engaged) {
 			// edit current vertex in current feature
 			this.editmanager.editCurrentVertex(p_mapctx, p_scrx, p_scry);
-			// console.log("pick, ret:", ret);	
-			//p_mapctx.featureCollection.redrawAllVectorLayers();
-			this.editmanager.paintCurrentEditFeature(p_mapctx);
+			p_mapctx.featureCollection.redrawAllVectorLayers();
 		} else {
+			// add new vertex to current feature or init a new feature creating its first vertex
 			this.editmanager.addNewVertex(p_mapctx, "point", p_scrx, p_scry);
 		}
-
-		this.editfeat_engaged = false;
-		//console.trace("clickOnEmpty");
 	} 
 
 	hover(p_mapctx, p_feature_dict, p_scrx, p_scry){
@@ -532,7 +525,7 @@ class PointEditTool extends BaseTool {
 
 		// If tabletFeatPreSelection is active, meaning tablet mode SIMPLE is enabled, lets act as pick method
 		if (p_mapctx.tabletFeatPreSelection.isActive) {
-			feat = this.editmanager.setCurrentEditFeature(p_feature_dict);
+			feat = this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict);
 			if (feat!=null) {
 				doDrawFeat = true;
 			}
@@ -561,7 +554,7 @@ class PointEditTool extends BaseTool {
 
 		// If NOT tabletFeatPreSelection is active, meaning tablet mode is DISBALED, lets act as expected in pick method
 		if (!p_mapctx.tabletFeatPreSelection.isActive) {
-			this.editmanager.setCurrentEditFeature(p_feature_dict);
+			this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict);
 		}
 
 		if (this.editmanager.getCurrentEditFeatureHolder() != null) {
@@ -631,7 +624,7 @@ class PointEditTool extends BaseTool {
 					break;
 
 				case 'mousemove':
-					// if in tablet mode SIMPLE, ignore mouse move for info / maptip purposes , EXCEPT whe feature engaged
+					// if in tablet mode SIMPLE, ignore mouse move for info / maptip purposes , EXCEPT when feature engaged
 					if (this.editfeat_engaged) {
 
 						mxdist = this.constructor.mouseselMaxdist(p_mapctx);
@@ -661,6 +654,14 @@ class PointEditTool extends BaseTool {
 		// has this tool interacted with event ?
 		return ret;
 		
+	}	
+
+	cleanUp(p_mapctx) {
+
+		console.info("[INFO] PointEditTool cleanup");
+
+		this.editfeat_engaged = false;
+		this.editmanager.resetCurrentEditFeatureHolder();
 	}	
 }
 
