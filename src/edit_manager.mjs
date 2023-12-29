@@ -67,7 +67,7 @@ export class EditingMgr extends MapPrintInRect {
 		this.enabledFillStyleFront = GlobalConst.CONTROLS_STYLES.EM_INACTIVECOLOR;
 		this.inactiveStyleFront = GlobalConst.CONTROLS_STYLES.EM_INACTIVECOLOR;
 		this.margin_offset = GlobalConst.CONTROLS_STYLES.OFFSET;
-		this.normalszPX = GlobalConst.CONTROLS_STYLES.EM_NORMALSZ_PX;		
+		this.normalszPX = GlobalConst.CONTROLS_STYLES.EM_NORMALSZ_PX;	
 		this.strokeWidth = GlobalConst.CONTROLS_STYLES.STROKEWIDTH;
 
 		if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["fontfamily"] !== undefined) {		
@@ -80,6 +80,7 @@ export class EditingMgr extends MapPrintInRect {
 
 		this.left = 600;
 		this.top = 600;
+		this.featcounter_width = 10;
 
 		this.expandenv = 1;
 		this.prevboxenv = null;
@@ -107,7 +108,7 @@ export class EditingMgr extends MapPrintInRect {
 		const icondims = GlobalConst.CONTROLS_STYLES.EM_ICONDIMS;
 
 		this.boxh = icondims[1] + 2 * this.margin_offset;
-		this.boxw = icondims[0] + 2 * this.margin_offset;
+		this.boxw = icondims[0] + 3 * this.margin_offset + this.featcounter_width;
 
 		this.left = mapdims[0] - (this.boxw + this.margin_offset);
 
@@ -138,7 +139,6 @@ export class EditingMgr extends MapPrintInRect {
 
 			const dee = 2 * this.expandenv;
 			ctx.clearRect(this.left-this.expandenv, this.top-this.expandenv, this.boxw+dee, this.boxh+dee); 	
-
 			ctx.fillRect(this.left, this.top, this.boxw, this.boxh);
 			
 			ctx.strokeStyle = this.activeStyleFront;
@@ -157,8 +157,16 @@ export class EditingMgr extends MapPrintInRect {
 			img.src = imgsrc;
 			img.decode()
 			.then(() => {
-				ctx.drawImage(img, this.left+this.margin_offset, this.top+this.margin_offset, icondims[0], icondims[1]);
+				ctx.drawImage(img, this.left+2*this.margin_offset+this.featcounter_width, this.top+this.margin_offset, icondims[0], icondims[1]);
 			});
+
+			//if (this.#edit_feature_holders.length > 0) {
+			ctx.textAlign = "center";
+			ctx.fillStyle = "white";
+			ctx.textBaseline = "middle";
+			ctx.font = `${(this.normalszPX - 4)}px ${this.fontfamily}`;
+			ctx.fillText(this.#edit_feature_holders.length.toString(), this.left+this.margin_offset+0.5*this.featcounter_width, this.top+this.margin_offset+0.5*icondims[1]);	
+			//}
 
 		} catch(e) {
 			throw e;
@@ -534,6 +542,8 @@ export class EditingMgr extends MapPrintInRect {
 		p_mapctx.transformmgr.getTerrainPt([p_scrx, p_scry], terr_pt);
 		p_mapctx.featureCollection.setVertex(this.editingLayerKey, this.#current_edit_feature_holder.id, feat, terr_pt, this.#current_edit_vertexidx);
 
+		this.print(p_mapctx);
+
 		this.#pending_changes_to_save = "GEO";
 				
 	}
@@ -595,6 +605,8 @@ export class EditingMgr extends MapPrintInRect {
 		} else {
 			this.#edit_feature_holders.push(JSON.parse(JSON.stringify(this.#current_edit_feature_holder)));
 		}
+
+		this.print(p_mapctx);
 
 		this.#pending_changes_to_save = "GEO";
 
@@ -690,9 +702,11 @@ export class EditingMgr extends MapPrintInRect {
 
 		// Disable edit mode
 		this.setEditingEnabled(p_mapctx, false);
+		this.#edit_feature_holders.length = 0;
 		this.print(p_mapctx);
 
 		this.clearPendingChangesToSave();
+
 		p_mapctx.maprefresh();		
 	}
 
