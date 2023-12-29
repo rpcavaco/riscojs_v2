@@ -4,6 +4,102 @@ import {Layer} from './layers.mjs'
 import { isSuperset, setEquality} from './utils.mjs'
 import { diffDays, uuidv4 } from './utils.mjs';  // Can be called in 'varstyles' on 'iconsrcfunc' functions
 
+class FeatureChangeBuffer {
+
+	#buffer = {};
+
+	addState(p_layerkey, p_id, p_feat) {
+
+		if (this.#buffer[p_layerkey] === undefined) {
+			this.#buffer[p_layerkey] = {};
+		}
+		if (this.#buffer[p_layerkey][p_id] === undefined) {
+			this.#buffer[p_layerkey][p_id] = [];
+		}	
+		this.#buffer[p_layerkey][p_id].push(
+			{
+				"ts": new Date(),
+				"feat": JSON.parse(JSON.stringify(p_feat))
+			}
+		);
+
+	}
+
+	getExistingFeatStates(p_layerkey, p_id) {
+
+		let ret = null;
+
+		if (this.#buffer[p_layerkey] !== undefined) {
+			if (this.#buffer[p_layerkey][p_id] !== undefined) {
+				ret = this.#buffer[p_layerkey][p_id];
+			}		
+		}
+
+		return ret;		
+	}
+
+	/*getStateChangesCount(p_layerkey, p_id) {
+
+		let ret = 0;
+
+		const fs = this.getExistingFeatStates(p_layerkey, p_id);		
+		if (fs != null) {
+			ret = fs.length;
+		}
+
+		return ret;
+	}	*/
+
+	getStateChange(p_layerkey, p_id, p_idx) {
+
+		let ret = null;
+
+		const fs = this.getExistingFeatStates(p_layerkey, p_id);		
+		if (fs != null) {
+			if (p_idx >= 0 && p_idx < fs.length) {
+				ret = fs[p_idx];
+			}
+		}
+		
+		return ret;
+	}		
+
+	getUnchangedState(p_layerkey, p_id) {
+
+		let ret = null;
+
+		const fs = this.getExistingFeatStates(p_layerkey, p_id);		
+		if (fs != null && fs.length > 0) {
+			ret = fs[0];
+		}
+
+		return ret;
+	}
+	
+	getMostRecentState(p_layerkey, p_id) {
+
+		let ret = null;
+
+		const fs = this.getExistingFeatStates(p_layerkey, p_id);		
+		if (fs != null && fs.length > 0) {
+			ret = fs[fs.length-1];
+		}
+
+		return ret;
+	}	
+
+	reset(p_layerkey) {
+
+		if (p_layerkey != null) {
+			this.#buffer[p_layerkey] = {};
+		} else {
+			this.#buffer = {};
+		}	
+	}
+
+
+}
+
 export class FeatureCollection {
 
 	mapctx;
@@ -13,6 +109,7 @@ export class FeatureCollection {
 	lyrkeys_exclude_from_redraw;
 	current_featuresdraw_status;
 	utils_for_varstyles;
+	#change_buffer;
 
 	constructor(p_mapctx) {
 
@@ -27,6 +124,8 @@ export class FeatureCollection {
 		this.current_featuresdraw_status = null;
 
 		this.utils_for_varstyles = {"diffDays": diffDays};
+
+		this.#change_buffer = new FeatureChangeBuffer();
 		
 	}
 
@@ -468,6 +567,10 @@ export class FeatureCollection {
 		return ret;
 	}
 
+	#set(p_layerkey, p_id, p_feat_data_holder) {
+		this.featList[p_layerkey][p_id] = JSON.parse(JSON.stringify(p_feat_data_holder.feat));
+	}
+
 	distanceTo(p_from_pt, p_layerkey, p_featid, p_minarea) {
 
 		let ret = -1, feat = this.featList[p_layerkey][p_featid];
@@ -655,6 +758,49 @@ export class FeatureCollection {
 
 		}
 
+
+	}
+
+	setVertex(p_layerkey, p_id, p_feat_reference, p_new_point, opt_vertex_index) {
+
+		if (p_feat_reference == null) {
+			throw new Error("null feature reference on setVertex");
+		}
+
+		if (["point"].indexOf(p_feat_reference.gt) < 0) {
+			throw new Error(`setVertex: geometry type '${p_feat_reference.gt}' not supported`);
+		}
+
+		if (p_feat_reference.g === undefined || p_feat_reference.g.length < 1) {
+			throw new Error(`setVertex: feature geometry empty or not defined`);
+		}		
+
+
+		this.#change_buffer.addState(p_layerkey, p_id, p_feat_reference);
+
+		switch(p_feat_reference.gt) {
+
+			case "point":
+				p_feat_reference.g[0] = [...p_new_point];
+				break;
+
+			default:
+				throw new Error(`setVertex: geometry type '${p_feat_reference.gt}' not supported`);
+		}
+
+
+	}
+
+	revertEditions(p_layerkey, p_id) {
+
+		const ustate = this.#change_buffer.getUnchangedState(p_layerkey, p_id);
+
+		if (ustate) {
+			this.#set(p_layerkey, p_id, ustate);
+			this.#change_buffer.reset(p_layerkey);
+		} else {
+			console.warn(`[WARN] revertEditions, no unchanged state for layer:${p_layerkey}, id:${p_id}`);
+		}
 
 	}
 

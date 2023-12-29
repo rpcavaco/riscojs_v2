@@ -532,9 +532,7 @@ export class EditingMgr extends MapPrintInRect {
 			
 		const terr_pt = [];
 		p_mapctx.transformmgr.getTerrainPt([p_scrx, p_scry], terr_pt);
-
-		feat.g[this.#current_edit_vertexidx][0] = terr_pt[0];
-		feat.g[this.#current_edit_vertexidx][1] = terr_pt[1];
+		p_mapctx.featureCollection.setVertex(this.editingLayerKey, this.#current_edit_feature_holder.id, feat, terr_pt, this.#current_edit_vertexidx);
 
 		this.#pending_changes_to_save = "GEO";
 				
@@ -555,6 +553,7 @@ export class EditingMgr extends MapPrintInRect {
 				p_mapctx.featureCollection.remove(this.editingLayerKey, this.#current_edit_feature_holder.id);
 			} else {
 				// p_mapctx.maprefresh();
+				p_mapctx.featureCollection.revertEditions(this.editingLayerKey, this.#current_edit_feature_holder.id);
 			}
 		}
 	}

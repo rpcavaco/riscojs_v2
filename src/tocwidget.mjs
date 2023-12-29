@@ -210,7 +210,7 @@ export class TOC  extends MapPrintInRect {
 				}
 
 				if (varstyles_fc > 0 && lyr_fc[lyr.key] > varstyles_fc) {
-					console.warn(`[WARN] layer ${lyr.key} varstyles dont apply to all fetures - all f.count:${lyr_fc[lyr.key]},  vstyles f.count:${varstyles_fc}`);
+					console.warn(`[WARN] layer ${lyr.key} varstyles dont apply to all features - all f.count:${lyr_fc[lyr.key]},  vstyles f.count:${varstyles_fc}`);
 				}
 			}
 		}
