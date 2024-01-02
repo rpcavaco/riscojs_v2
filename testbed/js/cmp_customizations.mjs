@@ -830,7 +830,7 @@ export class LocQuery {
 					}); 
 				}
 				pp_query_box.addEventListener('keypress', function(e) { 
-					if (e.keyCode == 13) {
+					if (e.key == 13) {
 						e.target.blur();
 						pp_qryb_obj.lastinput = pp_query_box.value.trim();
 						pp_qryb_obj.query(pp_qryb_obj.lastinput);
