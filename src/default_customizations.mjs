@@ -10,10 +10,16 @@ import { EditingMgr } from './edit_manager.mjs';
 class MousecoordsPrint extends PermanentMessaging {
 
 	#dims_set = false;
+	visible = true;
 
-	constructor(p_other_widgets) {
+	constructor(p_other_widgets, p_visible) {
 		super();
 		this.other_widgets = p_other_widgets;
+		this.visible = p_visible;
+	}
+
+	changeVisibility(p_visible) {
+		this.visible = p_visible;
 	}
 
 	setdims(p_mapctx, opt_canvas_dims) {
@@ -43,6 +49,7 @@ class MousecoordsPrint extends PermanentMessaging {
 	print(p_mapctx, px, py) {
 
 		const terr_pt = [], canvas_dims = [];
+
 		p_mapctx.transformmgr.getTerrainPt([px, py], terr_pt);
 
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
@@ -73,17 +80,20 @@ class MousecoordsPrint extends PermanentMessaging {
 			}
 
 			ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
-			ctx.fillStyle = this.fillStyleBack;
-			ctx.fillRect(this.left, this.top, this.boxw, this.boxh);
 
-			ctx.fillStyle = this.fillStyleFront;
-			ctx.font = this.font;
-
-			const bottom = this.top + this.boxh;
-			const text_baseline_offset = GlobalConst.MESSAGING_STYLES.MAPSCALE_TXTBASEOFFSET;
-
-			ctx.fillText(terr_pt[0].toLocaleString(undefined, { maximumFractionDigits: 2 }), this.left+8, bottom+text_baseline_offset);		
-			ctx.fillText(terr_pt[1].toLocaleString(undefined, { maximumFractionDigits: 2 }), this.left+66, bottom+text_baseline_offset);	
+			if (this.visible) {
+				ctx.fillStyle = this.fillStyleBack;
+				ctx.fillRect(this.left, this.top, this.boxw, this.boxh);
+	
+				ctx.fillStyle = this.fillStyleFront;
+				ctx.font = this.font;
+	
+				const bottom = this.top + this.boxh;
+				const text_baseline_offset = GlobalConst.MESSAGING_STYLES.MAPSCALE_TXTBASEOFFSET;
+	
+				ctx.fillText(terr_pt[0].toLocaleString(undefined, { maximumFractionDigits: 2 }), this.left+8, bottom+text_baseline_offset);		
+				ctx.fillText(terr_pt[1].toLocaleString(undefined, { maximumFractionDigits: 2 }), this.left+66, bottom+text_baseline_offset);	
+			}	
 			
 		} catch(e) {
 			throw e;
@@ -1368,7 +1378,7 @@ export class MapCustomizations {
 			"infoclass": new Info(this.mapctx, infoboxStyle, max_textlines_height),
 			"attributionprint": ap,
 			"mapscaleprint": msp,
-			"mousecoordsprint": new MousecoordsPrint([ap, msp]),
+			"mousecoordsprint": new MousecoordsPrint([ap, msp], false),
 			"loadingmsgprint": new LoadingPrint(),
 			"overlay": new OverlayMgr()
 			// "analysis": new AnalysisMgr([ap]),

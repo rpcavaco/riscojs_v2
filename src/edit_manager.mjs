@@ -217,10 +217,12 @@ export class EditingMgr extends MapPrintInRect {
 					case 'mouseup':
 					case 'touchend':
 
+						/*
 						const ci = p_mapctx.getCustomizationObject();
 						if (ci == null) {
 							throw new Error("map context customization instance is missing")
 						}
+						*/
 
 						if (this.isEditingEnabled()) {
 							this.save(p_mapctx);
@@ -334,7 +336,7 @@ export class EditingMgr extends MapPrintInRect {
 	defineEditingLayer(p_mapctx) {
 
 		const work_layerkeys = [], editables= {}, types=[];
-		let lyr, constraints = null, tmp;
+		let lyr, constraints = null, ret = false;
 
 		p_mapctx.tocmgr.getAllVectorLayerKeys(work_layerkeys);		
 
@@ -392,44 +394,59 @@ export class EditingMgr extends MapPrintInRect {
 				throw new Error(`defineEditingLayer, layer '${temp_layer_key[0]}' not defined`);
 			}
 
-			if (lyr._gisid_field == null) {
-				throw new Error(`defineEditingLayer, layer '${temp_layer_key[0]}' has no gisid_field defined, cannot edit`);
-			}
+			const sv = p_mapctx.transformmgr.getReadableCartoScale();
+			if (!lyr.checkScaleVisibility(sv)) {
 
-			const missing_attribs = [];
-			for (let k of layeredit_cfg_attrib_names) {
-				if (lyr.layereditable[k] === undefined) {
-					missing_attribs.push(k);
+				const msgsctrlr = p_mapctx.getCustomizationObject().messaging_ctrlr;
+				msgsctrlr.warn(p_mapctx.i18n.msg('EDITLYROUTOFSCALE',true));
+				ret = false;
+		
+			} else {
+
+				if (lyr._gisid_field == null) {
+					throw new Error(`defineEditingLayer, layer '${temp_layer_key[0]}' has no gisid_field defined, cannot edit`);
 				}
-			}
 
-			if (missing_attribs.length > 0) {
+				const missing_attribs = [];
+				for (let k of layeredit_cfg_attrib_names) {
+					if (lyr.layereditable[k] === undefined) {
+						missing_attribs.push(k);
+					}
+				}
+
+				if (missing_attribs.length > 0) {
+					temp_layer_key.length = 0;
+					throw new Error(`defineEditingLayer failed for layer '${temp_layer_key[0]}', missing 'layereditable' attribs (in layer config): ${missing_attribs}`);
+				}
+
+				switch (types[temp_layer_key[0]]) {
+
+					case "point":
+						this.#current_tool_name = 'PointEditTool';
+						break;
+
+					default:
+						throw new Error(`geom type '${types[temp_layer_key[0]]}', for layer key '${temp_layer_key[0]}', has no edit tool associated for now`);
+				}
+
+				for (let k of layeredit_cfg_attrib_names) {
+					this.#layeredit_cfg_attribs[k] = lyr.layereditable[k];
+				}		
+				
+				this.#layeredit_cfg_attribs["gisid_field"] = lyr._gisid_field;
+
+				this.editingLayerKey = temp_layer_key[0];
 				temp_layer_key.length = 0;
-				throw new Error(`defineEditingLayer failed for layer '${temp_layer_key[0]}', missing 'layereditable' attribs (in layer config): ${missing_attribs}`);
+
+				this.#editing_layer_url = (lyr.url.endsWith("/") ? lyr.url : lyr.url + "/") + "save";
+
+				ret = true;
+					
 			}
-
-			switch (types[temp_layer_key[0]]) {
-
-				case "point":
-					this.#current_tool_name = 'PointEditTool';
-					break;
-
-				default:
-					throw new Error(`geom type '${types[temp_layer_key[0]]}', for layer key '${temp_layer_key[0]}', has no edit tool associated for now`);
-			}
-
-			for (let k of layeredit_cfg_attrib_names) {
-				this.#layeredit_cfg_attribs[k] = lyr.layereditable[k];
-			}		
-			
-			this.#layeredit_cfg_attribs["gisid_field"] = lyr._gisid_field;
-
-			this.editingLayerKey = temp_layer_key[0];
-			temp_layer_key.length = 0;
-
-			this.#editing_layer_url = (lyr.url.endsWith("/") ? lyr.url : lyr.url + "/") + "save";
 
 		}
+
+		return ret;
 	}
 	
 	setEditingEnabled(p_mapctx, p_editing_tobe_enabled) {
@@ -437,18 +454,28 @@ export class EditingMgr extends MapPrintInRect {
 		if (p_editing_tobe_enabled) {
 			if(this.precheckCanEditStatus()) {
 
-				this.defineEditingLayer(p_mapctx);
+				if (this.defineEditingLayer(p_mapctx)) {
 
-				// adicionar presel feats
-				if (!this.checkCanEditStatus(true)) {
-					throw new Error("Cannot enable editing");
+					// adicionar presel feats
+					if (!this.checkCanEditStatus(true)) {
+						throw new Error("Cannot enable editing");
+					}
+					this.#editing_is_enabled = true;
+
+					// ativar tool
+					const tool = p_mapctx.toolmgr.enableTool(p_mapctx, this.#current_tool_name, true);
+					tool.init(p_mapctx);
+
+					// Enable coords display
+					const ci = p_mapctx.getCustomizationObject();
+					if (ci == null) {
+						throw new Error("map context customization instance is missing")
+					}	
+					const mcp = ci.instances["mousecoordsprint"];		
+					mcp.changeVisibility(true);
+
 				}
-				this.#editing_is_enabled = true;
 
-				// ativar tool
-				const tool = p_mapctx.toolmgr.enableTool(p_mapctx, this.#current_tool_name, true);
-				tool.init(p_mapctx);
-			
 			}		
 		} else {
 
@@ -460,6 +487,15 @@ export class EditingMgr extends MapPrintInRect {
 			this.#editing_is_enabled = false;
 
 			p_mapctx.clearInteractions('EDITMGR3', true);
+
+			// Disable coords display
+			const ci = p_mapctx.getCustomizationObject();
+			if (ci == null) {
+				throw new Error("map context customization instance is missing")
+			}	
+			const mcp = ci.instances["mousecoordsprint"];		
+			mcp.changeVisibility(false);	
+			mcp.print(p_mapctx);		
 		}		
 	}	
 
