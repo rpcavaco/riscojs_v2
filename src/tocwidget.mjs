@@ -20,6 +20,7 @@ export class TOC  extends MapPrintInRect {
 	collapsedstate;
 	prevboxenv;
 	itemtypes_preventing_inflation;
+	editing_layer_key;
 
 	constructor(p_mapctx) {
 
@@ -114,7 +115,7 @@ export class TOC  extends MapPrintInRect {
 		}
 
 		// cal width
-		let lbl, lyr_labels={}, lyr_fc = {}, lyr_vs_captions={}, lyr_vs_fc={}, varstyle_caption, lang, max_lbl_w = 0, varstyles_fc;
+		let lbl, lyr_labels={}, lyr_fc = {}, lyr_vs_captions={}, lyr_vs_fc={}, varstyle_caption, lang, max_lbl_w = 0, varstyles_fc, cfgfont;
 
 		let paint_order = [], temp_paint_order = [], forced_order_cnt = 0;
 		temp_paint_order.length = this.tocmgr.forced_lorder.length;
@@ -304,6 +305,8 @@ export class TOC  extends MapPrintInRect {
 				substep = vs_toc_sep * this.varstylePX;
 				varstyles_groups_found.length = 0;
 
+				cfgfont = `${this.normalszPX}px ${this.fontfamily}`;
+
 				for (let li of paint_order) {
 
 					lyr = this.tocmgr.layers[li]; 
@@ -329,10 +332,28 @@ export class TOC  extends MapPrintInRect {
 						if (lyr["varstyles_symbols"] === undefined || lyr["varstyles_symbols"].length == 0) {
 							grcota = 2 + cota - 0.5 * this.varstylePX;
 							drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota, step);	
+							if (lyr.key == this.editing_layer_key) {
+								ctx.save();
+								ctx.font = `bold ${cfgfont}`;
+								ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_EDITLAYER_ENTRY_COLOR;
+							}
 							ctx.fillText(lbl, indent_txleft, cota);	
+							if (lyr.key == this.editing_layer_key) {
+								ctx.restore();
+							}							
 						} else {
 
+							if (lyr.key == this.editing_layer_key) {
+								ctx.save();
+								ctx.font = `bold ${cfgfont}`;
+								ctx.fillStyle = GlobalConst.CONTROLS_STYLES.TOC_EDITLAYER_ENTRY_COLOR;
+							}
+
 							ctx.fillText(lbl, txleft, cota);	
+
+							if (lyr.key == this.editing_layer_key) {
+								ctx.restore();
+							}							
 
 							if (!lyr.layervisible) {
 								ctx.save();
@@ -725,5 +746,13 @@ export class TOC  extends MapPrintInRect {
 		}
 
 		return (this.collapsedstate == "OPEN");
+	}	
+
+	setEditingLayerKey(p_editing_layer_key) {
+		this.editing_layer_key = p_editing_layer_key;
+	}
+
+	clearEditingLayerKey() {
+		this.editing_layer_key = null;
 	}	
 }

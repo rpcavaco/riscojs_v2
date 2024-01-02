@@ -287,6 +287,7 @@ var GlobalConst = {
 		TOC_STRIKETHROUGH_FILL: "rgba(200, 200, 200, 0.3)",
 		TOC_COLLAPSED_STRIPES_FILL: "rgba(220, 220, 220, 0.75)",
 		TOC_START_COLLAPSED_CANVAS_MAXWIDTH: 800,
+		TOC_EDITLAYER_ENTRY_COLOR: "#3effff",
 
 		// Shared between Analysis Manager and Selections Navigator, whose operation in tightly connected
 		AM_LEFTCOL_WIDTH: 50,

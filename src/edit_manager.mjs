@@ -471,8 +471,13 @@ export class EditingMgr extends MapPrintInRect {
 					if (ci == null) {
 						throw new Error("map context customization instance is missing")
 					}	
+
 					const mcp = ci.instances["mousecoordsprint"];		
 					mcp.changeVisibility(true);
+
+					const toc = ci.instances["toc"];		
+					toc.setEditingLayerKey(this.editingLayerKey);
+					toc.print(p_mapctx);
 
 				}
 
@@ -493,9 +498,15 @@ export class EditingMgr extends MapPrintInRect {
 			if (ci == null) {
 				throw new Error("map context customization instance is missing")
 			}	
+
 			const mcp = ci.instances["mousecoordsprint"];		
 			mcp.changeVisibility(false);	
-			mcp.print(p_mapctx);		
+			mcp.print(p_mapctx);	
+			
+			const toc = ci.instances["toc"];		
+			toc.clearEditingLayerKey();
+			toc.print(p_mapctx);
+	
 		}		
 	}	
 
