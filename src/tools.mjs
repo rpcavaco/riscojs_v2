@@ -166,6 +166,7 @@ class MultiTool extends BaseTool {
 
 				case 'touchend':
 					orig = "touch";
+					// fallthrough
 				case 'mouseup':
 					// console.log("mup multitool");
 					// console.trace();
@@ -206,6 +207,7 @@ class MultiTool extends BaseTool {
 
 				case 'touchmove':
 				case 'mousemove':
+					p_mapctx.printMouseCoords(p_evt.offsetX, p_evt.offsetY);
 					if (this.start_screen != null) {
 						if (p_evt.buttons === undefined || (p_evt.buttons & 1) == 1) {
 							p_mapctx.renderingsmgr.putImages(this.imgs_dict, [p_evt.offsetX-this.start_screen[0], p_evt.offsetY-this.start_screen[1]]);

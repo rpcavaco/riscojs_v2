@@ -500,14 +500,15 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			//this.drawControls();
 
 			const sv = this.transformmgr.getReadableCartoScale();
-			// print decorated map scale widget 
-			this.printScale(sv);
+			
+			//// print decorated map scale widget 
+			// this.printScale(sv);
 
 			this.featureCollection.invalidate();
 			// maplayers refresh
 			this.tocmgr.tocMgrRefresh(sv);
 
-			this.printAttributionMsg();
+			// this.printAttributionMsg();
 
 
 		}
@@ -747,15 +748,18 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		}
 	}
 
-	printMouseCoords(p_x, py) {
+
+	printMouseCoords(px, py) {
 		const ci = this.getCustomizationObject();
 		if (ci) {
 			const mpc = ci.instances["mousecoordsprint"];
 			if (mpc.print !== undefined) {
-				mpc.print(this, p_x, py);
+				mpc.print(this, px, py);
 			}			
 		}
 	}
+
+		/*
 
 	printScale(p_scaleval) {
 		const ci = this.getCustomizationObject();
@@ -801,7 +805,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		} else {
 			console.error("printScale, no map customizations available");
 		}
-	}
+	}*/
 
 	printLoadingMsg(p_layername) {
 		const ci = this.getCustomizationObject();

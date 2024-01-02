@@ -9,14 +9,41 @@ import { EditingMgr } from './edit_manager.mjs';
 
 class MousecoordsPrint extends PermanentMessaging {
 
-	constructor() {
+	#dims_set = false;
+
+	constructor(p_other_widgets) {
 		super();
+		this.other_widgets = p_other_widgets;
 	}
 
-	print(p_mapctx, p_x, py) {
+	setdims(p_mapctx, opt_canvas_dims) {
+
+		if (this.#dims_set) {
+			return;
+		}
+
+		let canvas_dims;
+
+		if (opt_canvas_dims) {
+			canvas_dims = opt_canvas_dims;
+		} else {
+			canvas_dims = [];
+			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+		}
+
+		this.boxw =  GlobalConst.MESSAGING_STYLES.MAPCOORDS_WIDTH;
+		this.boxh = GlobalConst.MESSAGING_STYLES.MAPCOORDS_HEIGHT;
+		this.left = canvas_dims[0] - this.boxw;
+		this.top = canvas_dims[1] - this.boxh;
+
+		this.#dims_set = true;
+
+	}
+
+	print(p_mapctx, px, py) {
 
 		const terr_pt = [], canvas_dims = [];
-		p_mapctx.transformmgr.getTerrainPt([p_x, py], terr_pt);
+		p_mapctx.transformmgr.getTerrainPt([px, py], terr_pt);
 
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		ctx.save();
@@ -24,10 +51,26 @@ class MousecoordsPrint extends PermanentMessaging {
 		try {
 			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
-			this.boxw = 130;
-			this.boxh = 20;
-			this.left = canvas_dims[0]-this.boxw;
-			this.top = canvas_dims[1]-(3*this.boxh)-2;
+			this.setdims(p_mapctx, canvas_dims);
+
+			let otherboxesoffset = 0;
+			for (let ow of this.other_widgets) {
+				if (ow['setdims'] !== undefined) {
+					ow.setdims(p_mapctx, canvas_dims);
+				}		
+				if (GlobalConst.MESSAGING_STYLES.MAPSCALE_HORIZONTAL_LAYOUT) {
+					otherboxesoffset += ow.getWidth();
+				} else {
+					otherboxesoffset += ow.getHeight();
+				}
+				// console.warn("AM boxesheight:", otherboxesheight, this.other_widgets.length);
+			}
+
+			if (GlobalConst.MESSAGING_STYLES.MAPCOORDS_HORIZONTAL_LAYOUT) {
+				this.left = canvas_dims[0] - this.boxw - otherboxesoffset - GlobalConst.MESSAGING_STYLES.MAPCOORDS_SEPARATION;
+			} else {
+				this.top = canvas_dims[1] - this.boxh - otherboxesoffset - GlobalConst.MESSAGING_STYLES.MAPCOORDS_SEPARATION;
+			}
 
 			ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
 			ctx.fillStyle = this.fillStyleBack;
@@ -37,9 +80,10 @@ class MousecoordsPrint extends PermanentMessaging {
 			ctx.font = this.font;
 
 			const bottom = this.top + this.boxh;
+			const text_baseline_offset = GlobalConst.MESSAGING_STYLES.MAPSCALE_TXTBASEOFFSET;
 
-			ctx.fillText(terr_pt[0].toLocaleString(undefined, { maximumFractionDigits: 2 }), this.left+8, bottom-6);		
-			ctx.fillText(terr_pt[1].toLocaleString(undefined, { maximumFractionDigits: 2 }), this.left+66, bottom-6);	
+			ctx.fillText(terr_pt[0].toLocaleString(undefined, { maximumFractionDigits: 2 }), this.left+8, bottom+text_baseline_offset);		
+			ctx.fillText(terr_pt[1].toLocaleString(undefined, { maximumFractionDigits: 2 }), this.left+66, bottom+text_baseline_offset);	
 			
 		} catch(e) {
 			throw e;
@@ -54,37 +98,71 @@ class MousecoordsPrint extends PermanentMessaging {
 
 class MapScalePrint extends PermanentMessaging {
 
-	constructor() {
+	#dims_set = false;
+
+	constructor(p_other_widgets) {
 		super();
+		this.other_widgets = p_other_widgets;
 	}
 
-	print(p_mapctx, p_scaleval, opt_right_offset, opt_vert_offset) {
+	setdims(p_mapctx, opt_canvas_dims) {
+
+		if (this.#dims_set) {
+			return;
+		}
+
+		let canvas_dims;
+
+		if (opt_canvas_dims) {
+			canvas_dims = opt_canvas_dims;
+		} else {
+			canvas_dims = [];
+			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+		}
+
+		this.boxw =  GlobalConst.MESSAGING_STYLES.MAPSCALE_WIDTH;
+		this.boxh = GlobalConst.MESSAGING_STYLES.MAPSCALE_HEIGHT;
+		this.left = canvas_dims[0] - this.boxw;
+		this.top = canvas_dims[1] - this.boxh;
+
+		this.#dims_set = true;
+
+	}
+
+	print(p_mapctx) {
 
 		const canvas_dims = [];
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		ctx.save();
 
-		let right_offset = 0;
-		if (opt_right_offset) {
-			right_offset = opt_right_offset;
-		}
-
 		try {
 			p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
-			this.boxw =  GlobalConst.MESSAGING_STYLES.MAPSCALE_WIDTH;
-			this.boxh = GlobalConst.MESSAGING_STYLES.MAPSCALE_HEIGHT;
+			this.setdims(p_mapctx, canvas_dims);
+
+			const sv = p_mapctx.transformmgr.getReadableCartoScale();
+
+			let otherboxesoffset = 0;
+			for (let ow of this.other_widgets) {
+				if (ow['setdims'] !== undefined) {
+					ow.setdims(p_mapctx, canvas_dims);
+				}		
+				if (GlobalConst.MESSAGING_STYLES.MAPSCALE_HORIZONTAL_LAYOUT) {
+					otherboxesoffset += ow.getWidth();
+				} else {
+					otherboxesoffset += ow.getHeight();
+				}
+				// console.warn("AM boxesheight:", otherboxesheight, this.other_widgets.length);
+			}
+
+			if (GlobalConst.MESSAGING_STYLES.MAPSCALE_HORIZONTAL_LAYOUT) {
+				this.left = canvas_dims[0] - this.boxw - otherboxesoffset;
+			} else {
+				this.top = canvas_dims[1] - this.boxh - otherboxesoffset;
+			}
 
 			const text_baseline_offset = GlobalConst.MESSAGING_STYLES.MAPSCALE_TXTBASEOFFSET;
 	
-			this.left = canvas_dims[0]-this.boxw-right_offset;
-
-			if (opt_vert_offset) {
-				this.top = canvas_dims[1] - this.boxh - opt_vert_offset;
-			} else {
-				this.top = canvas_dims[1] - this.boxh;
-			}
-
 			ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
 			ctx.fillStyle = this.fillStyleBack;
 			ctx.fillRect(this.left, this.top, this.boxw, this.boxh);
@@ -94,7 +172,7 @@ class MapScalePrint extends PermanentMessaging {
 
 			const bottom = this.top + this.boxh;
 
-			ctx.fillText(p_mapctx.i18n.msg('ESCL', true) + " 1:"+p_scaleval, this.left+GlobalConst.MESSAGING_STYLES.TEXT_OFFSET, bottom+text_baseline_offset);		
+			ctx.fillText(p_mapctx.i18n.msg('ESCL', true) + " 1:"+sv, this.left+GlobalConst.MESSAGING_STYLES.TEXT_OFFSET, bottom+text_baseline_offset);		
 
 		} catch(e) {
 			throw e;
@@ -105,7 +183,6 @@ class MapScalePrint extends PermanentMessaging {
 
 	interact(p_mapctx, p_evt) {
 
-
 		let topcnv, ret = false;
 		let maxscl = 1000000;
 
@@ -114,6 +191,7 @@ class MapScalePrint extends PermanentMessaging {
 		}
 
 		if (this.top == null) {
+			console.warn("[WARN] MapScalePrint interact, no dims, this.top is missing");
 			return ret;
 		}
 
@@ -1266,6 +1344,7 @@ export class MapCustomizations {
 		// widget which presence impacts others, at least through display area occupied
 		const ap = new AttributionPrint();
 		const toc = new TOC(this.mapctx);
+		const msp = new MapScalePrint([ap]);
 
 		let has_slicing = false;
 		if (this.mapctx.cfgvar["basic"]["slicing"] !== undefined && this.mapctx.cfgvar["basic"]["slicing"]["keys"] !== undefined && Object.keys(this.mapctx.cfgvar["basic"]["slicing"]["keys"]).length > 0) {
@@ -1287,10 +1366,10 @@ export class MapCustomizations {
 			"basemapctrl": new BasemapCtrlBox(),
 			"toc": toc,
 			"infoclass": new Info(this.mapctx, infoboxStyle, max_textlines_height),
-			"mousecoordsprint": new MousecoordsPrint(),
-			"mapscaleprint": new MapScalePrint(),
-			"loadingmsgprint": new LoadingPrint(),
 			"attributionprint": ap,
+			"mapscaleprint": msp,
+			"mousecoordsprint": new MousecoordsPrint([ap, msp]),
+			"loadingmsgprint": new LoadingPrint(),
 			"overlay": new OverlayMgr()
 			// "analysis": new AnalysisMgr([ap]),
 			// "navigator": nav,
@@ -1330,15 +1409,15 @@ export class MapCustomizations {
 		}
 
 		// Temporariamente sem navigator
-		this.mapcustom_controls_keys = ["basiccontrolsbox", "basemapctrl", "toc", "analysis", "slicing", "dashboard", "editing"]; // widgets exposing a 'print' method, just for display
-		this.mapcustom_controlsmgrs_keys = ["basiccontrolsbox", "basemapctrl", "analysis", "slicing", "dashboard", "editing"]; // controls manager widgets, exposing a generic 'interact' method
+		this.mapcustom_controls_keys = ["attributionprint", "mapscaleprint", "basiccontrolsbox", "basemapctrl", "toc", "analysis", "slicing", "dashboard", "editing"]; // widgets exposing a 'print' method, just for display
+		this.mapcustom_controlsmgrs_keys = ["mapscaleprint", "basiccontrolsbox", "basemapctrl", "analysis", "slicing", "dashboard", "editing"]; // controls manager widgets, exposing a generic 'interact' method
 
 /* 		this.mapcustom_controls_keys = ["basiccontrolsbox", "basemapctrl", "toc", "navigator", "analysis"]; // widgets exposing a 'print' method, just for display
 		this.mapcustom_controlsmgrs_keys = ["basiccontrolsbox", "basemapctrl", "navigator", "analysis"]; // controls manager widgets, exposing a generic 'interact' method
 																		// TOC is a special widget, not considered as a 'controls manager', its interactions
 																		// are trated separately, as it is a default map context member, opposite to these widgets 
 																		// which act as plugins */
-		this.overlay_keys = ["overlay", "mapscaleprint"];
+		this.overlay_keys = ["overlay"];
 	}
 }
 

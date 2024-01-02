@@ -85,6 +85,10 @@ export class MapPrintInRect {
 		return this.boxh;
 	}
 
+	getWidth() {
+		return this.boxw;
+	}
+
 	remove(p_mapctx) {
 		const gfctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		gfctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
