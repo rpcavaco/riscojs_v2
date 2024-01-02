@@ -434,6 +434,7 @@ export class EditingMgr extends MapPrintInRect {
 				}		
 				
 				this.#layeredit_cfg_attribs["gisid_field"] = lyr._gisid_field;
+				this.#layeredit_cfg_attribs["accept_deletion"] = lyr._accept_deletion;
 
 				this.editingLayerKey = temp_layer_key[0];
 				temp_layer_key.length = 0;
