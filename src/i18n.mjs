@@ -13,33 +13,8 @@ export class I18n {
 		this.msgs = {
 			"deflang": "pt",
 			"pt": {
-				"Y": "sim",
-				"N": "não",
-				"C": "cancelar",
-				"ESCL": "escala",
-				"LDNG": "a carregar",
-				"CLR": "limpar",
-				"ZOUT": "afastar",
-				"ZIN": "aproximar",
-				"HOME": "vista inicial",
-				//"CL2CP": "clicar para copiar valor",
-				"DEFSCL": "indique a escala",
-				"CHOOSEBASEMAP": "escolha o mapa base"
 			}, 
 			"en": {
-				"Y": "yes",
-				"N": "no",
-				"C": "cancel",
-				"ESCL": "scale",
-				"LDNG": "loading",
-				"CLR": "clear",
-				"ZOUT": "zoom out",					
-				"ZIN": "zoom in",
-				"HOME": "home view",
-				//"CL2CP": "click to copy value"
-				"DEFSCL": "set maps scale",
-				"CHOOSEBASEMAP": "choose base map"
-
 			}
 		};	
 		

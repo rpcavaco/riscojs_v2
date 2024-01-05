@@ -6,6 +6,7 @@ import { SlicingPanel } from './slicing.mjs';
 import { DashboardPanel } from './dashboard.mjs';
 import { TOC } from './tocwidget.mjs';
 import { EditingMgr } from './edit_manager.mjs';
+import { EditCtrlBox } from './edit_ui.mjs';
 
 class MousecoordsPrint extends PermanentMessaging {
 
@@ -720,10 +721,9 @@ class BasicCtrlBox extends ControlsBox {
 	prev_ctrl_key = null;
 	had_prev_interaction; 
 
-	constructor() {
-		super();
+	constructor(p_mapctx, p_orientation, p_anchoring_twoletter, p_other_widgets) {
+		super(p_mapctx, p_orientation, p_anchoring_twoletter, p_other_widgets, GlobalConst.CONTROLS_STYLES);
 
-		this.orientation = "VERTICAL";
  		this.controls_keys = [
 			"zoomout",
 			"home",
@@ -817,6 +817,17 @@ class BasicCtrlBox extends ControlsBox {
 		this.had_prev_interaction = false;
 	}
 
+	_initParameters(p_config_namespaceroot) {
+		this.fillStyleBack = p_config_namespaceroot.BCKGRD; 
+		this.strokeStyleFront = p_config_namespaceroot.COLOR;
+		this.fillStyleBackOn = p_config_namespaceroot.BCKGRDON; 
+		this.strokeStyleFrontOn = p_config_namespaceroot.COLORON;
+
+		this.strokeWidth = p_config_namespaceroot.STROKEWIDTH;
+		this.sz = p_config_namespaceroot.SIZE;
+		this.margin_offset = p_config_namespaceroot.OFFSET;
+
+	}
 
 	initialDrawingActions(p_ctx, p_control_key, p_control_status) {
 
@@ -824,6 +835,10 @@ class BasicCtrlBox extends ControlsBox {
 
 		p_ctx.clearRect(left, top, boxw, boxh); 
 		
+		if (this.all_controls_hidden) {
+			return;
+		}
+
 		if (!p_control_status.disabled) {
 			p_ctx.strokeStyle = this.strokeStyleFront; // box outer stroke only affected by disabled status
 			if (p_control_status.togglestatus) {
@@ -1370,9 +1385,9 @@ export class MapCustomizations {
 		if (this.mapctx.cfgvar["basic"]["editing"] !== undefined && this.mapctx.cfgvar["basic"]["editing"]["editable_layers"] !== undefined && this.mapctx.cfgvar["basic"]["editing"]["editable_layers"].length > 0) {
 			editable_layers = this.mapctx.cfgvar["basic"]["editing"]["editable_layers"];
 		}		
-		
+
 		this.instances = {
-			"basiccontrolsbox": new BasicCtrlBox(),
+			"basiccontrolsbox": new BasicCtrlBox(this.mapctx, GlobalConst.CONTROLS_STYLES.BASIC_CONTROLS_ORIENTATION),
 			"basemapctrl": new BasemapCtrlBox(),
 			"toc": toc,
 			"infoclass": new Info(this.mapctx, infoboxStyle, max_textlines_height),
@@ -1415,12 +1430,15 @@ export class MapCustomizations {
 				sfem = this.mapctx.cfgvar["basic"]["single_feat_editing_mode"]; 
 			}
 
-			this.instances["editing"] = new EditingMgr(this.mapctx, editable_layers, [toc], sfem);
+			const em = new EditingMgr(this.mapctx, editable_layers, [toc], sfem)
+			this.instances["editing"] = em;
+			this.instances["editcontrolsbox"] = new EditCtrlBox(this.mapctx, this.mapctx.cfgvar["basic"]["editcontrols"]["orientation"], "UR", [toc, em]);
+
 		}
 
 		// Temporariamente sem navigator
-		this.mapcustom_controls_keys = ["attributionprint", "mapscaleprint", "basiccontrolsbox", "basemapctrl", "toc", "analysis", "slicing", "dashboard", "editing"]; // widgets exposing a 'print' method, just for display
-		this.mapcustom_controlsmgrs_keys = ["mapscaleprint", "basiccontrolsbox", "basemapctrl", "analysis", "slicing", "dashboard", "editing"]; // controls manager widgets, exposing a generic 'interact' method
+		this.mapcustom_controls_keys = ["attributionprint", "mapscaleprint", "basiccontrolsbox", "basemapctrl", "toc", "analysis", "slicing", "dashboard", "editing","editcontrolsbox"]; // widgets exposing a 'print' method, just for display
+		this.mapcustom_controlsmgrs_keys = ["mapscaleprint", "basiccontrolsbox", "basemapctrl", "analysis", "slicing", "dashboard", "editing", "editcontrolsbox"]; // controls manager widgets, exposing a generic 'interact' method
 
 /* 		this.mapcustom_controls_keys = ["basiccontrolsbox", "basemapctrl", "toc", "navigator", "analysis"]; // widgets exposing a 'print' method, just for display
 		this.mapcustom_controlsmgrs_keys = ["basiccontrolsbox", "basemapctrl", "navigator", "analysis"]; // controls manager widgets, exposing a generic 'interact' method

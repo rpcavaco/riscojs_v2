@@ -78,6 +78,9 @@ export class EditingMgr extends MapPrintInRect {
 
 		this.canvaslayer = 'service_canvas'; 
 
+		let mapdims = [];
+		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
+
 		this.left = 600;
 		this.top = 600;
 		this.featcounter_width = 10;
@@ -88,13 +91,14 @@ export class EditingMgr extends MapPrintInRect {
 		this.print_attempts = 0;
 		this.had_prev_interaction = false;
 
+		const icondims = GlobalConst.CONTROLS_STYLES.EM_ICONDIMS;
+
+		this.boxh = icondims[1] + 2 * this.margin_offset;
+		this.boxw = icondims[0] + 3 * this.margin_offset + this.featcounter_width;
+
 		this.#current_edit_feature_holder = null;
 
 		p_mapctx.toolmgr.setEditingManager(this);
-	}
-
-	getHeight() {
-		return this.boxh;
 	}
 
 	_print(p_mapctx) {
@@ -106,9 +110,6 @@ export class EditingMgr extends MapPrintInRect {
 		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
 
 		const icondims = GlobalConst.CONTROLS_STYLES.EM_ICONDIMS;
-
-		this.boxh = icondims[1] + 2 * this.margin_offset;
-		this.boxw = icondims[0] + 3 * this.margin_offset + this.featcounter_width;
 
 		this.left = mapdims[0] - (this.boxw + this.margin_offset);
 

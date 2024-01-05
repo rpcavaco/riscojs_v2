@@ -29,7 +29,6 @@ export class TOC  extends MapPrintInRect {
 		// BASIC_CONFIG_DEFAULTS_OVERRRIDE
 		// ** - can be overrriden in basic config, at 'style_override' group, 
 		//      creating a key with same property name in CONTROLS_STYLES, but in lower case
-		this.name = "TOC";
 
 		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.TOC_BCKGRD;  // **
 		this.activeStyleFront = GlobalConst.CONTROLS_STYLES.TOC_ACTIVECOLOR;
@@ -461,6 +460,10 @@ export class TOC  extends MapPrintInRect {
 	getHeight() {
 		return this.boxh[this.collapsedstate];
 	}
+
+	getWidth() {
+		return this.boxw[this.collapsedstate];
+	}	
 
 	print(p_mapctx) {
 		const that = this;

@@ -75,7 +75,6 @@ export class MapPrintInRect {
 	fillStyleFront; 
 	font;
 	canvaslayer = 'service_canvas';
-	name;
 
 	print(p_mapctx) {     // p_mapctx, ...
 		// To be implemented
@@ -99,7 +98,6 @@ export class MapPrintInRect {
 export class PermanentMessaging extends MapPrintInRect {
 	constructor() {
 		super();
-		this.name = "PermanentMessaging";
 		this.fillStyleBack = GlobalConst.MESSAGING_STYLES.PERMANENT_BCKGRD; 
 		this.fillStyleFront = GlobalConst.MESSAGING_STYLES.PERMANENT_COLOR;
 		this.font = GlobalConst.MESSAGING_STYLES.PERMANENT_FONT;
@@ -109,7 +107,6 @@ export class PermanentMessaging extends MapPrintInRect {
 export class LoadingMessaging extends MapPrintInRect {
 	constructor() {
 		super();
-		this.name = "LoadingMessaging";
 		this.fillStyleBack = GlobalConst.MESSAGING_STYLES.LOADING_BCKGRD; 
 		this.fillStyleFront = GlobalConst.MESSAGING_STYLES.LOADING_COLOR;
 		this.font = GlobalConst.MESSAGING_STYLES.LOADING_FONT;
@@ -126,43 +123,91 @@ export class ControlsBox extends MapPrintInRect {
 	controls_prevgaps = {};	
 	//tool_manager = null;
 	controls_boxes = {};
+	anchoring = "UL";
+	other_widgets;
+	horiz_layout;
+	all_controls_hidden = false;
 
-	constructor() {
+	setHideAllControls(p_do_hide) {
+		this.all_controls_hidden = p_do_hide;
+	}
+
+	constructor(p_mapctx, p_orientation, p_anchoring_twoletter, p_other_widgets, p_config_namespaceroot) {
 		super();
-		this.name = "ControlsBox";
-		this.fillStyleBack = GlobalConst.CONTROLS_STYLES.BCKGRD; 
-		this.strokeStyleFront = GlobalConst.CONTROLS_STYLES.COLOR;
-		this.fillStyleBackOn = GlobalConst.CONTROLS_STYLES.BCKGRDON; 
-		this.strokeStyleFrontOn = GlobalConst.CONTROLS_STYLES.COLORON;
 
-		this.strokeWidth = GlobalConst.CONTROLS_STYLES.STROKEWIDTH;
-		this.sz = GlobalConst.CONTROLS_STYLES.SIZE;
-		this.margin_offset = GlobalConst.CONTROLS_STYLES.OFFSET;
+		this._initParameters(p_config_namespaceroot);
 
-		this.dimensioning();
+		if (p_anchoring_twoletter) {
+			this.anchoring = p_anchoring_twoletter;
+		}
+
+		this.other_widgets = p_other_widgets;
+		this.orientation = p_orientation;
+
+		this.setdims(p_mapctx);
 	}
 
-	getOrientation() {
-		return this.orientation;
+	_initParameters(p_config_namespaceroot) {
+		
+		// a ser estendido
+
 	}
 
-	dimensioning() {
+	isOrientationVertical() {
+		return (this.orientation == "VERTICAL");
+	}
+
+	setdims(p_mapctx) {
 
 		let offset = 0;
 		if (navigator.userAgent.toLowerCase().includes("mobile") || navigator.userAgent.toLowerCase().includes("android")) {
 			offset = GlobalConst.CONTROLS_STYLES.MOBILE_DEFGAP;
 		}
 
-		this.left = this.margin_offset;
-		this.top = this.margin_offset;
+		let otherboxesoffset = 0;
+		const canvas_dims = [];	
+		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);	
+
+		if (this.other_widgets) {
+			for (let ow of this.other_widgets) {
+				if (ow['setdims'] !== undefined) {
+					ow.setdims(p_mapctx, canvas_dims);
+				}		
+				if (!this.isOrientationVertical()) {
+					otherboxesoffset += ow.getWidth();
+				} else {
+					otherboxesoffset += ow.getHeight();
+				}
+				otherboxesoffset += this.margin_offset;
+				// console.warn("AM boxesheight:", otherboxesheight, this.other_widgets.length);
+			}				
+		}
+
 		this.boxh = this.sz + offset;
-		this.boxw = this.sz + offset;
-	
+		this.boxw = this.sz + offset;	
+
+		switch (this.anchoring) {
+
+			case "UL":
+				this.left = this.margin_offset;
+				this.top = this.margin_offset + otherboxesoffset;
+				break;
+
+			case "UR":
+				this.left = canvas_dims[0] - this.boxw - this.margin_offset;
+				this.top = this.margin_offset + otherboxesoffset;
+				break;
+
+			default:
+				throw new Error(`ControlsBox unsupported anchoring ${this.anchoring}`);
+
+		}
+
 	}
 
 	getWidth() {
 		let w = 0;
-		if (this.orientation == "HORIZONTAL") {
+		if (!this.isOrientationVertical()) {
 			w = this.controls_keys.length * this.boxw;
 		} else {
 			w = this.boxw;
@@ -172,7 +217,7 @@ export class ControlsBox extends MapPrintInRect {
 
 	getHeight() {
 		let h = 0;
-		if (this.orientation == "HORIZONTAL") {
+		if (!this.isOrientationVertical()) {
 			h = this.controls_keys.length * this.boxh;
 		} else {
 			h = this.boxh;
@@ -222,6 +267,7 @@ export class ControlsBox extends MapPrintInRect {
 			// p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 
 			let left, top, accum=0;
+			this.setdims(p_mapctx);
 
 			for (let ci=0;  ci<this.controls_keys.length; ci++) {
 
@@ -234,7 +280,7 @@ export class ControlsBox extends MapPrintInRect {
 					accum += GlobalConst.CONTROLS_STYLES.MOBILE_DEFGAP;
 				}
 
-				if (this.orientation == "HORIZONTAL") {
+				if (!this.isOrientationVertical()) {
 					left = accum + ci * this.boxw + this.left;
 					top = this.top;
 				} else {
@@ -246,7 +292,6 @@ export class ControlsBox extends MapPrintInRect {
 				ctx.lineWidth = this.strokeWidth;
 
 				this.drawControlFace(ctx, this.controls_keys[ci], left, top, this.boxw, this.boxh, p_mapctx.cfgvar["basic"], GlobalConst);
-
 			}
 
 			// console.log('>> MapScalePrint print scale', ctx, [this.left, this.top, this.boxw, this.boxh]);

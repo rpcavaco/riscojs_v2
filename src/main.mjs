@@ -467,6 +467,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 	drawControls() {
 		const ci = this.getCustomizationObject();
+
 		for (let k of ci.mapcustom_controls_keys) {
 			if (ci && ci.instances[k] !== undefined) {
 				const bcb = ci.instances[k];
