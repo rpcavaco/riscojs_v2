@@ -559,7 +559,7 @@ class PointEditTool extends BaseTool {
 			this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict);
 		}
 
-		if (this.editmanager.getCurrentEditFeatureHolder() != null) {
+		if (this.editmanager.currentEditFeatHolder != null) {
 			layerklist = Object.keys(p_feature_dict);
 			ret = p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDITENGAGE", {'normal': 'temporary', 'label': 'temporary' });	
 			if (ret) {
