@@ -106,7 +106,7 @@ export class EditingMgr extends MapPrintInRect {
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		ctx.save();
 
-		let mapdims = [];
+		let edited_featcount, mapdims = [];
 		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
 
 		const icondims = GlobalConst.CONTROLS_STYLES.EM_ICONDIMS;
@@ -161,12 +161,19 @@ export class EditingMgr extends MapPrintInRect {
 				ctx.drawImage(img, this.left+2*this.margin_offset+this.featcounter_width, this.top+this.margin_offset, icondims[0], icondims[1]);
 			});
 
+			edited_featcount = 0;
+			for (const f of this.#edit_feature_holders) {
+				if (f.edited) {
+					edited_featcount++;
+				}
+			}
+
 			//if (this.#edit_feature_holders.length > 0) {
 			ctx.textAlign = "center";
 			ctx.fillStyle = "white";
 			ctx.textBaseline = "middle";
 			ctx.font = `${(this.normalszPX - 4)}px ${this.fontfamily}`;
-			ctx.fillText(this.#edit_feature_holders.length.toString(), this.left+this.margin_offset+0.5*this.featcounter_width, this.top+this.margin_offset+0.5*icondims[1]);	
+			ctx.fillText(edited_featcount.toString(), this.left+this.margin_offset+0.5*this.featcounter_width, this.top+this.margin_offset+0.5*icondims[1]);	
 			//}
 
 		} catch(e) {
@@ -610,6 +617,8 @@ export class EditingMgr extends MapPrintInRect {
 		p_mapctx.transformmgr.getTerrainPt([p_scrx, p_scry], terr_pt);
 		p_mapctx.featureCollection.setVertex(this.editingLayerKey, this.#current_edit_feature_holder.id, feat, terr_pt, this.#current_edit_vertexidx);
 
+		this.#current_edit_feature_holder.edited = true;
+
 		this.print(p_mapctx);
 
 		this.pendingChangesToSave = "GEO";
@@ -673,6 +682,8 @@ export class EditingMgr extends MapPrintInRect {
 		} else {
 			this.#edit_feature_holders.push(JSON.parse(JSON.stringify(this.#current_edit_feature_holder)));
 		}
+
+		this.print(p_mapctx);
 
 		this.pendingChangesToSave = "GEO";
 
