@@ -458,22 +458,29 @@ export class EditingMgr extends MapPrintInRect {
 
 				if (this.defineEditingLayer(p_mapctx)) {
 
-					// adicionar presel feats
+					// add pre-selected feats
 					if (!this.checkCanEditStatus(true)) {
 						throw new Error("Cannot enable editing");
 					}
 					this.#editing_is_enabled = true;
 
-					// ativar tool
+					// activate layer-defined tool
 					const tool = p_mapctx.toolmgr.enableTool(p_mapctx, this.#current_tool_name, true);
 					tool.init(p_mapctx);
 
-					// Enable coords display
 					const ci = p_mapctx.getCustomizationObject();
 					if (ci == null) {
-						throw new Error("map context customization instance is missing")
-					}	
+						throw new Error("setEditingEnabled, map context customization instance is missing")
+					}
+			
+					// Show edit controls
+					const ecb = ci.instances["editcontrolsbox"];
+					if (ecb) {
+						ecb.setAllControlsHidden(false);
+						ecb.print(p_mapctx);
+					}
 
+					// Enable coords display
 					const mcp = ci.instances["mousecoordsprint"];		
 					mcp.changeVisibility(true);
 
@@ -500,6 +507,13 @@ export class EditingMgr extends MapPrintInRect {
 			if (ci == null) {
 				throw new Error("map context customization instance is missing")
 			}	
+
+			// Hide edit controls
+			const ecb = ci.instances["editcontrolsbox"];
+			if (ecb) {
+				ecb.setAllControlsHidden(true);
+				ecb.print(p_mapctx);
+			}
 
 			const mcp = ci.instances["mousecoordsprint"];		
 			mcp.changeVisibility(false);	

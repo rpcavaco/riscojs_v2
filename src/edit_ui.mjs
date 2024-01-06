@@ -52,7 +52,8 @@ export class EditCtrlBox extends ControlsBox {
 			}	
 		}
 
-		this.controls_status["delete"] = { "togglable": false, "togglestatus": false, "disabled": false };
+		// All of these controls are hidden by default; they're only shown while editing is enable
+		this.controls_state["delete"] = { "togglable": false, "togglestatus": false, "disabled": false, "hidden": true };
 
 		this.had_prev_interaction = false;
 	}
@@ -73,10 +74,11 @@ export class EditCtrlBox extends ControlsBox {
 	initialDrawingActions(p_ctx, p_control_key, p_control_status) {
 
 		const [left, top, boxw, boxh] = this.controls_boxes[p_control_key];
+		const offset = 2;
 
-		p_ctx.clearRect(left, top, boxw, boxh); 
+		p_ctx.clearRect(left-offset, top-offset, boxw+(2*offset), boxh+(2*offset)); 
 
-		if (this.all_controls_hidden) {
+		if (this.controls_state[p_control_key].hidden) {
 			return;
 		}
 		
@@ -113,8 +115,10 @@ export class EditCtrlBox extends ControlsBox {
 
 		if (this.controls_funcs[p_control_key] !== undefined) {
 			if (this.controls_funcs[p_control_key]["drawface"] !== undefined) {
-				this.initialDrawingActions(p_ctx, p_control_key, this.controls_status[p_control_key]);
-				this.controls_funcs[p_control_key]["drawface"](this, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, this.controls_status[p_control_key]);
+				this.initialDrawingActions(p_ctx, p_control_key, this.controls_state[p_control_key]);
+				if (!this.controls_state[p_control_key].hidden) {
+					this.controls_funcs[p_control_key]["drawface"](this, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, this.controls_state[p_control_key]);
+				}
 			} else {
 				console.error(`drawControlFace, missing DRAWFACE control func block for ${p_control_key}`);
 			}
@@ -148,21 +152,7 @@ export class EditCtrlBox extends ControlsBox {
 
 						if (this.controls_funcs[ctrl_key]["endevent"] !== undefined) {
 							const ret = this.controls_funcs[ctrl_key]["endevent"](p_mapctx, p_evt, p_mapctx.cfgvar["basic"], GlobalConst);
-							if (this.changeToggleFlag(ctrl_key, ret)) {
-								
-								const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
-								ctx.save();
-						
-								try {
-									const [left, top, boxw, boxh] = this.controls_boxes[ctrl_key];
-									this.drawControlFace(ctx, ctrl_key, left, top, boxw, boxh, p_mapctx.cfgvar["basic"], GlobalConst);
-								} catch(e) {
-									throw e;
-								} finally {
-									ctx.restore();
-								}
 
-							}
 						} else {
 							throw new Error("interact, missing endevent control func block for", ctrl_key);
 						}

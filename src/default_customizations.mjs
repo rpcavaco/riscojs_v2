@@ -810,9 +810,9 @@ class BasicCtrlBox extends ControlsBox {
 			}	
 		}
 
-		this.controls_status["zoomout"] = { "togglable": false, "togglestatus": false, "disabled": false };
-		this.controls_status["zoomin"] = { "togglable": false, "togglestatus": false, "disabled": false };
-		this.controls_status["home"] = { "togglable": false, "togglestatus": false, "disabled": false };
+		this.controls_state["zoomout"] = { "togglable": false, "togglestatus": false, "disabled": false, "hidden": false };
+		this.controls_state["zoomin"] = { "togglable": false, "togglestatus": false, "disabled": false, "hidden": false };
+		this.controls_state["home"] = { "togglable": false, "togglestatus": false, "disabled": false, "hidden": false };
 
 		this.had_prev_interaction = false;
 	}
@@ -835,7 +835,7 @@ class BasicCtrlBox extends ControlsBox {
 
 		p_ctx.clearRect(left, top, boxw, boxh); 
 		
-		if (this.all_controls_hidden) {
+		if (this.controls_state[p_control_key].hidden) {
 			return;
 		}
 
@@ -872,8 +872,10 @@ class BasicCtrlBox extends ControlsBox {
 
 		if (this.controls_funcs[p_control_key] !== undefined) {
 			if (this.controls_funcs[p_control_key]["drawface"] !== undefined) {
-				this.initialDrawingActions(p_ctx, p_control_key, this.controls_status[p_control_key]);
-				this.controls_funcs[p_control_key]["drawface"](this, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, this.controls_status[p_control_key]);
+				this.initialDrawingActions(p_ctx, p_control_key, this.controls_state[p_control_key]);
+				if (!this.controls_state[p_control_key].hidden) {
+					this.controls_funcs[p_control_key]["drawface"](this, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, this.controls_state[p_control_key]);
+				}
 			} else {
 				console.error(`drawControlFace, missing DRAWFACE control func block for ${p_control_key}`);
 			}

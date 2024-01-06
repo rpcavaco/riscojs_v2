@@ -118,7 +118,7 @@ export class ControlsBox extends MapPrintInRect {
 	orientation = "HORIZONTAL";
 	controls_keys = [];
 	controls_funcs = {};
-	controls_status = { }; 
+	controls_state = { }; 
 	controls_rounded_face = [];
 	controls_prevgaps = {};	
 	//tool_manager = null;
@@ -126,10 +126,11 @@ export class ControlsBox extends MapPrintInRect {
 	anchoring = "UL";
 	other_widgets;
 	horiz_layout;
-	all_controls_hidden = false;
 
-	setHideAllControls(p_do_hide) {
-		this.all_controls_hidden = p_do_hide;
+	setAllControlsHidden(p_do_hide) {
+		for (const k of this.controls_keys) {
+			this.controls_state[k].hidden = p_do_hide;
+		}
 	}
 
 	constructor(p_mapctx, p_orientation, p_anchoring_twoletter, p_other_widgets, p_config_namespaceroot) {
@@ -225,7 +226,7 @@ export class ControlsBox extends MapPrintInRect {
 		return h;
 	}	
 
-	addControl(p_key, p_togglable, p_is_round, p_drawface_func, p_endevent_func, p_mmove_func, opt_gap_to_prev) {
+	addControl(p_key, p_togglable, p_is_round, p_drawface_func, p_endevent_func, p_mmove_func, opt_gap_to_prev, opt_hidden_by_default) {
 
 		this.controls_keys.push(p_key);
 		this.controls_funcs[p_key] = {
@@ -237,11 +238,7 @@ export class ControlsBox extends MapPrintInRect {
 			this.controls_prevgaps[p_key] = opt_gap_to_prev;
 		}
 
-		this.controls_status[p_key] = { "togglable": false, "togglestatus": false, "disabled": false };
-
-		if (p_togglable) {
-			this.controls_status[p_key].togglable = true;
-		}
+		this.controls_state[p_key] = { "togglable": !!p_togglable, "togglestatus": false, "disabled": false, "hidden": !!opt_hidden_by_default  };
 
 		if (p_is_round && !this.controls_rounded_face.includes(p_key)) {
 			this.controls_rounded_face.push(p_key);
@@ -250,9 +247,9 @@ export class ControlsBox extends MapPrintInRect {
 
 	changeToggleFlag(p_key, p_toggle_status) {
 		let has_changed = false;
-		if (this.controls_status[p_key].togglable && !this.controls_status[p_key].disabled && this.controls_status[p_key].togglestatus != p_toggle_status) {
+		if (this.controls_state[p_key].togglable && !this.controls_state[p_key].disabled && this.controls_state[p_key].togglestatus != p_toggle_status) {
 			has_changed = true;
-			this.controls_status[p_key].togglestatus = p_toggle_status;
+			this.controls_state[p_key].togglestatus = p_toggle_status;
 		}
 		return has_changed;
 	}
