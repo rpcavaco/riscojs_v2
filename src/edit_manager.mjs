@@ -268,12 +268,36 @@ export class EditingMgr extends MapPrintInRect {
 		return ret;
 	} 
 
+	editControlsDisabling(p_mapctx, p_ctrlkeys_list, b_do_disable) {
+
+		// Enable relevant edit controls
+		const ci = p_mapctx.getCustomizationObject();
+		if (ci == null) {
+			throw new Error("setCurrentEditVertex, map context customization instance is missing")
+		}
+		const ecb = ci.instances["editcontrolsbox"];
+		if (ecb) {
+			ecb.controlsDisabling(p_ctrlkeys_list, b_do_disable);
+			ecb.print(p_mapctx);
+		}
+	}
+
 	get currentEditFeatHolder() {
 		return this.#current_edit_feature_holder;
 	}
 
-	set currentEditFeatHolder(p_feat_holder) {
-		return this.#current_edit_feature_holder = p_feat_holder;
+	setCurrentEditFeatHolder(p_mapctx, p_feat_holder) {
+		
+		this.#current_edit_feature_holder = p_feat_holder;
+
+		this.editControlsDisabling(p_mapctx, ["delete"], false);
+
+		return this.#current_edit_feature_holder;
+	}	
+
+
+	resetCurrentEditFeatureHolder() {
+		this.#current_edit_feature_holder = null;
 	}	
 
 	precheckCanEditStatus() {
@@ -570,7 +594,7 @@ export class EditingMgr extends MapPrintInRect {
 
 			this.removePreviousTempFeat(p_mapctx, true);
 
-			this.currentEditFeatHolder = p_feat_dict[this.editingLayerKey][0];
+			this.setCurrentEditFeatHolder(p_mapctx, p_feat_dict[this.editingLayerKey][0]);
 			this.currentEditFeatHolder["edited"] = false;
 			if (this.#single_feat_editing) {
 				this.#edit_feature_holders = [this.currentEditFeatHolder];
@@ -678,7 +702,8 @@ export class EditingMgr extends MapPrintInRect {
 				this.removePreviousTempFeat(p_mapctx, true);
 
 				id = this.addTempPointFeat(p_mapctx, terr_pt);
-				this.currentEditFeatHolder = { "feat": p_mapctx.featureCollection.get(this.editingLayerKey, id), "id": id, "edited": true };
+				this.setCurrentEditFeatHolder(p_mapctx, { "feat": p_mapctx.featureCollection.get(this.editingLayerKey, id), "id": id, "edited": true });
+
 				p_mapctx.featureCollection.redrawAllVectorLayers();
 
 				break;
@@ -696,10 +721,6 @@ export class EditingMgr extends MapPrintInRect {
 		this.pendingChangesToSave = "GEO";
 
 	}
-
-	resetCurrentEditFeatureHolder() {
-		this.currentEditFeatHolder = null;
-	}	
 
 	paintCurrentEditFeature(p_mapctx) {
 		const id = this.currentEditFeatHolder["id"];
