@@ -829,7 +829,7 @@ class BasicCtrlBox extends ControlsBox {
 
 	}
 
-	initialDrawingActions(p_ctx, p_control_key, p_control_status) {
+	initialDrawingActions(p_ctx, p_control_key, p_control_state) {
 
 		const [left, top, boxw, boxh] = this.controls_boxes[p_control_key];
 
@@ -839,15 +839,11 @@ class BasicCtrlBox extends ControlsBox {
 			return;
 		}
 
-		if (!p_control_status.disabled) {
-			p_ctx.strokeStyle = this.strokeStyleFront; // box outer stroke only affected by disabled status
-			if (p_control_status.togglestatus) {
-				p_ctx.fillStyle = this.fillStyleBackOn;
-			} else {
-				p_ctx.fillStyle = this.fillStyleBack;
-			}
+		p_ctx.strokeStyle = this.strokeStyleFront; // box outer stroke only affected by disabled status
+		if (p_control_state.togglestatus) {
+			p_ctx.fillStyle = this.fillStyleBackOn;
 		} else {
-			// TODO - disabled control styles
+			p_ctx.fillStyle = this.fillStyleBack;
 		}
 
 		if (this.controls_rounded_face.includes(p_control_key)) {

@@ -13,17 +13,24 @@ export class EditCtrlBox extends ControlsBox {
 			"delete"
 		];
 
+		// All of these controls are hidden by default; they're only shown while editing is enable
+		this.controls_state["delete"] = { "togglable": false, "togglestatus": false, "disabled": true, "hidden": true };
+
 		this.controls_funcs = {
 			"delete": {
-				"drawface": function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_control_status) {
+				"drawface": function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_control_state) {
 
-					let imgsrc, iconwidth, ctrlsize, offset;
+					let imgsrc, iconwidth, ctrlsize, offset, tmp_color;
 					const imgh = new Image();
 					imgh.decoding = "sync";
 
-					// imgsrc = p_global_constants.CONTROLS_STYLES.DELSYMB.replace(/#000000/g, `=%22${encodeURIComponent(p_ctrlsbox.strokeStyleFront)}%22`);
+					if (p_control_state.disabled) {
+						tmp_color = p_ctrlsbox.strokeStyleFrontOff;
+					} else {
+						tmp_color = p_ctrlsbox.strokeStyleFront;
+					}
 
-					imgsrc = p_basic_config["editcontrols"]["delsymb"].replace(/%23000000/g, `${encodeURIComponent(p_ctrlsbox.strokeStyleFront)}`);
+					imgsrc = p_basic_config["editcontrols"]["delsymb"].replace(/%23000000/g, `${encodeURIComponent(tmp_color)}`);
 					iconwidth = p_basic_config["editcontrols"]["iconwidth"];
 					ctrlsize = p_mapctx.cfgvar["basic"]["editcontrols"]["controlssize"];
 					offset = (ctrlsize - iconwidth) / 2;
@@ -52,9 +59,6 @@ export class EditCtrlBox extends ControlsBox {
 			}	
 		}
 
-		// All of these controls are hidden by default; they're only shown while editing is enable
-		this.controls_state["delete"] = { "togglable": false, "togglestatus": false, "disabled": false, "hidden": true };
-
 		this.had_prev_interaction = false;
 	}
 
@@ -63,7 +67,7 @@ export class EditCtrlBox extends ControlsBox {
 		this.fillStyleBack = p_config_namespaceroot.bckgrd; 
 		this.strokeStyleFront = p_config_namespaceroot.color;
 		this.fillStyleBackOn = p_config_namespaceroot.bckgrdon; 
-		this.strokeStyleFrontOn = p_config_namespaceroot.coloron;
+		this.strokeStyleFrontOff = p_config_namespaceroot.coloroff;
 
 		this.strokeWidth = p_config_namespaceroot.STROKEWIDTH;
 		this.sz = p_config_namespaceroot.controlssize;
@@ -71,7 +75,7 @@ export class EditCtrlBox extends ControlsBox {
 
 	}
 
-	initialDrawingActions(p_ctx, p_control_key, p_control_status) {
+	initialDrawingActions(p_ctx, p_control_key, p_control_state) {
 
 		const [left, top, boxw, boxh] = this.controls_boxes[p_control_key];
 		const offset = 2;
@@ -82,15 +86,11 @@ export class EditCtrlBox extends ControlsBox {
 			return;
 		}
 		
-		if (!p_control_status.disabled) {
-			p_ctx.strokeStyle = this.strokeStyleFront; // box outer stroke only affected by disabled status
-			if (p_control_status.togglestatus) {
-				p_ctx.fillStyle = this.fillStyleBackOn;
-			} else {
-				p_ctx.fillStyle = this.fillStyleBack;
-			}
+		p_ctx.strokeStyle = this.strokeStyleFront; // box outer stroke only affected by disabled status
+		if (p_control_state.togglestatus) {
+			p_ctx.fillStyle = this.fillStyleBackOn;
 		} else {
-			// TODO - disabled control styles
+			p_ctx.fillStyle = this.fillStyleBack;
 		}
 
 		if (this.controls_rounded_face.includes(p_control_key)) {
