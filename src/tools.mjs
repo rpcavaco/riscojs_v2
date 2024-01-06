@@ -570,7 +570,7 @@ class PointEditTool extends BaseTool {
 		// TODO - usar p_scrx, p_scry para 'apanhar' o vértice da geometria amover, zero para o ponto
 
 		if (p_feature_dict[layerklist[0]][0].feat.gt == "point") {
-			this.editmanager.setCurrentEditVertex(0, 0);
+			this.editmanager.setCurrentEditVertex(p_mapctx, 0, 0);
 		}
 
 		return ret;

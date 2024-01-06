@@ -218,13 +218,6 @@ export class EditingMgr extends MapPrintInRect {
 					case 'mouseup':
 					case 'touchend':
 
-						/*
-						const ci = p_mapctx.getCustomizationObject();
-						if (ci == null) {
-							throw new Error("map context customization instance is missing")
-						}
-						*/
-
 						if (this.isEditingEnabled()) {
 							this.save(p_mapctx);
 						} else {
@@ -326,8 +319,16 @@ export class EditingMgr extends MapPrintInRect {
 		return this.#editing_layer_key;
 	}
 	
-	get hasPendingChangesToSave() {
+	get pendingChangesToSave() {
 		return this.#pending_changes_to_save;
+	}
+
+	// acronym - GEO, ALPHA, to reset pending changes flag use 'clearPendingChangesToSave'
+	set pendingChangesToSave(p_pend_changes_type_acronym) {
+		if (p_pend_changes_type_acronym == "none") {
+			return this.clearPendingChangesToSave();
+		}
+		this.#pending_changes_to_save = p_pend_changes_type_acronym;
 	}
 
 	clearPendingChangesToSave() {
@@ -511,6 +512,7 @@ export class EditingMgr extends MapPrintInRect {
 			// Hide edit controls
 			const ecb = ci.instances["editcontrolsbox"];
 			if (ecb) {
+				ecb.controlsDisabling("all", true);
 				ecb.setAllControlsHidden(true);
 				ecb.print(p_mapctx);
 			}
@@ -554,11 +556,13 @@ export class EditingMgr extends MapPrintInRect {
 			this.removePreviousTempFeat(p_mapctx, true);
 
 			this.#current_edit_feature_holder = p_feat_dict[this.editingLayerKey][0];
+			this.#current_edit_feature_holder["edited"] = false;
 			if (this.#single_feat_editing) {
 				this.#edit_feature_holders = [this.#current_edit_feature_holder];
 			} else {
 				this.#edit_feature_holders.push(JSON.parse(JSON.stringify(this.#current_edit_feature_holder)));
 			}
+
 			ret = this.#current_edit_feature_holder;
 		}
 
@@ -566,10 +570,11 @@ export class EditingMgr extends MapPrintInRect {
 
 	}
 
-	setCurrentEditVertex(p_geompartidx, p_vertorderidx) {
+	setCurrentEditVertex(p_mapctx, p_geompartidx, p_vertorderidx) {
 
 		this.#current_edit_partidx = p_geompartidx;
 		this.#current_edit_vertexidx = p_vertorderidx;
+			
 	}
 
 	editCurrentVertex(p_mapctx, p_scrx, p_scry) {
@@ -607,7 +612,7 @@ export class EditingMgr extends MapPrintInRect {
 
 		this.print(p_mapctx);
 
-		this.#pending_changes_to_save = "GEO";
+		this.pendingChangesToSave = "GEO";
 				
 	}
 
@@ -656,7 +661,7 @@ export class EditingMgr extends MapPrintInRect {
 				this.removePreviousTempFeat(p_mapctx, true);
 
 				id = this.addTempPointFeat(p_mapctx, terr_pt);
-				this.#current_edit_feature_holder = { "feat": p_mapctx.featureCollection.get(this.editingLayerKey, id), "id": id};
+				this.#current_edit_feature_holder = { "feat": p_mapctx.featureCollection.get(this.editingLayerKey, id), "id": id, "edited": true };
 				p_mapctx.featureCollection.redrawAllVectorLayers();
 
 				break;
@@ -669,9 +674,7 @@ export class EditingMgr extends MapPrintInRect {
 			this.#edit_feature_holders.push(JSON.parse(JSON.stringify(this.#current_edit_feature_holder)));
 		}
 
-		this.print(p_mapctx);
-
-		this.#pending_changes_to_save = "GEO";
+		this.pendingChangesToSave = "GEO";
 
 	}
 
@@ -696,7 +699,7 @@ export class EditingMgr extends MapPrintInRect {
 
 		let ret = [];
 
-		if (this.#edit_feature_holders.length > 0 && this.hasPendingChangesToSave != "none") {
+		if (this.#edit_feature_holders.length > 0 && this.pendingChangesToSave != "none") {
 
 			let currfeat, cef_feat;
 			for (const cef of this.#edit_feature_holders) {
@@ -705,7 +708,7 @@ export class EditingMgr extends MapPrintInRect {
 
 				cef_feat = cef["feat"];
 
-				if (this.#layeredit_cfg_attribs["attribs_to_save"].length > 0 && (this.hasPendingChangesToSave == "ALL" || this.hasPendingChangesToSave == "ALPHA")) {
+				if (this.#layeredit_cfg_attribs["attribs_to_save"].length > 0 && (this.pendingChangesToSave == "ALL" || this.pendingChangesToSave == "ALPHA")) {
 					currfeat["feat"]["properties"] = {};
 					for (let la of this.#layeredit_cfg_attribs["attribs_to_save"]) {
 						if (cef_feat.a[la] != null) {
@@ -714,7 +717,7 @@ export class EditingMgr extends MapPrintInRect {
 					}
 				}
 
-				if (this.hasPendingChangesToSave == "ALL" || this.hasPendingChangesToSave == "GEO") {
+				if (this.pendingChangesToSave == "ALL" || this.pendingChangesToSave == "GEO") {
 					
 					switch (cef_feat.gt) {
 
@@ -775,7 +778,7 @@ export class EditingMgr extends MapPrintInRect {
 
 	save(p_mapctx) {
 
-		if (this.hasPendingChangesToSave == "none") {
+		if (this.pendingChangesToSave == "none") {
 
 			this.setEditingEnabled(p_mapctx, false);
 			this.print(p_mapctx);

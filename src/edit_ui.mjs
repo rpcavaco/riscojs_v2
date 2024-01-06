@@ -215,4 +215,17 @@ export class EditCtrlBox extends ControlsBox {
 		return ret;
 	}
 
+	controlsDisabling(p_ctrlkeys_list, b_do_disable) {
+		
+		let ctrls_keys;
+		if (p_ctrlkeys_list == "all") {
+			ctrls_keys = this.controls_keys;
+		} else {
+			ctrls_keys = p_ctrlkeys_list;
+		}
+
+		for (const k of ctrls_keys) {
+			this.controls_state[k].disabled = !!b_do_disable;
+		}	
+	}
 }
