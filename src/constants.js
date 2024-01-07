@@ -67,6 +67,8 @@ var GlobalConst = {
 	GEOLOCATION_LOWSPEED_SCALE: 700,
 	IMAGE_LRUCACHE_SZ: 200,
 	MOUSEINTERACTION_NEARESTFEATURES_COINCIDENCE_TOLERANCE: 0.01, // ground meters
+	CENTER_TARGET_WIDTH: 2,
+	CENTER_TARGET_SIZE: 18,
 
 	// ------------------------------------------------------------------------
 	// END of internal constants 

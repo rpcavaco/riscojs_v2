@@ -214,14 +214,12 @@ class tabletFeatPreSelectionMgr {
  * @param {object} p_config_var - Variable object containing configuration JSON dictionary
  * @param {object} p_paneldiv 	- String Id or object reference to HTML DIV element to act as RiscoJS map panel
  * @param {string} p_mode - Just 'canvas' for now
- * @param {string} p_tabletmode - Activate 'tablet mode': null or 'SIMPLE'
  * @param {boolean} b_wait_for_customization_avail - Flag - if true, customizations must be completely inited before first refresh of map
- * @param {string} p_tabletmode - Activate 'tablet mode': null or 'SIMPLE'
+ * @param {string} p_tabletmode - Activate 'tablet mode': 'NONE', 'SIMPLE' OR 'ADVANCED'
  */
 export class RiscoMapCtx {
 
 	#customization_object;
-	classname = "RiscoMapCtx";
 	graphicsmode;
 	tabletmode; 
 	tabletFeatPreSelection;
@@ -479,6 +477,54 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		}	
 	}
 
+	getCenterPoint(p_mapdims) {
+
+		let mapdims;
+
+		if (!p_mapdims) {
+			mapdims = [];
+			this.renderingsmgr.getCanvasDims(mapdims);
+		} else {
+			mapdims = p_mapdims;
+		}
+
+		return [parseInt(Math.round(mapdims[0]/2.0)), parseInt(Math.round(mapdims[1]/2.0))];
+
+	}
+
+	drawAdvancedTabletmodeTarget() {
+
+		const canvaslayer = "service_canvas";
+
+		let mapdims = [];
+		this.renderingsmgr.getCanvasDims(mapdims);
+
+		const center_pt = this.getCenterPoint(mapdims);
+		const gfctx = this.renderingsmgr.getDrwCtx(canvaslayer, '2d');
+
+		gfctx.save();
+		gfctx.strokeStyle = "white";
+		gfctx.lineWidth = GlobalConst.CENTER_TARGET_WIDTH;
+
+		try {
+			gfctx.clearRect(0, 0, ...mapdims); 
+
+			gfctx.beginPath();
+			gfctx.moveTo(center_pt[0] - GlobalConst.CENTER_TARGET_SIZE, center_pt[1]);
+			gfctx.lineTo(center_pt[0] + GlobalConst.CENTER_TARGET_SIZE, center_pt[1]);
+			gfctx.stroke();
+			
+			gfctx.beginPath();
+			gfctx.moveTo(center_pt[0], center_pt[1] - GlobalConst.CENTER_TARGET_SIZE);
+			gfctx.lineTo(center_pt[0], center_pt[1] + GlobalConst.CENTER_TARGET_SIZE);
+			gfctx.stroke();
+
+		} finally {
+			gfctx.restore();
+		}
+
+	}
+
 	maprefresh() {
 
 		if (this.tocmgr.isRefreshing()) {
@@ -503,15 +549,13 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 			const sv = this.transformmgr.getReadableCartoScale();
 			
-			//// print decorated map scale widget 
-			// this.printScale(sv);
-
 			this.featureCollection.invalidate();
 			// maplayers refresh
 			this.tocmgr.tocMgrRefresh(sv);
 
-			// this.printAttributionMsg();
-
+			if (this.tabletmode.toLowerCase() == "advanced") {
+				this.drawAdvancedTabletmodeTarget();
+			}
 
 		}
 	}

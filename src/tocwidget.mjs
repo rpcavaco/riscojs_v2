@@ -65,7 +65,7 @@ export class TOC  extends MapPrintInRect {
 
 		this.canvaslayer = 'service_canvas'; 
 
-		this.left = 600;
+		this.left = 300;
 		this.top = this.margin_offset;
 		this.boxh = {
 			"OPEN": 300,
@@ -104,14 +104,6 @@ export class TOC  extends MapPrintInRect {
 
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		ctx.save();
-
-		if (this.prevboxenv) {
-			ctx.clearRect(...this.prevboxenv); 	
-			this.prevboxenv = null;
-		} else {
-			const dee = 2 * this.expandenv;
-			ctx.clearRect(this.left-this.expandenv, this.top-this.expandenv, this.boxw[this.collapsedstate]+dee, this.boxh[this.collapsedstate]+dee); 	
-		}
 
 		// cal width
 		let lbl, lyr_labels={}, lyr_fc = {}, lyr_vs_captions={}, lyr_vs_fc={}, varstyle_caption, lang, max_lbl_w = 0, varstyles_fc, cfgfont;
@@ -226,7 +218,14 @@ export class TOC  extends MapPrintInRect {
 
 		// const canvas_dims = [];
 		// console.log("::229:: this.canvaslayer, maxw:", this.canvaslayer, max_lbl_w);
-
+		if (this.prevboxenv) {
+			ctx.clearRect(...this.prevboxenv); 	
+			this.prevboxenv = null;
+		} else {
+			const dee = 2 * this.expandenv;
+			ctx.clearRect(this.left-this.expandenv, this.top-this.expandenv, this.boxw[this.collapsedstate]+dee, this.boxh[this.collapsedstate]+dee); 	
+		}
+		
 		try {
 			ctx.textAlign = "left";
 			indent_txleft = this.left + this.margin_offset + this.leftcol_width;
