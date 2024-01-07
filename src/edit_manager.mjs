@@ -864,6 +864,7 @@ export class EditingMgr extends MapPrintInRect {
 
 		// publish confirm save message
 		msgsctrlr.confirmMessage(
+
 			p_mapctx.i18n.msg('WANT2SAVE', true), 
 			true,
 			(p_evt, p_result, p_value) => { 
@@ -906,9 +907,12 @@ export class EditingMgr extends MapPrintInRect {
 					);
 
 				} else {
-					that.finishUpEditing(p_mapctx);
+					if (p_result !== null) {
+						that.finishUpEditing(p_mapctx);
+					}
 				}
-			}
+			},
+			true // Add cancel
 		);		
 	}
 

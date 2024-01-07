@@ -152,7 +152,7 @@ let MessagesController2 = {
 			} else if (p_type == "INFO") {
 				this.persist = false;
 				iconimg.src = this.media_root + "media/info-3-32.png";
-			} else if (p_type == "YESNO" || p_type == "OKCANCEL" || p_type == "SELECT" || p_type == "TEXT" || p_type == "NUMBER") {
+			} else if (p_type == "YESNO" || p_type == "YESNOCANCEL" || p_type == "OKCANCEL" || p_type == "SELECT" || p_type == "TEXT" || p_type == "NUMBER") {
 				this.persist = true;
 				iconimg.src = this.media_root + "media/q-32.png";
 			}
@@ -273,27 +273,35 @@ let MessagesController2 = {
 
 			if (opt_callback) {
 
-				if (opt_value_text_dict==null) {
+				if (!opt_value_text_dict) {
 
 					const ctrldiv = document.createElement("div");
 					ctrldiv.style.float = "right";
 					innercontentdiv.appendChild(ctrldiv);
 
-					if (p_type.endsWith("YESNO") || p_type.endsWith("OKCANCEL") || p_type == "TEXT" || p_type == "NUMBER") {
+					if (p_type == "YESNO" || p_type == "YESNOCANCEL" || p_type.endsWith("OKCANCEL") || p_type == "TEXT" || p_type == "NUMBER") {
 
 						btn1 = document.createElement("button");
 						const btn2 = document.createElement("button");
+						let btn3 = null;
 						btn1.setAttribute("type", "button");
 						btn2.setAttribute("type", "button");
-						ctrldiv.appendChild(btn1);
-						ctrldiv.appendChild(btn2);
-						if (p_type.endsWith("YESNO")) {
+						if (p_type.startsWith("YESNO")) {
 							btn1.insertAdjacentHTML('afterBegin', this.i18nMsg("Y", true));
 							btn2.insertAdjacentHTML('afterBegin', this.i18nMsg("N", true));
+							if (p_type.endsWith("CANCEL")) {
+								btn3 = document.createElement("button");
+								btn3.insertAdjacentHTML('afterBegin', this.i18nMsg("C", true));
+							}
 						} else if (p_type.endsWith("OKCANCEL") || p_type == "TEXT" || p_type == "NUMBER") {
 							btn1.insertAdjacentHTML('afterBegin', "Ok");
 							btn1.disabled = true;
 							btn2.insertAdjacentHTML('afterBegin', this.i18nMsg("C", true));
+						}
+						ctrldiv.appendChild(btn1);
+						ctrldiv.appendChild(btn2);
+						if (btn3) {
+							ctrldiv.appendChild(btn3);
 						}
 
 						// Activation of OK button when effective content change happens 
@@ -324,6 +332,15 @@ let MessagesController2 = {
 								pp_callback(ev, false, null);
 							});
 						})(this, btn2, opt_callback);
+
+						if (btn3) {
+							(function(p_this, p_btn, pp_callback) {
+								p_btn.addEventListener('click', function(ev) {
+									p_this.hideMessage(true);
+									pp_callback(ev, null, null);
+								});
+							})(this, btn3, opt_callback);						
+						}
 
 					}
 
@@ -460,11 +477,15 @@ let MessagesController2 = {
 		}
 	},*/
 
-	confirmMessage: function(p_msg_txt, p_yes_no, p_callback) {
+	confirmMessage: function(p_msg_txt, p_yes_no, p_callback, opt_adic_cancel_for_yesno) {
 		
 		let type;
 		if (p_yes_no) {
-			type = 'YESNO';
+			if (opt_adic_cancel_for_yesno) {
+				type = 'YESNOCANCEL';
+			} else {
+				type = 'YESNO';
+			}
 		} else {
 			type = 'OKCANCEL';
 		}
