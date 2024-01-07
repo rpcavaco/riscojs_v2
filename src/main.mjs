@@ -266,8 +266,9 @@ export class RiscoMapCtx {
 
 		// Tablet mode SIMPLE (tabletFeatPreSelection activated): changes mouse and touch interaction with features
 		// Keeps selected layer key and associated selected feature id
+		this.tabletmode = p_tabletmode;
 		this.tabletFeatPreSelection = new tabletFeatPreSelectionMgr();
-		if (p_tabletmode == "SIMPLE") {
+		if (this.tabletmode.trim().toLowerCase() != "none") {
 			this.tabletFeatPreSelection.activate(true);
 		}
 

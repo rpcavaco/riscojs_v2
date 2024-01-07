@@ -121,7 +121,6 @@ export class ControlsBox extends MapPrintInRect {
 	controls_state = { }; 
 	controls_rounded_face = [];
 	controls_prevgaps = {};	
-	//tool_manager = null;
 	controls_boxes = {};
 	anchoring = "UL";
 	other_widgets;
