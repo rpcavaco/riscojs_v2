@@ -490,7 +490,7 @@ export class EditingMgr extends MapPrintInRect {
 
 		return ret;
 	}
-	
+
 	setEditingEnabled(p_mapctx, p_editing_tobe_enabled) {
 
 		if (p_editing_tobe_enabled) {
@@ -512,11 +512,16 @@ export class EditingMgr extends MapPrintInRect {
 					if (ci == null) {
 						throw new Error("setEditingEnabled, map context customization instance is missing")
 					}
+
+					const controlkeys_exceptions = [];
+					if (!this.#layeredit_cfg_attribs.accept_deletion) {
+						controlkeys_exceptions.push("delete");
+					}
 			
 					// Show edit controls
 					const ecb = ci.instances["editcontrolsbox"];
 					if (ecb) {
-						ecb.setAllControlsHidden(false);
+						ecb.setManyControlsHidden(false, controlkeys_exceptions);
 						ecb.print(p_mapctx);
 					}
 
@@ -552,7 +557,7 @@ export class EditingMgr extends MapPrintInRect {
 			const ecb = ci.instances["editcontrolsbox"];
 			if (ecb) {
 				ecb.controlsDisabling("all", true);
-				ecb.setAllControlsHidden(true);
+				ecb.setManyControlsHidden(true);
 				ecb.print(p_mapctx);
 			}
 
@@ -883,7 +888,6 @@ export class EditingMgr extends MapPrintInRect {
 								msgsctrlr.warn(p_mapctx.i18n.msg('EDITSAVEERROR',true));
 								that.finishUpEditing(p_mapctx);
 							} else if (responsejson['state'] == 'OK') {
-								console.log("!! OK !!")
 								console.log(responsejson);
 								that.execAfterSave(p_mapctx, responsejson, function() {
 									that.finishUpEditing(p_mapctx);

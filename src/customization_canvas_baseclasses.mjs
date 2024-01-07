@@ -127,9 +127,11 @@ export class ControlsBox extends MapPrintInRect {
 	other_widgets;
 	horiz_layout;
 
-	setAllControlsHidden(p_do_hide) {
+	setManyControlsHidden(p_do_hide, opt_exceptionkeys_list) {
 		for (const k of this.controls_keys) {
-			this.controls_state[k].hidden = p_do_hide;
+			if (!opt_exceptionkeys_list || opt_exceptionkeys_list.indexOf(k) < 0) {
+				this.controls_state[k].hidden = p_do_hide;
+			}
 		}
 	}
 
@@ -150,7 +152,7 @@ export class ControlsBox extends MapPrintInRect {
 
 	_initParameters(p_config_namespaceroot) {
 		
-		// a ser estendido
+		// to be extended, to be called in derived class constructor
 
 	}
 

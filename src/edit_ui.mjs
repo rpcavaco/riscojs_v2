@@ -16,9 +16,7 @@ export class EditCtrlBox extends ControlsBox {
 			"delete"
 		];
 
-		// All of these controls are hidden by default; they're only shown while editing is enable
 		this.controls_state["delete"] = { "togglable": false, "togglestatus": false, "disabled": true, "hidden": true };
-
 		const that = this;
 
 		this.controls_funcs = {
