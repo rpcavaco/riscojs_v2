@@ -268,7 +268,7 @@ export class RiscoMapCtx {
 		// Keeps selected layer key and associated selected feature id
 		this.tabletmode = p_tabletmode;
 		this.tabletFeatPreSelection = new tabletFeatPreSelectionMgr();
-		if (this.tabletmode.trim().toLowerCase() != "none") {
+		if (this.tabletmode.trim().toLowerCase() == "SIMPLE") {
 			this.tabletFeatPreSelection.activate(true);
 		}
 

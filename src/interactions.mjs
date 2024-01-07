@@ -311,6 +311,7 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 
 				// at this point, opt_actonselfeat_dict has methods for both 'hover' and 'pick' ...
 
+				// tablet mode SIMPLE only
 				if (p_mapctx.tabletFeatPreSelection.isActive) {
 
 					// if pre-selection object exists and is active ...

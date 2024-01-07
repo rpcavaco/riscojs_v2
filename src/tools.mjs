@@ -525,6 +525,7 @@ class PointEditTool extends BaseTool {
 
 		this.editfeat_engaged = false;
 
+		/*
 		// If tabletFeatPreSelection is active, meaning tablet mode SIMPLE is enabled, lets act as pick method
 		if (p_mapctx.tabletFeatPreSelection.isActive) {
 			feat = this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict);
@@ -537,15 +538,19 @@ class PointEditTool extends BaseTool {
 
 		if (doDrawFeat) {
 			if (feat) {
-				layerklist = Object.keys(p_feature_dict);
 				ret = p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, feat.id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });		
 			} else {
 				layerklist = Object.keys(p_feature_dict);
 				ret = p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });	
 			}
 		}
+		*/
 
-		// console.log("hover, doDrawFeat:", doDrawFeat);
+		feat = this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict);
+		if (feat) {
+			ret = p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, feat.id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });		
+		}
+		console.log("hover, feat:", feat, "ret:", ret);
 
 		return ret;
 	}
@@ -554,7 +559,7 @@ class PointEditTool extends BaseTool {
 
 		let layerklist, ret = null;
 
-		// If NOT tabletFeatPreSelection is active, meaning tablet mode is DISBALED, lets act as expected in pick method
+		// If NOT tabletFeatPreSelection is active, meaning tablet mode is NOT SIMPLE, lets act as expected in pick method
 		if (!p_mapctx.tabletFeatPreSelection.isActive) {
 			this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict);
 		}
@@ -634,6 +639,7 @@ class PointEditTool extends BaseTool {
 
 					} else {
 
+						// SIMPLE tablet mode
 						if (p_mapctx.tabletFeatPreSelection.isActive) {
 							ret = false;
 							break;
