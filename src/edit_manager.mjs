@@ -657,6 +657,27 @@ export class EditingMgr extends MapPrintInRect {
 				
 	}
 
+	deleteCurrentEditFeat(p_mapctx) {
+
+		if (this.currentEditFeatHolder == null) {
+			throw new Error("deleteCurrentEditFeat, no current editing feature");
+		}
+
+		const gisid = this.currentEditFeatHolder.feat.a[this.#layeredit_cfg_attribs["gisid_field"]];
+
+		p_mapctx.featureCollection.remove(this.editingLayerKey, this.currentEditFeatHolder.id);
+
+		this.currentEditFeatHolder.feat = null;
+		this.currentEditFeatHolder.edited = true;
+		this.currentEditFeatHolder.gisid = gisid;
+
+		p_mapctx.featureCollection.redrawAllVectorLayers();
+		this.print(p_mapctx);
+
+		this.pendingChangesToSave = "ALL";
+
+	}
+
 	removePreviousTempFeat(p_mapctx, b_test_for_singlefeat_editing) {
 
 		let sfem = false;
@@ -740,11 +761,17 @@ export class EditingMgr extends MapPrintInRect {
 			let currfeat, cef_feat;
 			for (const cef of this.#edit_feature_holders) {
 
-				currfeat = { "feat": { "type": "Feature"} };
 
 				cef_feat = cef["feat"];
+				if (cef_feat) {
+					currfeat = { "feat": { "type": "Feature"} };
+				} else {
+					currfeat = { "gisid": cef["gisid"] };
+				}
 
-				if (this.#layeredit_cfg_attribs["attribs_to_save"].length > 0 && (this.pendingChangesToSave == "ALL" || this.pendingChangesToSave == "ALPHA")) {
+				console.log("pendingChangesToSave:", this.pendingChangesToSave);
+
+				if (cef_feat && this.#layeredit_cfg_attribs["attribs_to_save"].length > 0 && (this.pendingChangesToSave == "ALL" || this.pendingChangesToSave == "ALPHA")) {
 					currfeat["feat"]["properties"] = {};
 					for (let la of this.#layeredit_cfg_attribs["attribs_to_save"]) {
 						if (cef_feat.a[la] != null) {
@@ -755,25 +782,30 @@ export class EditingMgr extends MapPrintInRect {
 
 				if (this.pendingChangesToSave == "ALL" || this.pendingChangesToSave == "GEO") {
 					
-					switch (cef_feat.gt) {
+					if (cef_feat) {
 
-						case "point":
-							currfeat["feat"]["geometry"] = {
-									"type": "Point",
-									"coordinates": [...cef_feat.g[0]]
-							};
-							break;
+						switch (cef_feat.gt) {
 
-						default:
-							throw new Error(`serialize2GeoJSONLike, geom type '${cef_feat.gt}' still not supported`);
+							case "point":
+								currfeat["feat"]["geometry"] = {
+										"type": "Point",
+										"coordinates": [...cef_feat.g[0]]
+								};
+								break;
+	
+							default:
+								throw new Error(`serialize2GeoJSONLike, geom type '${cef_feat.gt}' still not supported`);
+	
+						}
+	
+						if (currfeat["feat"]["geometry"] !== undefined) {
+							currfeat["feat"]["geometry"]["crs"] = p_crs;
+						}
 
+						// in case of deletion, gisid must be spared prior to deletion
+						currfeat["gisid"] = cef["feat"].a[this.#layeredit_cfg_attribs["gisid_field"]];
 					}
 
-					if (currfeat["feat"]["geometry"] !== undefined) {
-						currfeat["feat"]["geometry"]["crs"] = p_crs;
-					}
-
-					currfeat["gisid"] = cef["feat"].a[this.#layeredit_cfg_attribs["gisid_field"]];
 				}
 
 				ret.push(currfeat)

@@ -5,9 +5,12 @@ export class EditCtrlBox extends ControlsBox {
 
 	prev_ctrl_key = null;
 	had_prev_interaction; 
+	editmgr;
 
-	constructor(p_mapctx, p_orientation, p_anchoring_twoletter, p_other_widgets) {
+	constructor(p_mapctx, p_orientation, p_anchoring_twoletter, p_other_widgets, p_editmgr) {
 		super(p_mapctx, p_orientation, p_anchoring_twoletter, p_other_widgets, p_mapctx.cfgvar["basic"]["editcontrols"]);
+
+		this.editmgr = p_editmgr;
 
  		this.controls_keys = [
 			"delete"
@@ -15,6 +18,8 @@ export class EditCtrlBox extends ControlsBox {
 
 		// All of these controls are hidden by default; they're only shown while editing is enable
 		this.controls_state["delete"] = { "togglable": false, "togglestatus": false, "disabled": true, "hidden": true };
+
+		const that = this;
 
 		this.controls_funcs = {
 			"delete": {
@@ -43,8 +48,12 @@ export class EditCtrlBox extends ControlsBox {
 						console.error(e);
 					});
 				},
-				"endevent": function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
-					p_mapctx.transformmgr.setScaleCenteredAtPoint(p_basic_config.scale, [p_basic_config.terrain_center[0], p_basic_config.terrain_center[1]], true);
+				"endevent": function(p_mapctx, p_evt, p_basic_config, p_global_constants, p_control_state) {
+					
+					that.editmgr.deleteCurrentEditFeat(p_mapctx);
+
+					p_control_state.disabled = true;
+
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 					topcnv.style.cursor = "default";
 
@@ -151,7 +160,9 @@ export class EditCtrlBox extends ControlsBox {
 					case 'mouseup':
 
 						if (this.controls_funcs[ctrl_key]["endevent"] !== undefined) {
-							const ret = this.controls_funcs[ctrl_key]["endevent"](p_mapctx, p_evt, p_mapctx.cfgvar["basic"], GlobalConst);
+							const ret = this.controls_funcs[ctrl_key]["endevent"](p_mapctx, p_evt, p_mapctx.cfgvar["basic"], GlobalConst, this.controls_state[ctrl_key]);
+
+							this.print(p_mapctx);
 							
 							// TODO - maybe to remove as no edit control is expected to be togglable
 

@@ -732,14 +732,14 @@ class BasicCtrlBox extends ControlsBox {
 
 		this.controls_funcs = {
 			"zoomout": {
-				"drawface": function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_control_status) {
+				"drawface": function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_control_state) {
 
 					p_ctx.beginPath();
 					p_ctx.moveTo(p_left+p_width*0.2, p_top+p_height*0.5);
 					p_ctx.lineTo(p_left+p_width*0.8, p_top+p_height*0.5);
 					p_ctx.stroke();
 				},
-				"endevent": function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
+				"endevent": function(p_mapctx, p_evt, p_basic_config, p_global_constants, p_control_state) {
 //					console.log("***", p_basic_config);
 					p_mapctx.transformmgr.zoomOut(p_basic_config.maxscaleview.scale, p_global_constants.SCALEINOUT_STEP, true);
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
@@ -756,7 +756,7 @@ class BasicCtrlBox extends ControlsBox {
 				}
 			},
 			"zoomin": {
-				"drawface": function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_control_status) {
+				"drawface": function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_control_state) {
 
 					p_ctx.beginPath();
 					p_ctx.moveTo(p_left+p_width*0.2, p_top+p_height*0.5);
@@ -765,7 +765,7 @@ class BasicCtrlBox extends ControlsBox {
 					p_ctx.lineTo(p_left+p_width*0.5, p_top+p_height*0.8);
 					p_ctx.stroke();
 				},
-				"endevent": function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
+				"endevent": function(p_mapctx, p_evt, p_basic_config, p_global_constants, p_control_state) {
 					p_mapctx.transformmgr.zoomIn(p_global_constants.MINSCALE, p_global_constants.SCALEINOUT_STEP, true);
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 					topcnv.style.cursor = "default";
@@ -780,7 +780,7 @@ class BasicCtrlBox extends ControlsBox {
 				}
 			},
 			"home": {
-				"drawface": function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_control_status) {
+				"drawface": function(p_ctrlsbox, p_ctx, p_left, p_top, p_width, p_height, p_basic_config, p_global_constants, p_control_state) {
 
 					let imgsrc;
 					const imgh = new Image();
@@ -794,7 +794,7 @@ class BasicCtrlBox extends ControlsBox {
 						p_ctx.drawImage(imgh, p_left + ((p_global_constants.CONTROLS_STYLES.SIZE - p_global_constants.CONTROLS_STYLES.HOMESYMBWID) / 2), p_top);
 					});
 				},
-				"endevent": function(p_mapctx, p_evt, p_basic_config, p_global_constants) {
+				"endevent": function(p_mapctx, p_evt, p_basic_config, p_global_constants, p_control_state) {
 					p_mapctx.transformmgr.setScaleCenteredAtPoint(p_basic_config.scale, [p_basic_config.terrain_center[0], p_basic_config.terrain_center[1]], true);
 					const topcnv = p_mapctx.renderingsmgr.getTopCanvas();
 					topcnv.style.cursor = "default";
@@ -904,7 +904,10 @@ class BasicCtrlBox extends ControlsBox {
 					case 'mouseup':
 
 						if (this.controls_funcs[ctrl_key]["endevent"] !== undefined) {
-							const ret = this.controls_funcs[ctrl_key]["endevent"](p_mapctx, p_evt, p_mapctx.cfgvar["basic"], GlobalConst);
+							const ret = this.controls_funcs[ctrl_key]["endevent"](p_mapctx, p_evt, p_mapctx.cfgvar["basic"], GlobalConst, this.controls_state[ctrl_key]);
+
+							this.print(p_mapctx);
+							
 							if (this.changeToggleFlag(ctrl_key, ret)) {
 								
 								const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
@@ -1430,7 +1433,7 @@ export class MapCustomizations {
 
 			const em = new EditingMgr(this.mapctx, editable_layers, [toc], sfem)
 			this.instances["editing"] = em;
-			this.instances["editcontrolsbox"] = new EditCtrlBox(this.mapctx, this.mapctx.cfgvar["basic"]["editcontrols"]["orientation"], "UR", [toc, em]);
+			this.instances["editcontrolsbox"] = new EditCtrlBox(this.mapctx, this.mapctx.cfgvar["basic"]["editcontrols"]["orientation"], "UR", [toc, em], em);
 
 		}
 
