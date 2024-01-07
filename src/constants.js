@@ -128,8 +128,12 @@ var GlobalConst = {
 				"lineWidth": 3
 			},
 			"point" : { 
-				"marker": "square",
-				"markersize": 8
+				"marker": "star",
+				"fillStyle": "none",
+				"strokeStyle": "#20ffff",
+				"lineWidth": 3,
+				"markersize": 18,
+				"thickness": 10	
 			}	
 		},		
 	},
