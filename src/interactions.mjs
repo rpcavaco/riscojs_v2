@@ -302,6 +302,7 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 		}
 
 		let usesel = null, coincidence_found;
+
 		if (opt_actonselfeat_ok) {
 
 			// at this point, opt_actonselfeat_dict contains methods to execute just on 'hover' or on 'hover' and on 'pick'
@@ -395,6 +396,14 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 				if (p_is_end_event) {
 					if (opt_clickonemptyspace) {
 						opt_clickonemptyspace(p_mapctx, 'INTERACTSPIDXLYR', p_scrx, p_scry);
+					}
+				} else {
+					if (opt_hoveronemptyspace) {
+
+						if (feats == null || Object.keys(feats).length < 1) {
+							ret_dir_interact =  opt_hoveronemptyspace(p_mapctx, 'INTERACTSPIDXLYR', p_scrx, p_scry);
+						}
+			
 					}
 				}			
 			} 

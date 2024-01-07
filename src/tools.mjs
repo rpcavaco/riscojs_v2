@@ -519,38 +519,28 @@ class PointEditTool extends BaseTool {
 		}
 	} 
 
+	hoverOnEmpty(p_mapctx, p_source_id, p_scrx, p_scry) {
+
+		// ... and create set / create vertex or new point object
+
+		if (p_source_id == 'TOC' || p_source_id == 'TOCMGR') {
+			return;
+		}
+
+		this.clearCanvas(p_mapctx);
+
+	} 	
+
 	hover(p_mapctx, p_feature_dict, p_scrx, p_scry){
 
 		let feat=null, layerklist, doDrawFeat = false, ret = null;
 
 		this.editfeat_engaged = false;
 
-		/*
-		// If tabletFeatPreSelection is active, meaning tablet mode SIMPLE is enabled, lets act as pick method
-		if (p_mapctx.tabletFeatPreSelection.isActive) {
-			feat = this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict);
-			if (feat!=null) {
-				doDrawFeat = true;
-			}
-		} else {
-			doDrawFeat = true;
-		}
-
-		if (doDrawFeat) {
-			if (feat) {
-				ret = p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, feat.id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });		
-			} else {
-				layerklist = Object.keys(p_feature_dict);
-				ret = p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });	
-			}
-		}
-		*/
-
 		feat = this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict);
 		if (feat) {
 			ret = p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, feat.id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });		
 		}
-		console.log("hover, feat:", feat, "ret:", ret);
 
 		return ret;
 	}
@@ -639,20 +629,15 @@ class PointEditTool extends BaseTool {
 
 					} else {
 
-						// SIMPLE tablet mode
+						// if in tablet mode SIMPLE, ignore mouse move for info / maptip purposes
 						if (p_mapctx.tabletFeatPreSelection.isActive) {
 							ret = false;
-							break;
+						} else {
+							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
+							ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, false, { "hover": this.hover.bind(this) }, null, this.hoverOnEmpty.bind(this));	
 						}
-
-						// TODO
-						// mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-						// ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, false, {"hover": ic.hover.bind(ic)}, ic.clearinfo.bind(ic));
 						break;
-							
 					}
-
-
 
 			}
 		} catch(e) {
