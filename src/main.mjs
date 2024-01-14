@@ -506,17 +506,30 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		gfctx.strokeStyle = "white";
 		gfctx.lineWidth = GlobalConst.CENTER_TARGET_WIDTH;
 
+		const sz = 0.3 * GlobalConst.CENTER_TARGET_SIZE;
+		const sz2 = 1.5 * GlobalConst.CENTER_TARGET_SIZE;
+
 		try {
 			gfctx.clearRect(0, 0, ...mapdims); 
 
 			gfctx.beginPath();
-			gfctx.moveTo(center_pt[0] - GlobalConst.CENTER_TARGET_SIZE, center_pt[1]);
-			gfctx.lineTo(center_pt[0] + GlobalConst.CENTER_TARGET_SIZE, center_pt[1]);
+			gfctx.moveTo(center_pt[0] - sz2, center_pt[1]);
+			gfctx.lineTo(center_pt[0] - sz, center_pt[1]);
 			gfctx.stroke();
 			
 			gfctx.beginPath();
-			gfctx.moveTo(center_pt[0], center_pt[1] - GlobalConst.CENTER_TARGET_SIZE);
-			gfctx.lineTo(center_pt[0], center_pt[1] + GlobalConst.CENTER_TARGET_SIZE);
+			gfctx.moveTo(center_pt[0] + sz, center_pt[1]);
+			gfctx.lineTo(center_pt[0] + sz2, center_pt[1]);
+			gfctx.stroke();
+
+			gfctx.beginPath();
+			gfctx.moveTo(center_pt[0], center_pt[1] - sz2);
+			gfctx.lineTo(center_pt[0], center_pt[1] - sz);
+			gfctx.stroke();
+			
+			gfctx.beginPath();
+			gfctx.moveTo(center_pt[0], center_pt[1] + sz);
+			gfctx.lineTo(center_pt[0], center_pt[1] + sz2);
 			gfctx.stroke();
 
 		} finally {
