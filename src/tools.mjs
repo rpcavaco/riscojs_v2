@@ -98,12 +98,14 @@ class MultiTool extends BaseTool {
 
 			// never do pan on mouseout or mouseleave events
 			//if (["mouseleave", "mouseout"].indexOf(p_evt.type) < 0) {
-				if (p_orig) {
-					orig = p_orig;
-				} else {
-					orig = "mouse";
-				}
-				this.finishPan(p_mapctx.transformmgr, p_evt.offsetX, p_evt.offsetY, orig);	
+			if (p_orig) {
+				orig = p_orig;
+			} else {
+				orig = "mouse";
+			}
+
+			this.finishPan(p_mapctx.transformmgr, p_evt.offsetX, p_evt.offsetY, orig);	
+
 			//}
 			this.imgs_dict={};
 			this.start_screen = null;
@@ -319,7 +321,9 @@ class InfoTool extends BaseTool {
 
 			if (GlobalConst.getDebug("INTERACTIONOUT") && p_evt.type == "mouseout") {
 				console.log("[DBG:INTERACTIONOUT] INFOTOOL, mouseout");
-			}				
+			}	
+			
+			//console.log("-- Infotool on event, evt.type:", p_evt.type, "cstm:", p_evt.custom);
 
 			switch(p_evt.type) {
 
@@ -368,17 +372,21 @@ class InfoTool extends BaseTool {
 					break;
 
 				case 'mousemove':
-					// if in tablet mode SIMPLE, ignore mouse move for info / maptip purposes
-					if (p_mapctx.tabletFeatPreSelection.isActive) {
+				case "adv_hover":
+					// if any tablet mode, ignore mouse move for info / maptip purposes
+
+					if (p_evt.type == "mousemove" && p_mapctx.tabletmode.toLowerCase() != "none") {
 						ret = false;
 						break;
 					}
+
 					if (!this.getAnyPanelActive()) {
 						if (ic.hover !== undefined) {
 
 							ic.clearinfo(p_mapctx, 'INFOTOOL_MOUSEMOVE');
 		
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
+							console.log(":: 389 :: type:", p_evt.type, p_evt.offsetX, p_evt.offsetY);
 							ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, false, {"hover": ic.hover.bind(ic)}, ic.clearinfo.bind(ic));
 						} else {
 							console.warn(`infoclass customization unavailable, cannot hover / maptip feature`);			
@@ -927,7 +935,31 @@ export class ToolManager {
 		//  we prevent its dispatchment to the active tools
 
 		if (!_ret) {
-			for (let i=this.maptools.length-1; i>=0; i--) {
+			// for (let i=this.maptools.length-1; i>=0; i--) {
+			let evt = p_evt, mapdims = [], center_pt;
+			let toggletool_already_interacted = false; 
+			let mini, step;
+
+			// if (p_mapctx.tabletmode.toLowerCase() == "advanced") {
+			// 	mini = 0;
+			// 	maxi = this.maptools.length;
+			// 	step = 1;
+			// } else {
+			mini = this.maptools.length-1;
+			step = -1;
+			//}
+
+			for (let i=mini; ; i=i+step) {
+
+				// if (p_mapctx.tabletmode.toLowerCase() == "advanced") {
+				// 	if (i >= this.maptools.length) {
+				// 		return;
+				// 	}
+				// } else {
+				if (i < 0) {
+					return;
+				}
+				//}
 
 				// toggletool_already_interacted - signals if a tool joining a toggle group already interacted with this event.
 				// In that case, other tools joining toggle groups should not interact
@@ -935,21 +967,39 @@ export class ToolManager {
 				// Other tools, including always-available ones like 'base' tool, should not be prevented
 				// from interacting
 
-				let toggletool_already_interacted = false; 
 				if (this.maptools[i].enabled) {
 
 					if (this.maptools[i].joinstogglegroup && toggletool_already_interacted) {
 						continue;
 					}
 
-					_ret = this.maptools[i].onEvent(p_mapctx, p_evt);
+					_ret = this.maptools[i].onEvent(p_mapctx, evt);
 
-					if (GlobalConst.getDebug("INTERACTIONCLICKEND") && clickendevents.indexOf(p_evt.type) >= 0) {
-						console.log("[DBG:INTERACTIONCLICKEND] ToolManager tool", this.maptools[i].name, "onEvent, returned:", _ret, "togglegrp:", this.maptools[i].joinstogglegroup);
+					// if (_ret && p_mapctx.tabletmode.toLowerCase() == "advanced") {
+					// 	if (evt.custom !== undefined && evt.custom.operation == "pan") {
+					// 		p_mapctx.renderingsmgr.getCanvasDims(mapdims);					
+					// 		center_pt = p_mapctx.getCenterPoint(mapdims);
+					// 		evt = {
+					// 			type: "adv_hover",
+					// 			offsetX: center_pt[0],
+					// 			offsetY: center_pt[1],
+					// 			custom: {
+					// 				orig: "synthetic"
+					// 			}
+					// 		}
+					// 	}
+					// }
+
+					if (p_evt.type.startsWith("adv")) {
+						console.log(_ret, i, this.maptools[i].constructor.name, "ty:", p_evt.type, "->", evt.type, "custX:", evt.offsetX, "Y:", evt.offsetY, evt.custom);
 					}
 
-					if (GlobalConst.getDebug("INTERACTIONOUT") && p_evt.type == "mouseout") {
-						console.log("[DBG:INTERACTIONOUT] ToolManager, mouseout tool", this.maptools[i].name, "onEvent, returned:", _ret, "togglegrp:", this.maptools[i].joinstogglegroup);
+					if (GlobalConst.getDebug("INTERACTIONCLICKEND") && clickendevents.indexOf(evt.type) >= 0) {
+						console.log("[DBG:INTERACTIONCLICKEND] ToolManager tool", this.maptools[i].constructor.name, "onEvent, returned:", _ret, "togglegrp:", this.maptools[i].joinstogglegroup);
+					}
+
+					if (GlobalConst.getDebug("INTERACTIONOUT") && evt.type == "mouseout") {
+						console.log("[DBG:INTERACTIONOUT] ToolManager, mouseout tool", this.maptools[i].constructor.name, "onEvent, returned:", _ret, "togglegrp:", this.maptools[i].joinstogglegroup);
 					}	
 
 					if (_ret && this.maptools[i].joinstogglegroup) {

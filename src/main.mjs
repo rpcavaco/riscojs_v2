@@ -291,9 +291,10 @@ export class RiscoMapCtx {
 
 		// Attach event listeners to this map context panel
 		(function(p_mapctx) {
-			const evttypes = ["mouseup", "mousedown", "mousemove", "mouseover", "mouseout", "mouseleave", "wheel", "touchstart", "touchmove", "touchend", "touchcancel"];
+			const evttypes = ["mouseup", "mousedown", "mousemove", "mouseover", "mouseout", "mouseleave", "wheel", "touchstart", "touchmove", "touchend", "touchcancel", "adv_hover"];
 			for (let i=0; i<evttypes.length; i++) {
 				p_mapctx.panelwidget.addEventListener(evttypes[i], function(e) { 
+					if (evttypes[i].startsWith("adv")) { console.log("-->", e.type, e.offsetX, e.offsetY); }
 					p_mapctx.mxOnEvent(e);
 				}); 
 			}
@@ -391,7 +392,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 	 */
 	mxOnEvent(p_evt) {
 
-		const clickendevents = ["touchstart", "touchend", "mousedown", "mouseup", "mouseleave", "mouseout"];
+		const clickendevents = ["touchstart", "touchend", "mousedown", "mouseup", "mouseleave", "mouseout", "adv_pick"];
 
 		if (p_evt.target.tagName.toLowerCase() == "canvas") {
 			const evt = this.touchevtctrlr.adapt(p_evt);

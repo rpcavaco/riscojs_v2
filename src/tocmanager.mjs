@@ -581,6 +581,30 @@ export class TOCManager {
 		this.nextdraw();
 	}
 
+	genAdvancedTabletmodeEvent(b_is_hover_or_pick) {
+
+		const mapdims = [];
+		this.mapctx.renderingsmgr.getCanvasDims(mapdims);					
+		const center_pt = this.mapctx.getCenterPoint(mapdims);
+		const topcnv = this.mapctx.renderingsmgr.getTopCanvas();
+
+		let tp;
+		if (b_is_hover_or_pick) {
+			tp = "adv_hover";
+		} else {
+			tp = "adv_pick";
+		}
+
+		const evt = new Event(tp, {
+			bubbles: true,
+			cancelable: true,
+			view: window
+		  });
+		  evt.offsetX = center_pt[0];
+		  evt.offsetY = center_pt[1];
+		  topcnv.dispatchEvent(evt);		
+	}
+
 	// getStats and draw2D will launch processes that terminate by calling signalVectorLoadFinished
 	nextdraw() {
 
@@ -599,6 +623,11 @@ export class TOCManager {
 
 			// apply configured relations between feature layers
 			this.mapctx.featureCollection.relateall();
+
+			if (this.mapctx.tabletmode.toLowerCase() == "advanced") {
+				this.genAdvancedTabletmodeEvent(true);
+			}
+
 			return;
 
 		}
