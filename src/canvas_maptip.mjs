@@ -350,13 +350,16 @@ export class MaptipBox extends PopupBox {
 				return;
 			}
 
-			for (let feat, featrows, featidx=0; featidx < this.feature_dict[lyrk].length; featidx++) {
+			for (let feat, featrows, featid, featidx=0; featidx < this.feature_dict[lyrk].length; featidx++) {
 
 				feat = this.feature_dict[lyrk][featidx]['feat'];
 				if (featids[lyrk] === undefined) {
 					featids[lyrk] = [];
 				}
-				featids[lyrk].push(feat.id);
+
+				featid = this.feature_dict[lyrk][featidx]["id"];
+
+				featids[lyrk].push(featid);
 				featrows = [];
 
 				if (ifkeys.indexOf("add") >= 0) {
@@ -700,7 +703,7 @@ export class MaptipBox extends PopupBox {
 
 							this.tipclear();
 							clearFeatureHover(this.mapctx, this.featurehover_canvas);
-							p_info_instance.pickfeature(cb.layerk, this.feature_dict[cb.layerk][cb.featidx], p_evt.offsetX, p_evt.offsetY);
+							p_info_instance.pickfeature(this.mapctx, cb.layerk, this.feature_dict[cb.layerk][cb.featidx]["feat"], p_evt.offsetX, p_evt.offsetY);
 
 						} else {
 
