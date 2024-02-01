@@ -386,7 +386,7 @@ class InfoTool extends BaseTool {
 							ic.clearinfo(p_mapctx, 'INFOTOOL_MOUSEMOVE');
 		
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
-							console.log(":: 389 :: type:", p_evt.type, p_evt.offsetX, p_evt.offsetY);
+							// console.log(":: 389 :: type:", p_evt.type, p_evt.offsetX, p_evt.offsetY);
 							ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, false, {"hover": ic.hover.bind(ic)}, ic.clearinfo.bind(ic));
 						} else {
 							console.warn(`infoclass customization unavailable, cannot hover / maptip feature`);			

@@ -6,7 +6,7 @@ import { SlicingPanel } from './slicing.mjs';
 import { DashboardPanel } from './dashboard.mjs';
 import { TOC } from './tocwidget.mjs';
 import { EditingMgr } from './edit_manager.mjs';
-import { EditCtrlBox } from './edit_ui.mjs';
+import { AdvTabletModeEditCtrlBox, EditCtrlBox } from './edit_ui.mjs';
 
 class MousecoordsPrint extends PermanentMessaging {
 
@@ -1434,6 +1434,8 @@ export class MapCustomizations {
 			const em = new EditingMgr(this.mapctx, editable_layers, [toc], sfem)
 			this.instances["editing"] = em;
 			this.instances["editcontrolsbox"] = new EditCtrlBox(this.mapctx, this.mapctx.cfgvar["basic"]["editcontrols"]["orientation"], "UR", [toc, em], em);
+
+			//this.instances["adveditcontrolsbox"] = new AdvTabletModeEditCtrlBox(this.mapctx, this.mapctx.cfgvar["basic"]["adveditcontrols"]["orientation"], "UR", [toc, em], em);		
 
 		}
 

@@ -88,7 +88,7 @@ export class RiscoMapOverlay {
 	 * @param {string} p_ctx_id - Identification of this context eg: 'left', 'right', 'single', 'base', etc.
 	 * @param {string} p_mode - Just 'canvas' for now
 	 * @param {boolean} b_wait_for_customization_avail - Flag - if true, customizations must be completely inited before first refresh of map
-	 * @param {string} p_tabletmode - Activate 'tablet mode': null or 'SIMPLE'
+	 * @param {string} p_tabletmode - Activate 'tablet mode': 'NONE' or null,  'SIMPLE', 'ADVANCED'
 	 * @returns - the context just created
 	 */
 	newMapCtx(p_config_var, p_ctx_id, p_mode, b_wait_for_customization_avail, p_tabletmode) {
@@ -262,7 +262,7 @@ export class RiscoMapCtx {
 
 		this.graphicsmode = p_mode;
 
-		// Tablet mode SIMPLE (tabletFeatPreSelection activated): changes mouse and touch interaction with features
+		// Tablet mode SIMPLE/ADVANCED (tabletFeatPreSelection activated): changes mouse and touch interaction with features
 		// Keeps selected layer key and associated selected feature id
 		this.tabletmode = p_tabletmode;
 		this.tabletFeatPreSelection = new tabletFeatPreSelectionMgr();
