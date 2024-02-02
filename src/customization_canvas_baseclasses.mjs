@@ -465,130 +465,180 @@ export class Info {
 		if (currlayer["infocfg"] === undefined) {
 			throw new Error(`Missing 'infocfg' config for layer '${p_layerkey}, cannot 'pick' features`);
 		}
-		if (currlayer["infocfg"]["function"] === undefined && currlayer["infocfg"]["keyfields"] === undefined && currlayer["infocfg"]["keyfield"] === undefined) {
+
+		let mode = "NONE";
+
+		if (currlayer["infocfg"]["function"] !== undefined) {
+			mode = "INFOFUNC";
+		} else if (currlayer["infocfg"]["keyfields"] !== undefined || currlayer["infocfg"]["keyfield"] !== undefined) {
+			mode = "INFOQRY";
+		} else if (currlayer["infocfg"]["fields"] !== undefined && currlayer["infocfg"]["fields"]["add"] !== undefined) {
+			mode = "INFODIRECT";
+		}
+
+		if (mode == "NONE") {
 			console.warn(`missing either 'infocfg.function' config OR 'infocfg.keyfields' and 'infocfg.keyfield' configs for layer '${p_layerkey}, cannot 'pick' features`);
 			return;
 		}
 
 		const keyfields = [];
+		let ret;
 
-		if (currlayer["infocfg"]["function"] !== undefined) {
+		if (mode == "INFOFUNC") {
 
 			const ic = p_mapctx.getCustomizationObject().interoperability_ctrlr;
 
-			return currlayer["infocfg"]["function"](ic, currlayer, p_feature);
+			ret = currlayer["infocfg"]["function"](ic, currlayer, p_feature);
 
-		} else if (currlayer["infocfg"]["keyfield"] !== undefined) {
+		} 
 
-			if (p_feature.a[currlayer["infocfg"]["keyfield"]] === undefined) {
-				console.warn(`[WARN] layer '${p_layerkey}' has no attribute corresponding to INFO key field '${currlayer["infocfg"]["keyfield"]}'`);
-				return;
-			}
+		if (mode == "INFOQRY") {
+		
+			if (currlayer["infocfg"]["keyfield"] !== undefined) {
 
-			if (typeof currlayer["infocfg"]["keyfield"] !== 'string') {
-				console.warn(`[WARN] layer '${p_layerkey}' infocfg->keyfield configuration MUST be of type 'string'`);
-				return;
-			}
-
-			keyfields.push(currlayer["infocfg"]["keyfield"]);
-
-		} else if (currlayer["infocfg"]["keyfields"] !== undefined) {
-
-			if (typeof currlayer["infocfg"]["keyfields"] == 'string') {
-				console.warn(`[WARN] layer '${p_layerkey}' infocfg->keyfields configuration cannot be of type 'string', must be array`);
-				return;
-			}
-
-			if (Array.isArray(currlayer["infocfg"]["keyfields"])) {
-
-				let warned = false;
-				for (let kf of currlayer["infocfg"]["keyfields"]) {
-					if (typeof kf != 'string') {
-						console.warn(`[WARN] layer '${p_layerkey}' has no attribute corresponding to INFO key field '${kf}'`);
-						warned = true;
-						break;
-					}
-				}
-				if (warned) {
+				if (p_feature.a[currlayer["infocfg"]["keyfield"]] === undefined) {
+					console.warn(`[WARN] layer '${p_layerkey}' has no attribute corresponding to INFO key field '${currlayer["infocfg"]["keyfield"]}'`);
 					return;
-				}	
-
-				for (let kf of currlayer["infocfg"]["keyfields"]) {
-					if (p_feature.a[kf] === undefined) {
-						console.warn(`[WARN] layer '${p_layerkey}' has no attribute corresponding to INFO key field '${kf}'`);
-						warned = true;
-						break;
-					}
 				}
-				if (warned) {
+
+				if (typeof currlayer["infocfg"]["keyfield"] !== 'string') {
+					console.warn(`[WARN] layer '${p_layerkey}' infocfg->keyfield configuration MUST be of type 'string'`);
 					return;
-				}	
-
-				for (let kf of currlayer["infocfg"]["keyfields"]) {
-					keyfields.push(kf);
 				}
 
-			} else {
+				keyfields.push(currlayer["infocfg"]["keyfield"]);
 
-				console.warn(`[WARN] layer '${p_layerkey}' infocfg->keyfields configuration is not an array`);
-				return;
+			} else if (currlayer["infocfg"]["keyfields"] !== undefined) {
+
+				if (typeof currlayer["infocfg"]["keyfields"] == 'string') {
+					console.warn(`[WARN] layer '${p_layerkey}' infocfg->keyfields configuration cannot be of type 'string', must be array`);
+					return;
+				}
+
+				if (Array.isArray(currlayer["infocfg"]["keyfields"])) {
+
+					let warned = false;
+					for (let kf of currlayer["infocfg"]["keyfields"]) {
+						if (typeof kf != 'string') {
+							console.warn(`[WARN] layer '${p_layerkey}' has no attribute corresponding to INFO key field '${kf}'`);
+							warned = true;
+							break;
+						}
+					}
+					if (warned) {
+						return;
+					}	
+
+					for (let kf of currlayer["infocfg"]["keyfields"]) {
+						if (p_feature.a[kf] === undefined) {
+							console.warn(`[WARN] layer '${p_layerkey}' has no attribute corresponding to INFO key field '${kf}'`);
+							warned = true;
+							break;
+						}
+					}
+					if (warned) {
+						return;
+					}	
+
+					for (let kf of currlayer["infocfg"]["keyfields"]) {
+						keyfields.push(kf);
+					}
+
+				} else {
+
+					console.warn(`[WARN] layer '${p_layerkey}' infocfg->keyfields configuration is not an array`);
+					return;
+
+				}
+
+			}  // pickfunction
+
+			const keyvals = [];		
+			for (let kf of keyfields) {
+				keyvals.push(p_feature.a[kf].toString());
+			}
+
+			ret = false;
+			if (keyvals.length > 0) {
+
+				ret = true;
+
+				const that = this;
+				const lyr = p_mapctx.tocmgr.getLayer(p_layerkey);
+		
+				// done - [MissingFeat 0002] - Obter este URL de configs
+				fetch(currlayer.url + "/doget", {
+					method: "POST",
+					body: JSON.stringify({ "alias":lyr.infocfg.qrykey, "filtervals":keyvals, "pbuffer":0, "lang":"pt" })
+				})
+				.then(response => response.json())
+				.then(
+					function(responsejson) {
+						// console.log("cust_canvas_baseclasses:828 - antes criação InfoBox");
+						const ctx = p_mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
+						const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
+						that.ibox = new InfoBox(p_mapctx, p_mapctx.imgbuffer, currlayer, responsejson, that.styles, p_scrx, p_scry, Info.infobox_pick, Info.expand_image, ctx, that.max_textlines_height);
+						that.ibox.infoclear();
+						that.ibox.infodraw();	
+
+						const ci = p_mapctx.getCustomizationObject();
+						if (ci == null) {
+							throw new Error("Info.pickfeature, map context customization instance is missing")
+						}
+				
+						const toc = ci.instances["toc"];
+						const itool = p_mapctx.toolmgr.findTool("InfoTool");
+						if (itool) {
+							itool.setPickPanelActive(true);					
+							itool.setTocCollapsed(toc.collapse(p_mapctx, 'INFO'));
+							for (let wdgk of ci.mapcustom_controlsmgrs_keys) {
+								if ( ci.instances[wdgk] !== undefined && ci.instances[wdgk]['collapse'] !== undefined) {
+									ci.instances[wdgk].collapse(p_mapctx);
+								}
+							}
+						}
+
+						// console.log("cust_canvas_baseclasses:836 - ibox:", that.ibox);
+						
+					}
+				).catch((error) => {
+					console.error(`Impossible to fetch attributes on '${p_layerkey}'`);
+					throw new Error(error);
+				});	
 
 			}
 
-		}  // pickfunction
-
-		const keyvals = [];		
-		for (let kf of keyfields) {
-			keyvals.push(p_feature.a[kf].toString());
 		}
 
-		let ret = false;
-		if (keyvals.length > 0) {
+		if (mode == "INFODIRECT") {
 
 			ret = true;
 
-			const that = this;
-			const lyr = p_mapctx.tocmgr.getLayer(p_layerkey);
+			const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+			const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
+
+			const data = {};
+			data[p_layerkey] = [p_feature.a];
+			this.ibox = new InfoBox(p_mapctx, p_mapctx.imgbuffer, currlayer, data, this.styles, p_scrx, p_scry, Info.infobox_pick, Info.expand_image, ctx, this.max_textlines_height);
+			this.ibox.infoclear();
+			this.ibox.infodraw();	
+
+			const ci = p_mapctx.getCustomizationObject();
+			if (ci == null) {
+				throw new Error("Info.pickfeature, map context customization instance is missing")
+			}
 	
-			// done - [MissingFeat 0002] - Obter este URL de configs
-			fetch(currlayer.url + "/doget", {
-				method: "POST",
-				body: JSON.stringify({ "alias":lyr.infocfg.qrykey, "filtervals":keyvals, "pbuffer":0, "lang":"pt" })
-			})
-			.then(response => response.json())
-			.then(
-				function(responsejson) {
-					// console.log("cust_canvas_baseclasses:828 - antes criação InfoBox");
-					const ctx = p_mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
-					const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
-					that.ibox = new InfoBox(p_mapctx, p_mapctx.imgbuffer, currlayer, responsejson, that.styles, p_scrx, p_scry, Info.infobox_pick, Info.expand_image, ctx, that.max_textlines_height);
-					that.ibox.infoclear();
-					that.ibox.infodraw();	
-
-					const ci = p_mapctx.getCustomizationObject();
-					if (ci == null) {
-						throw new Error("Info.pickfeature, map context customization instance is missing")
+			const toc = ci.instances["toc"];
+			const itool = p_mapctx.toolmgr.findTool("InfoTool");
+			if (itool) {
+				itool.setPickPanelActive(true);					
+				itool.setTocCollapsed(toc.collapse(p_mapctx, 'INFO'));
+				for (let wdgk of ci.mapcustom_controlsmgrs_keys) {
+					if ( ci.instances[wdgk] !== undefined && ci.instances[wdgk]['collapse'] !== undefined) {
+						ci.instances[wdgk].collapse(p_mapctx);
 					}
-			
-					const toc = ci.instances["toc"];
-					const itool = p_mapctx.toolmgr.findTool("InfoTool");
-					if (itool) {
-						itool.setPickPanelActive(true);					
-						itool.setTocCollapsed(toc.collapse(p_mapctx, 'INFO'));
-						for (let wdgk of ci.mapcustom_controlsmgrs_keys) {
-							if ( ci.instances[wdgk] !== undefined && ci.instances[wdgk]['collapse'] !== undefined) {
-								ci.instances[wdgk].collapse(p_mapctx);
-							}
-						}
-					}
-
-					// console.log("cust_canvas_baseclasses:836 - ibox:", that.ibox);
-					
 				}
-			).catch((error) => {
-				console.error(`Impossible to fetch attributes on '${p_layerkey}'`);
-				throw new Error(error);
-			});	
+			}
 
 		}
 

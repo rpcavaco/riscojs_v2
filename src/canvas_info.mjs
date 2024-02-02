@@ -28,6 +28,7 @@ export class InfoBox extends PopupBox {
 	layer;
 	rows;
 	ctx;
+	data_key;
 
 	constructor(p_mapctx, p_imgbuffer, p_layer, p_data, p_styles, p_scrx, p_scry, p_infobox_pick_method, p_expandimage_method, p_ctx, opt_max_rows_height) {
 
@@ -58,19 +59,35 @@ export class InfoBox extends PopupBox {
 		this.rowboundaries = []; // for each page
 		this.nontext_formats = ["singleimg", "thumbcoll"];
 	
+		/*
 		if (this.layer.infocfg["qrykey"] === undefined) {
 			throw new Error(`Missing mandatory 'infocfg.qrykey' config (info query 'falias' in 'risco_find') for layer '${this.layer.key}`);
 		}
 
-		if (this.layer.infocfg["jsonkey"] === undefined) {
 			throw new Error(`Missing mandatory 'infocfg.jsonkey' config (info query 'alias' in 'risco_find') for layer '${this.layer.key}`);
+
+		*/
+
+		if (this.layer.infocfg["jsonkey"] !== undefined) {
+
+			if (this.data[this.layer.infocfg.jsonkey] === undefined) {
+				throw new Error(`Missing 'infocfg.jsonkey' ('${this.layer.infocfg.jsonkey}') in data row (found keys:${Object.keys(this.data)}) for layer '${this.layer.key}`);
+			}
+
+			this.data_key = this.layer.infocfg["jsonkey"];
+	
+		} else {
+
+			if (this.data[this.layer.key] === undefined) {
+				throw new Error(`Missing '${this.layer.key}' in data row (found keys:${Object.keys(this.data)}) for layer '${this.layer.key}`);
+			}	
+			
+			this.data_key = this.layer.key;
+			
 		}
 
-		if (this.data[this.layer.infocfg.jsonkey] === undefined) {
-			throw new Error(`Missing 'infocfg.jsonkey' in data row (found keys:${Object.keys(this.data)}) for layer '${this.layer.key}`);
-		}
 		
-		this.recordcnt = this.data[this.layer.infocfg.jsonkey].length;
+		this.recordcnt = this.data[this.data_key].length;
 		
 		if (p_styles["navFillStyle"] !== undefined) {
 			this.navFillStyle = p_styles["navFillStyle"];
@@ -218,9 +235,9 @@ export class InfoBox extends PopupBox {
 		if (ifcfg.length < 1) {
 			throw new Error(`Missing mandatory 'infocfg' config for layer '${this.layer.key}`);
 		}
-		if (this.layer.infocfg["jsonkey"] === undefined) {
+		/*if (this.layer.infocfg["jsonkey"] === undefined) {
 			throw new Error(`Missing mandatory 'infocfg.jsonkey' config for layer '${this.layer.key}`);
-		}
+		}*/
 		const ifkeys = Object.keys(this.layer.infocfg.fields);
 		if (ifkeys.length < 1) {
 			console.warn(`Missing 'infocfg.fields' config for layer '${this.layer.key}, all fields will be printed`);
@@ -254,7 +271,9 @@ export class InfoBox extends PopupBox {
 		const lineheightfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["lineheightfactor"];
 		const rowsintervalfactor = GlobalConst.INFO_MAPTIPS_BOXSTYLE["rowsintervalfactor"];
 
-		const recdata = this.data[this.layer.infocfg.jsonkey][this.recordidx];
+		const recdata = this.data[this.data_key][this.recordidx];
+
+		console.log(recdata);
 
 		/*if (this.layer.infocfg.fields["transforms"] !== undefined) {
 			const trfcfgs = this.layer.infocfg.fields.transforms;
@@ -660,7 +679,7 @@ export class InfoBox extends PopupBox {
 
 
 		if (this.recordcnt > 1) {
-			this.drawnavitems(this.recordidx+1, this.data[this.layer.infocfg.jsonkey].length);
+			this.drawnavitems(this.recordidx+1, this.data[this.data_key].length);
 		}
 
 		this.drawcount++;
@@ -883,7 +902,7 @@ export class InfoBox extends PopupBox {
 
 					if (foundcolidx >= 0) {
 						if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
-							this.infobox_static_pick_method(this, this.data[this.layer.infocfg.jsonkey][this.recordidx], fldname, foundcolidx);
+							this.infobox_static_pick_method(this, this.data[this.data_key][this.recordidx], fldname, foundcolidx);
 						} 
 						else if (p_evt.type == "mousemove") {
 							if (foundcolidx % 2 == 1) {
