@@ -83,10 +83,6 @@ const strokeSymbolMixin = (Base) => class extends Base {
 	lineWidth = "none";	
 	lineDash = [];
 
-	shadowColor = "none";
-	shadowBlur = "none";
-	shadowOffsetX = "none";
-	shadowOffsetY = "none";	
 }
 
 const labelSymbolMixin = (Base) => class extends Base {
@@ -116,7 +112,25 @@ const labelSymbolMixin = (Base) => class extends Base {
 }
 
 const fillSymbolMixin = (Base) => class extends Base {
+	
 	fillStyle = "none";
+
+	shadowColor = "none";
+	shadowBlur = "none";
+	shadowOffsetX = "none";
+	shadowOffsetY = "none";	
+
+	setStyle(p_ctx) {
+
+		super.setStyle(p_ctx);
+
+		for (let attr of ["shadowColor", "shadowBlur", "shadowOffsetX", "shadowOffsetY"]) {
+			if (this[attr].toString().toLowerCase() != "none") {
+				p_ctx[attr] = this[attr];
+			}
+		}
+
+	}	
 }
 
 export class CanvasLineSymbol extends labelSymbolMixin(strokeSymbolMixin(GrSymbol)) { 
@@ -255,9 +269,18 @@ export class CanvasVertCross extends strokeSymbolMixin(MarkerSymbol) {
 	drawsymb(p_mapctxt, p_layer, p_coords) {
 
 		const sclval = p_mapctxt.getScale();
-		const dim = this.markersize * GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval);
+		const dim = this.markersize * GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval) * 0.5;
 
-		this.drawSimpleSymb(p_layer._gfctx, p_coords), dim;
+		this.drawSimpleSymb(p_layer._gfctx, p_coords, dim);
+
+	}
+
+	drawFreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step, p_lyr) {
+
+		const sclval = p_mapctx.getScale();
+		const dim = this.markersize * GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval) * 0.5;
+
+		this.drawSimpleSymb(p_ctx, p_symbcenter, dim);
 
 	}
 }
@@ -325,6 +348,86 @@ export class CanvasStar extends strokeSymbolMixin(MarkerSymbol) {
 		const dim = this.markersize * GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval);
 
 		this.drawSimpleSymb(p_layer._gfctx, p_coords), dim;
+
+	}
+}
+
+export class CanvasRegPolygon extends fillSymbolMixin(MarkerSymbol) { 
+
+	points = 3;
+	rotation_degrees = 0;
+	thickness = 0;
+	constructor(opt_variablesymb_idx) {
+		super(opt_variablesymb_idx);
+		this.marker = "polysymb";
+	}
+
+	drawSimpleSymb(p_ctx, p_coords, opt_dim) {
+
+		let exterior_radius;
+		
+		if (opt_dim) {
+			exterior_radius = opt_dim;
+		} else {
+			exterior_radius = this.markersize;
+		}
+
+		let cx, cy;
+		if (this.position_shift.length >= 2) {
+			cx = this.position_shift[0] + p_coords[0];
+			cy = this.position_shift[1] + p_coords[1];
+		} else {
+			cx = p_coords[0];
+			cy = p_coords[1];
+		}
+
+		let ang, co,se, xe, ye, r, first=true;
+		const step = (2 * Math.PI) / this.points;
+
+		for (let stepi = 0; stepi < this.points; stepi++) {
+
+			ang = (stepi * step) + ((this.rotation_degrees * Math.PI) / 180.0) ;
+
+			co = Math.cos(ang);
+			se = Math.sin(ang);
+
+			r = exterior_radius;
+
+			xe = cx + co * r;
+			ye = cy + se * r;
+
+			if (first) {
+				p_ctx.beginPath();
+				p_ctx.moveTo(xe, ye);
+			} else {
+				p_ctx.lineTo(xe, ye);
+			}
+			
+			first = false;
+		}
+
+		if (!first) {
+			p_ctx.fill();		
+			p_ctx.stroke();			
+		}
+
+	}
+
+	drawsymb(p_mapctxt, p_layer, p_coords) {
+
+		const sclval = p_mapctxt.getScale();
+		const dim = this.markersize * GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval) * 0.5;
+
+		this.drawSimpleSymb(p_layer._gfctx, p_coords, dim);
+
+	}
+
+	drawFreeSymb(p_mapctx, p_ctx, p_symbcenter, p_vert_step, p_lyr) {
+
+		const sclval = p_mapctx.getScale();
+		const dim = this.markersize * GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval) * 0.5;
+
+		this.drawSimpleSymb(p_ctx, p_symbcenter, dim);
 
 	}
 }
