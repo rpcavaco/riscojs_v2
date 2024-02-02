@@ -78,9 +78,15 @@ export class GrSymbol {
 }
 
 const strokeSymbolMixin = (Base) => class extends Base {
+
 	strokeStyle = "none";
 	lineWidth = "none";	
 	lineDash = [];
+
+	shadowColor = "none";
+	shadowBlur = "none";
+	shadowOffsetX = "none";
+	shadowOffsetY = "none";	
 }
 
 const labelSymbolMixin = (Base) => class extends Base {
