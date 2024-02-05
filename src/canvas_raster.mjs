@@ -1,6 +1,6 @@
 import {GlobalConst} from './constants.js';
 import {uuidv4} from './utils.mjs';
-import {WMSLayer, AGSMapLayer} from './rasterlayers.mjs';
+import {WMSLayer, AGSMapLayer, AGSImageServiceLayer} from './rasterlayers.mjs';
 
 // import {processHDREffect} from './canvas_utils.mjs';
 
@@ -247,3 +247,8 @@ export class CanvasWMSLayer extends canvasRasterMethodsMixin(WMSLayer) {
 export class CanvasAGSMapLayer extends canvasRasterMethodsMixin(AGSMapLayer) {
 
 }
+
+export class CanvasAGSImgSrvLayer extends canvasRasterMethodsMixin(AGSImageServiceLayer) {
+
+}
+

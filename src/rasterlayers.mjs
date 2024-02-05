@@ -394,6 +394,408 @@ export class WMSLayer extends RasterLayer {
 
 }
 
+export class AGSImageServiceLayer extends RasterLayer {
+
+	url;
+	imageformat = "jpg"; // png | png8 | png24 | jpg | pdf | bmp | gif | svg | svgz | emf | ps | png32
+
+	constructor() { 
+		super();
+		this._servmetadata_docollect = false;
+	}
+
+	isInited() {
+		//return !this._servmetadata_docollect || this._servmetadata_report_completed;
+		return true;
+	}
+
+	// Why passing Map context to this method if this layer has it as a field ?
+	// The reason is: it is not still available at this stage; it will be availabe later to subsequent drawing ops
+	/*initLayer(p_mapctx) {
+
+		if (GlobalConst.getDebug("AGSMAP")) {
+			console.log(`[DBG:AGSMAP] Layer '${this.key}' is in INIT`);
+		}
+		
+		if (this.url == null || this.url.length < 1) {
+			throw new Error("Class CanvasAGSMapLayer, null or empty p_metadata_or_root_url");
+		}
+
+		if (!this.url.endsWith('/MapServer')) {
+			throw new Error("Class CanvasAGSMapLayer, 'url' config parameter must terminate with '/MapServer'");
+		}		
+
+		this._servmetadata = {};
+		this._metadata_or_root_url = new URL(this.url);
+
+		const bounds = [], dims=[];
+		p_mapctx.getMapBounds(bounds);
+		const cfg = p_mapctx.cfgvar["basic"]; 
+		p_mapctx.getCanvasDims(dims);
+
+		if (this._metadata_or_root_url) {
+			const sp = this._metadata_or_root_url.searchParams;
+			const checkitems = {
+				"f": false
+			}
+
+			for (const [key, value] of sp.entries()) {
+				if (key.toLowerCase() == 'f' && value.toLowerCase() == 'json') {
+					checkitems["f"] = "true";
+				}
+			}
+
+			if (!checkitems["f"]) {
+				sp.append('f', 'json');
+			}
+		} 
+		
+		const that = this;
+
+		fetch(this._metadata_or_root_url.toString())
+			.then(response => response.json())
+			.then(
+				function(responsejson) {
+
+					if (GlobalConst.getDebug("AGSMAP")) {
+						console.log(`[DBG:AGSMAP] Layer '${that.key}' metadata arrived, viability check starting`);
+					}
+
+					const md_attrnames = [
+						"supportsDynamicLayers", 
+						{"layers": {
+							"type": "list",
+//							"fields_to_get": ["id", "name", "defaultVisibility", "minScale", "maxScale", "type", "geometryType"]
+							"fields_to_get": ["id", "name", "minScale", "maxScale"],
+							"remove": [
+								{"subLayerIds": ["diff", null]} // OR - one condition verified is sufficient to remove item
+							]
+						}},
+						"spatialReference/wkid",
+						{"fullExtent": {
+							"type": "dict",
+							"fields_to_get": ["xmin", "ymin", "xmax", "ymax", "spatialReference/wkid"]
+						}},						
+						"minscale",
+						"mapscale",
+						"units",
+						"supportedImageFormatTypes",
+						"capabilities", 
+						// "supportedQueryFormats", 
+						"supportsDatumTransformation",
+						"supportsSpatialFilter",
+						//"supportsQueryDataElements"
+						//"maxRecordCount",			
+						"maxImageHeight",			
+						"maxImageWidth"			
+					];
+
+					let splts;
+					for (let mdentry of md_attrnames) {
+
+						if (typeof mdentry == 'string') {
+								splts = mdentry.split('/');
+								if (splts.length == 1) {
+									if (responsejson[splts[0]] !== undefined ) {
+										that._servmetadata[splts[0]] = responsejson[splts[0]];
+									}
+								}
+								for (let colectedobj=null, si=0; si<splts.length; si++) {
+									if (si == 0) {
+										if (responsejson[splts[0]] !== undefined ) {
+											colectedobj = responsejson[splts[si]];
+										}
+									} else if (si < splts.length-1) {
+										if (colectedobj) {
+											colectedobj = colectedobj[splts[si]];
+										}
+									} else {
+										if (colectedobj) {
+											that._servmetadata[splts[si]] = colectedobj[splts[si]];
+										}
+									}
+
+								}
+						} else if (Array.isArray(mdentry)) {
+							// none, for now
+						} else if (mdentry.constructor == Object) {
+							for (let mdentry_label in mdentry) {
+								
+								let remove_dobreak;
+								switch(mdentry[mdentry_label]["type"]) {
+
+									case "list":
+
+										that._servmetadata[mdentry_label] = [];
+										for (let j=0; j<responsejson[mdentry_label].length; j++) {
+
+											remove_dobreak = false;
+											if (mdentry[mdentry_label]["remove"] !== undefined) {
+												for (const remitem of mdentry[mdentry_label]["remove"]) {
+													for (let remkey in remitem) {
+
+														const [rtestop, rtestvar] = remitem[remkey];
+														if (rtestop == "diff") {
+															if (responsejson[mdentry_label][j][remkey] != rtestvar) {
+																remove_dobreak = true;
+																break;
+															}
+														} // oter ops not implemented
+													}
+													if (remove_dobreak) {
+														break;
+													}
+												}
+												if (remove_dobreak) {
+													break;
+												}
+											}
+
+											that._servmetadata[mdentry_label].push({}); 
+											for (let fld of mdentry[mdentry_label]["fields_to_get"]) {
+												that._servmetadata[mdentry_label][that._servmetadata[mdentry_label].length - 1][fld] = responsejson[mdentry_label][j][fld];
+											}
+	
+										}
+
+										break;
+									
+									case "dict":
+										that._servmetadata[mdentry_label] = {};
+										for (let fld of mdentry[mdentry_label]["fields_to_get"]) {
+											splts = fld.split('/');
+											if (splts.length == 1) {
+												that._servmetadata[mdentry_label][fld] = responsejson[mdentry_label][fld];
+											}
+											for (let colectedobj, si=0; si<splts.length; si++) {
+												if (si == 0) {
+													colectedobj = responsejson[splts[si]];
+												} else if (si < splts.length-1) {
+													colectedobj = colectedobj[splts[si]];
+												} else {
+													that._servmetadata[mdentry_label][splts[si]] = colectedobj[splts[si]];
+												}
+
+											}
+										}
+										break;
+								}
+							}
+						}
+					}
+					if (that.reporting(p_mapctx, cfg["crs"], bounds, dims)) {
+						this.refresh(p_mapctx);
+					}			
+				}
+			)
+
+	}
+
+	reporting (p_mapctxt, p_crs, p_bounds, p_dims) {
+		// service capabilities validation step
+		
+		this._servmetadata_report = {};
+
+		try {
+
+			this._servmetadata_report["imagewidth"] = ( parseInt(this._servmetadata["maxImageWidth"]) >= p_dims[0] ? "ok" : "notok");
+			this._servmetadata_report["imageheight"] = ( parseInt(this._servmetadata["maxImageHeight"]) >= p_dims[1] ? "ok" : "notok");
+			this._servmetadata_report["imageformat"] = ( this._servmetadata["supportedImageFormatTypes"].toLowerCase().indexOf(this.imageformat) < 0 ? "notok" : "ok");
+
+			if (WKID_List[this._servmetadata["wkid"]] === undefined) {
+				throw new Error(`Uknown ${this._servmetadata["wkid"]} WKID in layer '${this._key}'`);
+			}
+
+			let crs = WKID_List[this._servmetadata["wkid"]];
+			if (crs != p_crs && !this._servmetadata["supportsDatumTransformation"]) {
+				this._servmetadata_report["crs"] = "notok";
+			} else {
+				this._servmetadata_report["crs"] = "ok";
+			}
+
+			this._servmetadata_report["layers"] = {}
+
+			let ly, mxs, mis, retstatus;
+			let bb = this._servmetadata["fullExtent"];      
+			if (bb["wkid"] == this._servmetadata["wkid"]) {
+				this._servmetadata_report["bbox"] = (p_bounds[0] >= bb["xmin"] && p_bounds[1] >= bb["ymin"] && p_bounds[2] <= bb["xmax"] && p_bounds[3] <= bb["ymax"] ? "ok" : "notok");
+			} else {
+				this._servmetadata_report["bbox"] = "undefined";
+			}
+
+			for (ly of this._servmetadata["layers"]) {
+
+				mxs = parseInt(ly["maxScale"]);
+				mis = parseInt(ly["minScale"]);
+				if (mis == 0 && mxs == 0) {
+					retstatus = "ok";
+				} else {
+					//console.log(this.minscale, '>', mis, this.maxscale, '<', mxs);
+					retstatus = ((this.minscale > mis || this.maxscale < mxs) ?  "notok" : "ok");
+				}
+
+				this._servmetadata_report["layers"][ly["id"]] = {
+					"name": ly["name"],
+					"scaleinterval": [ly["maxScale"], ly["minScale"]],
+					"status": retstatus
+				};
+			}
+			this._servmetadata_report_completed = true;
+
+			const [viable, errormsg] = this.checkGetMapRequestViability();
+
+			if (GlobalConst.getDebug("AGSMAP")) {
+				if (viable) {
+					console.log(`[DBG:AGSMAP] Layer '${this.key}' viability checked OK, before drawing`);
+				} else {
+					console.log(`[DBG:AGSMAP] Layer '${this.key}' metadata did not check OK, drawing skipped`);
+				}
+			}
+
+			if (!viable) {
+				return;
+			}
+
+			this.refresh(p_mapctxt);
+
+		} catch(e) {
+
+			console.error(e);
+
+			console.log(this._servmetadata);
+			
+		}
+	
+	}
+
+	reportResult(p_innerlyrnames_str) {
+
+		let splits=[], res = null;
+		for (let k in this._servmetadata_report) {
+			if (k == "layers") {
+				continue;
+			}
+			if (this._servmetadata_report[k] == "notok") {
+				res = k;
+				break;
+			}			
+		}
+		
+		if (res == null && p_innerlyrnames_str != null && p_innerlyrnames_str.length > 0) {
+
+			splits = p_innerlyrnames_str.split(/[,\s]+/);
+			for (let k of splits) {
+
+				for (const s in this._servmetadata_report["layers"][k]) {}
+
+				if (this._servmetadata_report["layers"][k]["status"] == "notok") {
+					res = `layer '${k}', name '${this._servmetadata_report["layers"][k]["name"]}' scale interval ${this._servmetadata_report["layers"][k]["scaleinterval"]} not ok`;
+					break;
+				}			
+			}
+		}
+		return res;
+	}
+
+	checkGetMapRequestViability() {
+		let ret = false, res="";
+
+		if (this._servmetadata_report_completed) {
+
+			// test generic viability
+			let res = this.reportResult();
+			if (res != null) {
+				throw new Error(`AGS service not usable due to: ${res}`);				
+			}
+
+			let othermandatory = [], missinglayername  = false;
+			if (this.missing_mandatory_configs.length > 0) {
+				for (let i=0; i<this.missing_mandatory_configs.length; i++) {		
+					if (this.missing_mandatory_configs[i] != "layers") {
+						othermandatory.push(this.missing_mandatory_configs[i]);
+					} else {
+						missinglayername = true;
+					}
+				}		
+				if (othermandatory.length > 0) {
+					throw new Error(`AGS layer, unable to draw due to missing mandatory configs for toc entry '${this.key}': ${othermandatory}`);
+				}					
+
+				if (missinglayername) {
+					let lyr, lylist = [];
+					for (const k in this._servmetadata_report.layers) {
+						lyr = this._servmetadata_report.layers[k];
+						lylist.push(`'${k}' (name:${lyr['name']}, scaleinterval:${lyr['scaleinterval']})`);
+					}
+					throw new Error(`AGS 'layers' not configured, available: ${lylist}`);
+				}				
+			}
+
+			ret = true;
+			res = this.reportResult(this.layers);
+			if (res != null) {
+				ret = false;
+				console.error(`AGS service inner layers '${this.layers}' not usable due to: ${res}`);				
+			}
+
+			if (GlobalConst.getDebug("AGSMAP")) {
+				console.log(`[DBG:AGSMAP] before drawing '${this.key}'`);
+			}
+
+		} else {
+			if (GlobalConst.getDebug("AGSMAP")) {
+				console.log(`[DBG:AGSMAP] waiting on metadata for '${this.key}'`);
+			}
+		}
+
+		return [ret, res];
+	}
+	*/
+
+	buildExportImageURL(p_mapctxt, p_terrain_bounds, p_dims) {
+
+		let sclval  = p_mapctxt.getScale();
+
+		if (GlobalConst.getDebug("AGSIMAGE")) {
+			console.log(`[DBG:AGSIMAGE] found_layers '${found_layers}' for scale 1:${sclval}`);
+		}
+
+		if (this.url.indexOf("/ImageServer/exportImage") < 0) {
+			this.url = this.url.replace("/ImageServer", "/ImageServer/exportImage");
+		}
+
+		const url = new URL(this.url);
+		
+		const sp = url.searchParams;
+		const crs = p_mapctxt.cfgvar["basic"]["crs"];
+		const bndstr = p_terrain_bounds.join(',');
+
+		sp.set('bbox', bndstr);
+		sp.set('bboxSR', crs);
+		sp.set('imageSR', crs);
+		sp.set('size', `${p_dims[0]},${p_dims[1]}`);
+		sp.set('format', this.imageformat);
+		sp.set('f', 'image');
+
+		const ret = url.toString();		
+		if (GlobalConst.getDebug("AGSIMAGE")) {
+			console.log(`[DBG:AGSIMAGE] buildExportImageURL: '${ret}'`);
+		}	
+		
+		return ret; 
+	}
+	
+	* genlayeritems(p_mapctxt, p_terrain_env, p_scr_env, p_dims) {
+
+		// p_mapctxt.getCanvasDims(p_dims);
+		yield this.buildExportImageURL(p_mapctxt, p_terrain_env, p_dims);
+	
+	}
+
+	
+	
+}
+
 export class AGSMapLayer extends RasterLayer {
 
 	url;
@@ -808,3 +1210,4 @@ export class AGSMapLayer extends RasterLayer {
 	
 	
 }
+

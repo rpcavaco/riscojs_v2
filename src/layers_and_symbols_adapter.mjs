@@ -1,7 +1,7 @@
 
 
 import { CanvasPointGridLayer, CanvasAreaGridLayer, CanvasGraticuleLayer, CanvasAGSQryLayer, CanvasRiscoFeatsLayer} from './canvas_vector.mjs';
-import { CanvasWMSLayer, CanvasAGSMapLayer} from  './canvas_raster.mjs';
+import { CanvasWMSLayer, CanvasAGSMapLayer, CanvasAGSImgSrvLayer } from  './canvas_raster.mjs';
 import { CanvasLineSymbol, CanvasPolygonSymbol, CanvasVertCross, CanvasConcentricCircles, CanvasCircle, CanvasDiamond, CanvasIcon, CanvasSquare, CanvasStar, CanvasRegPolygon } from './canvas_symbols.mjs';
 
 export const layerClassAdapter = {
@@ -12,6 +12,7 @@ export const layerClassAdapter = {
 		"wms": CanvasWMSLayer,
 		"ags_map": CanvasAGSMapLayer,
 		"ags_qry": CanvasAGSQryLayer,
+		"ags_img": CanvasAGSImgSrvLayer,
 		"riscofeats": CanvasRiscoFeatsLayer
 	}
 };
