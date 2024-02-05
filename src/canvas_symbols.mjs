@@ -474,7 +474,7 @@ export class CanvasCircle extends fillSymbolMixin(strokeSymbolMixin(MarkerSymbol
 	drawsymb(p_mapctxt, p_layer, p_coords) {
 
 		const sclval = p_mapctxt.getScale();
-		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval));
+		const dim = this.markersize * (GlobalConst.MARKERSIZE_SCALEFACTOR / Math.log10(sclval)) * 0.5;
 
 		this.drawSimpleSymb(p_layer._gfctx, p_coords, dim);
 	}

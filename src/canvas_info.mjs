@@ -273,8 +273,6 @@ export class InfoBox extends PopupBox {
 
 		const recdata = this.data[this.data_key][this.recordidx];
 
-		console.log(recdata);
-
 		/*if (this.layer.infocfg.fields["transforms"] !== undefined) {
 			const trfcfgs = this.layer.infocfg.fields.transforms;
 			for (const trcfg of trfcfgs) {

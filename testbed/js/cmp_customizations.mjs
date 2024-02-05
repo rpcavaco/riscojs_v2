@@ -498,7 +498,7 @@ export class LocQuery {
 
 						this.addressQuery(p_qrystr).then((p_responsejson) => {
 
-							if (["partial", "errornp", "topo", "npol"].indexOf(p_responsejson["type"]) >= 0) {			
+							if (["partial", "errornp", "topo", "npol", "full"].indexOf(p_responsejson["type"]) >= 0) {			
 								results["address"]  = {
 									"status":  "OK",
 									"data": JSON.parse(JSON.stringify(p_responsejson))
@@ -558,20 +558,48 @@ export class LocQuery {
 
 		if (oqtype == "none") {
 
+
+
 			this.addressQuery(p_qrystr).then((p_responsejson) => {
 
-				if (["partial", "errornp", "topo", "npol", "full"].indexOf(p_responsejson["type"]) < 0) {
+				console.log(JSON.stringify(p_responsejson))
 
-					results["address"]  = JSON.parse(JSON.stringify(p_responsejson));
-
+				if (["partial", "errornp", "topo", "npol"].indexOf(p_responsejson["type"]) >= 0) {			
+					results["address"]  = {
+						"status":  "OK",
+						"data": JSON.parse(JSON.stringify(p_responsejson))
+					}
+					
+				} else {
+					results["address"]  = {
+						"status":  "ERROR",
+						"message": `'type' desconhecido: ${p_responsejson['type']}`
+					}
 				}
+
 				this.fillResultInUI(results);
 
 			}).catch((e) => {
 
-				const msg = "Erro em tentativa de pesquisa de endereço:" + e.message;
-				console.error(msg);
-				that.msgs_ctrlr.warn(msg);
+				if (typeof e == "string") {
+					if (e == "SEM_RESULTADO") {
+						results["address"]  = {
+							"status":  "EMPTY_RESPONSE"
+						}	
+					} else {
+						const msg = "Erro em tentativa de pesquisa de endereço:" + e;
+						console.error(e);
+						that.msgs_ctrlr.warn(msg);		
+					}
+				} else if (e.name == "SyntaxError" && e.message.indexOf("JSON.parse") >= 0) {
+					results["address"]  = {
+						"status":  "ERROR",
+						"message": e.message
+					}
+				}			
+
+
+				this.fillResultInUI(results);
 		
 			});
 

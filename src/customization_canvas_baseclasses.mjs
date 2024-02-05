@@ -477,7 +477,7 @@ export class Info {
 		}
 
 		if (mode == "NONE") {
-			console.warn(`missing either 'infocfg.function' config OR 'infocfg.keyfields' and 'infocfg.keyfield' configs for layer '${p_layerkey}, cannot 'pick' features`);
+			console.warn(`missing either 'infocfg.function' config OR 'infocfg.keyfields' and 'infocfg.keyfield' configs or any info field configured for layer '${p_layerkey}, cannot 'pick' features`);
 			return;
 		}
 
