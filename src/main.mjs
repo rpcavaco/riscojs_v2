@@ -783,6 +783,10 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		const ly = this.tocmgr.getLayer(p_layer_key);
 
+		if (!ly) {
+			throw new Error(`drawFeatureAsMouseSelected: layer '${p_layer_key}' is missing in TOC Manager`);
+		}
+
 		if (ly[layercfgkey] !== undefined) {
 			const d = {};
 			d[ly.geomtype] = ly.selectionsymbol;
