@@ -273,12 +273,22 @@ export async function canvasWrtField(p_this, pp_ctx, p_attrs, p_fld, p_lang, p_l
 					case "URL":
 						if (o_urls != null) {
 							const urlfunc = p_layer.infocfg.fields["formats"][p_fld]["urlbuild"];
-							o_urls[p_fld] = urlfunc(p_attrs[p_fld]);
-							if (p_layer.infocfg.fields["formats"][p_fld]["format"] !== undefined) {
-								pretext = p_layer.infocfg.fields["formats"][p_fld]["format"](p_attrs, p_fld);
-							}
-							if (pretext == null) {
-								pretext = p_attrs[p_fld];
+							if (!urlfunc) {
+								console.error(`missing urlfunc in layer '${p_layer.key}', field '${p_layer.key}'`);
+								pretext = null;
+							} else {
+								tmp = urlfunc(p_attrs[p_fld]);
+								if (tmp) {
+									o_urls[p_fld] = tmp;
+									if (p_layer.infocfg.fields["formats"][p_fld]["format"] !== undefined) {
+										pretext = p_layer.infocfg.fields["formats"][p_fld]["format"](p_attrs, p_fld);
+									}
+									if (pretext == null) {
+										pretext = p_attrs[p_fld];
+									}
+								} else {
+									pretext = null;
+								}
 							}
 						} else {
 							pretext = p_attrs[p_fld];

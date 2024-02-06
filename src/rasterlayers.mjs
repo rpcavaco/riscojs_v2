@@ -754,14 +754,15 @@ export class AGSImageServiceLayer extends RasterLayer {
 
 	buildExportImageURL(p_mapctxt, p_terrain_bounds, p_dims) {
 
-		let sclval  = p_mapctxt.getScale();
-
-		if (GlobalConst.getDebug("AGSIMAGE")) {
-			console.log(`[DBG:AGSIMAGE] found_layers '${found_layers}' for scale 1:${sclval}`);
-		}
-
 		if (this.url.indexOf("/ImageServer/exportImage") < 0) {
-			this.url = this.url.replace("/ImageServer", "/ImageServer/exportImage");
+			if (this.url.indexOf("/ImageServer") >= 0) {
+				this.url = this.url.replace("/ImageServer", "/ImageServer/exportImage");
+			} else {
+				if (!this.url.endswith("/")) {
+					this.url + "/";
+				}
+				this.url = this.url + "ImageServer/exportImage";
+			}
 		}
 
 		const url = new URL(this.url);
