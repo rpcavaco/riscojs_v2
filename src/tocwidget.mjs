@@ -328,6 +328,7 @@ export class TOC  extends MapPrintInRect {
 						ctx.font = `${this.normalszPX}px ${this.fontfamily}`;
 
 						if (lyr["varstyles_symbols"] === undefined || lyr["varstyles_symbols"].length == 0) {
+							
 							grcota = 2 + cota - 0.5 * this.varstylePX;
 							drawTOCSymb(p_mapctx, lyr, ctx, symbxcenter, grcota, step);	
 							if (lyr.key == this.editing_layer_key) {
@@ -338,7 +339,8 @@ export class TOC  extends MapPrintInRect {
 							ctx.fillText(lbl, indent_txleft, cota);	
 							if (lyr.key == this.editing_layer_key) {
 								ctx.restore();
-							}							
+							}	
+
 						} else {
 
 							if (lyr.key == this.editing_layer_key) {
@@ -352,20 +354,21 @@ export class TOC  extends MapPrintInRect {
 							if (lyr.key == this.editing_layer_key) {
 								ctx.restore();
 							}							
-
-							if (!lyr.layervisible) {
-								ctx.save();
-								ctx.strokeStyle = GlobalConst.CONTROLS_STYLES.TOC_STRIKETHROUGH_FILL;
-								ctx.lineWidth = 12;
-								ctx.beginPath();
-								ctx.moveTo(txleft,cota-5);
-								ctx.lineTo(this.left + this.boxw[this.collapsedstate] - this.margin_offset, cota-4);
-								ctx.stroke();
-								ctx.restore();
-							}
 						}
 
-						if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
+						// drawing 'strikethru' symbol indicating invisibility
+						if (!lyr.layervisible) {
+							ctx.save();
+							ctx.strokeStyle = GlobalConst.CONTROLS_STYLES.TOC_STRIKETHROUGH_FILL;
+							ctx.lineWidth = 12;
+							ctx.beginPath();
+							ctx.moveTo(txleft,cota-5);
+							ctx.lineTo(this.left + this.boxw[this.collapsedstate] - this.margin_offset, cota-4);
+							ctx.stroke();
+							ctx.restore();
+						}
+
+						if (lyr.layervisible && lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
 
 							// console.log("334:", lyr["varstyles_symbols"] )
 							ctx.font = `${this.varstylePX}px ${this.fontfamily}`;
@@ -407,7 +410,7 @@ export class TOC  extends MapPrintInRect {
 
 								if (vs['hide'] !== undefined && vs['hide']) {
 									ctx.save();
-									ctx.strokeStyle = "rgba(200, 200, 200, 0.5)";
+									ctx.strokeStyle = GlobalConst.CONTROLS_STYLES.TOC_STRIKETHROUGH_FILL;
 									ctx.lineWidth = 8;
 									ctx.beginPath();
 									ctx.moveTo(txleft,cota-4);
@@ -415,13 +418,10 @@ export class TOC  extends MapPrintInRect {
 									ctx.stroke();
 									ctx.restore();
 								}
-		
+	
 							}
-
 						}
-
 					}
-
 				}
 
 			} else {
@@ -486,7 +486,9 @@ export class TOC  extends MapPrintInRect {
 		if (SHOWROWS) {
 			ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 			ctx.save();
+			ctx.fillStyle = "cyan";	
 			ctx.strokeStyle = "cyan";	
+			ctx.font = '14px sans-serif';
 		}
 
 		let toc_sep, vs_toc_sep;
@@ -517,21 +519,22 @@ export class TOC  extends MapPrintInRect {
 
 			if (this.collapsedstate == "OPEN") {
 
-				for (let lyr, li=this.tocmgr.layers.length-1; li>=0; li--) {
+				for (let lyr, li=this.tocmgr.layers.length-1; li>0; li--) {
 
 					lyr = this.tocmgr.layers[li];
 					if (lyr["label"] !== undefined && lyr["label"] != "none") {
 						
 						i++;
-						if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
+						if (lyr.layervisible && lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
 							step = stepSubEntry;
 						} else {
-							step = stepEntry;
+							step = stepEntry + 2;
 						}
 						next = prev + step;
 
 						// use prev, next
 						if (ctx) {
+							ctx.fillText(li.toString(), left, prev+step);
 							ctx.strokeRect(left, prev, width, step);
 						}
 						if (p_evt.offsetX >= left && p_evt.offsetX <= this.left+width && p_evt.offsetY >= prev && p_evt.offsetY <= next) {
@@ -544,7 +547,7 @@ export class TOC  extends MapPrintInRect {
 
 						prev = next;
 						
-						if (lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
+						if (lyr.layervisible && lyr["varstyles_symbols"] !== undefined && lyr["varstyles_symbols"].length > 0) {
 							for (let vs, vi=0; vi<lyr["varstyles_symbols"].length; vi++) {
 
 								vs = lyr["varstyles_symbols"][vi];
@@ -553,7 +556,7 @@ export class TOC  extends MapPrintInRect {
 								if (vi < (lyr["varstyles_symbols"].length-1)) {
 									step = stepSubEntry;
 								} else {
-									step = stepEntry;
+									step = stepEntry - 1;
 								}
 
 								if (vs["vsgroup"] !== undefined && vs["vsgroup"] !== "none") {
