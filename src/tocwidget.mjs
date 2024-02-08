@@ -72,7 +72,7 @@ export class TOC  extends MapPrintInRect {
 			"COLLAPSED": 60
 		};
 		this.boxw = {
-			"OPEN": 300,
+			"OPEN": 100,
 			"COLLAPSED": 60
 		};
 
@@ -208,7 +208,7 @@ export class TOC  extends MapPrintInRect {
 		}
 
 		// this.leftcol_width is merged when necessary, in max_lbl_w
-		this.boxw["OPEN"] = max_lbl_w + 2 * this.margin_offset;
+		this.boxw["OPEN"] = Math.max(this.boxw["OPEN"], max_lbl_w + 2 * this.margin_offset);
 
 		let grcota, cota, maxcota, count, lyr, txleft, indent_txleft, step, substep, mapdims = [];
 		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
