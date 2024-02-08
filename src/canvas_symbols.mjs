@@ -120,6 +120,8 @@ const fillSymbolMixin = (Base) => class extends Base {
 	shadowOffsetX = "none";
 	shadowOffsetY = "none";	
 
+	globalAlpha = "none";
+
 	setStyle(p_ctx) {
 
 		super.setStyle(p_ctx);
