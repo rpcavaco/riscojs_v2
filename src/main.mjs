@@ -334,10 +334,6 @@ export class RiscoMapCtx {
 		console.info(`[init RISCO] ==  End of map context init for '${this.panelwidget.id}'  ==`);
 	}
 
-	setCurrentUser(p_username) {
-		this.toolmgr.setCurrentUser(p_username);
-	}
-
 	/**
 	 * @param {any} p_cclass
 	 */

@@ -317,12 +317,15 @@ export class EditingMgr extends MapPrintInRect {
 	}
 
 	checkCanEditStatus(b_before_enable_editing) {
+		 
 		let ret = true;
 
-		if (this.#current_sessionid == null) {
+		if (this.#current_sessionid == null || this.#current_sessionid.toLowerCase() == "none") {
 			console.error("checkEditionStatus: no current session id");
 			ret = false;
 		};
+
+		console.log("this.#current_sessionid>", this.#current_sessionid);
 
 		/*if (this.#current_user == null) {
 			console.warn("[WARN] checkEditionStatus: no current user");
@@ -397,6 +400,8 @@ export class EditingMgr extends MapPrintInRect {
 		// temp_layer_key here works as variable passed by reference
 		const temp_layer_key = [];
 		const layeredit_cfg_attrib_names = ["attribs_to_save"];
+
+		console.log("SZ:", sz);
 
 		if (sz == 0) {
 
@@ -494,6 +499,7 @@ export class EditingMgr extends MapPrintInRect {
 	setEditingEnabled(p_mapctx, p_editing_tobe_enabled) {
 
 		if (p_editing_tobe_enabled) {
+
 			if(this.precheckCanEditStatus()) {
 
 				if (this.defineEditingLayer(p_mapctx)) {
