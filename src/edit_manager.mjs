@@ -401,8 +401,6 @@ export class EditingMgr extends MapPrintInRect {
 		const temp_layer_key = [];
 		const layeredit_cfg_attrib_names = ["attribs_to_save"];
 
-		console.log("SZ:", sz);
-
 		if (sz == 0) {
 
 			console.error("defineEditingLayer: no editable layers, check all layer 'layereditable' attribute in layer config");
