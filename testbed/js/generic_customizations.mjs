@@ -102,7 +102,9 @@ export class LocQuery {
 
 		this.mapctx.renderingsmgr.clearAll(['temporary']);
 		this.cleanResultArea();	
-		this.query_box.value = '';	
+		if (this.query_box) {
+			this.query_box.value = '';	
+		}
 		this.#lastinput = '';
 	}
 
@@ -717,48 +719,53 @@ export class LocQuery {
 			logo.style.width = p_basic_config["logo"]["width"];	
 		}
 
-		this.query_box = document.createElement('input');
-		this.query_box.setAttribute("id", "loc-inputtext");
+		this.query_box = null;
+		if (p_basic_config["querybox"]["show"] !== undefined && p_basic_config["querybox"]["show"]) {
 
-		let lbl = "(void placeholder, edit 'querybox'->'placeholder' and 'msgs' in risco_basic_config.js)";
+			this.query_box = document.createElement('input');
+			this.query_box.setAttribute("id", "loc-inputtext");
 
-		if (p_basic_config["querybox"]["placeholder"] !== undefined && p_basic_config["msgs"] !== undefined) {
+			let lbl = "(void placeholder, edit 'querybox'->'placeholder' and 'msgs' in risco_basic_config.js)";
 
-			const lang = (new I18n(p_basic_config["msgs"])).getLang();
+			if (p_basic_config["querybox"]["placeholder"] !== undefined && p_basic_config["msgs"] !== undefined) {
 
-			// Querybox placeholder caption
-			if (p_basic_config["querybox"]["placeholder"] != "none") {
-				if (Object.keys(p_basic_config["msgs"][lang]).indexOf(p_basic_config["querybox"]["placeholder"]) >= 0) {
-					lbl = I18n.capitalize(p_basic_config["msgs"][lang][p_basic_config["querybox"]["placeholder"]]);
-				} else {
-					lbl = I18n.capitalize(p_basic_config["querybox"]["placeholder"]);
-				}	
+				const lang = (new I18n(p_basic_config["msgs"])).getLang();
+
+				// Querybox placeholder caption
+				if (p_basic_config["querybox"]["placeholder"] != "none") {
+					if (Object.keys(p_basic_config["msgs"][lang]).indexOf(p_basic_config["querybox"]["placeholder"]) >= 0) {
+						lbl = I18n.capitalize(p_basic_config["msgs"][lang][p_basic_config["querybox"]["placeholder"]]);
+					} else {
+						lbl = I18n.capitalize(p_basic_config["querybox"]["placeholder"]);
+					}	
+				}
 			}
+
+			this.query_box.setAttribute("placeholder", lbl );
+
+			p_mapctx.panelwidget.appendChild(this.query_box);
+
+			this.query_box.setAttribute("type", "text");
+			this.query_box.style.position = "absolute";
+			this.query_box.style.zIndex = p_mapctx.renderingsmgr.getMaxZIndex()+1;
+			if (navigator.userAgent.toLowerCase().includes("mobile") || navigator.userAgent.toLowerCase().includes("android")) {
+				this.query_box.style.fontSize = "14pt";
+			} else {
+				this.query_box.style.fontSize = "12pt";
+			}
+
+			this.query_results = document.createElement('div');
+			p_mapctx.panelwidget.appendChild(this.query_results);
+
+			this.query_results.id = "loc-query_results";
+			//this.query_results.setAttribute("type", "text");
+			this.query_results.style.position = "absolute";
+			this.query_results.style.zIndex = p_mapctx.renderingsmgr.getMaxZIndex()+1;
+			this.query_results.style.backgroundColor = "white";
+			this.query_results.style.padding = "2px";
+			this.query_results.style.margin = "0";
+
 		}
-
-		this.query_box.setAttribute("placeholder", lbl );
-
-		p_mapctx.panelwidget.appendChild(this.query_box);
-
-		this.query_box.setAttribute("type", "text");
-		this.query_box.style.position = "absolute";
-		this.query_box.style.zIndex = p_mapctx.renderingsmgr.getMaxZIndex()+1;
-		if (navigator.userAgent.toLowerCase().includes("mobile") || navigator.userAgent.toLowerCase().includes("android")) {
-			this.query_box.style.fontSize = "14pt";
-		} else {
-			this.query_box.style.fontSize = "12pt";
-		}
-
-		this.query_results = document.createElement('div');
-		p_mapctx.panelwidget.appendChild(this.query_results);
-
-		this.query_results.id = "loc-query_results";
-		//this.query_results.setAttribute("type", "text");
-		this.query_results.style.position = "absolute";
-		this.query_results.style.zIndex = p_mapctx.renderingsmgr.getMaxZIndex()+1;
-		this.query_results.style.backgroundColor = "white";
-		this.query_results.style.padding = "2px";
-		this.query_results.style.margin = "0";
 
 		if (bcb) {
 
@@ -771,17 +778,25 @@ export class LocQuery {
 				xoffset = (2 * bcb.left + bcb.getWidth());
 			}
 
-			this.query_box.style.top = bcb.top + "px";
-			this.query_box.style.left = xoffset + "px";	
-
-			this.query_results.style.top = 6 + bcb.top + qryboxheight + "px";
-			this.query_results.style.left = this.query_box.style.left;	
+			if (this.query_box) {
+				this.query_box.style.top = bcb.top + "px";
+				this.query_box.style.left = xoffset + "px";	
+				this.query_results.style.top = 6 + bcb.top + qryboxheight + "px";
+				this.query_results.style.left = this.query_box.style.left;	
+			}
 		} else {
-			this.query_box.style.top = p_global_constants.CONTROLS_STYLES.OFFSET + "px";
-			this.query_box.style.left = p_global_constants.CONTROLS_STYLES.OFFSET + "px";	
 
-			this.query_results.style.top = p_global_constants.CONTROLS_STYLES.OFFSET + qryboxheight + "px";
-			this.query_results.style.left = this.query_box.style.left + "px";	
+			if (this.query_box) {
+				this.query_box.style.top = p_global_constants.CONTROLS_STYLES.OFFSET + "px";
+				this.query_box.style.left = p_global_constants.CONTROLS_STYLES.OFFSET + "px";	
+
+				this.query_results.style.top = p_global_constants.CONTROLS_STYLES.OFFSET + qryboxheight + "px";
+				this.query_results.style.left = this.query_box.style.left + "px";	
+			}
+		}
+
+		if (!this.query_box) {
+			return;
 		}
 
 		const boxw = Math.min(canvas_dims[0]*0.65, p_basic_config["querybox"]["size"]);
@@ -866,6 +881,7 @@ export class LocQuery {
 					}
 				}); 
 			})(p_query_box, p_qryb_obj);	
+
 
 		})(this.query_clrbtn, this.query_box, this, p_mapctx);	
 
