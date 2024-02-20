@@ -109,7 +109,7 @@ let MessagesController2 = {
 		}
 
 		if (opt_value_text_dict) {
-			console.assert(p_type == "SELECT", "optional value-text pairs will work only with type SELECT, not with '%s'", p_type);
+			console.assert(p_type.startsWith("SELECT"), "optional value-text pairs will work only with type SELECT / SELECTDIRECT, not with '%s'", p_type);
 		}
 
 		if (msgsdiv!=null) {
@@ -134,7 +134,7 @@ let MessagesController2 = {
 				msgsdiv.style.left = '30%';
 			}
 			if (!topchange) {
-				if (p_type == "TEXT" || p_type == "NUMBER" || p_type == "SELECT") {
+				if (p_type == "TEXT" || p_type == "NUMBER" || p_type.startsWith("SELECT")) {
 					msgsdiv.style.top = '40%';
 				} else {
 					msgsdiv.style.top = '10%';
@@ -374,32 +374,46 @@ let MessagesController2 = {
 						}
 					}
 
-					const btn1 = document.createElement("button");
-					const btn2 = document.createElement("button");
-					btn1.setAttribute("type", "button");
-					btn2.setAttribute("type", "button");
-					ctrldiv.appendChild(btn1);
-					ctrldiv.appendChild(btn2);
+					if (p_type == "SELECT") {
 
-					btn1.insertAdjacentHTML('afterBegin', "Ok");
-					btn2.insertAdjacentHTML('afterBegin', this.i18nMsg("C", true));
-
-					if (contentelem != null) { 
-						(function(p_this, p_selel, p_btn, pp_callback) {
+						const btn1 = document.createElement("button");
+						const btn2 = document.createElement("button");
+						btn1.setAttribute("type", "button");
+						btn2.setAttribute("type", "button");
+						ctrldiv.appendChild(btn1);
+						ctrldiv.appendChild(btn2);
+	
+						btn1.insertAdjacentHTML('afterBegin', "Ok");
+						btn2.insertAdjacentHTML('afterBegin', this.i18nMsg("C", true));
+	
+						if (contentelem != null) { 
+							(function(p_this, p_selel, p_btn, pp_callback) {
+								p_btn.addEventListener('click', function(ev) {
+									const optval = getSelOption(p_selel);
+									p_this.hideMessage(true);						
+									pp_callback(ev, true, optval);
+								});
+							})(this, contentelem, btn1, opt_callback);
+						}
+	
+						(function(p_this, p_btn, pp_callback) {
 							p_btn.addEventListener('click', function(ev) {
-								const optval = getSelOption(p_selel);
-								p_this.hideMessage(true);						
+								p_this.hideMessage(true);
+								pp_callback(ev, false, null);
+							});
+						})(this, btn2, opt_callback);	
+
+					} else {
+
+						// SELECTxxx
+						(function(p_this, p_contentelem, pp_callback) {
+							p_contentelem.addEventListener('change', function(ev) {
+								const optval = getSelOption(p_contentelem);
+								p_this.hideMessage(true);
 								pp_callback(ev, true, optval);
 							});
-						})(this, contentelem, btn1, opt_callback);
+						})(this, contentelem, opt_callback);					
 					}
-
-					(function(p_this, p_btn, pp_callback) {
-						p_btn.addEventListener('click', function(ev) {
-							p_this.hideMessage(true);
-							pp_callback(ev, false, null);
-						});
-					})(this, btn2, opt_callback);				
 				
 				}
 
@@ -497,6 +511,11 @@ let MessagesController2 = {
 		
 		this._setMessage(p_msg_txt, false, "SELECT", p_callback, p_value_text_pairs, opt_constraint_items);
 	},	
+
+	selectInputMessageDirect: function(p_msg_txt, p_value_text_pairs, p_callback, opt_constraint_items) {
+		
+		this._setMessage(p_msg_txt, false, "SELECTDIRECT", p_callback, p_value_text_pairs, opt_constraint_items);
+	},		
 
 	textInputMessage: function(p_msg_txt, p_callback, opt_constraint_items) {
 
