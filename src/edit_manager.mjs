@@ -318,7 +318,7 @@ export class EditingMgr extends MapPrintInRect {
 
 	checkCanEditStatus(b_before_enable_editing) {
 
-		console.log(`checkCanEditStatus -- b_before_enable_editing:${b_before_enable_editing}`);
+		// console.log(`checkCanEditStatus -- b_before_enable_editing:${b_before_enable_editing}`);
 		 
 		let ret = true;
 
@@ -765,13 +765,16 @@ export class EditingMgr extends MapPrintInRect {
 			throw new Error("serialize2GeoJSONLike, no current_edit_feature defined");
 		}
 
-		let ret = [];
+		let ret = [], ats = [];
 
 		if (this.#edit_feature_holders.length > 0 && this.pendingChangesToSave != "none") {
 
+			if (this.#layeredit_cfg_attribs["attribs_to_save"] !== undefined) {
+				ats = this.#layeredit_cfg_attribs["attribs_to_save"];
+			}
+
 			let currfeat, cef_feat;
 			for (const cef of this.#edit_feature_holders) {
-
 
 				cef_feat = cef["feat"];
 				if (cef_feat) {
@@ -782,9 +785,9 @@ export class EditingMgr extends MapPrintInRect {
 
 				console.log("pendingChangesToSave:", this.pendingChangesToSave);
 
-				if (cef_feat && this.#layeredit_cfg_attribs["attribs_to_save"].length > 0 && (this.pendingChangesToSave == "ALL" || this.pendingChangesToSave == "ALPHA")) {
+				if (cef_feat && ats.length > 0 && (this.pendingChangesToSave == "ALL" || this.pendingChangesToSave == "ALPHA")) {
 					currfeat["feat"]["properties"] = {};
-					for (let la of this.#layeredit_cfg_attribs["attribs_to_save"]) {
+					for (let la of ats) {
 						if (cef_feat.a[la] != null) {
 							currfeat["feat"]["properties"][la] = cef_feat.a[la];
 						}

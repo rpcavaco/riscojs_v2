@@ -775,7 +775,6 @@ export class FeatureCollection {
 			throw new Error(`setVertex: feature geometry empty or not defined`);
 		}		
 
-
 		this.#change_buffer.addState(p_layerkey, p_id, p_feat_reference);
 
 		switch(p_feat_reference.gt) {
@@ -798,8 +797,6 @@ export class FeatureCollection {
 		if (ustate) {
 			this.#set(p_layerkey, p_id, ustate);
 			this.#change_buffer.reset(p_layerkey);
-		} else {
-			console.warn(`[WARN] revertEditions, no unchanged state for layer:${p_layerkey}, id:${p_id}`);
 		}
 
 	}
