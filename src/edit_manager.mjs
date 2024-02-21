@@ -317,6 +317,8 @@ export class EditingMgr extends MapPrintInRect {
 	}
 
 	checkCanEditStatus(b_before_enable_editing) {
+
+		console.log(`checkCanEditStatus -- b_before_enable_editing:${b_before_enable_editing}`);
 		 
 		let ret = true;
 
@@ -399,7 +401,7 @@ export class EditingMgr extends MapPrintInRect {
 
 		// temp_layer_key here works as variable passed by reference
 		const temp_layer_key = [];
-		const layeredit_cfg_attrib_names = ["attribs_to_save"];
+		const layeredit_cfg_attrib_names = ["gisid"];
 
 		if (sz == 0) {
 
