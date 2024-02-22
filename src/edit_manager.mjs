@@ -397,57 +397,73 @@ export class EditingMgr extends MapPrintInRect {
 		this.#pending_changes_to_save = "none";
 	}	
 
-	defineEditingLayer(p_mapctx) {
+	defineEditingLayer(p_mapctx, opt_previously_sel_lyrkey) {
 
 		const work_layerkeys = [], editables= {}, types=[];
 		let lyr, constraints = null, ret = false;
-
-		p_mapctx.tocmgr.getAllVectorLayerKeys(work_layerkeys);		
-
-		if (work_layerkeys.length > 0) {
-			for (const lyrk of work_layerkeys) {
-				lyr = p_mapctx.tocmgr.getLayer(lyrk);
-				if (lyr.layereditable != "none") {
-					editables[lyrk] = (lyr.label == "none" ? lyrk : I18n.capitalize(lyr.label));
-					types[lyrk] = lyr.geomtype
-				}
-			}
-		}
-
-		const lyrks = Object.keys(editables);
-		const sz = lyrks.length;
 
 		// temp_layer_key here works as variable passed by reference
 		const temp_layer_key = [];
 		const layeredit_cfg_attrib_names = ["gisid"];
 
-		if (sz == 0) {
+		const that = this;
 
-			console.error("defineEditingLayer: no editable layers, check all layer 'layereditable' attribute in layer config");
+		if (!opt_previously_sel_lyrkey) {
+		
+			p_mapctx.tocmgr.getAllVectorLayerKeys(work_layerkeys);		
 
-		} else if (sz > 1) {
-
-			if (this.editingLayerKey) {
-				constraints = {
-					"selected": this.editingLayerKey
+			if (work_layerkeys.length > 0) {
+				for (const lyrk of work_layerkeys) {
+					lyr = p_mapctx.tocmgr.getLayer(lyrk);
+					if (lyr.layereditable != "none") {
+						editables[lyrk] = (lyr.label == "none" ? lyrk : I18n.capitalize(lyr.label));
+						types[lyrk] = lyr.geomtype
+					}
 				}
 			}
 
-			p_mapctx.getCustomizationObject().messaging_ctrlr.selectInputMessage(
-				p_mapctx.i18n.msg('SELEDITLYR', true), 
-				editables,
-				(evt, p_result, p_value) => { 
-					if (p_value) {
-						temp_layer_key.push(p_value);
-					}
-				},
-				constraints
-			);
+			const lyrks = Object.keys(editables);
+			const sz = lyrks.length;
 
+
+			if (sz == 0) {
+
+				console.error("defineEditingLayer: no editable layers, check all layer 'layereditable' attribute in layer config");
+
+			} else if (sz > 1) {
+
+				if (this.editingLayerKey) {
+					constraints = {
+						"selected": this.editingLayerKey
+					}
+				}
+
+				(function(pp_mapctx, p_editables, p_constraints) {
+
+					pp_mapctx.getCustomizationObject().messaging_ctrlr.selectInputMessage(
+						pp_mapctx.i18n.msg('SELEDITLYR', true), 
+						p_editables,
+						(evt, p_result, p_value) => { 
+							if (p_value) {
+								const meth = that.defineEditingLayer.bind(that);
+								meth(pp_mapctx, p_value);	
+							}
+						},
+						p_constraints
+					);
+	
+				})(p_mapctx, editables, constraints);
+				
+			} else {
+
+				// this.editingLayerKey = lyrks[0];
+				temp_layer_key.push(lyrks[0]);
+
+			}
+		
 		} else {
 
-			// this.editingLayerKey = lyrks[0];
-			temp_layer_key.push(lyrks[0]);
+			temp_layer_key.push(opt_previously_sel_lyrkey);
 
 		}
 
