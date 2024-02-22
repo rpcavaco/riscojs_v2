@@ -316,19 +316,25 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 							p_mapctx.tocmgr.signalVectorLoadFinished(that.key);
 						} else {
 
-							if (responsejson.stats[that.key]['nchunks'] > 0) {
-								that.refresh(p_mapctx, {
-									"reqid": responsejson.reqid,
-									"nchunks": responsejson.stats[that.key]['nchunks'],
-									"nvert": responsejson.stats[that.key]['nvert']
-								});	
-							}
-							
 							if (responsejson.stats[that.key]['gisid_field']) {
 								that._gisid_field = responsejson.stats[that.key]['gisid_field'];
 							}
 							if (responsejson.stats[that.key]['accept_deletion']) {
 								that._accept_deletion = responsejson.stats[that.key]['accept_deletion'];
+							}	
+
+							if (responsejson.stats[that.key]['nchunks'] > 0) {
+								
+								that.refresh(p_mapctx, {
+									"reqid": responsejson.reqid,
+									"nchunks": responsejson.stats[that.key]['nchunks'],
+									"nvert": responsejson.stats[that.key]['nvert']
+								});
+
+							} else {
+
+								p_mapctx.tocmgr.signalVectorLoadFinished(that.key);
+
 							}							
 						}
 					}

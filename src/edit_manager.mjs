@@ -399,7 +399,7 @@ export class EditingMgr extends MapPrintInRect {
 
 	defineEditingLayer(p_mapctx, opt_previously_sel_lyrkey) {
 
-		const work_layerkeys = [], editables= {}, types=[];
+		const work_layerkeys = [], editables= {}, types={};
 		let lyr, constraints = null, ret = false;
 
 		// temp_layer_key here works as variable passed by reference
@@ -408,20 +408,20 @@ export class EditingMgr extends MapPrintInRect {
 
 		const that = this;
 
-		if (!opt_previously_sel_lyrkey) {
-		
-			p_mapctx.tocmgr.getAllVectorLayerKeys(work_layerkeys);		
+		p_mapctx.tocmgr.getAllVectorLayerKeys(work_layerkeys);		
 
-			if (work_layerkeys.length > 0) {
-				for (const lyrk of work_layerkeys) {
-					lyr = p_mapctx.tocmgr.getLayer(lyrk);
-					if (lyr.layereditable != "none") {
-						editables[lyrk] = (lyr.label == "none" ? lyrk : I18n.capitalize(lyr.label));
-						types[lyrk] = lyr.geomtype
-					}
+		if (work_layerkeys.length > 0) {
+			for (const lyrk of work_layerkeys) {
+				lyr = p_mapctx.tocmgr.getLayer(lyrk);
+				if (lyr.layereditable != "none") {
+					editables[lyrk] = (lyr.label == "none" ? lyrk : I18n.capitalize(lyr.label));
+					types[lyrk] = lyr.geomtype
 				}
 			}
+		}
 
+		if (!opt_previously_sel_lyrkey) {
+		
 			const lyrks = Object.keys(editables);
 			const sz = lyrks.length;
 
@@ -509,6 +509,10 @@ export class EditingMgr extends MapPrintInRect {
 
 					case "point":
 						this.#current_tool_name = 'PointEditTool';
+						break;
+
+					case "line":
+						this.#current_tool_name = 'PathEditTool';
 						break;
 
 					default:
