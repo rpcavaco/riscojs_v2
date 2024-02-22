@@ -21,6 +21,7 @@ export class TOC  extends MapPrintInRect {
 	prevboxenv;
 	itemtypes_preventing_inflation;
 	editing_layer_key;
+	#widgets_to_hide_on_collapse;
 
 	constructor(p_mapctx) {
 
@@ -37,6 +38,7 @@ export class TOC  extends MapPrintInRect {
 		this.leftcol_width = GlobalConst.CONTROLS_STYLES.TOC_LEFTCOL_WIDTH;
 
 		this.varstylePX = null;
+		this.#widgets_to_hide_on_collapse = new Set();
 
 		if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined) {
 
@@ -94,6 +96,10 @@ export class TOC  extends MapPrintInRect {
 		}
 
 		this.itemtypes_preventing_inflation = new Set();
+	}
+
+	addWidgetToHideOnCollapse(p_widget) {
+		this.#widgets_to_hide_on_collapse.add(p_widget);
 	}
 
 	setTOCMgr(p_tocmgr) {
@@ -729,7 +735,13 @@ export class TOC  extends MapPrintInRect {
 
 		this.itemtypes_preventing_inflation.add(p_from_itemtype);
 
+		this.#widgets_to_hide_on_collapse.forEach((value1, value2, set) => {		
+			const fHide = value1.hide.bind(value1);
+			fHide(p_mapctx, true);
+		});
+
 		return (this.collapsedstate == "COLLAPSED");
+
 	}
 
 	isCollapsed() {
@@ -749,6 +761,13 @@ export class TOC  extends MapPrintInRect {
 			this.collapsedstate = "OPEN";
 			this.print(p_mapctx);
 		}
+
+		this.#widgets_to_hide_on_collapse.forEach((value1, _value2, _set) => {
+
+			const fHide = value1.hide.bind(value1);
+			fHide(p_mapctx, false);
+
+		});
 
 		return (this.collapsedstate == "OPEN");
 	}	

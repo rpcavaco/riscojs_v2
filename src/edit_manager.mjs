@@ -42,6 +42,7 @@ export class EditingMgr extends MapPrintInRect {
 	#pending_changes_to_save;
 	#layeredit_cfg_attribs;
 	#single_feat_editing;
+	#hidden;
 
 	constructor(p_mapctx, p_editable_layers, p_other_widgets, b_single_feat_editing) {
 
@@ -81,8 +82,8 @@ export class EditingMgr extends MapPrintInRect {
 		let mapdims = [];
 		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
 
-		this.left = 600;
-		this.top = 600;
+		this.left = null;
+		this.top = null;
 		this.featcounter_width = 10;
 
 		this.expandenv = 1;
@@ -98,10 +99,21 @@ export class EditingMgr extends MapPrintInRect {
 
 		this.#current_edit_feature_holder = null;
 
+		this.#hidden = false;
+
 		p_mapctx.toolmgr.setEditingManager(this);
 	}
 
+	hide(p_mapctx, p_dohide) {	
+		this.#hidden = p_dohide;
+		this.print(p_mapctx);
+	}
+
 	_print(p_mapctx) {
+
+		if (!this.checkCanEditStatus(true, true)) {
+			return;
+		}
 
 		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 		ctx.save();
@@ -111,70 +123,77 @@ export class EditingMgr extends MapPrintInRect {
 
 		const icondims = GlobalConst.CONTROLS_STYLES.EM_ICONDIMS;
 
-		this.left = mapdims[0] - (this.boxw + this.margin_offset);
 
 		try {
 
-			let otherboxesheight = 0;
-			for (let ow of this.other_widgets) {
-				if (ow['setdims'] !== undefined) {
-					ow.setdims(p_mapctx, mapdims);
-				}		
-				otherboxesheight += ow.getHeight();
-				// console.warn("AM boxesheight:", otherboxesheight, this.other_widgets.length);
-			}
-
-			this.top = otherboxesheight + 2 * this.margin_offset;
-			this.bottom = this.top + this.boxh;
-	
-			// background
-			
-			// BASIC_CONFIG_DEFAULTS_OVERRRIDE ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
-			if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["em_bckgrd"] !== undefined) {
-				ctx.fillStyle = p_mapctx.cfgvar["basic"]["style_override"]["em_bckgrd"];
-			} else {
-				ctx.fillStyle = this.fillStyleBack;
-			}
-
-			this.top = this.bottom - this.boxh;
-
 			const dee = 2 * this.expandenv;
-			ctx.clearRect(this.left-this.expandenv, this.top-this.expandenv, this.boxw+dee, this.boxh+dee); 	
-			ctx.fillRect(this.left, this.top, this.boxw, this.boxh);
-			
-			ctx.strokeStyle = this.activeStyleFront;
-			ctx.lineWidth = this.strokeWidth;
-			ctx.strokeRect(this.left, this.top, this.boxw, this.boxh);
 
-			let iconname = "edit_off";
-			if (this.isEditingEnabled()) {
-				iconname = "edit_on";
+			if (this.left) {
+				ctx.clearRect(this.left-this.expandenv, this.top-this.expandenv, this.boxw+dee, this.boxh+dee); 
 			}
-			const img = new Image();
-			img.decoding = "sync";
 
-			let imgsrc = p_mapctx.cfgvar["basic"][iconname]; //.replace(/stroke:%23fff;/g, `stroke:${encodeURIComponent(vstyle)};`);
 
-			img.src = imgsrc;
-			img.decode()
-			.then(() => {
-				ctx.drawImage(img, this.left+2*this.margin_offset+this.featcounter_width, this.top+this.margin_offset, icondims[0], icondims[1]);
-			});
+			if (!this.#hidden) {
 
-			edited_featcount = 0;
-			for (const f of this.#edit_feature_holders) {
-				if (f.edited) {
-					edited_featcount++;
+				let otherboxesheight = 0;
+				for (let ow of this.other_widgets) {
+					if (ow['setdims'] !== undefined) {
+						ow.setdims(p_mapctx, mapdims);
+					}		
+					otherboxesheight += ow.getHeight();
+					// console.warn("AM boxesheight:", otherboxesheight, this.other_widgets.length);
 				}
-			}
 
-			//if (this.#edit_feature_holders.length > 0) {
-			ctx.textAlign = "center";
-			ctx.fillStyle = "white";
-			ctx.textBaseline = "middle";
-			ctx.font = `${(this.normalszPX - 4)}px ${this.fontfamily}`;
-			ctx.fillText(edited_featcount.toString(), this.left+this.margin_offset+0.5*this.featcounter_width, this.top+this.margin_offset+0.5*icondims[1]);	
-			//}
+				this.left = mapdims[0] - (this.boxw + this.margin_offset);
+				this.bottom = otherboxesheight + 2 * this.margin_offset + this.boxh;
+				this.top = this.bottom - this.boxh;
+		
+				// background
+				
+				// BASIC_CONFIG_DEFAULTS_OVERRRIDE ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
+				if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["em_bckgrd"] !== undefined) {
+					ctx.fillStyle = p_mapctx.cfgvar["basic"]["style_override"]["em_bckgrd"];
+				} else {
+					ctx.fillStyle = this.fillStyleBack;
+				}
+
+				ctx.fillRect(this.left, this.top, this.boxw, this.boxh);
+				
+				ctx.strokeStyle = this.activeStyleFront;
+				ctx.lineWidth = this.strokeWidth;
+				ctx.strokeRect(this.left, this.top, this.boxw, this.boxh);
+
+				let iconname = "edit_off";
+				if (this.isEditingEnabled()) {
+					iconname = "edit_on";
+				}
+				const img = new Image();
+				img.decoding = "sync";
+
+				let imgsrc = p_mapctx.cfgvar["basic"][iconname]; //.replace(/stroke:%23fff;/g, `stroke:${encodeURIComponent(vstyle)};`);
+
+				img.src = imgsrc;
+				img.decode()
+				.then(() => {
+					ctx.drawImage(img, this.left+2*this.margin_offset+this.featcounter_width, this.top+this.margin_offset, icondims[0], icondims[1]);
+				});
+
+				edited_featcount = 0;
+				for (const f of this.#edit_feature_holders) {
+					if (f.edited) {
+						edited_featcount++;
+					}
+				}
+
+				//if (this.#edit_feature_holders.length > 0) {
+				ctx.textAlign = "center";
+				ctx.fillStyle = "white";
+				ctx.textBaseline = "middle";
+				ctx.font = `${(this.normalszPX - 4)}px ${this.fontfamily}`;
+				ctx.fillText(edited_featcount.toString(), this.left+this.margin_offset+0.5*this.featcounter_width, this.top+this.margin_offset+0.5*icondims[1]);	
+				//}
+
+			}
 
 		} catch(e) {
 			throw e;
@@ -301,33 +320,29 @@ export class EditingMgr extends MapPrintInRect {
 	}	
 
 	precheckCanEditStatus() {
+
 		let ret = true;
 		if (this.#current_user == null) {
-			console.error("checkEditionStatus: no current user");
+			console.warn("checkEditionStatus: no current user");
 			ret = false;
-		};
-		if (!this.#current_user_canedit) {
-			console.error("checkEditionStatus: current user cannot edit");
+		} else if (!this.#current_user_canedit) {
+			console.warn("checkEditionStatus: current user cannot edit");
 			ret = false;
 		};		
 		
-		console.info("[INFO] is PRE edit status (edit user defned) OK?:", ret);
+		console.info("[INFO] is PRE CHECK edit status (edit user defned) OK?:", ret);
 
 		return ret;
 	}
 
-	checkCanEditStatus(b_before_enable_editing) {
+	checkCanEditStatus(b_before_enable_editing, b_to_avail_paint_edit_mgr) {
 
-		// console.log(`checkCanEditStatus -- b_before_enable_editing:${b_before_enable_editing}`);
-		 
 		let ret = true;
 
 		if (this.#current_sessionid == null || this.#current_sessionid.toLowerCase() == "none") {
-			console.error("checkEditionStatus: no current session id");
+			console.warn("checkEditionStatus: no current session id");
 			ret = false;
 		};
-
-		console.log("this.#current_sessionid>", this.#current_sessionid);
 
 		/*if (this.#current_user == null) {
 			console.warn("[WARN] checkEditionStatus: no current user");
@@ -335,12 +350,12 @@ export class EditingMgr extends MapPrintInRect {
 		if (!this.#current_user_canedit) {
 			console.warn("[WARN] checkEditionStatus: current user cannot edit");
 		};	*/	
-		if (!b_before_enable_editing && !this.#editing_is_enabled) {
-			console.error("checkEditionStatus: editing not enabled");
+		if (ret && !b_before_enable_editing && !this.#editing_is_enabled) {
+			console.info("[INFO] checkEditionStatus: editing not enabled");
 			ret = false;
 		};	
-		if (this.#editing_layer_key == null) {
-			console.error("checkEditionStatus: no editing layer key defined");
+		if (ret && !b_to_avail_paint_edit_mgr && this.#editing_layer_key == null) {
+			console.warn("checkEditionStatus: no editing layer key defined");
 			ret = false;
 		};	
 		
@@ -350,6 +365,9 @@ export class EditingMgr extends MapPrintInRect {
 	}
 	
 	setCurrentUser(p_sessionid, p_username, b_user_canedit) {
+
+		console.info("[INFO] set edit session, id:", p_sessionid, "user:", p_username, "can edit:", b_user_canedit);
+
 		this.#current_sessionid = p_sessionid;
 		this.#current_user = p_username;
 		this.#current_user_canedit = b_user_canedit;
@@ -446,7 +464,13 @@ export class EditingMgr extends MapPrintInRect {
 				const msgsctrlr = p_mapctx.getCustomizationObject().messaging_ctrlr;
 				msgsctrlr.warn(p_mapctx.i18n.msg('EDITLYROUTOFSCALE',true));
 				ret = false;
-		
+
+			} else if (!lyr.layervisible) {
+
+				const msgsctrlr = p_mapctx.getCustomizationObject().messaging_ctrlr;
+				msgsctrlr.warn(`${p_mapctx.i18n.msg('EDITLYRNOTVISIBLE',true)} '${lyr.getLabel()}'`);
+				ret = false;
+			
 			} else {
 
 				if (lyr._gisid_field == null) {

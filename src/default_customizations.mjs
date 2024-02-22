@@ -1388,6 +1388,7 @@ export class MapCustomizations {
 		}		
 
 		this.instances = {
+
 			"basiccontrolsbox": new BasicCtrlBox(this.mapctx, GlobalConst.CONTROLS_STYLES.BASIC_CONTROLS_ORIENTATION),
 			"basemapctrl": new BasemapCtrlBox(),
 			"toc": toc,
@@ -1400,6 +1401,7 @@ export class MapCustomizations {
 			// "analysis": new AnalysisMgr([ap]),
 			// "navigator": nav,
 			// "slicing": new SlicingPanel()
+
 		}
 
 		if (has_slicing) {
@@ -1433,6 +1435,9 @@ export class MapCustomizations {
 
 			const em = new EditingMgr(this.mapctx, editable_layers, [toc], sfem)
 			this.instances["editing"] = em;
+
+			toc.addWidgetToHideOnCollapse(em);
+
 			this.instances["editcontrolsbox"] = new EditCtrlBox(this.mapctx, this.mapctx.cfgvar["basic"]["editcontrols"]["orientation"], "UR", [toc, em], em);
 
 			//this.instances["adveditcontrolsbox"] = new AdvTabletModeEditCtrlBox(this.mapctx, this.mapctx.cfgvar["basic"]["adveditcontrols"]["orientation"], "UR", [toc, em], em);		

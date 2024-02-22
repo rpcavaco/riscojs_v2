@@ -138,7 +138,6 @@ export class Layer {
 	_servmetadata_report;
 	_servmetadata_report_completed = false;
 	_metadata_or_root_url;
-	_name = "<Layer base class>";
 
 	constructor() {
 		this.missing_mandatory_configs = [];
@@ -171,6 +170,18 @@ export class Layer {
 		return this._key;
 	}
 
+	getLabel() {
+
+		let ret;
+		if (this.label == "none") {
+			ret = this.key;
+		} else {
+			ret = this.label;
+		}
+
+		return ret;
+	}
+
 	isCanceled() {
 		//console.info(`[***] Checking layer ${this.key} is canceled: ${this._drawingcanceled}`);
 		let ret =  this._drawingcanceled;
@@ -191,14 +202,7 @@ export class Layer {
 
 		// method meant to be extended
 
-		let name;
-		if (this._name === undefined) {
-			name = "<class yet not defining '_name' attribute>";
-		} else {
-			name = this._name;
-		}
-
-		console.error(`'refresh' method not implemented for layer '${this.key}', '${name}' class`);
+		console.error(`'refresh' method not implemented for layer '${this.key}', '${this.constructor.name}' class`);
 		
 		let cancel = false;
 		return cancel;
@@ -230,7 +234,6 @@ export class VectorLayer extends featureLayersMixin(Layer) {
 
 	geomtype;
 	_filterfunc = null;
-	_name = "<VectorLayer base class>";
 
 	constructor() {
 		super();
@@ -253,15 +256,7 @@ export class VectorLayer extends featureLayersMixin(Layer) {
 		// to be implemented
 		// for each chunk, respond with item_chunk_params object, specific to layer type
 
-		// method meant to be extended
-		let name;
-		if (this._name === undefined) {
-			name = "<class yet not defining '_name' attribute>";
-		} else {
-			name = this._name;
-		}
-
-		console.error(`'itemchunks' generator method not implemented for '${name}', vector layer class`);
+		console.error(`'itemchunks' generator method not implemented for '${this.constructor.name}', vector layer class`);
 
 	}		
 
@@ -271,7 +266,6 @@ export class RemoteVectorLayer extends VectorLayer {
 
 	featchunksloading = {};
 	_prerefreshed = false;
-	_name = "<RemoteVectorLayer base class>";	
 
 	isLoading() {
 		// console.info(`[***] Checking layer ${this.key} is loading, preref: ${this._prerefreshed} OR featchkld:${Object.keys(this.featchunksloading).length}>0`);
@@ -334,14 +328,8 @@ export class RemoteVectorLayer extends VectorLayer {
 		// for each chunk in 'itemschunks', add features to current feature collection
 
 		// method meant to be extended
-		let name;
-		if (this._name === undefined) {
-			name = "<class yet not defining '_name' attribute>";
-		} else {
-			name = this._name;
-		}
 
-		console.error(`'looplayeritems' method not implemented for '${name}' class`);
+		console.error(`'looplayeritems' method not implemented for '${this.constructor.name}' class`);
 
 	}
 
@@ -407,7 +395,6 @@ export class RasterLayer extends Layer {
 	filter = "none";
 	envsplit = true;
 	envsplit_cfg = {};
-	_name = "<RasterLayer base class>";
 
 	constructor(p_mapctx) {
 		super(p_mapctx);
