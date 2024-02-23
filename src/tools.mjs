@@ -666,6 +666,224 @@ class PointEditTool extends BaseTool {
 	}	
 }
 
+class PathEditTool extends BaseTool {
+
+	canvaslayers = ['temporary', 'transientmap'];
+	toc_collapsed;
+	editmanager;
+	editfeat_engaged = false;
+	constructor(p_mapctx) {
+		super(p_mapctx, true, false); // part of general toggle group, default in toogle
+		this.toc_collapsed = false;
+		this.editmanager = null;
+	}
+
+	static mouseselMaxdist(p_mapctx) {
+		const mscale = p_mapctx.getScale();
+		return GlobalConst.FEATMOUSESEL_MAXDIST_1K * mscale / 1000.0;
+	}
+
+	setTocCollapsed(p_is_collapsed) {
+		this.toc_collapsed = p_is_collapsed;
+	}
+
+	setEditingManager(p_edit_manager) {
+		if (p_edit_manager) {
+			console.info("[init RISCO] PathEditTool, edit manager is set");
+			this.editmanager = p_edit_manager;
+		} else {
+			throw new Error("PathEditTool, setEditingManager: no edit manager passed");
+		}
+	}
+
+	async init(p_mapctx) {
+
+		if (this.editmanager == null) {
+			throw new Error("PathEditTool, mandatory previous use of 'setEditingManager' has not happened");
+		}
+
+		// If tabletFeatPreSelection is set, meaning tablet mode SIMPLE is enabled and there is a presel feature
+		if (p_mapctx.tabletFeatPreSelection.isSet) {
+			const feat = this.editmanager.setCurrentEditFeature(p_mapctx, p_mapctx.tabletFeatPreSelection.get());
+			if (feat) {
+				await p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, feat.id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });		
+			}
+		}	
+	}
+
+	clearCanvas(p_mapctx) {
+
+		let gfctx;
+		const canvas_dims = [];		
+		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+		for (const cl of this.canvaslayers) {
+			gfctx = p_mapctx.renderingsmgr.getDrwCtx(cl, '2d');
+			gfctx.clearRect(0, 0, ...canvas_dims); 	
+		}	
+
+	}
+
+	clickOnEmpty(p_mapctx, p_source_id, p_scrx, p_scry) {
+
+		// ... and create set / create vertex or new point object
+
+		if (p_source_id == 'TOC' || p_source_id == 'TOCMGR') {
+			return;
+		}
+
+		this.clearCanvas(p_mapctx);
+
+		p_mapctx.drawVertex("NEW", p_scrx, p_scry, 'temporary');
+
+		if (this.editfeat_engaged) {
+			// edit current vertex in current feature
+			this.editmanager.editCurrentVertex(p_mapctx, p_scrx, p_scry);
+			p_mapctx.featureCollection.redrawAllVectorLayers();
+		} else {
+			// add new vertex to current feature or init a new feature creating its first vertex
+			this.editmanager.addNewVertex(p_mapctx, "point", p_scrx, p_scry);
+		}
+	} 
+
+	hoverOnEmpty(p_mapctx, p_source_id, p_scrx, p_scry) {
+
+		// ... and create set / create vertex or new point object
+
+		if (p_source_id == 'TOC' || p_source_id == 'TOCMGR') {
+			return;
+		}
+
+		this.clearCanvas(p_mapctx);
+
+	} 	
+
+	hover(p_mapctx, p_feature_dict, p_scrx, p_scry){
+
+		let feat=null, ret = null;
+
+		this.editfeat_engaged = false;
+
+		feat = this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict);
+		if (feat) {
+			ret = p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, feat.id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });		
+		}
+
+		return ret;
+	}
+
+	pick(p_mapctx, p_feature_dict, p_scrx, p_scry) {
+
+		let layerklist, ret = null;
+
+		// If NOT tabletFeatPreSelection is active, meaning tablet mode is NOT SIMPLE, lets act as expected in pick method
+		if (!p_mapctx.tabletFeatPreSelection.isActive) {
+			this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict);
+		}
+
+		if (this.editmanager.currentEditFeatHolder != null) {
+			layerklist = Object.keys(p_feature_dict);
+			ret = p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDITENGAGE", {'normal': 'temporary', 'label': 'temporary' });	
+			if (ret) {
+				this.editfeat_engaged = true;
+			}
+		}
+
+		// TODO - usar p_scrx, p_scry para 'apanhar' o vértice da geometria amover, zero para o ponto
+
+		if (p_feature_dict[layerklist[0]][0].feat.gt == "point") {
+			this.editmanager.setCurrentEditVertex(p_mapctx, 0, 0);
+		}
+
+		return ret;
+
+	}
+
+	hoverEditVertex(p_mapctx, p_source_id, p_scrx, p_scry) {
+		p_mapctx.drawVertex("MOVE", p_scrx, p_scry, 'transientmap');
+	}
+
+	async onEvent(p_mapctx, p_evt) {
+
+		let mxdist, ret = false; 
+
+		try {
+	
+			if (GlobalConst.getDebug("INTERACTION")) {
+				console.log("[DBG:INTERACTION] PATHTEDITTOOL onEvent evt.type:", p_evt.type);
+			}
+			if (GlobalConst.getDebug("INTERACTIONCLICKEND") && ["touchstart", "touchend", "mousedown", "mouseup", "mouseleave", "mouseout"].indexOf(p_evt.type) >= 0) {
+				console.log("[DBG:INTERACTIONCLICKEND] PATHTEDITTOOL onEvent evt.type:", p_evt.type);
+			}
+
+			if (GlobalConst.getDebug("INTERACTIONOUT") && p_evt.type == "mouseout") {
+				console.log("[DBG:INTERACTIONOUT] PATHTEDITTOOL, mouseout");
+			}				
+
+			switch(p_evt.type) {
+
+				/*case 'touchstart':
+				case 'mousedown':
+					if (insidefixedtippanel || insideainfoboxpanel) {
+						ret = true; 
+					}
+					break; */
+
+				case 'touchend':
+				case 'mouseup':
+
+					mxdist = this.constructor.mouseselMaxdist(p_mapctx);
+					ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, true, 
+						{
+							"hover": this.hover.bind(this),
+							"pick": this.pick.bind(this)
+
+						},
+						this.clickOnEmpty.bind(this));
+
+					break;
+
+				case 'mouseout':
+					this.clearCanvas(p_mapctx);
+					break;
+
+				case 'mousemove':
+					// if in tablet mode SIMPLE, ignore mouse move for info / maptip purposes , EXCEPT when feature engaged
+					if (this.editfeat_engaged) {
+
+						mxdist = this.constructor.mouseselMaxdist(p_mapctx);
+						ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, false, null, null, this.hoverEditVertex.bind(this));
+
+					} else {
+
+						// if in tablet mode SIMPLE, ignore mouse move for info / maptip purposes
+						if (p_mapctx.tabletFeatPreSelection.isActive) {
+							ret = false;
+						} else {
+							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
+							ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, false, { "hover": this.hover.bind(this) }, null, this.hoverOnEmpty.bind(this));	
+						}
+						break;
+					}
+
+			}
+		} catch(e) {
+			console.error(e);
+		}  
+
+		// has this tool interacted with event ?
+		return ret;
+		
+	}	
+
+	cleanUp(p_mapctx) {
+
+		console.info("[INFO] PathEditTool cleanup");
+
+		this.editfeat_engaged = false;
+		this.editmanager.resetCurrentEditFeatureHolder();
+	}	
+}
+
 
 class MeasureTool extends BaseTool {
 
@@ -757,6 +975,9 @@ export class ToolManager {
 					case "PointEditTool":
 						this.addTool(new PointEditTool(p_mapctx));
 						break;
+					case "PathEditTool":
+						this.addTool(new PathEditTool(p_mapctx));
+						break;						
 					}
 			}
 		}	
