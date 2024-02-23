@@ -666,6 +666,10 @@ export class EditingMgr extends MapPrintInRect {
 
 	setCurrentEditVertex(p_mapctx, p_geompartidx, p_vertorderidx) {
 
+		if (this.currentEditFeatHolder == null) {
+			throw new Error("setCurrentEditVertex, no current editing feature");
+		}
+
 		this.#current_edit_partidx = p_geompartidx;
 		this.#current_edit_vertexidx = p_vertorderidx;
 			
