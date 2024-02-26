@@ -637,7 +637,8 @@ export class EditingMgr extends MapPrintInRect {
 		}
 
 		if (p_feat_dict[this.editingLayerKey] === undefined) {
-			throw new Error(`editing layer ${this.editingLayerKey} not in edit features ${fd_keys}`);
+			return;
+			//throw new Error(`editing layer '${this.editingLayerKey}' not in edit features [${fd_keys}]`);
 		}
 
 		if (p_feat_dict[this.editingLayerKey].length == 0) {
