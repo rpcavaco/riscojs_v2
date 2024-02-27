@@ -33,3 +33,31 @@ First, you must be aware that RiscoJS instances can be used in multiplicity in a
 	<script>
 		var RiscoInst = new RiscoJS(RISCOJS_CFG, "RiscoPanelDiv");
 	</script>
+
+## Configuring
+
+Configuring has three parts: **basic** configuration, **layers** configuration and **text** messages configuration. 
+
+- basic config: risco_basic_config.js
+- layers config: risco_layers_config.js
+- text config: risco_text_config.js
+
+You can find generic examples of these files in this [folder](rpcavaco/riscojs_v2/testbed).
+
+To see a working example, you should check the web app (TBD).
+
+The expected location of these files is (TBD).
+
+
+### Basic config
+
+The file name for basic config is *risco_basic_config.js*.
+
+The expected location of thisfiles is webapp is (TBD).
+
+#### Syntax items
+
+- mapname: name of 'map', must coincide with same 'mapname' in risco_map table
+
+
+
