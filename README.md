@@ -57,7 +57,7 @@ The expected location of thisfiles is webapp is (TBD).
 
 #### Syntax items
 
-- mapname: name of 'map', must coincide with same 'mapname' in risco_map table
+- mapname: name of 'map', must coincide with same 'mapname' in [**risco_map**](https://github.com/rpcavaco/riscosrv_v2_pg#maps-table) table
 
 
 
