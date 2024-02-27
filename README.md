@@ -2,6 +2,11 @@
 
 ES6 Webmap client library
 
+## Currently supported datasources
+
+- RISCO server [rpcavaco/riscosrv_v2](https://github.com/rpcavaco/riscosrv_v2) custom GeoJSON-like content
+- OGC WMS and WFS
+
 ## Installation
 
 First, you must be aware that RiscoJS instances can be used in multiplicity in a web page, you can have more than one map panel.
