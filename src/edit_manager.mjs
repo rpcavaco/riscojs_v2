@@ -9,6 +9,7 @@ export class EditingMgr extends MapPrintInRect {
 	#current_user;
 	#current_user_canedit;
 	#editing_is_enabled;
+	#saveendpoint_authenticated;
 	#editing_layer_key;
 	#editing_layer_url;
 	editable_layers;
@@ -54,6 +55,7 @@ export class EditingMgr extends MapPrintInRect {
 		this.#current_sessionid = null;
 		this.#current_user = null;
 		this.#current_user_canedit = false;
+		this.#saveendpoint_authenticated = false;
 		this.#editing_is_enabled = false;
 		this.#editing_layer_key = null;
 		this.#editing_layer_url = null;
@@ -364,13 +366,14 @@ export class EditingMgr extends MapPrintInRect {
 		return ret;
 	}
 	
-	setCurrentUser(p_sessionid, p_username, b_user_canedit) {
+	setCurrentUser(p_sessionid, p_username, b_user_canedit, b_saveendpoint_authenticated) {
 
-		console.info("[INFO] set edit session, id:", p_sessionid, "user:", p_username, "can edit:", b_user_canedit);
+		console.info("[INFO] set edit session, id:", p_sessionid, "user:", p_username, "can edit:", b_user_canedit, "auth endpoint:", b_saveendpoint_authenticated);
 
 		this.#current_sessionid = p_sessionid;
 		this.#current_user = p_username;
 		this.#current_user_canedit = b_user_canedit;
+		this.#saveendpoint_authenticated = b_saveendpoint_authenticated;
 	}
 
 	set editingLayerKey(p_key) {
@@ -529,7 +532,11 @@ export class EditingMgr extends MapPrintInRect {
 				this.editingLayerKey = temp_layer_key[0];
 				temp_layer_key.length = 0;
 
-				this.#editing_layer_url = (lyr.url.endsWith("/") ? lyr.url : lyr.url + "/") + "save";
+				if (this.#saveendpoint_authenticated) {
+					this.#editing_layer_url = (lyr.url.endsWith("/") ? lyr.url : lyr.url + "/") + "save";
+				} else {
+					this.#editing_layer_url = (lyr.url.endsWith("/") ? lyr.url : lyr.url + "/") + "usave";
+				}
 
 				ret = true;
 					
