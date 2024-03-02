@@ -205,7 +205,6 @@ function adaptCoords(p_path_levels, p_in_coords, p_center_pt, p_pixsz, out_coord
 export class RiscoFeatsLayer extends RemoteVectorLayer {
 
 	url;     // https://servergeo.cm-porto.pt/arcgis/rest/services/BASE/ENQUADRAMENTO_BW_ComFregsPTM06/MapServer
-	_name = "RiscoFeatsLayer";
 	_gisid_field;
 	_accept_deletion;
 
@@ -431,7 +430,7 @@ export class RiscoFeatsLayer extends RemoteVectorLayer {
 
 							path_levels = calcPathLevels(feat.crds); 
 
-							// console.log("path_levels:", path_levels, "key:", that.key, feat.crds);
+							// console.log("!!!! path_levels:", path_levels, "key:", that.key, feat.crds);
 
 							// to terrain coords
 							const terrain_coords = [];

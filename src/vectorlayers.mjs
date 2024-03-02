@@ -291,11 +291,11 @@ export class AGSQryLayer extends RemoteVectorLayer {
 		}
 		
 		if (this.url == null || this.url.length < 1) {
-			throw new Error("Class CanvasAGSQryLayer, null or empty p_metadata_or_root_url");
+			throw new Error("Class AGSQryLayer, null or empty p_metadata_or_root_url");
 		}
 
 		if (!this.url.endsWith('/MapServer')) {
-			throw new Error("Class CanvasAGSQryLayer, 'url' config parameter must terminate with '/MapServer'");
+			throw new Error("Class AGSQryLayer, 'url' config parameter must terminate with '/MapServer'");
 		}		
 
 		this._servmetadata = {};
