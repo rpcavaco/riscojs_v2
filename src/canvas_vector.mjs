@@ -2,6 +2,7 @@
 import {GlobalConst} from './constants.js';
 import {GraticuleLayer, PointGridLayer, AreaGridLayer, AGSQryLayer} from './vectorlayers.mjs';
 import { RiscoFeatsLayer } from './risco_ownlayers.mjs';
+import { JSON_FG_Layer } from './ogc_layers.mjs';
 import {evalTextAlongPathViability, pathLength, dist2D, segmentMeasureToPoint, deg2Rad, lineMeasureToPoint, lineExtremePoints, getFeatureCenterPoint } from './geom.mjs';
 import { diffDays } from './utils.mjs';  // Can be called in 'varstyles' on 'iconsrcfunc' functions
 
@@ -188,6 +189,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			}	
 		} else {
 			try {
+				//console.log("grabbed", this.key);
 				this._gfctx = p_mapctx.renderingsmgr.getDrwCtx(canvaskey, '2d');
 				// _GLOBAL_SAVE_RESTORE_CTR++;
 				this._gfctx.save();
@@ -279,6 +281,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 			console.error(`releaseGf2DCtx, graphics context was not previously grabbed for layer '${this.key}'`);
 			return;
 		}
+
 /* 		_GLOBAL_SAVE_RESTORE_CTR--;
 		if (_GLOBAL_SAVE_RESTORE_CTR < 0) {
 			console.log("Neg _GLOBAL_SAVE_RESTORE_CTR, canvas_vector releaseGf2DCtx:", _GLOBAL_SAVE_RESTORE_CTR);
@@ -940,6 +943,10 @@ export class CanvasAGSQryLayer extends canvasVectorMethodsMixin(AGSQryLayer) {
 }
 
 export class CanvasRiscoFeatsLayer extends canvasVectorMethodsMixin(RiscoFeatsLayer) {
+
+}
+
+export class CanvasJSON_FG_Layer extends canvasVectorMethodsMixin(JSON_FG_Layer) {
 
 }
 
