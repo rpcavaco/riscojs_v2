@@ -407,7 +407,12 @@ export class FeatureCollection {
 		let feat = this.featList[p_layerkey][p_featid];
 
 		if (feat == null) {
-			return Promise.reject(new Error(`featuredraw, layer '${p_layerkey}', no feature found for id ${p_featid}`));
+			if (p_featid.startsWith("_temp_")) {
+				// temp feature was removed
+				return Promise.resolve(null);
+			} else {
+				return Promise.reject(new Error(`featuredraw, layer '${p_layerkey}', no feature found for id ${p_featid}`));
+			}
 		}
 
 		const that = this;

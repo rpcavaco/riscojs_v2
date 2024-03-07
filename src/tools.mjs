@@ -541,7 +541,7 @@ class PointEditTool extends BaseTool {
 
 	hover(p_mapctx, p_feature_dict, p_scrx, p_scry){
 
-		let feat=null, layerklist, doDrawFeat = false, ret = null;
+		let feat=null, ret = null;
 
 		this.editfeat_engaged = false;
 
@@ -564,7 +564,15 @@ class PointEditTool extends BaseTool {
 
 		if (this.editmanager.currentEditFeatHolder != null) {
 			layerklist = Object.keys(p_feature_dict);
-			ret = p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDITENGAGE", {'normal': 'temporary', 'label': 'temporary' });	
+			ret = p_mapctx.drawFeatureAsMouseSelected(
+					layerklist[0], 
+					p_feature_dict[layerklist[0]][0].id, 
+					"EDITENGAGE", 
+					{
+						'normal': 'temporary', 
+						'label': 'temporary' 
+					}
+				);	
 			if (ret) {
 				this.editfeat_engaged = true;
 			}

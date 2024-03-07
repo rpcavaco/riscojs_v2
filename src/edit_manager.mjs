@@ -36,6 +36,7 @@ export class EditingMgr extends MapPrintInRect {
 	// active_mode;
 
 	#current_edit_feature_holder;
+	#current_edit_feature_holder_lock;
 	#current_edit_partidx;
 	#current_edit_vertexidx;
 	#edit_feature_holders;
@@ -100,6 +101,7 @@ export class EditingMgr extends MapPrintInRect {
 		this.boxw = icondims[0] + 3 * this.margin_offset + this.featcounter_width;
 
 		this.#current_edit_feature_holder = null;
+		this.#current_edit_feature_holder_lock = false;
 
 		this.#hidden = false;
 
@@ -169,6 +171,7 @@ export class EditingMgr extends MapPrintInRect {
 				if (this.isEditingEnabled()) {
 					iconname = "edit_on";
 				}
+
 				const img = new Image();
 				img.decoding = "sync";
 
@@ -181,7 +184,7 @@ export class EditingMgr extends MapPrintInRect {
 				});
 
 				edited_featcount = 0;
-				for (const f of this.#edit_feature_holders) {
+				for (const f of this.editFeatureHolderIter()) {
 					if (f.edited) {
 						edited_featcount++;
 					}
@@ -245,12 +248,13 @@ export class EditingMgr extends MapPrintInRect {
 
 					case 'mouseup':
 					case 'touchend':
-
+		
 						if (this.isEditingEnabled()) {
 							this.save(p_mapctx);
 						} else {
+							this.resetCurrentEditFeatureHolder();
 							this.setEditingEnabled(p_mapctx, true);
-							this.print(p_mapctx);
+							// this.print(p_mapctx);
 						}
 	
 						break;
@@ -307,18 +311,37 @@ export class EditingMgr extends MapPrintInRect {
 		return this.#current_edit_feature_holder;
 	}
 
-	setCurrentEditFeatHolder(p_mapctx, p_feat_holder) {
+	setCurrentEditFeatHolder(p_mapctx, p_feat_holder, b_lock_holder) {
+
+		// console.trace("setCurrentEditFeatHolder:", p_feat_holder);
+
+		if (b_lock_holder) {
+
+			if (this.#current_edit_feature_holder_lock) {
+				throw new Error("Lock request over already locked current_edit_feature_holder");
+			}
+			this.#current_edit_feature_holder_lock = true;
+
+		} else {
+
+			if (this.#current_edit_feature_holder_lock) {
+				console.log("current_edit_feature LOCKED, setCurrentEditFeatHolder ignored");
+				return;
+			}
+
+		}
 		
 		this.#current_edit_feature_holder = p_feat_holder;
 
 		this.editControlsDisabling(p_mapctx, ["delete"], false);
 
-		return this.#current_edit_feature_holder;
+		//return this.#current_edit_feature_holder;
 	}	
 
 
 	resetCurrentEditFeatureHolder() {
 		this.#current_edit_feature_holder = null;
+		this.#current_edit_feature_holder_lock = false;
 	}	
 
 	precheckCanEditStatus() {
@@ -383,7 +406,29 @@ export class EditingMgr extends MapPrintInRect {
 	get editingLayerKey() {
 		return this.#editing_layer_key;
 	}
-	
+
+	* editFeatureHolderIter() {
+		yield* this.#edit_feature_holders
+	}
+
+	addEditFeatureHolder(p_editf_holder) {
+		// console.trace("addEditFeatureHolder:", p_editf_holder);
+		this.#edit_feature_holders.push(JSON.parse(JSON.stringify(p_editf_holder)));
+	}	
+
+	editFeatureHolderLen() {
+		return this.#edit_feature_holders.length;
+	}	
+
+	editFeatureHolderReset() {
+		this.#edit_feature_holders.length = 0;
+	}
+
+	set editFeatureHolder(p_list) {
+		// console.trace("SET EditFeatureHolder LIST:", p_list);
+		this.#edit_feature_holders = [...p_list];
+	}
+
 	get pendingChangesToSave() {
 		return this.#pending_changes_to_save;
 	}
@@ -449,7 +494,9 @@ export class EditingMgr extends MapPrintInRect {
 						(evt, p_result, p_value) => { 
 							if (p_value) {
 								const meth = that.defineEditingLayer.bind(that);
-								meth(pp_mapctx, p_value);	
+								if (meth(pp_mapctx, p_value)) {
+									that.enableEditingFinalSteps(p_mapctx);									
+								}
 							}
 						},
 						p_constraints
@@ -547,52 +594,61 @@ export class EditingMgr extends MapPrintInRect {
 		return ret;
 	}
 
+	enableEditingFinalSteps(p_mapctx) {
+
+		console.log(":: SEE pendingChangesToSave:", this.pendingChangesToSave);
+		console.log(":: SEE #edit_feature_holders:", this.#edit_feature_holders);
+
+
+		// add pre-selected feats
+		if (!this.checkCanEditStatus(true)) {
+			throw new Error("Cannot enable editing");
+		}
+		this.#editing_is_enabled = true;
+
+		// activate layer-defined tool
+		const tool = p_mapctx.toolmgr.enableTool(p_mapctx, this.#current_tool_name, true);
+		tool.init(p_mapctx);
+
+		const ci = p_mapctx.getCustomizationObject();
+		if (ci == null) {
+			throw new Error("setEditingEnabled, _enableEditingFinalSteps, map context customization instance is missing")
+		}
+
+		const controlkeys_exceptions = [];
+		if (!this.#layeredit_cfg_attribs.accept_deletion) {
+			controlkeys_exceptions.push("delete");
+		}
+
+		// Show edit controls
+		const ecb = ci.instances["editcontrolsbox"];
+		if (ecb) {
+			ecb.setManyControlsHidden(false, controlkeys_exceptions);
+			ecb.print(p_mapctx);
+		}
+
+		// Enable coords display
+		const mcp = ci.instances["mousecoordsprint"];		
+		mcp.changeVisibility(true);
+
+		const toc = ci.instances["toc"];		
+		toc.setEditingLayerKey(this.editingLayerKey);
+		toc.print(p_mapctx);
+
+		this.print(p_mapctx);
+
+	}
+
 	setEditingEnabled(p_mapctx, p_editing_tobe_enabled) {
 
 		if (p_editing_tobe_enabled) {
 
 			if(this.precheckCanEditStatus()) {
-
 				if (this.defineEditingLayer(p_mapctx)) {
-
-					// add pre-selected feats
-					if (!this.checkCanEditStatus(true)) {
-						throw new Error("Cannot enable editing");
-					}
-					this.#editing_is_enabled = true;
-
-					// activate layer-defined tool
-					const tool = p_mapctx.toolmgr.enableTool(p_mapctx, this.#current_tool_name, true);
-					tool.init(p_mapctx);
-
-					const ci = p_mapctx.getCustomizationObject();
-					if (ci == null) {
-						throw new Error("setEditingEnabled, map context customization instance is missing")
-					}
-
-					const controlkeys_exceptions = [];
-					if (!this.#layeredit_cfg_attribs.accept_deletion) {
-						controlkeys_exceptions.push("delete");
-					}
-			
-					// Show edit controls
-					const ecb = ci.instances["editcontrolsbox"];
-					if (ecb) {
-						ecb.setManyControlsHidden(false, controlkeys_exceptions);
-						ecb.print(p_mapctx);
-					}
-
-					// Enable coords display
-					const mcp = ci.instances["mousecoordsprint"];		
-					mcp.changeVisibility(true);
-
-					const toc = ci.instances["toc"];		
-					toc.setEditingLayerKey(this.editingLayerKey);
-					toc.print(p_mapctx);
-
+					this.enableEditingFinalSteps(p_mapctx);
 				}
-
 			}		
+
 		} else {
 
 			console.assert(this.#current_tool_name != null, "current_tool not defined");
@@ -657,12 +713,12 @@ export class EditingMgr extends MapPrintInRect {
 
 			this.removePreviousTempFeat(p_mapctx, true);
 
-			this.setCurrentEditFeatHolder(p_mapctx, p_feat_dict[this.editingLayerKey][0]);
+			this.setCurrentEditFeatHolder(p_mapctx, p_feat_dict[this.editingLayerKey][0], false);
 			this.currentEditFeatHolder["edited"] = false;
 			if (this.#single_feat_editing) {
-				this.#edit_feature_holders = [this.currentEditFeatHolder];
+				this.editFeatureHolder = [this.currentEditFeatHolder];
 			} else {
-				this.#edit_feature_holders.push(JSON.parse(JSON.stringify(this.currentEditFeatHolder)));
+				this.addEditFeatureHolder(this.currentEditFeatHolder);
 			}
 
 			ret = this.currentEditFeatHolder;
@@ -790,7 +846,7 @@ export class EditingMgr extends MapPrintInRect {
 				this.removePreviousTempFeat(p_mapctx, true);
 
 				id = this.addTempPointFeat(p_mapctx, terr_pt);
-				this.setCurrentEditFeatHolder(p_mapctx, { "feat": p_mapctx.featureCollection.get(this.editingLayerKey, id), "id": id, "edited": true });
+				this.setCurrentEditFeatHolder(p_mapctx, { "feat": p_mapctx.featureCollection.get(this.editingLayerKey, id), "id": id, "edited": true }, true);
 
 				p_mapctx.featureCollection.redrawAllVectorLayers();
 
@@ -799,9 +855,9 @@ export class EditingMgr extends MapPrintInRect {
 		}
 
 		if (this.#single_feat_editing) {
-			this.#edit_feature_holders = [this.currentEditFeatHolder];
+			this.editFeatureHolder= [this.currentEditFeatHolder];
 		} else {
-			this.#edit_feature_holders.push(JSON.parse(JSON.stringify(this.currentEditFeatHolder)));
+			this.addEditFeatureHolder(this.currentEditFeatHolder);
 		}
 
 		this.print(p_mapctx);
@@ -823,14 +879,14 @@ export class EditingMgr extends MapPrintInRect {
 
 		let ret = [], ats = [];
 
-		if (this.#edit_feature_holders.length > 0 && this.pendingChangesToSave != "none") {
+		if (this.editFeatureHolderLen() > 0 && this.pendingChangesToSave != "none") {
 
 			if (this.#layeredit_cfg_attribs["attribs_to_save"] !== undefined) {
 				ats = this.#layeredit_cfg_attribs["attribs_to_save"];
 			}
 
 			let currfeat, cef_feat;
-			for (const cef of this.#edit_feature_holders) {
+			for (const cef of this.editFeatureHolderIter()) {
 
 				cef_feat = cef["feat"];
 				if (cef_feat) {
@@ -839,7 +895,7 @@ export class EditingMgr extends MapPrintInRect {
 					currfeat = { "gisid": cef["gisid"] };
 				}
 
-				console.log("pendingChangesToSave:", this.pendingChangesToSave);
+				// console.log("pendingChangesToSave:", this.pendingChangesToSave);
 
 				if (cef_feat && ats.length > 0 && (this.pendingChangesToSave == "ALL" || this.pendingChangesToSave == "ALPHA")) {
 					currfeat["feat"]["properties"] = {};
@@ -906,7 +962,8 @@ export class EditingMgr extends MapPrintInRect {
 
 		// Disable edit mode
 		this.setEditingEnabled(p_mapctx, false);
-		this.#edit_feature_holders.length = 0;
+		this.resetCurrentEditFeatureHolder();
+		this.editFeatureHolderReset();
 		this.print(p_mapctx);
 
 		this.clearPendingChangesToSave();
@@ -974,6 +1031,7 @@ export class EditingMgr extends MapPrintInRect {
 				} else {
 					if (p_result !== null) {
 						that.finishUpEditing(p_mapctx);
+						that.resetCurrentEditFeatureHolder();
 					}
 				}
 			},
