@@ -421,6 +421,8 @@ export class FeatureCollection {
 			throw new Error(`layer '${p_layerkey}' class is not implemeting a 'refreshitem' method (async method returning a Promise); maybe your class should extend 'canvasVectorMethodsMixin'`);
 		}
 
+		// console.log("+++ >", p_layerkey, JSON.stringify(feat.g), JSON.stringify(feat.a));
+
 		return new Promise((resolve, reject) => {
 
 			try {
@@ -663,6 +665,10 @@ export class FeatureCollection {
 					for (let idfrom in this.featList[fr_lyk]) {
 
 						ff = this.featList[fr_lyk][idfrom];
+						if (ff["r"] !== undefined) {
+							delete ff["r"];
+						}
+
 						for (let idto in this.featList[to_lyk]) {
 	
 							tf = this.featList[to_lyk][idto];

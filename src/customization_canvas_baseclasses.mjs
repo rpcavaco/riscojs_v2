@@ -449,7 +449,8 @@ export class Info {
 			}
 
 		} else {
-			ret = this.pickfeature(p_mapctx, layerklist[0], p_feature_dict[layerklist[0]][0].feat, p_scrx, p_scry)
+			const feat = p_mapctx.featureCollection.get(layerklist[0], p_feature_dict[layerklist[0]][0].id);
+			ret = this.pickfeature(p_mapctx, layerklist[0], feat, p_scrx, p_scry)
 		}
 
 		if (ret) {

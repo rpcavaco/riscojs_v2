@@ -596,10 +596,6 @@ export class EditingMgr extends MapPrintInRect {
 
 	enableEditingFinalSteps(p_mapctx) {
 
-		console.log(":: SEE pendingChangesToSave:", this.pendingChangesToSave);
-		console.log(":: SEE #edit_feature_holders:", this.#edit_feature_holders);
-
-
 		// add pre-selected feats
 		if (!this.checkCanEditStatus(true)) {
 			throw new Error("Cannot enable editing");
@@ -751,32 +747,40 @@ export class EditingMgr extends MapPrintInRect {
 			throw new Error("editCurrentVertex, no current editing vertex index");
 		}	
 	
-		const feat = this.currentEditFeatHolder.feat;
-		
-		if (feat.gt == "point") { // }.g.length == 2 && typeof feat.g[0] === 'number') {
-			// point
+		const feat = p_mapctx.featureCollection.get(this.editingLayerKey, this.currentEditFeatHolder.id);
 
-			if (feat.g.length != 1 || feat.g[0].length != 2 || typeof feat.g[0][0] !== 'number') {
-				throw new Error("editCurrentVertex, current editing feature - invalid point feature");
+		if (feat) {
+			if (feat.gt == "point") { // }.g.length == 2 && typeof feat.g[0] === 'number') {
+				// point
+	
+				if (feat.g.length != 1 || feat.g[0].length != 2 || typeof feat.g[0][0] !== 'number') {
+					throw new Error("editCurrentVertex, current editing feature - invalid point feature");
+				}
+				if (this.#current_edit_partidx != 0) {
+					throw new Error("editCurrentVertex, current editing feature part index non-zero for point feature");
+				}
+				if (this.#current_edit_vertexidx != 0) {
+					throw new Error("editCurrentVertex, current editing vertex index non-zero for point feature");
+				}	
+	
 			}
-			if (this.#current_edit_partidx != 0) {
-				throw new Error("editCurrentVertex, current editing feature part index non-zero for point feature");
-			}
-			if (this.#current_edit_vertexidx != 0) {
-				throw new Error("editCurrentVertex, current editing vertex index non-zero for point feature");
-			}	
 
+			const terr_pt = [];
+			p_mapctx.transformmgr.getTerrainPt([p_scrx, p_scry], terr_pt);
+			p_mapctx.featureCollection.setVertex(this.editingLayerKey, this.currentEditFeatHolder.id, feat, terr_pt, this.#current_edit_vertexidx);
+	
+			this.currentEditFeatHolder.edited = true;
+	
+			this.print(p_mapctx);
+	
+			this.pendingChangesToSave = "GEO";
+				
+		} else {
+			console.error(`editCurrentVertex, feature not found for layer '${this.editingLayerKey}', id:${this.currentEditFeatHolder.id}`);
 		}
+		
+
 			
-		const terr_pt = [];
-		p_mapctx.transformmgr.getTerrainPt([p_scrx, p_scry], terr_pt);
-		p_mapctx.featureCollection.setVertex(this.editingLayerKey, this.currentEditFeatHolder.id, feat, terr_pt, this.#current_edit_vertexidx);
-
-		this.currentEditFeatHolder.edited = true;
-
-		this.print(p_mapctx);
-
-		this.pendingChangesToSave = "GEO";
 				
 	}
 
@@ -786,11 +790,11 @@ export class EditingMgr extends MapPrintInRect {
 			throw new Error("deleteCurrentEditFeat, no current editing feature");
 		}
 
-		const gisid = this.currentEditFeatHolder.feat.a[this.#layeredit_cfg_attribs["gisid_field"]];
+		const feat = p_mapctx.featureCollection.get(this.editingLayerKey, this.currentEditFeatHolder.id);
+		const gisid = feat.a[this.#layeredit_cfg_attribs["gisid_field"]];
 
 		p_mapctx.featureCollection.remove(this.editingLayerKey, this.currentEditFeatHolder.id);
 
-		this.currentEditFeatHolder.feat = null;
 		this.currentEditFeatHolder.edited = true;
 		this.currentEditFeatHolder.gisid = gisid;
 
@@ -846,7 +850,7 @@ export class EditingMgr extends MapPrintInRect {
 				this.removePreviousTempFeat(p_mapctx, true);
 
 				id = this.addTempPointFeat(p_mapctx, terr_pt);
-				this.setCurrentEditFeatHolder(p_mapctx, { "feat": p_mapctx.featureCollection.get(this.editingLayerKey, id), "id": id, "edited": true }, true);
+				this.setCurrentEditFeatHolder(p_mapctx, { "id": id, "edited": true }, true);
 
 				p_mapctx.featureCollection.redrawAllVectorLayers();
 
@@ -855,7 +859,7 @@ export class EditingMgr extends MapPrintInRect {
 		}
 
 		if (this.#single_feat_editing) {
-			this.editFeatureHolder= [this.currentEditFeatHolder];
+			this.editFeatureHolder = [this.currentEditFeatHolder];
 		} else {
 			this.addEditFeatureHolder(this.currentEditFeatHolder);
 		}
@@ -871,13 +875,15 @@ export class EditingMgr extends MapPrintInRect {
 		p_mapctx.featureCollection.featuredraw(this.editingLayerKey, id);
 	}
 
-	serialize2JSON(p_crs) {
+	serialize2JSON(p_mapctx) {
 
 		if (this.currentEditFeatHolder == null) {
 			throw new Error("serialize2GeoJSONLike, no current_edit_feature defined");
 		}
 
 		let ret = [], ats = [];
+
+		const crs = p_mapctx.cfgvar.basic["crs"];
 
 		if (this.editFeatureHolderLen() > 0 && this.pendingChangesToSave != "none") {
 
@@ -888,7 +894,7 @@ export class EditingMgr extends MapPrintInRect {
 			let currfeat, cef_feat;
 			for (const cef of this.editFeatureHolderIter()) {
 
-				cef_feat = cef["feat"];
+				cef_feat = p_mapctx.featureCollection.get(this.editingLayerKey, cef.id);
 				if (cef_feat) {
 					currfeat = { "feat": { "type": "Feature"} };
 				} else {
@@ -925,11 +931,11 @@ export class EditingMgr extends MapPrintInRect {
 						}
 	
 						if (currfeat["feat"]["geometry"] !== undefined) {
-							currfeat["feat"]["geometry"]["crs"] = p_crs;
+							currfeat["feat"]["geometry"]["crs"] = crs;
 						}
 
 						// in case of deletion, gisid must be spared prior to deletion
-						currfeat["gisid"] = cef["feat"].a[this.#layeredit_cfg_attribs["gisid_field"]];
+						currfeat["gisid"] = cef_feat.a[this.#layeredit_cfg_attribs["gisid_field"]];
 					}
 
 				}
@@ -951,7 +957,7 @@ export class EditingMgr extends MapPrintInRect {
 		return {
 			lname: this.editingLayerKey,
 			//gisid: this.currentEditFeatHolder["feat"].a[this.#layeredit_cfg_attribs["gisid_field"]],
-			featholders: this.serialize2JSON(p_mapctx.cfgvar.basic["crs"]),
+			featholders: this.serialize2JSON(p_mapctx),
 			sessionid: this.#current_sessionid,
 			mapname: p_mapctx.cfgvar.basic["mapname"]
 		};
@@ -1031,7 +1037,6 @@ export class EditingMgr extends MapPrintInRect {
 				} else {
 					if (p_result !== null) {
 						that.finishUpEditing(p_mapctx);
-						that.resetCurrentEditFeatureHolder();
 					}
 				}
 			},

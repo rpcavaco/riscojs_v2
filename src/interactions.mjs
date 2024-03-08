@@ -59,7 +59,7 @@ export class BaseTool {
 
 export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_event, opt_actonselfeat_dict, opt_clickonemptyspace, opt_hoveronemptyspace) {
 	
-	let foundly = null, ref_x, ref_y, max_y, col, row, maxrow, sqrid;
+	let spixly = null, ref_x, ref_y, max_y, col, row, maxrow, sqrid;
 
 	let ret_dir_interact = false, opt_actonselfeat_keys = null, opt_actonselfeat_ok = false;
 
@@ -79,16 +79,18 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 
 	for (let ly of p_mapctx.tocmgr.layers) {
 		if (ly.spindex !== undefined && ly.spindex && (ly instanceof AreaGridLayer)) {
-			foundly = ly;
+			spixly = ly;
 			break;
 		}
 	}
 
-	if (foundly) {
+	if (spixly) {
+
+		console.assert(spixly.separation !== undefined, "grid layer for sp.index has no 'separation' method");
 
 		let sclval = p_mapctx.getScale();
 		let minarea = sclval / 100.0;
-		let sep = foundly.separation(sclval);
+		let sep = spixly.separation(sclval);
 
 		p_mapctx.transformmgr.getTerrainPt([p_scrx, p_scry], terr_pt);
 
@@ -102,7 +104,7 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 		maxrow = Math.floor((max_y - ref_y) / sep);
 
 		let cmin = (col < 2 ? 1 : col-1);
-		let cmax = (col > foundly._columns ? foundly._columns : col+1);
+		let cmax = (col > spixly._columns ? spixly._columns : col+1);
 
 		let rmin = (row < 1 ? 0 : row-1);
 		let rmax = (row > maxrow ? maxrow : row+1);
@@ -111,7 +113,7 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 
 		if (cmin == col) {
 			cols = [col, cmax];
-		} else if (cmax == col || cmax > foundly._columns) {
+		} else if (cmax == col || cmax > spixly._columns) {
 			cols = [cmin, col];
 		} else {
 			cols = [cmin, col, cmax];
@@ -132,21 +134,21 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 
 			for (let r of rows) {
 
-				sqrid = r * foundly._columns + c;
+				sqrid = r * spixly._columns + c;
 
-				if (related_ids[foundly.key] === undefined) {
-					related_ids[foundly.key] = {}
+				if (related_ids[spixly.key] === undefined) {
+					related_ids[spixly.key] = {}
 				}
 
-				feat = p_mapctx.featureCollection.get(foundly.key, sqrid);
+				feat = p_mapctx.featureCollection.get(spixly.key, sqrid);
 				if (feat) {
 					if (feat.r !== undefined) {
 						for (let lyk in feat.r) {
-							if (related_ids[foundly.key][lyk] === undefined) {
-								related_ids[foundly.key][lyk] = new Set();
+							if (related_ids[spixly.key][lyk] === undefined) {
+								related_ids[spixly.key][lyk] = new Set();
 							}
 							for (let r of feat.r[lyk]) {
-								related_ids[foundly.key][lyk].add(r);
+								related_ids[spixly.key][lyk].add(r);
 							}
 						}
 					}
@@ -162,7 +164,7 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 						} else {
 							canvas_layers = {'normal': 'transientmap', 'label': 'transientmap' };
 						}
-						p_mapctx.drawSingleFeature(foundly.key, sqrid, false, GlobalConst.DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB, canvas_layers);
+						p_mapctx.drawSingleFeature(spixly.key, sqrid, false, GlobalConst.DEBUG_FEATMOUSESEL_SPINDEXMASK_SYMB, canvas_layers);
 					} catch (e) {
 						console.error(`[DBG:FEATMOUSESEL] feature error '${e}'`);
 					}
@@ -171,21 +173,25 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 			}
 		}
 
+		// if (Object.keys(related_ids["SPATIALIDX_GRID"]).length > 0) {
+		// 	console.log("related_ids:", related_ids["SPATIALIDX_GRID"]["sv_prumo_edittest"]); 
+		// }
+
 		let tmpd, findings={}; //= Number.MAX_SAFE_INTEGER;
 		const eps = GlobalConst.MOUSEINTERACTION_NEARESTFEATURES_COINCIDENCE_TOLERANCE;
 		for (let from_lyrk in related_ids) {
 
 			for (let to_lyrk in related_ids[from_lyrk]) {
 
-				foundly = null;
+				spixly = null;
 				for (let ly of p_mapctx.tocmgr.layers) {
 					if (ly.key == to_lyrk) {
-						foundly = ly;
+						spixly = ly;
 						break;
 					}
 				}
 
-				if (foundly == null) {
+				if (spixly == null) {
 					throw new Error(`to layer '${to_lyrk}' not found`);
 				}
 
@@ -231,19 +237,19 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 
 			for (let lyrk in findings) {
 
-				foundly = null;
+				spixly = null;
 				for (let ly of p_mapctx.tocmgr.layers) {
 					if (ly.key == lyrk) {
-						foundly = ly;
+						spixly = ly;
 						break;
 					}
 				}
 
-				if (foundly == null) {
+				if (spixly == null) {
 					throw new Error(`interactWithSpindexLayer: to layer '${lyrk}' not found`);
 				}
 
-				if (foundly.layervisible && (p_maxdist == null || p_maxdist >=  findings[lyrk].dist)) {
+				if (spixly.layervisible && (p_maxdist == null || p_maxdist >=  findings[lyrk].dist)) {
 					p_mapctx.renderingsmgr.clearAll(['temporary','transientmap']);
 					break;
 				}
@@ -255,10 +261,10 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 
 			for (let lyrk in findings) {
 
-				foundly = null;
+				spixly = null;
 				for (let ly of p_mapctx.tocmgr.layers) {
 					if (ly.key == lyrk) {
-						foundly = ly;
+						spixly = ly;
 						break;
 					}
 				}
@@ -271,7 +277,7 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 					console.log(`[DBG:FEATMOUSESEL] interact with NEAREST: ${lyrk}, dist:${findings[lyrk].dist} (max: ${p_maxdist}) to ids:${findings[lyrk].ids}`);
 				}
 	
-				if (foundly.layervisible && (p_maxdist == null || p_maxdist >=  findings[lyrk].dist)) {
+				if (spixly.layervisible && (p_maxdist == null || p_maxdist >=  findings[lyrk].dist)) {
 
 					//p_mapctx.renderingsmgr.clearAll(['temporary','transientmap']);
 
@@ -293,7 +299,7 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 							if (feats[lyrk] === undefined) {
 								feats[lyrk] = [];
 							}
-							feats[lyrk].push({"feat": feat, "id": id });
+							feats[lyrk].push({ "id": id, "edited": false });
 						}
 					}	
 
@@ -382,15 +388,20 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 				}
 			}
 			if (usesel == null) {
+				/* if (feats != null && Object.keys(feats).length > 0) {
+					console.log(":: 392 ::", mode, JSON.stringify(feats.sv_prumo_edittest[0].feat.g));
+				} */
 				usesel = feats;
 			}
 
+
 			ret_dir_interact = false;
 			if (usesel != null && Object.keys(usesel).length > 0) {
+				// console.log(":: 400 ::", mode, JSON.stringify(usesel.sv_prumo_edittest[0].feat.g));
 				ret_dir_interact = opt_actonselfeat_dict[mode](p_mapctx, usesel, p_scrx, p_scry);
 			} 
 
-			// console.log("ret_dir_interact:", ret_dir_interact);
+			//console.log("ret_dir_interact 1:", ret_dir_interact);
 
 			if (!ret_dir_interact) {
 				if (p_is_end_event) {
@@ -401,7 +412,7 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 					if (opt_hoveronemptyspace) {
 
 						if (feats == null || Object.keys(feats).length < 1) {
-							ret_dir_interact =  opt_hoveronemptyspace(p_mapctx, 'INTERACTSPIDXLYR', p_scrx, p_scry);
+							opt_hoveronemptyspace(p_mapctx, 'INTERACTSPIDXLYR', p_scrx, p_scry);
 						}
 			
 					}
@@ -422,6 +433,8 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 	if (GlobalConst.getDebug("INTERACTIONCLICKEND") && p_is_end_event) {
 		console.log("[DBG:INTERACTIONCLICKEND] interactWithSpindexLayer:", ret_dir_interact);
 	}
+
+	// console.log("ret_dir_interact 3:", ret_dir_interact);
 
 	return ret_dir_interact;
 }

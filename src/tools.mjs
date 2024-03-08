@@ -541,21 +541,26 @@ class PointEditTool extends BaseTool {
 
 	hover(p_mapctx, p_feature_dict, p_scrx, p_scry){
 
-		let feat=null, ret = null;
+		let featdict=null, ret = null;
 
 		this.editfeat_engaged = false;
 
-		feat = this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict);
-		if (feat) {
-			ret = p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, feat.id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });		
+		featdict = this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict);
+
+		console.log("I  >>>", JSON.stringify(featdict));
+
+		if (featdict) {
+			ret = p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, featdict.id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });	
 		}
+
+		console.log("II >>>", JSON.stringify(featdict));
 
 		return ret;
 	}
 
 	pick(p_mapctx, p_feature_dict, p_scrx, p_scry) {
 
-		let layerklist, ret = null;
+		let layerklist, feat = null, ret = null;
 
 		// If NOT tabletFeatPreSelection is active, meaning tablet mode is NOT SIMPLE, lets act as expected in pick method
 		if (!p_mapctx.tabletFeatPreSelection.isActive) {
@@ -580,7 +585,8 @@ class PointEditTool extends BaseTool {
 
 		// TODO - usar p_scrx, p_scry para 'apanhar' o vértice da geometria amover, zero para o ponto
 
-		if (p_feature_dict[layerklist[0]][0].feat.gt == "point") {
+		feat = p_mapctx.featureCollection.get(layerklist[0], p_feature_dict[layerklist[0]][0].id);
+		if (feat.gt == "point") {
 			this.editmanager.setCurrentEditVertex(p_mapctx, 0, 0);
 		}
 
@@ -789,17 +795,18 @@ class PathEditTool extends BaseTool {
 		}
 
 		if (this.editmanager.currentEditFeatHolder != null) {
+			
 			layerklist = Object.keys(p_feature_dict);
 			ret = p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDITENGAGE", {'normal': 'temporary', 'label': 'temporary' });	
 			if (ret) {
 				this.editfeat_engaged = true;
 			}
-		}
 
-		// TODO - usar p_scrx, p_scry para 'apanhar' o vértice da geometria amover, zero para o ponto
+			// TODO - usar p_scrx, p_scry para 'apanhar' o vértice da geometria amover, zero para o ponto
 
-		if (p_feature_dict[layerklist[0]][0].feat.gt == "point") {
-			this.editmanager.setCurrentEditVertex(p_mapctx, 0, 0);
+			if (p_feature_dict[layerklist[0]][0].feat.gt == "point") {
+				this.editmanager.setCurrentEditVertex(p_mapctx, 0, 0);
+			}
 		}
 
 		return ret;
@@ -971,24 +978,31 @@ export class ToolManager {
 		this.maptools = [new MultiTool(p_mapctx)];
 		this.mapcontrolmgrs = [];
 		
-		if (p_mapctx_config_var["togglable_tools"] !== undefined) {
-			for (let i=0; i<p_mapctx_config_var["togglable_tools"].length; i++) {
-				switch (p_mapctx_config_var["togglable_tools"][i]) {
-					case "InfoTool":
-						this.addTool(new InfoTool(p_mapctx));
-						break;
-					case "MeasureTool":
-						this.addTool(new MeasureTool(p_mapctx));
-						break;
-					case "PointEditTool":
-						this.addTool(new PointEditTool(p_mapctx));
-						break;
-					case "PathEditTool":
-						this.addTool(new PathEditTool(p_mapctx));
-						break;						
-					}
+		const tool_keys = ["InfoTool", "PointEditTool", "PathEditTool"];
+		if (p_mapctx_config_var["togglable_tools"] !== undefined && p_mapctx_config_var["togglable_tools"].length > 0) {	
+			for (let tk of p_mapctx_config_var["togglable_tools"]) {
+				if (tool_keys.indexOf(tk) < 0) {
+					tool_keys.push(tk);
+				}
 			}
-		}	
+		}
+			
+		for (let tk of tool_keys) {
+			switch (tk) {
+				case "InfoTool":
+					this.addTool(new InfoTool(p_mapctx));
+					break;
+				case "MeasureTool":
+					this.addTool(new MeasureTool(p_mapctx));
+					break;
+				case "PointEditTool":
+					this.addTool(new PointEditTool(p_mapctx));
+					break;
+				case "PathEditTool":
+					this.addTool(new PathEditTool(p_mapctx));
+					break;						
+			}
+		}
 
 		const tnames = [];
 		for (let mt of this.maptools) {
@@ -1022,7 +1036,7 @@ export class ToolManager {
 			throw new Error("Class ToolManager, addTool, null tool instance passed");
 		}	
 
-		const existing_classnames = [], classname = p_toolinstance.constructor.name;
+		const existing_classnames = [];
 		if (!(p_toolinstance instanceof BaseTool)) {
 			throw new Error(`Class ToolManager, addTool, tool is not a BaseTool instance: ${p_toolinstance.name}`);
 		}	
@@ -1057,7 +1071,7 @@ export class ToolManager {
 			}
 		}	
 		if (foundtool == null) {
-			throw new Error(`Class ToolManager, no instance of '${p_classname}' was found. Must add it to 'togglable_tools' in basic config`);
+			throw new Error(`Class ToolManager, no instance of '${p_classname}' (tool) was found. Must add it to 'togglable_tools' in basic config`);
 		}
 		return foundtool;	
 	}

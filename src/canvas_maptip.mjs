@@ -352,12 +352,12 @@ export class MaptipBox extends PopupBox {
 
 			for (let feat, featrows, featid, featidx=0; featidx < this.feature_dict[lyrk].length; featidx++) {
 
-				feat = this.feature_dict[lyrk][featidx]['feat'];
 				if (featids[lyrk] === undefined) {
 					featids[lyrk] = [];
 				}
 
 				featid = this.feature_dict[lyrk][featidx]["id"];
+				feat = this.mapctx.featureCollection.get(lyrk, featid);
 
 				featids[lyrk].push(featid);
 				featrows = [];
