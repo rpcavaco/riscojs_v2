@@ -791,6 +791,8 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		if (GlobalConst.getDebug("DRAWASSELECTED")) {
 			console.log(`[DBG:DRAWASSELECTED] drawFeatureAsMouseSelected hstyles: ${JSON.stringify(hlStyles)}`);
+			const f = this.featureCollection.get(p_layer_key, p_obj_id);
+			console.log("  feature, layer:", p_layer_key, ", id:", p_obj_id, ", content:", JSON.stringify(f));
 		}
 
 		//drawSingleFeature(p_layer_key, p_obj_id, b_is_sel, opt_geomtype_keyed_symbdict, opt_alt_canvaskeys_dict) {
