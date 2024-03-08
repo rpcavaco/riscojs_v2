@@ -818,9 +818,6 @@ export class EditingMgr extends MapPrintInRect {
 		if (sfem && this.currentEditFeatHolder != null) {
 			if (FeatureCollection.checkIdIsTemp(this.currentEditFeatHolder.id)) {
 				p_mapctx.featureCollection.remove(this.editingLayerKey, this.currentEditFeatHolder.id);
-			} else {
-				// p_mapctx.maprefresh();
-				p_mapctx.featureCollection.revertEditions(this.editingLayerKey, this.currentEditFeatHolder.id);
 			}
 		}
 	}

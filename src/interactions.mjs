@@ -388,20 +388,14 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 				}
 			}
 			if (usesel == null) {
-				/* if (feats != null && Object.keys(feats).length > 0) {
-					console.log(":: 392 ::", mode, JSON.stringify(feats.sv_prumo_edittest[0].feat.g));
-				} */
 				usesel = feats;
 			}
 
 
 			ret_dir_interact = false;
 			if (usesel != null && Object.keys(usesel).length > 0) {
-				// console.log(":: 400 ::", mode, JSON.stringify(usesel.sv_prumo_edittest[0].feat.g));
 				ret_dir_interact = opt_actonselfeat_dict[mode](p_mapctx, usesel, p_scrx, p_scry);
 			} 
-
-			//console.log("ret_dir_interact 1:", ret_dir_interact);
 
 			if (!ret_dir_interact) {
 				if (p_is_end_event) {
@@ -421,7 +415,7 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 		} else if (opt_hoveronemptyspace!=null) {
 
 			if (feats == null || Object.keys(feats).length < 1) {
-				ret_dir_interact =  opt_hoveronemptyspace(p_mapctx, 'INTERACTSPIDXLYR', p_scrx, p_scry);
+				opt_hoveronemptyspace(p_mapctx, 'INTERACTSPIDXLYR', p_scrx, p_scry);
 			}
 
 		}
@@ -433,8 +427,6 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 	if (GlobalConst.getDebug("INTERACTIONCLICKEND") && p_is_end_event) {
 		console.log("[DBG:INTERACTIONCLICKEND] interactWithSpindexLayer:", ret_dir_interact);
 	}
-
-	// console.log("ret_dir_interact 3:", ret_dir_interact);
 
 	return ret_dir_interact;
 }
@@ -448,7 +440,6 @@ export class wheelEventCtrller {
 		this.imgscale = 1.0;
 	}
 	clear() {
-		//console.log(" ---- clear METHOD, id:", this.wheelevtTmoutID);
 		if (this.wheelevtTmoutID) {
 			clearTimeout(this.wheelevtTmoutID);
 			this.wheelevtTmoutID = null;
@@ -496,9 +487,9 @@ export class wheelEventCtrller {
 
 			this.imgscale = auxscale / scale;
 
-			// disparar alteração parcial
+			// fire partial change
 			this.immediateAfterWheelEvt(p_mapctx, p_mapimgs_dict, p_evt);
-			// agendar alteração definitiva
+			// schedule final change
 			this.timedAfterWheelEvt(p_mapctx, p_evt);
 		}
 

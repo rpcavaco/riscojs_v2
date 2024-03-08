@@ -389,6 +389,7 @@ export class FeatureCollection {
 	}
 
 	invalidate() {
+		this.#change_buffer.reset();
 		this.emptyAll();
 		this.clearIndexes();
 		//this.spIndex.invalidate();
@@ -411,7 +412,8 @@ export class FeatureCollection {
 				// temp feature was removed
 				return Promise.resolve(null);
 			} else {
-				return Promise.reject(new Error(`featuredraw, layer '${p_layerkey}', no feature found for id ${p_featid}`));
+				console.error(`featuredraw, layer '${p_layerkey}', no feature found for id ${p_featid}`);
+				return Promise.resolve(null);
 			}
 		}
 
@@ -420,8 +422,6 @@ export class FeatureCollection {
 		if (this.layers[p_layerkey]["refreshitem"] === undefined) {
 			throw new Error(`layer '${p_layerkey}' class is not implemeting a 'refreshitem' method (async method returning a Promise); maybe your class should extend 'canvasVectorMethodsMixin'`);
 		}
-
-		// console.log("+++ >", p_layerkey, JSON.stringify(feat.g), JSON.stringify(feat.a));
 
 		return new Promise((resolve, reject) => {
 
@@ -801,6 +801,7 @@ export class FeatureCollection {
 
 	}
 
+	// !! WARNING !! - when using this revert method, after it has been fired, do not forget to rebuild spatial index if have one
 	revertEditions(p_layerkey, p_id) {
 
 		const ustate = this.#change_buffer.getUnchangedState(p_layerkey, p_id);

@@ -547,13 +547,9 @@ class PointEditTool extends BaseTool {
 
 		featdict = this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict);
 
-		console.log("I  >>>", JSON.stringify(featdict));
-
 		if (featdict) {
 			ret = p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, featdict.id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });	
 		}
-
-		console.log("II >>>", JSON.stringify(featdict));
 
 		return ret;
 	}
