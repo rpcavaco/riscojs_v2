@@ -556,7 +556,12 @@ export class Info {
 
 			const keyvals = [];		
 			for (let kf of keyfields) {
-				keyvals.push(p_feature.a[kf].toString());
+
+				if (p_feature.a[kf] === undefined || p_feature.a[kf] === null) {
+					console.error(`mandatory feature key field '${kf}' is empty; feat: ${JSON.stringify(p_feature)}`);
+				} else {
+					keyvals.push(p_feature.a[kf].toString());
+				}
 			}
 
 			ret = false;

@@ -1170,6 +1170,8 @@ class BasemapCtrlBox extends MapPrintInRect {
 
 			this.printSelFilter(p_mapctx);
 		}
+
+		console.assert(p_mapctx.cfgvar["layers"]["basemaps"] !== undefined, "layers config JSON is missing the 'basemaps' group");
 		
 		if (p_mapctx.cfgvar["layers"]["basemaps"].length > 1) {
 			this.printSelBasemap(p_mapctx);
