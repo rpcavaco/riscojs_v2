@@ -847,7 +847,7 @@ export class EditingMgr extends MapPrintInRect {
 				this.removePreviousTempFeat(p_mapctx, true);
 
 				id = this.addTempPointFeat(p_mapctx, terr_pt);
-				this.setCurrentEditFeatHolder(p_mapctx, { "id": id, "edited": true }, true);
+				this.setCurrentEditFeatHolder(p_mapctx, { "id": id, "edited": true, "vrtxord": 0 }, true);
 
 				p_mapctx.featureCollection.redrawAllVectorLayers();
 

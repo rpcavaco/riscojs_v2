@@ -294,12 +294,13 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 
 					for (let id of findings[lyrk].ids) {
 						feat = p_mapctx.featureCollection.get(lyrk, id);
+						console.log(">>> feat:", feat);
 						// feat = await p_mapctx.drawFeatureAsMouseSelected(lyrk, id, "NORMAL", canvas_layers);
 						if (feat!=null && (opt_actonselfeat_ok || opt_hoveronemptyspace!=null)) {
 							if (feats[lyrk] === undefined) {
 								feats[lyrk] = [];
 							}
-							feats[lyrk].push({ "id": id, "edited": false });
+							feats[lyrk].push({ "id": id, "edited": false, "vrtxord": 0 });
 						}
 					}	
 

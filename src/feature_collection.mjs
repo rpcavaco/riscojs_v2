@@ -111,6 +111,8 @@ export class FeatureCollection {
 	utils_for_varstyles;
 	#change_buffer;
 
+	#max_path_level_cnt = 0;
+
 	constructor(p_mapctx) {
 
 		this.mapctx = p_mapctx;
@@ -132,7 +134,6 @@ export class FeatureCollection {
 	static checkIdIsTemp(p_id) {
 		return p_id.startsWith('_temp_');
 	}
-
 
 	setLayer(p_layerkey, p_layerobj, opt_exclude_from_redraw) {
 
@@ -159,6 +160,11 @@ export class FeatureCollection {
 	}
 
 	addfeature(p_layerkey, p_geom, p_attrs, p_geom_type, p_path_levels, opt_id, opt_id_fieldname) {
+
+		if (p_path_levels > this.#max_path_level_cnt) {
+			this.#max_path_level_cnt = p_path_levels;
+			console.warn("### >> max l cnt:", this.#max_path_level_cnt, "t:", p_geom_type);
+		}
 
 		function innerCycle(pp_this, pp_bbox, pp_root, pp_call_level, pp_path_level, pp_feat_id) {
 	
