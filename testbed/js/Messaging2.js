@@ -1,30 +1,4 @@
-function fadeout(element, heartbeat, p_callback_obj) {
-    let op = 1;  // initial opacity
-    let timer = setInterval(function () {
-        if (op <= 0.2){
-			op = 0;
-            clearInterval(timer);
-            element.style.display = 'none';
-            if (p_callback_obj != null && p_callback_obj['threshold'] === undefined) {
-				p_callback_obj.execfunc();
-			}
-        }
-		if (p_callback_obj != null && p_callback_obj['threshold'] !== undefined) {
-			if (op < p_callback_obj['threshold']) {
-				p_callback_obj.execfunc();
-			}
-		}
-        element.style.opacity = op;
-		if (op > 0) {
-        	op -= op * 0.1;
-		}
-    }, heartbeat);
-    return timer;
-}
 
-function getSelOption(p_wdg) {
-	return p_wdg.options[p_wdg.selectedIndex].value;
-}
 
 // Singleton
 let MessagesController2 = {
@@ -66,6 +40,34 @@ let MessagesController2 = {
 			ret = this.i18n.msg(p_input, p_capitalize);
 		}
 		return ret;
+	},
+
+	fadeout(element, heartbeat, p_callback_obj) {
+		let op = 1;  // initial opacity
+		let timer = setInterval(function () {
+			if (op <= 0.2){
+				op = 0;
+				clearInterval(timer);
+				element.style.display = 'none';
+				if (p_callback_obj != null && p_callback_obj['threshold'] === undefined) {
+					p_callback_obj.execfunc();
+				}
+			}
+			if (p_callback_obj != null && p_callback_obj['threshold'] !== undefined) {
+				if (op < p_callback_obj['threshold']) {
+					p_callback_obj.execfunc();
+				}
+			}
+			element.style.opacity = op;
+			if (op > 0) {
+				op -= op * 0.1;
+			}
+		}, heartbeat);
+		return timer;
+	},
+	
+	getSelOption(p_wdg) {
+		return p_wdg.options[p_wdg.selectedIndex].value;
 	},
 
 	check() {
@@ -389,7 +391,7 @@ let MessagesController2 = {
 						if (contentelem != null) { 
 							(function(p_this, p_selel, p_btn, pp_callback) {
 								p_btn.addEventListener('click', function(ev) {
-									const optval = getSelOption(p_selel);
+									const optval = this.getSelOption(p_selel);
 									p_this.hideMessage(true);						
 									pp_callback(ev, true, optval);
 								});
@@ -408,7 +410,7 @@ let MessagesController2 = {
 						// SELECTxxx
 						(function(p_this, p_contentelem, pp_callback) {
 							p_contentelem.addEventListener('change', function(ev) {
-								const optval = getSelOption(p_contentelem);
+								const optval = this.getSelOption(p_contentelem);
 								p_this.hideMessage(true);
 								pp_callback(ev, true, optval);
 							});
@@ -538,7 +540,7 @@ let MessagesController2 = {
 		this.isvisible = false;
 		if (do_fadeout) 
 		{
-			fadeout(msgsdiv);
+			this.fadeout(msgsdiv);
 		} 
 		else 
 		{
