@@ -391,7 +391,7 @@ let MessagesController2 = {
 						if (contentelem != null) { 
 							(function(p_this, p_selel, p_btn, pp_callback) {
 								p_btn.addEventListener('click', function(ev) {
-									const optval = this.getSelOption(p_selel);
+									const optval = p_this.getSelOption(p_selel);
 									p_this.hideMessage(true);						
 									pp_callback(ev, true, optval);
 								});
@@ -410,7 +410,7 @@ let MessagesController2 = {
 						// SELECTxxx
 						(function(p_this, p_contentelem, pp_callback) {
 							p_contentelem.addEventListener('change', function(ev) {
-								const optval = this.getSelOption(p_contentelem);
+								const optval = p_this.getSelOption(p_contentelem);
 								p_this.hideMessage(true);
 								pp_callback(ev, true, optval);
 							});
