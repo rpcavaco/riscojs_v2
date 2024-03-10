@@ -40,18 +40,17 @@ export class TOC  extends MapPrintInRect {
 		this.varstylePX = null;
 		this.#widgets_to_hide_on_collapse = new Set();
 
+		this.fontfamily = null;
+		this.normalszPX = null;
+
 		if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined) {
 
 			if (p_mapctx.cfgvar["basic"]["style_override"]["fontfamily"] !== undefined) {		
 				this.fontfamily = p_mapctx.cfgvar["basic"]["style_override"]["fontfamily"];
-			} else {
-				this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
 			}
 
 			if (p_mapctx.cfgvar["basic"]["style_override"]["normalsz_px"] !== undefined) {		
 				this.normalszPX = p_mapctx.cfgvar["basic"]["style_override"]["normalsz_px"];
-			} else {
-				this.normalszPX = GlobalConst.CONTROLS_STYLES.NORMALSZ_PX;
 			}
 
 			if (p_mapctx.cfgvar["basic"]["style_override"]["toc"] !== undefined) {
@@ -59,11 +58,17 @@ export class TOC  extends MapPrintInRect {
 					this.varstylePX = p_mapctx.cfgvar["basic"]["style_override"]["toc"]["varstylesz_px"];
 				}
 			}
-
-			if (this.varstylePX == null) {
-				this.varstylePX = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLESZ_PX;
-			}			
 		}
+
+		if (this.fontfamily == null) {
+			this.fontfamily = GlobalConst.CONTROLS_STYLES.FONTFAMILY;
+		}		
+		if (this.varstylePX == null) {
+			this.varstylePX = GlobalConst.CONTROLS_STYLES.TOC_VARSTYLESZ_PX;
+		}		
+		if (this.normalszPX == null) {
+			this.normalszPX = GlobalConst.CONTROLS_STYLES.NORMALSZ_PX;
+		}			
 
 		this.canvaslayer = 'service_canvas'; 
 
@@ -96,6 +101,7 @@ export class TOC  extends MapPrintInRect {
 		}
 
 		this.itemtypes_preventing_inflation = new Set();
+
 	}
 
 	addWidgetToHideOnCollapse(p_widget) {
@@ -151,6 +157,8 @@ export class TOC  extends MapPrintInRect {
 				}
 			}
 		}
+
+		console.assert(typeof this.normalszPX === 'number' && this.normalszPX >= 1, `invalid normalszPX: ${this.normalszPX}`);
 
 		for (const lyr of this.tocmgr.layers) {
 
@@ -213,6 +221,8 @@ export class TOC  extends MapPrintInRect {
 			}
 		}
 
+		console.assert(typeof this.margin_offset === 'number' && this.margin_offset >= 1, `invalid margin_offset: ${this.margin_offset}`);
+
 		// this.leftcol_width is merged when necessary, in max_lbl_w
 		this.boxw["OPEN"] = Math.max(this.boxw["OPEN"], max_lbl_w + 2 * this.margin_offset);
 
@@ -243,6 +253,12 @@ export class TOC  extends MapPrintInRect {
 				toc_sep = p_mapctx.cfgvar["basic"]["style_override"]["toc"]["separation_factor"];
 			} else {
 				toc_sep = GlobalConst.CONTROLS_STYLES.TOC_SEPARATION_FACTOR;
+			}
+
+			console.assert(typeof toc_sep=== 'number' && toc_sep>= 1, `invalid toc_sep: ${toc_sep}`);
+
+			if (!toc_sep) {
+				throw new Error("null or invalid 'toc_sep' value, chek style_override->toc->separation_factor in basic config");
 			}
 	
 			if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["toc"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["toc"]["varstyle_separation_factor"] !== undefined) {
@@ -295,8 +311,18 @@ export class TOC  extends MapPrintInRect {
 			} else {
 				ctx.fillStyle = this.fillStyleBack;
 			}
+
+			let cnt = 0;
+			for (let v of [this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]]) {
+				if (!v) {
+					const emsg = ["left", "top", "width", "height"];
+					throw new Error(`TOC widget printing, invalid or null value for '${emsg[cnt]}'`);
+				}
+				cnt++;
+			}
+
 			ctx.fillRect(this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]);
-			
+
 			ctx.strokeStyle = this.activeStyleFront;
 			ctx.lineWidth = this.strokeWidth;
 			ctx.strokeRect(this.left, this.top, this.boxw[this.collapsedstate], this.boxh[this.collapsedstate]);
@@ -475,10 +501,14 @@ export class TOC  extends MapPrintInRect {
 		// prevent drawing before configured fonts are available
 		while (!document.fonts.check("10px "+this.fontfamily) && this.print_attempts < 10) {
 			setTimeout(() => {
+				console.info(`[INFO] TOC printing after ${this.print_attempts} attempts:${this.print_attempts}, waiting for font ${"10px "+this.fontfamily} loading.`);
 				that.print(p_mapctx);
 			}, 200);
 			that.print_attempts++;
 			return;
+		}
+		if (this.print_attempts >= 10) {
+			throw new Error(`TOC printing failed, attempts:${this.print_attempts}. Font ${"10px "+this.fontfamily} hasn't been loaded.`);
 		}
 		this.print_attempts = 0;
 		return this._print(p_mapctx)
