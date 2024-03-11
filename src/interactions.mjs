@@ -173,10 +173,6 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 			}
 		}
 
-		// if (Object.keys(related_ids["SPATIALIDX_GRID"]).length > 0) {
-		// 	console.log("related_ids:", related_ids["SPATIALIDX_GRID"]["sv_prumo_edittest"]); 
-		// }
-
 		let tmpd, findings={}; //= Number.MAX_SAFE_INTEGER;
 		const eps = GlobalConst.MOUSEINTERACTION_NEARESTFEATURES_COINCIDENCE_TOLERANCE;
 		for (let from_lyrk in related_ids) {
@@ -294,7 +290,6 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 
 					for (let id of findings[lyrk].ids) {
 						feat = p_mapctx.featureCollection.get(lyrk, id);
-						console.log(">>> feat:", feat);
 						// feat = await p_mapctx.drawFeatureAsMouseSelected(lyrk, id, "NORMAL", canvas_layers);
 						if (feat!=null && (opt_actonselfeat_ok || opt_hoveronemptyspace!=null)) {
 							if (feats[lyrk] === undefined) {
@@ -420,6 +415,8 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 			}
 
 		}
+	} else {
+		console.warn("no spatial index layer found for map interactions");
 	}
 
 	if (GlobalConst.getDebug("INTERACTION")) {

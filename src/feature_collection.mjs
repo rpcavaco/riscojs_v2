@@ -251,8 +251,8 @@ export class FeatureCollection {
 					g: p_geom.slice(0),
 					a: {...p_attrs},
 					bb: bbox.slice(0)
-				};		
-				
+				};
+
 				for (const relentry of this.relationscfg) {
 					
 					let ptr, thisindex=null, ixlen, fldlist;
@@ -627,9 +627,7 @@ export class FeatureCollection {
 	relateall() {
 		
 		let relcfgvar, fr_lyk, to_lyk, bidir;
-
 		const t0 = new Date().getTime();
-			
 			
 		if (this.mapctx.cfgvar["layers"]["relations"] === undefined) {
 			console.info("[INFO] no feature layer relations configured.");
@@ -671,10 +669,6 @@ export class FeatureCollection {
 					for (let idfrom in this.featList[fr_lyk]) {
 
 						ff = this.featList[fr_lyk][idfrom];
-						if (ff["r"] !== undefined) {
-							delete ff["r"];
-						}
-
 						for (let idto in this.featList[to_lyk]) {
 	
 							tf = this.featList[to_lyk][idto];
