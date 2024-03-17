@@ -3,6 +3,166 @@ import {GlobalConst} from './constants.js';
 import {FeatureCollection} from './feature_collection.mjs';
 import {ctrToolTip, MapPrintInRect} from './customization_canvas_baseclasses.mjs';
 
+class featureHolder {
+
+	#isset;
+	#edited;
+	#id;
+	#gisid;
+	#curr_partidx;
+	#curr_vertxid;
+
+	constructor() {
+
+		this.#id = null;
+		this.#isset = false;
+		this.#edited = false;
+		this.#gisid = null;
+		this.#curr_partidx = null;
+		this.#curr_vertxid = null;
+	
+	}
+
+	reset() {
+
+		this.#id = null;
+		this.#isset = false;
+		this.#edited = false;
+		this.#gisid = null;
+
+	}	
+
+	get Id() {
+		return this.#id;
+	}
+
+	checkCurrentId(p_otherid) {
+		return (this.#id == p_otherid);
+	}	
+
+	/*set(p_id, opt_partidx, opt_vertidx) {
+
+		this.#id = p_id;
+		this.#isset = true;
+		this.#edited = false;
+		this.#gisid = null;
+
+		if (opt_partidx) {
+			this.#curr_partidx = opt_partidx;
+		}else {
+			this.#curr_partidx = null;
+		}
+
+		if (opt_vertidx) {
+			this.#curr_vertxid = opt_vertidx;
+		}else {
+			this.#curr_vertxid = 0;
+		}		
+	} */
+
+	setCurrentVertex(p_partidx, p_vertidx) {
+
+		console.assert(this.#id != null);
+
+		this.#curr_partidx = p_partidx;
+		this.#curr_vertxid = p_vertidx;	
+	}	
+
+	fhFromDict(p_dict, b_edited, b_has_parts) {
+
+		this.#id = p_dict.id;
+		this.#isset = true;
+		this.#edited = b_edited;
+
+		if (b_edited) {
+			if (b_has_parts) {
+				this.#curr_partidx = 0;
+			} else {
+				this.#curr_partidx = null;
+			}
+			this.#curr_vertxid = 0;
+		} else {
+			this.#curr_partidx = null;
+			this.#curr_vertxid = null;	
+		}
+
+		if (p_dict['gisid'] !== undefined) {
+			this.#gisid = p_dict['gisid'];
+		}else {
+			this.#gisid = null;
+		}		
+
+	}
+
+	toDict() {
+		return {
+			id: this.#id,
+			gisid: this.#gisid
+		}
+	}
+
+	get isSet() {
+		return this.#isset = true;
+	}
+
+	get getCurrentVertexIsSet() {
+		return this.#curr_vertxid !== null;
+	}
+
+	get GISId() {
+		return this.#gisid;
+	}
+
+	set GISId(p_value) {
+		return this.#gisid = p_value;
+	}	
+
+	get Edited() {
+		return this.#edited;
+	}
+
+	set Edited(b_flag) {
+		this.#edited = b_flag;
+	}	
+
+	get PartIdx() {
+		return this.#curr_partidx;
+	}
+
+	get VertexIdx() {
+		return this.#curr_vertxid;
+	}
+}
+
+class lockableFeatureHolder extends featureHolder {
+
+	#locked;
+
+	constructor() {
+		super();
+		this.#locked = false;
+	}
+
+	/*setFHolder(p_id, opt_partidx, opt_vertidx, b_do_lock) {
+		super.setFHolder(p_id, opt_partidx, opt_vertidx);
+		this.#locked = b_do_lock;
+	}*/
+
+	lfhFromDict(p_dict, b_edited, b_has_parts, b_do_lock) {
+		super.fhFromDict(p_dict, b_edited, b_has_parts);
+		this.#locked = b_do_lock;
+	}
+
+	get locked() {
+		return this.#locked;
+	}
+
+	reset() {
+		super.reset();
+		this.#locked = false;
+	}
+}
+
 export class EditingMgr extends MapPrintInRect {
 
 	#current_sessionid;
@@ -36,9 +196,6 @@ export class EditingMgr extends MapPrintInRect {
 	// active_mode;
 
 	#current_edit_feature_holder;
-	#current_edit_feature_holder_lock;
-	#current_edit_partidx;
-	#current_edit_vertexidx;
 	#edit_feature_holders;
 	#current_tool_name;
 	#pending_changes_to_save;
@@ -100,8 +257,8 @@ export class EditingMgr extends MapPrintInRect {
 		this.boxh = icondims[1] + 2 * this.margin_offset;
 		this.boxw = icondims[0] + 3 * this.margin_offset + this.featcounter_width;
 
-		this.#current_edit_feature_holder = null;
-		this.#current_edit_feature_holder_lock = false;
+		this.#current_edit_feature_holder = new lockableFeatureHolder();
+		// this.#current_edit_feature_holder_lock = false;
 
 		this.#hidden = false;
 
@@ -185,9 +342,9 @@ export class EditingMgr extends MapPrintInRect {
 
 				edited_featcount = 0;
 				for (const f of this.editFeatureHolderIter()) {
-					if (f.edited) {
+					//if (f.edited) {
 						edited_featcount++;
-					}
+					//}
 				}
 
 				//if (this.#edit_feature_holders.length > 0) {
@@ -311,28 +468,28 @@ export class EditingMgr extends MapPrintInRect {
 		return this.#current_edit_feature_holder;
 	}
 
-	setCurrentEditFeatHolder(p_mapctx, p_feat_holder, b_lock_holder) {
+	setCurrentEditFeatHolder(p_mapctx, p_feat_holder, b_lock_holder, b_has_parts) {
 
 		// console.trace("setCurrentEditFeatHolder:", p_feat_holder);
 
 		if (b_lock_holder) {
 
-			if (this.#current_edit_feature_holder_lock) {
-				throw new Error("Lock request over already locked current_edit_feature_holder");
-			}
-			this.#current_edit_feature_holder_lock = true;
+			if (this.currentEditFeatHolder.locked) {
+		 		throw new Error("Lock request over already locked current_edit_feature_holder");
+		 	}
+			//this.#current_edit_feature_holder_lock = true;
 
 		} else {
 
-			if (this.#current_edit_feature_holder_lock) {
-				console.log("current_edit_feature LOCKED, setCurrentEditFeatHolder ignored");
+			if (this.currentEditFeatHolder.locked) {
 				return;
 			}
 
 		}
-		
-		this.#current_edit_feature_holder = p_feat_holder;
 
+		// console.log("p_feat_holder:", p_feat_holder);
+		
+		this.currentEditFeatHolder.lfhFromDict(p_feat_holder, true, b_has_parts, b_lock_holder);
 		this.editControlsDisabling(p_mapctx, ["delete"], false);
 
 		//return this.#current_edit_feature_holder;
@@ -340,8 +497,8 @@ export class EditingMgr extends MapPrintInRect {
 
 
 	resetCurrentEditFeatureHolder() {
-		this.#current_edit_feature_holder = null;
-		this.#current_edit_feature_holder_lock = false;
+		console.assert(this.#current_edit_feature_holder != null, "current_edit_feature_holder is NULL");
+		this.#current_edit_feature_holder.reset();
 	}	
 
 	precheckCanEditStatus() {
@@ -408,7 +565,9 @@ export class EditingMgr extends MapPrintInRect {
 	}
 
 	* editFeatureHolderIter() {
-		yield* this.#edit_feature_holders
+		for (const fh of this.#edit_feature_holders) {
+			yield fh;
+		}
 	}
 
 	addEditFeatureHolder(p_editf_holder) {
@@ -424,7 +583,7 @@ export class EditingMgr extends MapPrintInRect {
 		this.#edit_feature_holders.length = 0;
 	}
 
-	set editFeatureHolder(p_list) {
+	set initialEditFeatureHolder(p_list) {
 		// console.trace("SET EditFeatureHolder LIST:", p_list);
 		this.#edit_feature_holders = [...p_list];
 	}
@@ -562,7 +721,7 @@ export class EditingMgr extends MapPrintInRect {
 						break;
 
 					case "line":
-						this.#current_tool_name = 'PathEditTool';
+						this.#current_tool_name = 'SimplePathEditTool';
 						break;
 
 					default:
@@ -685,7 +844,7 @@ export class EditingMgr extends MapPrintInRect {
 		return this.#editing_is_enabled;
 	}
 	
-	setCurrentEditFeature(p_mapctx, p_feat_dict) {
+	setCurrentEditFeature(p_mapctx, p_feat_dict, b_has_parts) {
 
 		const fd_keys = Object.keys(p_feat_dict);
 		let ret = null;
@@ -709,47 +868,50 @@ export class EditingMgr extends MapPrintInRect {
 
 			this.removePreviousTempFeat(p_mapctx, true);
 
-			this.setCurrentEditFeatHolder(p_mapctx, p_feat_dict[this.editingLayerKey][0], false);
-			this.currentEditFeatHolder["edited"] = false;
+			// console.log(".....", p_feat_dict[this.editingLayerKey][0]);
+
+			this.setCurrentEditFeatHolder(p_mapctx, p_feat_dict[this.editingLayerKey][0], false, b_has_parts);
+			this.currentEditFeatHolder.Edited = false;
 			if (this.#single_feat_editing) {
-				this.editFeatureHolder = [this.currentEditFeatHolder];
+				this.initialEditFeatureHolder = [this.currentEditFeatHolder.toDict()];
 			} else {
-				this.addEditFeatureHolder(this.currentEditFeatHolder);
+				this.addEditFeatureHolder(this.currentEditFeatHolder.toDict());
 			}
 
-			ret = this.currentEditFeatHolder;
+			ret = this.currentEditFeatHolder.toDict();
 		}
+
+		// console.log("::: 889 :::", ret);
 
 		return ret;
 
 	}
 
-	setCurrentEditVertex(p_mapctx, p_geompartidx, p_vertorderidx) {
+	setCurrentEditVertex(p_vertorderidx, b_is_edited, opt_geompartidx) {
 
-		if (this.currentEditFeatHolder == null) {
+		// console.trace("setCurrentEditVertex:", p_vertorderidx, b_is_edited, opt_geompartidx);
+
+		if (!this.currentEditFeatHolder.isSet) {
 			throw new Error("setCurrentEditVertex, no current editing feature");
 		}
 
-		this.#current_edit_partidx = p_geompartidx;
-		this.#current_edit_vertexidx = p_vertorderidx;
-			
+		this.currentEditFeatHolder.setCurrentVertex(opt_geompartidx, p_vertorderidx);		
+		this.currentEditFeatHolder.Edited = b_is_edited;
 	}
 
 	editCurrentVertex(p_mapctx, p_scrx, p_scry) {
 
-		if (this.currentEditFeatHolder == null) {
+		if (!this.currentEditFeatHolder.isSet) {
 			throw new Error("editCurrentVertex, no current editing feature");
 		}
-		if (this.#current_edit_partidx == null) {
-			throw new Error("editCurrentVertex, no current editing feature part index");
+		if (!this.currentEditFeatHolder.getCurrentVertexIsSet) {
+			throw new Error("editCurrentVertex, no current editing vertex set");
 		}
-		if (this.#current_edit_vertexidx == null) {
-			throw new Error("editCurrentVertex, no current editing vertex index");
-		}	
-	
-		const feat = p_mapctx.featureCollection.get(this.editingLayerKey, this.currentEditFeatHolder.id);
+		const feat = p_mapctx.featureCollection.get(this.editingLayerKey, this.currentEditFeatHolder.Id);
 
 		if (feat) {
+			
+			/*
 			if (feat.gt == "point") { // }.g.length == 2 && typeof feat.g[0] === 'number') {
 				// point
 	
@@ -764,39 +926,37 @@ export class EditingMgr extends MapPrintInRect {
 				}	
 	
 			}
+			*/
 
 			const terr_pt = [];
 			p_mapctx.transformmgr.getTerrainPt([p_scrx, p_scry], terr_pt);
-			p_mapctx.featureCollection.setVertex(this.editingLayerKey, this.currentEditFeatHolder.id, feat, terr_pt, this.#current_edit_vertexidx);
+			p_mapctx.featureCollection.setVertex(this.editingLayerKey, feat, terr_pt, this.currentEditFeatHolder.VertexIdx, this.currentEditFeatHolder.PartIdx);
 	
-			this.currentEditFeatHolder.edited = true;
+			this.currentEditFeatHolder.Edited = true;
 	
 			this.print(p_mapctx);
 	
 			this.pendingChangesToSave = "GEO";
 				
 		} else {
-			console.error(`editCurrentVertex, feature not found for layer '${this.editingLayerKey}', id:${this.currentEditFeatHolder.id}`);
+			console.error(`editCurrentVertex, feature not found for layer '${this.editingLayerKey}', id:${this.currentEditFeatHolder.Id}`);
 		}
 		
-
-			
-				
 	}
 
 	deleteCurrentEditFeat(p_mapctx) {
 
-		if (this.currentEditFeatHolder == null) {
-			throw new Error("deleteCurrentEditFeat, no current editing feature");
+		if (!this.currentEditFeatHolder.IsSet) {
+			throw new Error("deleteCurrentEditFeat, no current editing feature set");
 		}
 
-		const feat = p_mapctx.featureCollection.get(this.editingLayerKey, this.currentEditFeatHolder.id);
+		const feat = p_mapctx.featureCollection.get(this.editingLayerKey, this.currentEditFeatHolder.Id);
 		const gisid = feat.a[this.#layeredit_cfg_attribs["gisid_field"]];
 
-		p_mapctx.featureCollection.remove(this.editingLayerKey, this.currentEditFeatHolder.id);
+		this.currentEditFeatHolder.GISId = gisid;
 
-		this.currentEditFeatHolder.edited = true;
-		this.currentEditFeatHolder.gisid = gisid;
+		p_mapctx.featureCollection.remove(this.editingLayerKey, this.currentEditFeatHolder.Id);
+		this.currentEditFeatHolder.Edited = true;
 
 		p_mapctx.featureCollection.redrawAllVectorLayers();
 		this.print(p_mapctx);
@@ -815,15 +975,15 @@ export class EditingMgr extends MapPrintInRect {
 			}
 		}
 
-		if (sfem && this.currentEditFeatHolder != null) {
-			if (FeatureCollection.checkIdIsTemp(this.currentEditFeatHolder.id)) {
-				p_mapctx.featureCollection.remove(this.editingLayerKey, this.currentEditFeatHolder.id);
+		if (sfem && this.currentEditFeatHolder.IsSet) {
+			if (FeatureCollection.checkIdIsTemp(this.currentEditFeatHolder.Id)) {
+				p_mapctx.featureCollection.remove(this.editingLayerKey, this.currentEditFeatHolder.Id);
 			}
 		}
 	}
 
 	// returns feat id
-	addTempPointFeat(p_mapctx, p_terr_pt) {
+	addTempPointEditFeat(p_mapctx, p_terr_pt) {
 		return p_mapctx.featureCollection.addTempFeature(this.editingLayerKey, [[...p_terr_pt]], {}, "point", 1)
 	}	
 
@@ -846,19 +1006,23 @@ export class EditingMgr extends MapPrintInRect {
 
 				this.removePreviousTempFeat(p_mapctx, true);
 
-				id = this.addTempPointFeat(p_mapctx, terr_pt);
-				this.setCurrentEditFeatHolder(p_mapctx, { "id": id, "edited": true, "vrtxord": 0 }, true);
+				id = this.addTempPointEditFeat(p_mapctx, terr_pt);
+				this.setCurrentEditFeatHolder(p_mapctx, { "id": id }, true);
 
 				p_mapctx.featureCollection.redrawAllVectorLayers();
+
+				break;
+
+			case "line":
 
 				break;
 
 		}
 
 		if (this.#single_feat_editing) {
-			this.editFeatureHolder = [this.currentEditFeatHolder];
+			this.initialEditFeatureHolder = [JSON.parse(JSON.stringify(this.currentEditFeatHolder.toDict()))];
 		} else {
-			this.addEditFeatureHolder(this.currentEditFeatHolder);
+			this.addEditFeatureHolder(this.currentEditFeatHolder.toDict());
 		}
 
 		this.print(p_mapctx);
@@ -868,14 +1032,13 @@ export class EditingMgr extends MapPrintInRect {
 	}
 
 	paintCurrentEditFeature(p_mapctx) {
-		const id = this.currentEditFeatHolder["id"];
-		p_mapctx.featureCollection.featuredraw(this.editingLayerKey, id);
+		p_mapctx.featureCollection.featuredraw(this.editingLayerKey, this.currentEditFeatHolder.Id);
 	}
 
 	serialize2JSON(p_mapctx) {
 
-		if (this.currentEditFeatHolder == null) {
-			throw new Error("serialize2GeoJSONLike, no current_edit_feature defined");
+		if (!this.currentEditFeatHolder.isSet) {
+			throw new Error("serialize2GeoJSONLike, current_edit_feature is not set");
 		}
 
 		let ret = [], ats = [];
@@ -889,6 +1052,7 @@ export class EditingMgr extends MapPrintInRect {
 			}
 
 			let currfeat, cef_feat;
+
 			for (const cef of this.editFeatureHolderIter()) {
 
 				cef_feat = p_mapctx.featureCollection.get(this.editingLayerKey, cef.id);
@@ -932,13 +1096,17 @@ export class EditingMgr extends MapPrintInRect {
 						}
 
 						// in case of deletion, gisid must be spared prior to deletion
-						currfeat["gisid"] = cef_feat.a[this.#layeredit_cfg_attribs["gisid_field"]];
+						if (currfeat["gisid"] === undefined) {
+							currfeat["gisid"] = cef_feat.a[this.#layeredit_cfg_attribs["gisid_field"]];
+						} else {
+							if (currfeat["gisid"] != cef_feat.a[this.#layeredit_cfg_attribs["gisid_field"]]) {
+								throw new Error(`different GISID values while saving feature, current GISID: ${currfeat["gisid"]}, save feature:${cef_feat}`);
+							}
+						}
 					}
-
 				}
 
 				ret.push(currfeat)
-
 			}
 		}
 
@@ -947,8 +1115,8 @@ export class EditingMgr extends MapPrintInRect {
 
 	genSavePayload(p_mapctx) {
 
-		if (this.currentEditFeatHolder == null) {
-			throw new Error("genSavePayload, no current_edit_feature defined");
+		if (!this.currentEditFeatHolder.isSet) {
+			throw new Error("genSavePayload, no current_edit_feature is set");
 		}
 
 		return {
@@ -978,6 +1146,7 @@ export class EditingMgr extends MapPrintInRect {
 
 		if (this.pendingChangesToSave == "none") {
 
+			// Nothing to save
 			this.setEditingEnabled(p_mapctx, false);
 			this.print(p_mapctx);
 	
@@ -1014,7 +1183,11 @@ export class EditingMgr extends MapPrintInRect {
 								msgsctrlr.warn(p_mapctx.i18n.msg('EDITSAVEERROR',true));
 								that.finishUpEditing(p_mapctx);
 							} else if (responsejson['state'] == 'OK') {
-								console.log(responsejson);
+
+								if (GlobalConst.getDebug("SAVERESULT")) {
+									console.log(`[DBG:SAVERESULT] after save, response:${JSON.stringify(responsejson)}`);
+								}
+
 								that.execAfterSave(p_mapctx, responsejson, function() {
 									that.finishUpEditing(p_mapctx);
 								});
@@ -1043,21 +1216,37 @@ export class EditingMgr extends MapPrintInRect {
 
 	execAfterSave(p_mapctx, p_responsejson, p_callback_func) {
 
-		console.assert(this.editingLayerKey != null, "editingLayerKey not defined at 'execAfterSave'");
+		if (p_responsejson["state"] !== undefined && p_responsejson["state"] == "OK") {
 
-		const lyr = p_mapctx.tocmgr.getLayer(this.editingLayerKey);
+			if (p_responsejson["results"] !== undefined && p_responsejson["results"].length > 0) {
+				for (let rec of p_responsejson["results"]) {
+					if (rec["gisid"] === undefined || rec["gisid"] === null || rec["gisid"].length == 0) {
+						p_mapctx.getCustomizationObject().messaging_ctrlr.warn(p_mapctx.i18n.msg('EDITLYRHASNOGISID', true));
+					}
+				}
+			}
 
-		if (Object.keys(lyr.editcfg) < 1) {
-			console.warn(`[WARN] edit layer '${this.editingLayerKey}' has no 'editcfg' defined in layer configs`);
-		}
+			console.assert(this.editingLayerKey != null, "editingLayerKey not defined at 'execAfterSave' function");
 
-		if (lyr.editcfg["aftersave_func"] !== undefined) {
-			const ic = p_mapctx.getCustomizationObject().interoperability_ctrlr;
-			lyr.editcfg.aftersave_func(p_mapctx, this, lyr, ic, p_responsejson, p_callback_func);
+			const lyr = p_mapctx.tocmgr.getLayer(this.editingLayerKey);
+	
+			if (Object.keys(lyr.editcfg) < 1) {
+				console.warn(`[WARN] edit layer '${this.editingLayerKey}' has no 'editcfg' defined in layer configs`);
+			}
+	
+			if (lyr.editcfg["aftersave_func"] !== undefined) {
+				const ic = p_mapctx.getCustomizationObject().interoperability_ctrlr;
+				lyr.editcfg.aftersave_func(p_mapctx, this, lyr, ic, p_responsejson, p_callback_func);
+			} else {
+				console.warn(`[WARN] edit layer '${this.editingLayerKey}' has no 'editcfg.aftersave_func' defined in layer configs`);
+				p_callback_func();
+			}
+	
 		} else {
-			console.warn(`[WARN] edit layer '${this.editingLayerKey}' has no 'editcfg.aftersave_func' defined in layer configs`);
-			p_callback_func();
+
+			console.error(`execAfterSave, save result in error: ${p_responsejson}`);
 		}
+
 	}
 
 }

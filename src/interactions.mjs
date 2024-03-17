@@ -288,6 +288,8 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 
 					// console.log(">> found k:", lyrk, "ids:", findings[lyrk].ids, "dist:", findings[lyrk].dist);
 
+					// console.error(findings[lyrk]);
+
 					for (let id of findings[lyrk].ids) {
 						feat = p_mapctx.featureCollection.get(lyrk, id);
 						// feat = await p_mapctx.drawFeatureAsMouseSelected(lyrk, id, "NORMAL", canvas_layers);
@@ -295,7 +297,16 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 							if (feats[lyrk] === undefined) {
 								feats[lyrk] = [];
 							}
-							feats[lyrk].push({ "id": id, "edited": false, "vrtxord": 0 });
+							switch (feat.gt) {
+
+								case "point":
+									feats[lyrk].push({ "id": id, "partidx": null, "vrtxidx": 0 });
+									break;
+
+								default:
+									throw new Error(`interactWithSpindexLayer, feat.type ${feat.gt} is not yet supported`);
+
+							}
 						}
 					}	
 
@@ -390,6 +401,9 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 
 			ret_dir_interact = false;
 			if (usesel != null && Object.keys(usesel).length > 0) {
+
+				// console.log("use sel", usesel);
+
 				ret_dir_interact = opt_actonselfeat_dict[mode](p_mapctx, usesel, p_scrx, p_scry);
 			} 
 

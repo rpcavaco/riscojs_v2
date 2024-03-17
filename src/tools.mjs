@@ -477,7 +477,7 @@ class PointEditTool extends BaseTool {
 
 		// If tabletFeatPreSelection is set, meaning tablet mode SIMPLE is enabled and there is a presel feature
 		if (p_mapctx.tabletFeatPreSelection.isSet) {
-			const feat = this.editmanager.setCurrentEditFeature(p_mapctx, p_mapctx.tabletFeatPreSelection.get());
+			const feat = this.editmanager.setCurrentEditFeature(p_mapctx, p_mapctx.tabletFeatPreSelection.get(), false);
 			if (feat) {
 				await p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, feat.id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });		
 			}
@@ -543,12 +543,15 @@ class PointEditTool extends BaseTool {
 
 		let featdict=null, ret = null;
 
+		// console.log(">> PointEditTool hover: p_feature_dict", p_feature_dict);
+
 		this.editfeat_engaged = false;
 
-		featdict = this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict);
-
+		featdict = this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict, false);
 		if (featdict) {
 			ret = p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, featdict.id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });	
+		} else {
+			console.warn(`editmanager.setCurrentEditFeature failed for feat.dict.: ${p_feature_dict}`);
 		}
 
 		return ret;
@@ -556,18 +559,22 @@ class PointEditTool extends BaseTool {
 
 	pick(p_mapctx, p_feature_dict, p_scrx, p_scry) {
 
-		let layerklist, feat = null, ret = null;
+		let layerklist, ret = null;
+		let feat_holder = null;
+
+		// console.warn(">>>>", p_feature_dict);
 
 		// If NOT tabletFeatPreSelection is active, meaning tablet mode is NOT SIMPLE, lets act as expected in pick method
 		if (!p_mapctx.tabletFeatPreSelection.isActive) {
-			this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict);
+			this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict, false);
 		}
 
-		if (this.editmanager.currentEditFeatHolder != null) {
+		if (this.editmanager.currentEditFeatHolder.isSet) {
 			layerklist = Object.keys(p_feature_dict);
+			feat_holder = p_feature_dict[layerklist[0]][0];
 			ret = p_mapctx.drawFeatureAsMouseSelected(
 					layerklist[0], 
-					p_feature_dict[layerklist[0]][0].id, 
+					feat_holder.id, 
 					"EDITENGAGE", 
 					{
 						'normal': 'temporary', 
@@ -579,12 +586,17 @@ class PointEditTool extends BaseTool {
 			}
 		}
 
-		// TODO - usar p_scrx, p_scry para 'apanhar' o vértice da geometria amover, zero para o ponto
-
-		feat = p_mapctx.featureCollection.get(layerklist[0], p_feature_dict[layerklist[0]][0].id);
-		if (feat.gt == "point") {
-			this.editmanager.setCurrentEditVertex(p_mapctx, 0, 0);
+		if (feat_holder == null) {
+			throw new Error('pick, feature holder is undefined.');
 		}
+
+		this.editmanager.setCurrentEditVertex(feat_holder.vrtxidx, false, feat_holder.partidx);
+
+					// TODO - usar p_scrx, p_scry para 'apanhar' o vértice da geometria amover, zero para o ponto
+
+		/*if (feat.gt == "point") {
+			this.editmanager.setCurrentEditVertex(p_mapctx, 0, 0);
+		} */
 
 		return ret;
 
@@ -676,7 +688,7 @@ class PointEditTool extends BaseTool {
 	}	
 }
 
-class PathEditTool extends BaseTool {
+class SimplePathEditTool extends BaseTool {
 
 	canvaslayers = ['temporary', 'transientmap'];
 	toc_collapsed;
@@ -699,22 +711,22 @@ class PathEditTool extends BaseTool {
 
 	setEditingManager(p_edit_manager) {
 		if (p_edit_manager) {
-			console.info("[init RISCO] PathEditTool, edit manager is set");
+			console.info("[init RISCO] SimplePathEditTool, edit manager is set");
 			this.editmanager = p_edit_manager;
 		} else {
-			throw new Error("PathEditTool, setEditingManager: no edit manager passed");
+			throw new Error("SimplePathEditTool, setEditingManager: no edit manager passed");
 		}
 	}
 
 	async init(p_mapctx) {
 
 		if (this.editmanager == null) {
-			throw new Error("PathEditTool, mandatory previous use of 'setEditingManager' has not happened");
+			throw new Error("SimplePathEditTool, mandatory previous use of 'setEditingManager' has not happened");
 		}
 
 		// If tabletFeatPreSelection is set, meaning tablet mode SIMPLE is enabled and there is a presel feature
 		if (p_mapctx.tabletFeatPreSelection.isSet) {
-			const feat = this.editmanager.setCurrentEditFeature(p_mapctx, p_mapctx.tabletFeatPreSelection.get());
+			const feat = this.editmanager.setCurrentEditFeature(p_mapctx, p_mapctx.tabletFeatPreSelection.get(), false);
 			if (feat) {
 				await p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, feat.id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });		
 			}
@@ -772,8 +784,7 @@ class PathEditTool extends BaseTool {
 		let feat=null, ret = null;
 
 		this.editfeat_engaged = false;
-
-		feat = this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict);
+		feat = this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict, false);
 		if (feat) {
 			ret = p_mapctx.drawFeatureAsMouseSelected(this.editmanager.editingLayerKey, feat.id, "EDITSEL", {'normal': 'temporary', 'label': 'temporary' });		
 		}
@@ -787,10 +798,10 @@ class PathEditTool extends BaseTool {
 
 		// If NOT tabletFeatPreSelection is active, meaning tablet mode is NOT SIMPLE, lets act as expected in pick method
 		if (!p_mapctx.tabletFeatPreSelection.isActive) {
-			this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict);
+			this.editmanager.setCurrentEditFeature(p_mapctx, p_feature_dict, false);
 		}
 
-		if (this.editmanager.currentEditFeatHolder != null) {
+		if (this.editmanager.currentEditFeatHolder.isSet) {
 			
 			layerklist = Object.keys(p_feature_dict);
 			ret = p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "EDITENGAGE", {'normal': 'temporary', 'label': 'temporary' });	
@@ -801,7 +812,7 @@ class PathEditTool extends BaseTool {
 			// TODO - usar p_scrx, p_scry para 'apanhar' o vértice da geometria amover, zero para o ponto
 
 			if (p_feature_dict[layerklist[0]][0].feat.gt == "point") {
-				this.editmanager.setCurrentEditVertex(p_mapctx, 0, 0);
+				this.editmanager.setCurrentEditVertex(0, false, 0);
 			}
 		}
 
@@ -888,7 +899,7 @@ class PathEditTool extends BaseTool {
 
 	cleanUp(p_mapctx) {
 
-		console.info("[INFO] PathEditTool cleanup");
+		console.info("[INFO] SimplePathEditTool cleanup");
 
 		this.editfeat_engaged = false;
 		this.editmanager.resetCurrentEditFeatureHolder();
@@ -974,7 +985,7 @@ export class ToolManager {
 		this.maptools = [new MultiTool(p_mapctx)];
 		this.mapcontrolmgrs = [];
 		
-		const tool_keys = ["InfoTool", "PointEditTool", "PathEditTool"];
+		const tool_keys = ["InfoTool", "PointEditTool", "SimplePathEditTool"];
 		if (p_mapctx_config_var["togglable_tools"] !== undefined && p_mapctx_config_var["togglable_tools"].length > 0) {	
 			for (let tk of p_mapctx_config_var["togglable_tools"]) {
 				if (tool_keys.indexOf(tk) < 0) {
@@ -994,8 +1005,8 @@ export class ToolManager {
 				case "PointEditTool":
 					this.addTool(new PointEditTool(p_mapctx));
 					break;
-				case "PathEditTool":
-					this.addTool(new PathEditTool(p_mapctx));
+				case "SimplePathEditTool":
+					this.addTool(new SimplePathEditTool(p_mapctx));
 					break;						
 			}
 		}

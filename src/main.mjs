@@ -579,6 +579,10 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		const ly = this.tocmgr.getLayer(p_layer_key);
 
+		if (!p_obj_id) {
+			throw new Error(`drawSingleFeature, null obj_id`);
+		}
+
 		if (ly != null && ly.layervisible) {
 
 			if (opt_geomtype_keyed_symbdict!=null && opt_geomtype_keyed_symbdict[ly.geomtype] === undefined) {
@@ -736,6 +740,10 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		let hlStyles, basestyle, layercfgkey;
 
+		if (!p_obj_id) {
+			throw new Error(`drawFeatureAsMouseSelected, null obj_id`);
+		}		
+
 		if (GlobalConst.getDebug("DRAWASSELECTED")) {
 			console.trace(`[DBG:DRAWASSELECTED]`);
 		}
@@ -796,6 +804,8 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		}
 
 		//drawSingleFeature(p_layer_key, p_obj_id, b_is_sel, opt_geomtype_keyed_symbdict, opt_alt_canvaskeys_dict) {
+
+		// p_layer_key, p_obj_id, b_is_sel, opt_geomtype_keyed_symbdict, opt_alt_canvaskeys_dict
 
 		return this.drawSingleFeature(p_layer_key, p_obj_id, true, hlStyles, opt_alt_canvaskeys_dict);
 	}

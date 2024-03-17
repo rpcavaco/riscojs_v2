@@ -488,7 +488,6 @@ export class Info {
 		if (mode == "INFOFUNC") {
 
 			const ic = p_mapctx.getCustomizationObject().interoperability_ctrlr;
-
 			ret = currlayer["infocfg"]["function"](ic, currlayer, p_feature);
 
 		} 

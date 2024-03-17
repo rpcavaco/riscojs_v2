@@ -407,7 +407,7 @@ export class FeatureCollection {
 		let feat = this.featList[p_layerkey][p_featid];
 
 		if (feat == null) {
-			if (p_featid.startsWith("_temp_")) {
+			if (FeatureCollection.checkIdIsTemp(p_featid)) {
 				// temp feature was removed
 				return Promise.resolve(null);
 			} else {
@@ -765,7 +765,17 @@ export class FeatureCollection {
 
 	}
 
-	setVertex(p_layerkey, p_id, p_feat_reference, p_new_point, opt_vertex_index) {
+	/* 
+	* Part and vertex indexes:
+	*	- part index is null for
+			- points
+			- simple lines
+			- simple poligons
+		- part is not null for 'complex' line or polygons, having parts
+
+		!! WARNING !! - Multipoint is not being considered (at least not for now)
+	* */
+	setVertex(p_layerkey, p_feat_reference, p_new_point, p_vertex_index, opt_vertex_partidx) {
 
 		if (p_feat_reference == null) {
 			throw new Error("null feature reference on setVertex");
@@ -779,9 +789,9 @@ export class FeatureCollection {
 			throw new Error(`setVertex: feature geometry empty or not defined`);
 		}		
 
-		this.#change_buffer.addState(p_layerkey, p_id, p_feat_reference);
+		this.#change_buffer.addState(p_layerkey, p_feat_reference.id, p_feat_reference);
 
-		switch(p_feat_reference.gt) {
+		/*switch(p_feat_reference.gt) {
 
 			case "point":
 				p_feat_reference.g[0] = [...p_new_point];
@@ -789,6 +799,27 @@ export class FeatureCollection {
 
 			default:
 				throw new Error(`setVertex: geometry type '${p_feat_reference.gt}' not supported`);
+		}*/
+
+		if (!opt_vertex_partidx) {
+
+			p_feat_reference.g[p_vertex_index] = [...p_new_point];
+
+		} else {
+
+			if (p_feat_reference.gt != "point") {
+				throw new Error(`setVertex, multipoint features not (yet) supported - passed vertex_partidx was not null: ${opt_vertex_partidx}`);
+			}
+
+			if (opt_vertex_partidx == p_feat_reference.g.length) {
+				// add new part
+				p_feat_reference.g.push([[...p_new_point]]);
+			} else if (opt_vertex_partidx < p_feat_reference.g.length) {
+				p_feat_reference.g[opt_vertex_partidx].push([...p_new_point]);
+			} else {
+				throw new Error(`setVertex, recieved invalid part index value: ${opt_vertex_partidx}, existing part count for this feature: ${p_feat_reference.g.length}`);
+			}
+
 		}
 
 
