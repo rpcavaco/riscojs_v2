@@ -157,56 +157,73 @@ export class FeatureCollection {
 		} */
 	}
 
-	addfeature(p_layerkey, p_geom, p_attrs, p_geom_type, p_path_levels, opt_id, opt_id_fieldname) {
-
-		function innerCycle(pp_this, pp_bbox, pp_root, pp_call_level, pp_path_level, pp_feat_id) {
+	boundBoxCycle(p_bbox, p_root, p_call_level, p_path_level, p_layer_key, p_feat_id) {
 	
-			let ptini=null, ret = false;
+		let ptini=null, ret = false;
 
-			for (let pti=0; pti<pp_root.length; pti++) {
+		for (let pti=0; pti<p_root.length; pti++) {
 
-				if (typeof pp_root[pti][0] != 'number' && ptini == null) {
+			if (typeof p_root[pti][0] != 'number' && ptini == null) {
 
-					ret = innerCycle(pp_this, pp_bbox, pp_root[pti], pp_call_level+1, pp_path_level-1, pp_feat_id);
+				ret = this.boundBoxCycle(p_bbox, p_root[pti], p_call_level+1, p_path_level-1, p_feat_id);
 
-				} else {
+			} else {
 
-					if (ptini==null) {
+				if (ptini==null) {
 
-						if (pp_path_level != 1) {
-							console.error(`[WARN] non-zero bottom path level on layer '${pp_this.key}', feat.id:${pp_feat_id}`);
-						}
-
-						ptini = pp_root[pti].slice(0);
-
+					if (p_path_level != 1) {
+						console.error(`[WARN] non-zero bottom path level on layer '${p_layer_key}', feat.id:${p_feat_id}`);
 					}
 
-					for (let p in p_geom) {
-						if (pp_root[pti][0] < pp_bbox[0]) {
-							pp_bbox[0] = pp_root[pti][0];
-						}
-						if (pp_root[pti][0] > pp_bbox[2]) {
-							pp_bbox[2] = pp_root[pti][0];
-						}
-						if (pp_root[pti][1] < pp_bbox[1]) {
-							pp_bbox[1] = pp_root[pti][1];
-						}
-						if (pp_root[pti][1] > pp_bbox[3]) {
-							pp_bbox[3] = pp_root[pti][1];
-						}
-					}
+					ptini = p_root[pti].slice(0);
 
 				}
+
+				if (p_root[pti][0] < p_bbox[0]) {
+					p_bbox[0] = p_root[pti][0];
+				}
+				if (p_root[pti][0] > p_bbox[2]) {
+					p_bbox[2] = p_root[pti][0];
+				}
+				if (p_root[pti][1] < p_bbox[1]) {
+					p_bbox[1] = p_root[pti][1];
+				}
+				if (p_root[pti][1] > p_bbox[3]) {
+					p_bbox[3] = p_root[pti][1];
+				}
+
 			}
-
-			if (ptini != null) {
-
-				ret = true;
-
-			}
-
-			return ret;
 		}
+
+		if (ptini != null) {
+
+			ret = true;
+
+		}
+
+		return ret;
+	}
+
+	static bboxMinimums(p_bbox) {
+
+		let midv;
+
+		if ((p_bbox[2]-p_bbox[0]) < GlobalConst.GLOBAL_BBOX_DELTA) {
+			midv = (p_bbox[2] + p_bbox[0]) / 2.0;
+			p_bbox[0] = midv - GlobalConst.GLOBAL_BBOX_DELTA;
+			p_bbox[2] = midv + GlobalConst.GLOBAL_BBOX_DELTA;
+		}
+	
+		if ((p_bbox[3]-p_bbox[1]) < GlobalConst.GLOBAL_BBOX_DELTA) {
+			midv = (p_bbox[3] + p_bbox[1]) / 2.0;
+			p_bbox[1] = midv - GlobalConst.GLOBAL_BBOX_DELTA;
+			p_bbox[3] = midv + GlobalConst.GLOBAL_BBOX_DELTA;
+		}
+	
+	}
+
+
+	addfeature(p_layerkey, p_geom, p_attrs, p_geom_type, p_path_levels, opt_id, opt_id_fieldname) {
 
 		if (opt_id != null && opt_id_fieldname != null) {
 			throw new Error(`layer '${p_layerkey}' opt_id, opt_id_fieldname are mutually exclusive, both were given, opt_id:${opt_id}, opt_id_fieldname:${opt_id_fieldname}`);
@@ -216,7 +233,7 @@ export class FeatureCollection {
 			throw new Error(`layer '${p_layerkey}' was not set through 'setLayer' method`);
 		}
 
-		let id;
+		let id, midv;
 
 		if (opt_id) {
 			id = opt_id;
@@ -236,7 +253,9 @@ export class FeatureCollection {
 
 				const bbox = [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER]
 
-				innerCycle(this, bbox, p_geom, 0, p_path_levels, id);
+				this.boundBoxCycle(bbox, p_geom, 0, p_path_levels, p_layerkey, id);
+
+				FeatureCollection.bboxMinimums(bbox);
 
 				this.featList[p_layerkey][id] = {
 					gt: p_geom_type,

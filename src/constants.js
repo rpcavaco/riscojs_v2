@@ -25,6 +25,7 @@ var GlobalConst = {
 	MINSCALEDIFF: 1,
 	GLOBAL_SEQATTEMPTS_DELAY_MS: 700,
 	GLOBAL_SEQATTEMPTS_MAXNR: 50,
+	GLOBAL_BBOX_DELTA: 10,
 
 	// Specialized debugging - canvas path opening and closing
 	DEBUG_CANVASVECTOR_PATHCLOSING: null,
