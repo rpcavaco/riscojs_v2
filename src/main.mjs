@@ -340,7 +340,7 @@ export class RiscoMapCtx {
 	setCustomizationObj(p_object, p_setmapctx_func) {
 
 		this.#customization_object = p_object;
-		p_setmapctx_func(this, p_object);
+		const prevent_refresh = p_setmapctx_func(this, p_object);
 
 		for (let objid of this.#customization_object.mapcustom_controlsmgrs_keys) {
 			if (p_object.instances[objid] !== undefined) {
@@ -355,7 +355,7 @@ export class RiscoMapCtx {
 			this.tocmgr.setTOCControl(p_object.instances["toc"]);
 		}	
 
-		if (this.wait_for_customization_avail) {
+		if (this.wait_for_customization_avail && !prevent_refresh) {
 			this.maprefresh();
 		}		
 	}
@@ -919,8 +919,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		}
 	}	
 
-	// opt_alt_canvaskeys_dict: {'normal': 'temporary', 'label': 'temporary' }
-	zoomToFeatsAndOpenInfoOnLast(p_featids_per_layerkey_dict, p_env, opt_alt_canvaskeys_dict, opt_adic_callback) {
+	zoomToFeatsCanOpenInfoOnLast(p_featids_per_layerkey_dict, p_env, b_open_info, opt_alt_canvaskeys_dict, opt_adic_callback) {
 
 		this.tocmgr.addAfterRefreshProcedure(() => {
 
@@ -955,9 +954,11 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				}
 			
 				// abrir info
-				const ic = ci.instances["infoclass"];
-				if (ic) {
-					ic.pickfeature(this, lastk, the_feat, ...spt);
+				if (b_open_info) {
+					const ic = ci.instances["infoclass"];
+					if (ic) {
+						ic.pickfeature(this, lastk, the_feat, ...spt);
+					}	
 				}
 		
 			}
@@ -972,6 +973,12 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		}
 
 		this.transformmgr.zoomToRect(...p_env);		
+	}
+
+	// opt_alt_canvaskeys_dict: {'normal': 'temporary', 'label': 'temporary' }
+	zoomToFeatsAndOpenInfoOnLast(p_featids_per_layerkey_dict, p_env, opt_alt_canvaskeys_dict, opt_adic_callback) {
+
+		this.zoomToFeatsCanOpenInfoOnLast(p_featids_per_layerkey_dict, p_env, true, opt_alt_canvaskeys_dict, opt_adic_callback)	
 	}
 
 	clearInteractions(opt_source_id, opt_clear_temp_also, opt_single_canvaslayer) { 

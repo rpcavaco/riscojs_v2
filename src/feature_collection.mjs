@@ -133,31 +133,25 @@ export class FeatureCollection {
 		return p_id.startsWith('_temp_');
 	}
 
-	setLayer(p_layerkey, p_layerobj, opt_exclude_from_redraw) {
+	static bboxMinimums(p_bbox) {
 
-		if (!(p_layerobj instanceof Layer)) {
-			throw new Error(`layer '${p_layerkey}' is not instance of Layer`);
+		let midv;
+
+		if ((p_bbox[2]-p_bbox[0]) < GlobalConst.GLOBAL_BBOX_DELTA) {
+			midv = (p_bbox[2] + p_bbox[0]) / 2.0;
+			p_bbox[0] = midv - GlobalConst.GLOBAL_BBOX_DELTA;
+			p_bbox[2] = midv + GlobalConst.GLOBAL_BBOX_DELTA;
 		}
-
-		if (opt_exclude_from_redraw) {
-			if (this.lyrkeys_exclude_from_redraw.indexOf(p_layerkey) < 0) {
-				this.lyrkeys_exclude_from_redraw.push(p_layerkey);
-			}
+	
+		if ((p_bbox[3]-p_bbox[1]) < GlobalConst.GLOBAL_BBOX_DELTA) {
+			midv = (p_bbox[3] + p_bbox[1]) / 2.0;
+			p_bbox[1] = midv - GlobalConst.GLOBAL_BBOX_DELTA;
+			p_bbox[3] = midv + GlobalConst.GLOBAL_BBOX_DELTA;
 		}
-
-		if (this.featList[p_layerkey] === undefined) {
-			this.featList[p_layerkey] = {};
-			this.layers[p_layerkey] = p_layerobj;
-		} else {
-			throw new Error(`layer '${p_layerkey}' already set`);
-		}	
-
-		/* if (p_layerobj['labelfield'] !== undefined && p_layerobj['labelfield'] != "none") {
-			this.labelfield = p_layerobj['labelfield'];
-		} */
+	
 	}
 
-	boundBoxCycle(p_bbox, p_root, p_call_level, p_path_level, p_layer_key, p_feat_id) {
+	static boundBoxCycle(p_bbox, p_root, p_call_level, p_path_level, p_layer_key, p_feat_id) {
 	
 		let ptini=null, ret = false;
 
@@ -165,7 +159,7 @@ export class FeatureCollection {
 
 			if (typeof p_root[pti][0] != 'number' && ptini == null) {
 
-				ret = this.boundBoxCycle(p_bbox, p_root[pti], p_call_level+1, p_path_level-1, p_feat_id);
+				ret = FeatureCollection.boundBoxCycle(p_bbox, p_root[pti], p_call_level+1, p_path_level-1, p_feat_id);
 
 			} else {
 
@@ -196,32 +190,36 @@ export class FeatureCollection {
 		}
 
 		if (ptini != null) {
-
+			FeatureCollection.bboxMinimums(p_bbox);
 			ret = true;
-
 		}
 
 		return ret;
 	}
 
-	static bboxMinimums(p_bbox) {
+	setLayer(p_layerkey, p_layerobj, opt_exclude_from_redraw) {
 
-		let midv;
+		if (!(p_layerobj instanceof Layer)) {
+			throw new Error(`layer '${p_layerkey}' is not instance of Layer`);
+		}
 
-		if ((p_bbox[2]-p_bbox[0]) < GlobalConst.GLOBAL_BBOX_DELTA) {
-			midv = (p_bbox[2] + p_bbox[0]) / 2.0;
-			p_bbox[0] = midv - GlobalConst.GLOBAL_BBOX_DELTA;
-			p_bbox[2] = midv + GlobalConst.GLOBAL_BBOX_DELTA;
+		if (opt_exclude_from_redraw) {
+			if (this.lyrkeys_exclude_from_redraw.indexOf(p_layerkey) < 0) {
+				this.lyrkeys_exclude_from_redraw.push(p_layerkey);
+			}
 		}
-	
-		if ((p_bbox[3]-p_bbox[1]) < GlobalConst.GLOBAL_BBOX_DELTA) {
-			midv = (p_bbox[3] + p_bbox[1]) / 2.0;
-			p_bbox[1] = midv - GlobalConst.GLOBAL_BBOX_DELTA;
-			p_bbox[3] = midv + GlobalConst.GLOBAL_BBOX_DELTA;
-		}
-	
+
+		if (this.featList[p_layerkey] === undefined) {
+			this.featList[p_layerkey] = {};
+			this.layers[p_layerkey] = p_layerobj;
+		} else {
+			throw new Error(`layer '${p_layerkey}' already set`);
+		}	
+
+		/* if (p_layerobj['labelfield'] !== undefined && p_layerobj['labelfield'] != "none") {
+			this.labelfield = p_layerobj['labelfield'];
+		} */
 	}
-
 
 	addfeature(p_layerkey, p_geom, p_attrs, p_geom_type, p_path_levels, opt_id, opt_id_fieldname) {
 
@@ -233,7 +231,7 @@ export class FeatureCollection {
 			throw new Error(`layer '${p_layerkey}' was not set through 'setLayer' method`);
 		}
 
-		let id, midv;
+		let id;
 
 		if (opt_id) {
 			id = opt_id;
@@ -252,10 +250,7 @@ export class FeatureCollection {
 			if (p_geom.length > 0) {
 
 				const bbox = [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER]
-
-				this.boundBoxCycle(bbox, p_geom, 0, p_path_levels, p_layerkey, id);
-
-				FeatureCollection.bboxMinimums(bbox);
+				FeatureCollection.boundBoxCycle(bbox, p_geom, 0, p_path_levels, p_layerkey, id);
 
 				this.featList[p_layerkey][id] = {
 					gt: p_geom_type,

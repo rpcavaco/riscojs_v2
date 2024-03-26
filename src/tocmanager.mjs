@@ -95,7 +95,9 @@ export class TOCManager {
 		const l = this.after_refresh_procedure_list.length;
 		for (let p, i=0; i<l; i++) {
 			p = this.after_refresh_procedure_list.pop();
-			p();
+			if (p) {
+				p();
+			}
 		}
 		this._refreshing = false;
 	}

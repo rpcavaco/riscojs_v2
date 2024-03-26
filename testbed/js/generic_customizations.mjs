@@ -709,7 +709,7 @@ export class LocQuery {
 			bcb = p_customization_instance.instances["basiccontrolsbox"];
 		}	
 
-		if (p_basic_config["logo"]["src"] !== undefined) {
+		if (p_basic_config["logo"] !== undefined && p_basic_config["logo"]["src"] !== undefined) {
 			logo = document.createElement('img');
 			logo.src = p_basic_config["logo"]["src"];
 			logo.setAttribute("id", "logo-img");

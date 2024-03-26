@@ -1236,7 +1236,7 @@ export class EditingMgr extends MapPrintInRect {
 	
 			if (lyr.editcfg["aftersave_func"] !== undefined) {
 				const ic = p_mapctx.getCustomizationObject().interoperability_ctrlr;
-				lyr.editcfg.aftersave_func(p_mapctx, this, lyr, ic, p_responsejson, p_callback_func);
+				lyr.editcfg.aftersave_func(p_mapctx, FeatureCollection, this, lyr, ic, p_responsejson, p_callback_func);
 			} else {
 				console.warn(`[WARN] edit layer '${this.editingLayerKey}' has no 'editcfg.aftersave_func' defined in layer configs`);
 				p_callback_func();

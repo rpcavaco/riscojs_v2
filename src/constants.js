@@ -25,7 +25,7 @@ var GlobalConst = {
 	MINSCALEDIFF: 1,
 	GLOBAL_SEQATTEMPTS_DELAY_MS: 700,
 	GLOBAL_SEQATTEMPTS_MAXNR: 50,
-	GLOBAL_BBOX_DELTA: 10,
+
 
 	// Specialized debugging - canvas path opening and closing
 	DEBUG_CANVASVECTOR_PATHCLOSING: null,
@@ -60,6 +60,7 @@ var GlobalConst = {
 	LBL_VERTICALITY_TEST: 2,
 	LBL_MAX_ALONGPATH_OCCUPATION: 0.98,
 	ZOOM2RECT_PERC: 0.8, // proportion of map frame fillling when zooming to rect (largest dimension of rect to respective frame dimension)
+	GLOBAL_BBOX_DELTA: 5,
 
 	GEOLOCATION_INTERVAL_MS: 1000,
 	GEOLOCATION_NEXTPOS_TOLERANCE_PX: 20,
