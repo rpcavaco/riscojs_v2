@@ -135,6 +135,7 @@ export class ControlsBox extends MapPrintInRect {
 	}
 
 	constructor(p_mapctx, p_orientation, p_anchoring_twoletter, p_other_widgets, p_config_namespaceroot) {
+
 		super();
 
 		this._initParameters(p_config_namespaceroot);
@@ -248,10 +249,22 @@ export class ControlsBox extends MapPrintInRect {
 
 	changeToggleFlag(p_key, p_toggle_status) {
 		let has_changed = false;
+
 		if (this.controls_state[p_key].togglable && !this.controls_state[p_key].disabled && this.controls_state[p_key].togglestatus != p_toggle_status) {
 			has_changed = true;
 			this.controls_state[p_key].togglestatus = p_toggle_status;
 		}
+		return has_changed;
+	}
+
+	toggleControl(p_key) {
+		let has_changed = false;
+
+		if (this.controls_state[p_key].togglable && !this.controls_state[p_key].disabled) {
+			has_changed = true;
+			this.controls_state[p_key].togglestatus = !this.controls_state[p_key].togglestatus;
+		}
+
 		return has_changed;
 	}
 

@@ -166,7 +166,7 @@ export class EditCtrlBox extends ControlsBox {
 							
 							// TODO - maybe to remove as no edit control is expected to be togglable
 
-							if (this.changeToggleFlag(ctrl_key, ret)) {
+							/*if (this.changeToggleFlag(ctrl_key, ret)) {
 								
 								const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 								ctx.save();
@@ -179,7 +179,7 @@ export class EditCtrlBox extends ControlsBox {
 								} finally {
 									ctx.restore();
 								}
-							}
+							}*/
 						} else {
 							throw new Error("interact, missing endevent control func block for", ctrl_key);
 						}
@@ -410,7 +410,7 @@ export class AdvTabletModeEditCtrlBox extends ControlsBox {
 							
 							// TODO - maybe to remove as no edit control is expected to be togglable
 
-							if (this.changeToggleFlag(ctrl_key, ret)) {
+							/*if (this.changeToggleFlag(ctrl_key, ret)) {
 								
 								const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 								ctx.save();
@@ -423,7 +423,7 @@ export class AdvTabletModeEditCtrlBox extends ControlsBox {
 								} finally {
 									ctx.restore();
 								}
-							}
+							} */
 						} else {
 							throw new Error("interact, missing endevent control func block for", ctrl_key);
 						}

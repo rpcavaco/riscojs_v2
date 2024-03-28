@@ -908,7 +908,7 @@ class BasicCtrlBox extends ControlsBox {
 
 							this.print(p_mapctx);
 							
-							if (this.changeToggleFlag(ctrl_key, ret)) {
+							/*if (this.changeToggleFlag(ctrl_key, ret)) {
 								
 								const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
 								ctx.save();
@@ -922,7 +922,7 @@ class BasicCtrlBox extends ControlsBox {
 									ctx.restore();
 								}
 
-							}
+							} */
 						} else {
 							throw new Error("interact, missing endevent control func block for", ctrl_key);
 						}
