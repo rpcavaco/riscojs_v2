@@ -305,20 +305,12 @@ export class ControlsBox extends MapPrintInRect {
 				this.drawControlFace(ctx, this.controls_keys[ci], left, top, this.boxw, this.boxh, p_mapctx.cfgvar["basic"], GlobalConst);
 			}
 
-			// console.log('>> MapScalePrint print scale', ctx, [this.left, this.top, this.boxw, this.boxh]);
-
-
 		} catch(e) {
 			throw e;
 		} finally {
 			ctx.restore();
 		}
 	}	
-
-	// setToolmgr(p_toolmgr) {
-	// 	console.trace("setToolmgr:", p_toolmgr)
-	// 	this.tool_manager = p_toolmgr;
-	// }
 
 	interact(p_mapctx, p_evt) {
 
