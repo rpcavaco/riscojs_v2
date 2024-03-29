@@ -709,12 +709,18 @@ class SelectElemsTool extends BaseTool {
 	toc_collapsed;
 	editmanager;
 	rect;
-	//editfeat_engaged = false;
+	featureCollection;
+	selection_list;
+	lyrkey = null;
+
 	constructor(p_mapctx) {
 		super(p_mapctx, true, false); // part of general toggle group, default in toogle
 		this.toc_collapsed = false;
 		this.editmanager = null;
 		this.rect = null;
+		this.featureCollection = p_mapctx.featureCollection;
+		this.selection_list = new Set();
+		this.lyrkey = null;
 	}
 
 	incompatibleWithPan() {
@@ -734,11 +740,58 @@ class SelectElemsTool extends BaseTool {
 		}
 	}
 
-	async init(p_mapctx) {
+	prepare(p_mapctx) {
+
+		//console.trace(":: 745 ::");
 
 		if (this.editmanager == null) {
 			throw new Error("SelectElemsTool, mandatory previous use of 'setEditingManager' has not happened");
 		}
+
+		const editables = [];
+		let constraints = null;
+
+		this.editmanager.getEditableLayers(p_mapctx, editables);
+
+		const lyrks = Object.keys(editables);
+		const sz = lyrks.length;
+
+		if (sz == 0) {
+
+			console.error("SelectElemsTool init: no editable layers, check all layer 'layereditable' attribute in layer config");
+
+		} else if (sz > 1) {
+
+			if (this.editmanager.editingLayerKey) {
+				constraints = {
+					"selected": this.editmanager.editingLayerKey
+				}
+			}
+
+			(function(p_this, pp_mapctx, p_editables, p_constraints) {
+
+				pp_mapctx.getCustomizationObject().messaging_ctrlr.selectInputMessage(
+					pp_mapctx.i18n.msg('CHOOSESELLYR', true), 
+					p_editables,
+					(evt, p_result, p_value) => { 
+						if (p_result) {
+							if (p_value) {
+								p_this.lyrkey = p_value;
+							} 
+						} else {
+							pp_mapctx.toolmgr.enableTool(pp_mapctx, p_this.constructor.name, false);
+						}
+					},
+					p_constraints
+				);
+
+			})(this, p_mapctx, editables, constraints);
+			
+		} else {
+
+			this.lyrkey = lyrks[0];
+
+		}		
 
 	}
 
@@ -781,6 +834,7 @@ class SelectElemsTool extends BaseTool {
 	async onEvent(p_mapctx, p_evt) {
 
 		let maxv, ret = false; 
+		const terrain_bb = [], pt = [];
 
 		try {
 	
@@ -806,8 +860,31 @@ class SelectElemsTool extends BaseTool {
 				case 'touchend':
 				case 'mouseup':
 				case 'mouseout':
-					this.rect = null;
-					this.clearCanvas(p_mapctx);
+					
+					if (this.rect) {
+
+						this.clearCanvas(p_mapctx);
+
+						pt.length = 2;
+						terrain_bb.length = 4;
+
+						p_mapctx.transformmgr.getTerrainPt([this.rect[0], this.rect[1]+this.rect[3]], pt);
+						terrain_bb[0] = pt[0];
+						terrain_bb[1] = pt[1];
+
+						p_mapctx.transformmgr.getTerrainPt([this.rect[0]+this.rect[2], this.rect[1]], pt);
+						terrain_bb[2] = pt[0];
+						terrain_bb[3] = pt[1];
+
+						const out_id_list = [];
+						this.featureCollection.fetchWithRect(this.lyrkey, "INSIDE", terrain_bb, out_id_list);
+
+						console.log("out_id_list:", out_id_list);
+
+						out_id_list.forEach(item => this.selection_list.add(item));
+
+						this.rect = null;
+					}
 					break;
 
 				case 'mousemove':
@@ -1136,6 +1213,7 @@ export class ToolManager {
 	editmgr;
 	maptools;
 	mapcontrolmgrs;
+	ctrl_boxes;
 
 	constructor(p_mapctx, p_mapctx_config_var) {
 
@@ -1148,6 +1226,7 @@ export class ToolManager {
 		// this.maptools = [new DefaultTool(), new MultiTool()];
 		this.maptools = [new MultiTool(p_mapctx)];
 		this.mapcontrolmgrs = [];
+		this.ctrl_boxes = {};
 		
 		const tool_keys = ["InfoTool", "PointEditTool", "SimplePathEditTool"];
 		if (p_mapctx_config_var["togglable_tools"] !== undefined && p_mapctx_config_var["togglable_tools"].length > 0) {	
@@ -1262,12 +1341,33 @@ export class ToolManager {
 		}		
 	}
 
+	setCtrlBoxForTool(p_classname, p_ctrl_box, p_cb_key) {
+
+		console.log("setCtrlBoxForTool:", p_classname);
+
+		this.ctrl_boxes[p_classname] = {
+			ctrl_box: p_ctrl_box,
+			cb_key: p_cb_key
+		}
+	}
+
 	enableTool(p_mapctx, p_classname, p_do_enable) {
 
 		let foundtool = this.findTool(p_classname);
 
 		if (foundtool == null) {
 			return null;
+		}
+
+		if (p_do_enable == foundtool.enabled) {
+			return foundtool;
+		}
+
+		// untoggle control if tool is being disabled and setCtrlBoxForTool was prev. used for the tool being changed
+		if (!p_do_enable && this.ctrl_boxes[p_classname] !== undefined) {
+			const cb_item = this.ctrl_boxes[p_classname];
+			cb_item.ctrl_box.toggleOff(cb_item.cb_key);
+			cb_item.ctrl_box.print(p_mapctx);
 		}
 
 		if (GlobalConst.getDebug("TOOLENABLE")) {

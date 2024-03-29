@@ -223,6 +223,17 @@ export class RiscoMapCtx {
 	graphicsmode;
 	tabletmode; 
 	tabletFeatPreSelection;
+	
+	featureCollection;
+
+	transformmgr;	
+	toolmgr;
+	tocmgr;
+	i18n;
+	touchevtctrlr;
+	imgbuffer;
+
+
 	//_refresh_timeout_id;
 	//_setscaleatcenter_timeout_id;
 

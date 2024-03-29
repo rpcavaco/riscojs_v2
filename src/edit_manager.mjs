@@ -604,6 +604,27 @@ export class EditingMgr extends MapPrintInRect {
 		this.#pending_changes_to_save = "none";
 	}	
 
+	getEditableLayers(p_mapctx, out_editable_layers, out_lyr_types) {
+	
+		let lyr;
+		const work_layerkeys = [];
+
+		p_mapctx.tocmgr.getAllVectorLayerKeys(work_layerkeys);		
+
+		if (work_layerkeys.length > 0) {
+			for (const lyrk of work_layerkeys) {
+				lyr = p_mapctx.tocmgr.getLayer(lyrk);
+				if (lyr.layereditable != "none") {
+					out_editable_layers[lyrk] = (lyr.label == "none" ? lyrk : I18n.capitalize(lyr.label));
+					if (out_lyr_types) {
+						out_lyr_types[lyrk] = lyr.geomtype
+					}
+				}
+			}
+		}
+
+	}
+
 	defineEditingLayer(p_mapctx, opt_previously_sel_lyrkey) {
 
 		const work_layerkeys = [], editables= {}, types={};
@@ -615,17 +636,9 @@ export class EditingMgr extends MapPrintInRect {
 
 		const that = this;
 
-		p_mapctx.tocmgr.getAllVectorLayerKeys(work_layerkeys);		
+		this.getEditableLayers(p_mapctx, editables, types);
 
-		if (work_layerkeys.length > 0) {
-			for (const lyrk of work_layerkeys) {
-				lyr = p_mapctx.tocmgr.getLayer(lyrk);
-				if (lyr.layereditable != "none") {
-					editables[lyrk] = (lyr.label == "none" ? lyrk : I18n.capitalize(lyr.label));
-					types[lyrk] = lyr.geomtype
-				}
-			}
-		}
+		p_mapctx.tocmgr.getAllVectorLayerKeys(work_layerkeys);		
 
 		if (!opt_previously_sel_lyrkey) {
 		

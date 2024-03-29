@@ -54,6 +54,10 @@ export class BaseTool {
 		}		
 
 		this.#enabled_flag = p_flag_value;
+
+		if (p_flag_value && this["prepare"] !== undefined) {
+			this.prepare(p_mapctx);
+		}
 	}
 
 	get enabled() {

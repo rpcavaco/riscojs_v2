@@ -373,7 +373,7 @@ function insidePolygon(p_pointlist, p_path_levels, p_ptin) {
 	return ret;
 }
 
-export function ptInsideEnv(p_env, p_pt) {
+export function ptInsideTouchEnv(p_env, p_pt) {
 	return p_pt[0] >= p_env[0] && p_pt[0] <= p_env[2] && p_pt[1] >= p_env[1] && p_pt[1] <= p_env[3];
 }
 
@@ -399,10 +399,10 @@ export function bbTouch(p_bb1, p_bb2) {
 
 	let ret = false;
 
-	if (p_bb1[2] > p_bb2[0]) {
-		if (p_bb1[0] < p_bb2[2] ) {
-			if (p_bb1[3] > p_bb2[1]) {
-				if (p_bb1[1] < p_bb2[3] ) {
+	if (p_bb1[2] >= p_bb2[0]) {
+		if (p_bb1[0] <= p_bb2[2] ) {
+			if (p_bb1[3] >= p_bb2[1]) {
+				if (p_bb1[1] <= p_bb2[3] ) {
 					ret = true;
 				}
 			}			
@@ -567,11 +567,11 @@ export function evalTextAlongPathViability(p_mapctxt, p_coords, p_path_levels, p
 				// skip if terrain env is given and beginning point of segment is out of it
 				if (opt_terrain_env != null) {
 					if (dx > 0) {
-						if (!ptInsideEnv(opt_terrain_env, p_pathpart[pi-1])) {
+						if (!ptInsideTouchEnv(opt_terrain_env, p_pathpart[pi-1])) {
 							continue;
 						}
 					} else {
-						if (!ptInsideEnv(opt_terrain_env, p_pathpart[pi])) {
+						if (!ptInsideTouchEnv(opt_terrain_env, p_pathpart[pi])) {
 							continue;
 						}
 					}
@@ -694,7 +694,7 @@ export function findPolygonCentroid(p_coords, p_path_levels, p_cpt, p_step) {
 		test_pt[0] = curr_col * p_step + p_cpt[0];
 		test_pt[1] = curr_row * p_step + p_cpt[1];
 
-		if (!ptInsideEnv(env, test_pt)) {
+		if (!ptInsideTouchEnv(env, test_pt)) {
 			throw new Error(`no inside centroid found for polygon, secloopcnt:${secloopcnt}`);
 		}
 	}

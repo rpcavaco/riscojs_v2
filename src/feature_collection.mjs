@@ -1,5 +1,5 @@
 import {GlobalConst} from './constants.js';
-import {distanceToPoly, distanceToLine, dist2D, bbTouch} from './geom.mjs'
+import {distanceToPoly, distanceToLine, dist2D, bbTouch, ptInsideTouchEnv } from './geom.mjs'
 import {Layer} from './layers.mjs'
 import { isSuperset, setEquality} from './utils.mjs'
 import { diffDays, uuidv4 } from './utils.mjs';  // Can be called in 'varstyles' on 'iconsrcfunc' functions
@@ -351,6 +351,46 @@ export class FeatureCollection {
 		}
 		return (out_id_list.length > 0);
 	}
+
+	fetchWithRect(p_layerkey, p_op, p_bbox_list, out_id_list) {
+
+		out_id_list.length = 0;
+
+
+		let feat, found;
+		if (this.featList[p_layerkey] !== undefined) {
+
+			for (let id in this.featList[p_layerkey]) {
+				
+				feat = this.featList[p_layerkey][id];
+				found = false;
+				if (feat.gt == "point") {
+					found = ptInsideTouchEnv(p_bbox_list, feat.g[0]);
+				} else {
+					// TODO - incomplete must test vertex inside bb or interception betw.feat segments and bb segments
+					if (bbTouch(p_bbox_list, feat.bb)) {
+						found = true;
+					}
+				}
+
+				if (found) {
+					if (p_op == "INSIDE") {
+						out_id_list.push(id);
+					}
+				} else {
+					if (p_op == "OUTSIDE") {
+						out_id_list.push(id);
+					}
+				}
+
+			}
+		} else {
+			console.warn(`FeatureColllection.fetchWithRect: no '${p_layerkey}' layer exists`);
+		}
+
+		return (out_id_list.length > 0);
+
+	}	
 
 	remove(p_layerkey, p_id) {
 		//console.trace("REMOVING", p_layerkey, p_id);
