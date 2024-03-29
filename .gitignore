@@ -16,4 +16,5 @@ passos_*
 quick-lint-js.config
 _scraps/
 testbed/js/cmp_customizations.mjs
+*._mjs_
 

@@ -6,7 +6,13 @@ import {BaseTool, interactWithSpindexLayer, wheelEventCtrller} from './interacti
 // pan, zoom wheel
 class MultiTool extends BaseTool {
 
-	name = 'MultiTool';
+	start_screen;
+	pending_pinch;
+	imgs_dict;
+	wheelevtctrlr;
+	_isworking_timeout;
+	pan_enabled;
+
 	constructor(p_mapctx) {
 		super(p_mapctx, false, false); // not part of general toggle group, surely not default in toogle
 		this.start_screen = null;
@@ -15,6 +21,16 @@ class MultiTool extends BaseTool {
 		this.wheelevtctrlr = new wheelEventCtrller();
 		//this.touchevtctrlr = new TouchController();
 		this._isworking_timeout = null;
+		this.pan_enabled = true;
+	}
+
+	implementsPan() {
+		// Classes returnin 'true' should implement setEnabledPan method
+		return true;
+	}
+
+	setEnabledPan(b_doenable) {
+		this.pan_enabled = b_doenable;
 	}
 
 	finishPan(p_transfmgr, p_x, p_y, opt_origin) {
@@ -151,7 +167,7 @@ class MultiTool extends BaseTool {
 						console.log("[DBG:INTERACTIONCLICKEND] MULTITOOL mdown:", p_evt, "startscrpt:", this.start_screen, "orig:", orig, "pinch:", this.pending_pinch);
 					}
 
-					if (this.start_screen == null) {
+					if (this.pan_enabled && this.start_screen == null) {
 						if (p_evt.buttons === undefined || (p_evt.buttons & 1) == 1) {						
 							this.start_screen = [p_evt.offsetX, p_evt.offsetY];		
 							if (GlobalConst.getDebug("INTERACTIONCLICKEND") && ["touchstart", "touchend", "mousedown", "mouseup", "mouseleave", "mouseout"].indexOf(p_evt.type) >= 0) {
@@ -243,7 +259,6 @@ class MultiTool extends BaseTool {
 
 class InfoTool extends BaseTool {
 
-	name = 'InfoTool';
 	pickpanel_active;
 	fixedtippanel_active;
 	toc_collapsed;
@@ -688,6 +703,156 @@ class PointEditTool extends BaseTool {
 	}	
 }
 
+class SelectElemsTool extends BaseTool {
+
+	canvaslayers = ['transientmap'];
+	toc_collapsed;
+	editmanager;
+	rect;
+	//editfeat_engaged = false;
+	constructor(p_mapctx) {
+		super(p_mapctx, true, false); // part of general toggle group, default in toogle
+		this.toc_collapsed = false;
+		this.editmanager = null;
+		this.rect = null;
+	}
+
+	incompatibleWithPan() {
+		return true;
+	}
+	
+	setTocCollapsed(p_is_collapsed) {
+		this.toc_collapsed = p_is_collapsed;
+	}
+
+	setEditingManager(p_edit_manager) {
+		if (p_edit_manager) {
+			console.info("[init RISCO] SelectElemsTool, edit manager is set");
+			this.editmanager = p_edit_manager;
+		} else {
+			throw new Error("SelectElemsTool setEditingManager, no edit manager passed");
+		}
+	}
+
+	async init(p_mapctx) {
+
+		if (this.editmanager == null) {
+			throw new Error("SelectElemsTool, mandatory previous use of 'setEditingManager' has not happened");
+		}
+
+	}
+
+	clearCanvas(p_mapctx) {
+
+		let gfctx;
+		const canvas_dims = [];		
+		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
+		for (const cl of this.canvaslayers) {
+			gfctx = p_mapctx.renderingsmgr.getDrwCtx(cl, '2d');
+			gfctx.clearRect(0, 0, ...canvas_dims); 	
+		}	
+
+	}
+
+	drawRect(p_mapctx) {
+
+		let ret = false;
+		this.clearCanvas(p_mapctx);
+
+		if (this.rect) {
+
+			const cl = this.canvaslayers[0];
+			const gfctx = p_mapctx.renderingsmgr.getDrwCtx(cl, '2d');
+
+			gfctx.save();
+
+			gfctx.strokeStyle = "red";
+			gfctx.lineWidth = 2;
+			gfctx.strokeRect(...this.rect); 
+
+			gfctx.restore();
+				
+			ret = true;	
+		}		
+
+		return ret;
+	}
+
+	async onEvent(p_mapctx, p_evt) {
+
+		let maxv, ret = false; 
+
+		try {
+	
+			if (GlobalConst.getDebug("INTERACTION")) {
+				console.log("[DBG:INTERACTION] SELECTELEMSTOOL onEvent evt.type:", p_evt.type);
+			}
+			if (GlobalConst.getDebug("INTERACTIONCLICKEND") && ["touchstart", "touchend", "mousedown", "mouseup", "mouseleave", "mouseout"].indexOf(p_evt.type) >= 0) {
+				console.log("[DBG:INTERACTIONCLICKEND] SELECTELEMSTOOL onEvent evt.type:", p_evt.type);
+			}
+
+			if (GlobalConst.getDebug("INTERACTIONOUT") && p_evt.type == "mouseout") {
+				console.log("[DBG:INTERACTIONOUT] SELECTELEMSTOOL, mouseout");
+			}				
+
+			switch(p_evt.type) {
+
+				case 'touchstart':
+				case 'mousedown':
+					this.rect = [p_evt.offsetX, p_evt.offsetY, 2, 2]
+					ret = true;
+					break;
+
+				case 'touchend':
+				case 'mouseup':
+				case 'mouseout':
+					this.rect = null;
+					this.clearCanvas(p_mapctx);
+					break;
+
+				case 'mousemove':
+					if (this.rect) {
+						if (p_evt.offsetX < this.rect[0]) {
+							maxv = this.rect[0] + this.rect[2];
+							this.rect[0] = p_evt.offsetX;
+							this.rect[2] = (maxv - p_evt.offsetX);
+						}
+						if (p_evt.offsetX > (this.rect[0] + this.rect[2])) {
+							this.rect[2] = (p_evt.offsetX-this.rect[0]);
+						} 
+						if (p_evt.offsetY < this.rect[1]) {
+							maxv = this.rect[1] + this.rect[3];
+							this.rect[1] = p_evt.offsetY;
+							this.rect[3] = (maxv - p_evt.offsetY);
+						} 
+						if (p_evt.offsetY > (this.rect[1] + this.rect[3])) {
+							this.rect[3] = (p_evt.offsetY-this.rect[1]);
+						} 					
+						this.drawRect(p_mapctx);
+						ret = true;
+					}
+					break;
+					
+
+			}
+		} catch(e) {
+			console.error(e);
+		}  
+
+		// has this tool interacted with event ?
+		return ret;
+		
+	}	
+
+	cleanUp(p_mapctx) {
+
+		console.info("[INFO] SelectElemsTool cleanup");
+
+		//this.editfeat_engaged = false;
+		//this.editmanager.resetCurrentEditFeatureHolder();
+	}	
+}
+
 class SimplePathEditTool extends BaseTool {
 
 	canvaslayers = ['temporary', 'transientmap'];
@@ -909,7 +1074,6 @@ class SimplePathEditTool extends BaseTool {
 
 class MeasureTool extends BaseTool {
 
-	name = 'MeasureTool';
 	accumdist;
 	prevpt;
 	constructor(p_mapctx) {
@@ -999,6 +1163,9 @@ export class ToolManager {
 				case "InfoTool":
 					this.addTool(new InfoTool(p_mapctx));
 					break;
+				case "SelectElemsTool":
+					this.addTool(new SelectElemsTool(p_mapctx));
+					break;
 				case "MeasureTool":
 					this.addTool(new MeasureTool(p_mapctx));
 					break;
@@ -1016,7 +1183,6 @@ export class ToolManager {
 			tnames.push(mt.name);
 		}
 		console.info("[init RISCO] tools in ToolManager:", tnames);
-
 		
 	}
 
@@ -1139,6 +1305,53 @@ export class ToolManager {
 		return foundtool;
 	}
 
+	/*
+	toggleTool(p_mapctx, p_classname) {
+
+		let foundtool = this.findTool(p_classname);
+
+		if (foundtool == null) {
+			return null;
+		}
+
+		const enabledState = !foundtool.enabled;
+
+		if (GlobalConst.getDebug("TOOLENABLE")) {
+			console.info("[DBG:TOOLENABLE] toggleTool, tool:", foundtool.name, "enabled:", enabledState);
+		}		
+
+		if (!foundtool.joinstogglegroup) {
+			foundtool.setEnabled(enabledState);
+		} else {
+			if (enabledState) {
+
+				// disable all in toggle group ...
+				for (let j=0; j<this.maptools.length; j++) {
+					if (!this.maptools[j].joinstogglegroup) {
+						continue;
+					}		
+					this.maptools[j].setEnabled(p_mapctx, false);
+				}	
+
+				// enable chosen tool
+				foundtool.setEnabled(p_mapctx, true);	
+
+			} else {
+
+				// Enable default tool, keeping all others disabled
+				for (let j=0; j<this.maptools.length; j++) {
+					if (!this.maptools[j].joinstogglegroup) {
+						continue;
+					}
+					this.maptools[j].setEnabled(p_mapctx, this.maptools[j].defaultintoggle);
+				}
+			}
+		}
+
+		return foundtool;		
+	}
+	*/
+
 	// event procedes from mxOnEvent
 	toolmgrOnEvent(p_mapctx, p_evt) {
 
@@ -1188,28 +1401,24 @@ export class ToolManager {
 			// for (let i=this.maptools.length-1; i>=0; i--) {
 			let evt = p_evt, mapdims = [], center_pt;
 			let toggletool_already_interacted = false; 
-			let mini, step;
+			let mini;
 
-			// if (p_mapctx.tabletmode.toLowerCase() == "advanced") {
-			// 	mini = 0;
-			// 	maxi = this.maptools.length;
-			// 	step = 1;
-			// } else {
-			mini = this.maptools.length-1;
-			step = -1;
-			//}
-
-			for (let i=mini; ; i=i+step) {
-
-				// if (p_mapctx.tabletmode.toLowerCase() == "advanced") {
-				// 	if (i >= this.maptools.length) {
-				// 		return;
-				// 	}
-				// } else {
-				if (i < 0) {
-					return;
+			let disable_pan = false;
+			for (const t of this.maptools) {
+				if (t.enabled && t.incompatibleWithPan()) {
+					disable_pan = true;
+					break;
 				}
-				//}
+			}
+
+			const ordered_toollist = [];
+			mini = this.maptools.length-1;
+
+			for (let i=mini; i>=0; i--) {
+				ordered_toollist.push(this.maptools[i]);
+			}
+
+			for (const tool of ordered_toollist) {
 
 				// toggletool_already_interacted - signals if a tool joining a toggle group already interacted with this event.
 				// In that case, other tools joining toggle groups should not interact
@@ -1217,13 +1426,17 @@ export class ToolManager {
 				// Other tools, including always-available ones like 'base' tool, should not be prevented
 				// from interacting
 
-				if (this.maptools[i].enabled) {
+				if (tool.enabled) {
 
-					if (this.maptools[i].joinstogglegroup && toggletool_already_interacted) {
+					if (tool.implementsPan()) {
+						tool.setEnabledPan(!disable_pan);
+					}
+
+					if (tool.joinstogglegroup && toggletool_already_interacted) {
 						continue;
 					}
 
-					_ret = this.maptools[i].onEvent(p_mapctx, evt);
+					_ret = tool.onEvent(p_mapctx, evt);
 
 					// if (_ret && p_mapctx.tabletmode.toLowerCase() == "advanced") {
 					// 	if (evt.custom !== undefined && evt.custom.operation == "pan") {
@@ -1241,18 +1454,18 @@ export class ToolManager {
 					// }
 
 					if (p_evt.type.startsWith("adv")) {
-						console.log(_ret, i, this.maptools[i].constructor.name, "ty:", p_evt.type, "->", evt.type, "custX:", evt.offsetX, "Y:", evt.offsetY, evt.custom);
+						console.log(_ret, tool.constructor.name, "ty:", p_evt.type, "->", evt.type, "custX:", evt.offsetX, "Y:", evt.offsetY, evt.custom);
 					}
 
 					if (GlobalConst.getDebug("INTERACTIONCLICKEND") && clickendevents.indexOf(evt.type) >= 0) {
-						console.log("[DBG:INTERACTIONCLICKEND] ToolManager tool", this.maptools[i].constructor.name, "onEvent, returned:", _ret, "togglegrp:", this.maptools[i].joinstogglegroup);
+						console.log("[DBG:INTERACTIONCLICKEND] ToolManager tool", tool.constructor.name, "onEvent, returned:", _ret, "togglegrp:", tool.joinstogglegroup);
 					}
 
 					if (GlobalConst.getDebug("INTERACTIONOUT") && evt.type == "mouseout") {
-						console.log("[DBG:INTERACTIONOUT] ToolManager, mouseout tool", this.maptools[i].constructor.name, "onEvent, returned:", _ret, "togglegrp:", this.maptools[i].joinstogglegroup);
+						console.log("[DBG:INTERACTIONOUT] ToolManager, mouseout tool", tool.constructor.name, "onEvent, returned:", _ret, "togglegrp:", tool.joinstogglegroup);
 					}	
 
-					if (_ret && this.maptools[i].joinstogglegroup) {
+					if (_ret && tool.joinstogglegroup) {
 						toggletool_already_interacted = true;
 					}
 				}

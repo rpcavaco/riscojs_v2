@@ -7,7 +7,6 @@ export class BaseTool {
 
 	#enabled_flag = false;
 	start_time = null;
-	name = 'BaseTool';
 	constructor(p_mapctx, p_joinstogglegroup, opt_defaultintoggle) {
 		this.joinstogglegroup = p_joinstogglegroup;
 		if (this.joinstogglegroup) {
@@ -25,6 +24,16 @@ export class BaseTool {
 		}
 	}
 
+	implementsPan() {
+		// Classes returnin 'true' should implement setEnabledPan method
+		return false;
+	}
+
+	incompatibleWithPan() {
+		// Classes returnin 'true' use mousemove, need pan disabled
+		return false;
+	}	
+	
 	onEvent(p_mapctx, p_evt) {
 		// Abstract
 
