@@ -950,8 +950,6 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 	clearInteractions(opt_source_id, opt_clear_temp_also, opt_single_canvaslayer) { 
 
-		console.log("clearInteractions", opt_source_id, opt_clear_temp_also, opt_single_canvaslayer);
-
 		if (GlobalConst.getDebug("INTERACTION") || GlobalConst.getDebug("INTERACTIONCLEAR")) {
 			console.log(`[DBG:INTERACTIONCLEAR] Map context clearInteractions, source:'${opt_source_id}', also clear temp:${opt_clear_temp_also}', single layer:${opt_single_canvaslayer}'`);
 		}		
@@ -970,11 +968,6 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			if (ci.instances[k]["customizClearInteractions"] !== undefined) {
 				ci.instances[k].customizClearInteractions(this);
 			}
-		}
-
-		const ic = ci.instances["infoclass"];
-		if (ic) {
-			ic.clearinfo(this, opt_source_id);
 		}
 
 		// Clear up SIMPLE tablet mode preselected feature

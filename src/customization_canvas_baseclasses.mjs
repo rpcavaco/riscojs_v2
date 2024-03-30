@@ -683,7 +683,7 @@ export class Info {
 			console.log(`[DBG:INTERACTIONCLEAR] clearinfo, source:'${p_source_id}', this.callout:${this.callout}, this.ibox:${this.ibox}`);
 		}	
 
-		let panels_exist = false;
+		let panels_existed = false;
 
 		if (this.callout) {
 
@@ -693,16 +693,18 @@ export class Info {
 			}
 
 			this.callout.tipclear();
-			panels_exist = true;
+			this.callout = null;
+			panels_existed = true;
 			
 		} else if (this.ibox) {
 
 			this.ibox.infoclear();
-			panels_exist = true;
+			this.ibox = null;
+			panels_existed = true;
 
 		}
 
-		if (panels_exist) {
+		if (panels_existed) {
 
 			const ci = p_mapctx.getCustomizationObject();
 			if (ci == null) {
