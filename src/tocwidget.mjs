@@ -21,6 +21,7 @@ export class TOC  extends MapPrintInRect {
 	prevboxenv;
 	itemtypes_preventing_inflation;
 	editing_layer_key;
+	canvaslayer;
 	#widgets_to_hide_on_collapse;
 
 	constructor(p_mapctx) {
@@ -305,7 +306,6 @@ export class TOC  extends MapPrintInRect {
 
 			// background
 			
-			// BASIC_CONFIG_DEFAULTS_OVERRRIDE ctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
 			if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["toc_bckgrd"] !== undefined) {
 				ctx.fillStyle = p_mapctx.cfgvar["basic"]["style_override"]["toc_bckgrd"];
 			} else {

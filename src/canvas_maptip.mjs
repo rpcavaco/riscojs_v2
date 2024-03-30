@@ -251,16 +251,6 @@ export class PopupBox {
 	}
 }
 
-function clearFeatureHover(p_mapctx, p_canvas_key) {
-	
-	const gfctx = p_mapctx.renderingsmgr.getDrwCtx(p_canvas_key);
-	const canvas_dims = [];		
-
-	p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
-	gfctx.clearRect(0, 0, ...canvas_dims); 
-
-}
-
 function featureHover(p_mapctx, p_box, p_layer_key, p_feat_id, p_canvas_key) {
 	
 	const gfctx = p_mapctx.renderingsmgr.getDrwCtx(p_canvas_key);
@@ -674,7 +664,7 @@ export class MaptipBox extends PopupBox {
 	}
 
 	tipclear() {
-		clearFeatureHover(this.mapctx, this.featurehover_canvas);
+		this.mapctx.renderingsmgr.clearAll([this.featurehover_canvas]);
 		this.ctx.clearRect(0, 0, ...this.mapdims); 
 		this.is_drawn = false;
 		this.clickboxes = {};
@@ -702,7 +692,7 @@ export class MaptipBox extends PopupBox {
 						if (p_evt.type == "mouseup" || p_evt.type == "touchend") {
 
 							this.tipclear();
-							clearFeatureHover(this.mapctx, this.featurehover_canvas);
+							this.mapctx.renderingsmgr.clearAll([this.featurehover_canvas]);
 							p_info_instance.pickfeature(this.mapctx, cb.layerk, this.feature_dict[cb.layerk][cb.featidx]["feat"], p_evt.offsetX, p_evt.offsetY);
 
 						} else {
@@ -713,7 +703,7 @@ export class MaptipBox extends PopupBox {
 						}
 						break;
 				} else {
-					clearFeatureHover(this.mapctx, this.featurehover_canvas);
+					this.mapctx.renderingsmgr.clearAll([this.featurehover_canvas]);
 				}
 			}
 		} 

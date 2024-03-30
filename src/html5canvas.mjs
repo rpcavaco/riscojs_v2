@@ -114,6 +114,11 @@
 
 		for (const ck of keys) {
 
+			if (ck == "temporary") {
+				console.log("CLEARING TEMPORARY");
+
+			}
+
 			if (ck == null) {
 				continue;
 			}
