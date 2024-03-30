@@ -261,6 +261,10 @@ export class ControlsBox extends MapPrintInRect {
 		return this.changeToggleFlag(p_key, false);
 	}
 
+	toggleOn(p_key) {
+		return this.changeToggleFlag(p_key, true);
+	}
+
 	toggleControl(p_key) {
 		let has_changed = false;
 

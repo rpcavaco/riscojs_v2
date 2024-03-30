@@ -706,7 +706,7 @@ class PointEditTool extends BaseTool {
 class SelectElemsTool extends BaseTool {
 
 	canvaslayers = ['transientmap'];
-	toc_collapsed;
+	//toc_collapsed;
 	editmanager;
 	rect;
 	featureCollection;
@@ -715,7 +715,7 @@ class SelectElemsTool extends BaseTool {
 
 	constructor(p_mapctx) {
 		super(p_mapctx, true, false); // part of general toggle group, default in toogle
-		this.toc_collapsed = false;
+		//this.toc_collapsed = false;
 		this.editmanager = null;
 		this.rect = null;
 		this.featureCollection = p_mapctx.featureCollection;
@@ -728,7 +728,8 @@ class SelectElemsTool extends BaseTool {
 	}
 	
 	setTocCollapsed(p_is_collapsed) {
-		this.toc_collapsed = p_is_collapsed;
+		// not needed
+		// this.toc_collapsed = p_is_collapsed;
 	}
 
 	setEditingManager(p_edit_manager) {
@@ -742,7 +743,7 @@ class SelectElemsTool extends BaseTool {
 
 	prepare(p_mapctx) {
 
-		//console.trace(":: 745 ::");
+		console.log("::: prepare ::::");
 
 		if (this.editmanager == null) {
 			throw new Error("SelectElemsTool, mandatory previous use of 'setEditingManager' has not happened");
@@ -886,7 +887,7 @@ class SelectElemsTool extends BaseTool {
 						const canvas_layers = {'normal': 'temporary', 'label': 'temporary' };
 						const hlStyleDict = p_mapctx.getHighlightStyleDict("NORMAL", this.lyrkey);
 
-						p_mapctx.featureCollection.featuresdraw(this.lyrkey, canvas_layers, hlStyleDict, out_id_list)
+						p_mapctx.featureCollection.featuresdraw(this.lyrkey, canvas_layers, hlStyleDict, out_id_list);
 
 						this.rect = null;
 					}
@@ -930,8 +931,9 @@ class SelectElemsTool extends BaseTool {
 
 		console.info("[INFO] SelectElemsTool cleanup");
 
-		//this.editfeat_engaged = false;
-		//this.editmanager.resetCurrentEditFeatureHolder();
+		this.rect = null;
+		this.selection_list.clear();
+		this.lyrkey = null;
 	}	
 }
 
@@ -1218,6 +1220,7 @@ export class ToolManager {
 	editmgr;
 	maptools;
 	mapcontrolmgrs;
+	ctrl_boxes_for_toolclass;
 	ctrl_boxes;
 
 	constructor(p_mapctx, p_mapctx_config_var) {
@@ -1231,7 +1234,8 @@ export class ToolManager {
 		// this.maptools = [new DefaultTool(), new MultiTool()];
 		this.maptools = [new MultiTool(p_mapctx)];
 		this.mapcontrolmgrs = [];
-		this.ctrl_boxes = {};
+		this.ctrl_boxes_for_toolclass = {};
+		this.ctrl_boxes = new Map();
 		
 		const tool_keys = ["InfoTool", "PointEditTool", "SimplePathEditTool"];
 		if (p_mapctx_config_var["togglable_tools"] !== undefined && p_mapctx_config_var["togglable_tools"].length > 0) {	
@@ -1284,7 +1288,6 @@ export class ToolManager {
 				console.info(`[INFO] Delayed setting of edit mgr. for tool '${t.name}' is now completed`);
 			}
 		}
-
 	}
 
 	addTool(p_toolinstance) {
@@ -1348,9 +1351,12 @@ export class ToolManager {
 
 	setCtrlBoxForTool(p_classname, p_ctrl_box, p_cb_key) {
 
-		console.log("setCtrlBoxForTool:", p_classname);
+		const k = p_ctrl_box.constructor.name;
+		if (!this.ctrl_boxes.has(k)) {
+			this.ctrl_boxes.set(k, p_ctrl_box);
+		}
 
-		this.ctrl_boxes[p_classname] = {
+		this.ctrl_boxes_for_toolclass[p_classname] = {
 			ctrl_box: p_ctrl_box,
 			cb_key: p_cb_key
 		}
@@ -1358,7 +1364,7 @@ export class ToolManager {
 
 	enableTool(p_mapctx, p_classname, p_do_enable) {
 
-		let foundtool = this.findTool(p_classname);
+		let cb_item, cbs_changed = new Set(), foundtool = this.findTool(p_classname);
 
 		if (foundtool == null) {
 			return null;
@@ -1369,11 +1375,12 @@ export class ToolManager {
 		}
 
 		// untoggle control if tool is being disabled and setCtrlBoxForTool was prev. used for the tool being changed
-		if (!p_do_enable && this.ctrl_boxes[p_classname] !== undefined) {
+		/*console.log("::: 1376 ", p_classname, !p_do_enable, foundtool.enabled, (this.ctrl_boxes[p_classname] !== undefined));
+		if (!p_do_enable && foundtool.enabled && this.ctrl_boxes[p_classname] !== undefined) {
 			const cb_item = this.ctrl_boxes[p_classname];
 			cb_item.ctrl_box.toggleOff(cb_item.cb_key);
 			cb_item.ctrl_box.print(p_mapctx);
-		}
+		}*/
 
 		if (GlobalConst.getDebug("TOOLENABLE")) {
 			console.info("[DBG:TOOLENABLE] enableTool, tool:", foundtool.name, "enabled:", p_do_enable);
@@ -1390,11 +1397,20 @@ export class ToolManager {
 						continue;
 					}		
 					this.maptools[j].setEnabled(p_mapctx, false);
+					if (this.ctrl_boxes_for_toolclass[this.maptools[j].constructor.name] !== undefined) {
+						cb_item = this.ctrl_boxes_for_toolclass[this.maptools[j].constructor.name];
+						cb_item.ctrl_box.toggleOff(cb_item.cb_key);		
+						cbs_changed.add(cb_item.ctrl_box.constructor.name);	
+					}
 				}	
 
 				// enable chosen tool
 				foundtool.setEnabled(p_mapctx, true);	
-
+				if (this.ctrl_boxes_for_toolclass[p_classname] !== undefined) {
+					cb_item = this.ctrl_boxes_for_toolclass[p_classname];
+					cb_item.ctrl_box.toggleOn(cb_item.cb_key);		
+					cbs_changed.add(cb_item.ctrl_box.constructor.name);		
+				}
 			} else {
 
 				// Enable default tool, keeping all others disabled
@@ -1403,7 +1419,21 @@ export class ToolManager {
 						continue;
 					}
 					this.maptools[j].setEnabled(p_mapctx, this.maptools[j].defaultintoggle);
+					if (this.ctrl_boxes_for_toolclass[p_classname] !== undefined) {
+						cb_item = this.ctrl_boxes_for_toolclass[p_classname];
+						cb_item.ctrl_box.changeToggleFlag(cb_item.cb_key, this.maptools[j].defaultintoggle);		
+						cbs_changed.add(cb_item.ctrl_box.constructor.name);	
+					}
+	
 				}
+			}
+		}
+
+		if (cbs_changed.size > 0) {
+			let cb;
+			for (const cbch of cbs_changed) {
+				cb = this.ctrl_boxes.get(cbch);
+				cb.print(p_mapctx);
 			}
 		}
 
