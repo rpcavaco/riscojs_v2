@@ -829,6 +829,7 @@ class SelectElemsTool extends BaseTool {
 
 		let maxv, ret = false; 
 		const terrain_bb = [], pt = [];
+		let stsz, found = 0, newids = [];
 
 		try {
 	
@@ -873,14 +874,40 @@ class SelectElemsTool extends BaseTool {
 						const out_id_list = [];
 						this.featureCollection.fetchWithRect(this.lyrkey, "INSIDE", terrain_bb, out_id_list);
 
-						console.log("out_id_list:", out_id_list);
+						stsz = this.selection_list.size;
 
-						out_id_list.forEach(item => this.selection_list.add(item));
+						if (out_id_list.length == 0) {
+
+							this.selection_list.clear();
+
+						} else {
+
+							for (let v of out_id_list) {
+								if (this.selection_list.has(v)) {
+									found++;
+								} else {
+									newids.push(v);
+								}
+							}
+	
+							if (newids.length == 0) {
+								for (let v of out_id_list) {
+									this.selection_list.delete(v);
+								}
+							} else {
+								for (let v of newids) {
+									this.selection_list.add(v);
+								}
+							}	
+						}						
 
 						const canvas_layers = {'normal': 'temporary', 'label': 'temporary' };
 						const hlStyleDict = p_mapctx.getHighlightStyleDict("NORMAL", this.lyrkey);
-
-						p_mapctx.featureCollection.featuresdraw(this.lyrkey, canvas_layers, hlStyleDict, out_id_list);
+						
+						if (stsz != this.selection_list.size) {
+							p_mapctx.renderingsmgr.clearAll(['temporary']);						
+							p_mapctx.featureCollection.featuresdraw(this.lyrkey, canvas_layers, hlStyleDict, this.selection_list);	
+						}
 
 						this.rect = null;
 					}
