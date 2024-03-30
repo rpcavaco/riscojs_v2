@@ -740,8 +740,6 @@ class SelectElemsTool extends BaseTool {
 
 	prepare(p_mapctx) {
 
-		console.log("::: prepare ::::");
-
 		if (this.editmanager == null) {
 			throw new Error("SelectElemsTool, mandatory previous use of 'setEditingManager' has not happened");
 		}

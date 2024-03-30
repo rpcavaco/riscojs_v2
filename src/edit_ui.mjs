@@ -160,26 +160,10 @@ export class EditCtrlBox extends ControlsBox {
 					case 'mouseup':
 
 						if (this.controls_funcs[ctrl_key]["endevent"] !== undefined) {
-							const ret = this.controls_funcs[ctrl_key]["endevent"](p_mapctx, p_evt, p_mapctx.cfgvar["basic"], GlobalConst, this.controls_state[ctrl_key]);
+							this.controls_funcs[ctrl_key]["endevent"](p_mapctx, p_evt, p_mapctx.cfgvar["basic"], GlobalConst, this.controls_state[ctrl_key]);
 
 							this.print(p_mapctx);
 							
-							// TODO - maybe to remove as no edit control is expected to be togglable
-
-							/*if (this.changeToggleFlag(ctrl_key, ret)) {
-								
-								const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
-								ctx.save();
-						
-								try {
-									const [left, top, boxw, boxh] = this.controls_boxes[ctrl_key];
-									this.drawControlFace(ctx, ctrl_key, left, top, boxw, boxh, p_mapctx.cfgvar["basic"], GlobalConst);
-								} catch(e) {
-									throw e;
-								} finally {
-									ctx.restore();
-								}
-							}*/
 						} else {
 							throw new Error("interact, missing endevent control func block for", ctrl_key);
 						}
