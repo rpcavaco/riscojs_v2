@@ -504,10 +504,7 @@ class PointEditTool extends BaseTool {
 		let gfctx;
 		const canvas_dims = [];		
 		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
-		for (const cl of this.canvaslayers) {
-			gfctx = p_mapctx.renderingsmgr.getDrwCtx(cl);
-			gfctx.clearRect(0, 0, ...canvas_dims); 	
-		}	
+		p_mapctx.renderingsmgr.clearAll(this.canvaslayers);
 
 	}
 
@@ -987,10 +984,7 @@ class SimplePathEditTool extends BaseTool {
 		let gfctx;
 		const canvas_dims = [];		
 		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
-		for (const cl of this.canvaslayers) {
-			gfctx = p_mapctx.renderingsmgr.getDrwCtx(cl);
-			gfctx.clearRect(0, 0, ...canvas_dims); 	
-		}	
+		p_mapctx.renderingsmgr.clearAll(this.canvaslayers);
 
 	}
 

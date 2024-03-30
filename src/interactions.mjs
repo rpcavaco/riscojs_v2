@@ -140,7 +140,6 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 			rows = [rmin, row, rmax];
 		}
 
-		// p_mapctx.renderingsmgr.clearAll(['temporary']);
 		const related_ids = {};
 
 		for (let c of cols) {
@@ -287,21 +286,6 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 				}
 	
 				if (spixly.layervisible && (p_maxdist == null || p_maxdist >=  findings[lyrk].dist)) {
-
-					//p_mapctx.renderingsmgr.clearAll(['temporary','transientmap']);
-
-					/*
-					let canvas_layers;
-					if (p_is_end_event) {
-						canvas_layers = {'normal': 'temporary', 'label': 'temporary' };
-					} else {
-						canvas_layers = {'normal': 'transientmap', 'label': 'transientmap' };
-					}
-					*/
-
-					// console.log(">> found k:", lyrk, "ids:", findings[lyrk].ids, "dist:", findings[lyrk].dist);
-
-					// console.error(findings[lyrk]);
 
 					for (let id of findings[lyrk].ids) {
 						feat = p_mapctx.featureCollection.get(lyrk, id);

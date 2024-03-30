@@ -285,7 +285,7 @@ function featureHover(p_mapctx, p_box, p_layer_key, p_feat_id, p_canvas_key) {
 		gfctx.strokeRect(...realbox);
 
 
-		p_mapctx.renderingsmgr.clearAll(['temporary', 'transientmap']);
+		p_mapctx.renderingsmgr.clearAll(['transientmap']);
 		p_mapctx.drawFeatureAsMouseSelected(p_layer_key, p_feat_id, "NORMAL", {'normal': 'transientmap', 'label': 'transientmap' });
 
 	} catch(e) {
