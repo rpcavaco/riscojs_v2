@@ -10,7 +10,7 @@ export function ctrToolTip(p_mapctx, p_evt, p_text, opt_deltas) {
 		return;
 	}
 	
-	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transientviz", '2d');
+	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transientviz");
 	gfctx.save();
 	const slack = 6;
 
@@ -89,7 +89,7 @@ export class MapPrintInRect {
 	}
 
 	remove(p_mapctx) {
-		const gfctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const gfctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 		gfctx.clearRect(this.left, this.top, this.boxw, this.boxh); 
 	}	
 	
@@ -288,7 +288,7 @@ export class ControlsBox extends MapPrintInRect {
 	print(p_mapctx) {
 
 		// const canvas_dims = [];
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 		ctx.save();
 
 		try {
@@ -422,7 +422,7 @@ export class Info {
 
 	_showCallout(p_feature_dict, p_scrx, p_scry, b_noline) {
 
-		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = this.mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 		this.callout = new MaptipBox(this.mapctx, this.mapctx.imgbuffer, p_feature_dict, this.styles, p_scrx, p_scry, ctx);
 		this.callout.tipclear();
 		this.callout.tipdraw(b_noline);
@@ -602,7 +602,7 @@ export class Info {
 				.then(
 					function(responsejson) {
 						// console.log("cust_canvas_baseclasses:828 - antes criação InfoBox");
-						const ctx = p_mapctx.renderingsmgr.getDrwCtx(that.canvaslayer, '2d');
+						const ctx = p_mapctx.renderingsmgr.getDrwCtx(that.canvaslayer);
 						const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
 						that.ibox = new InfoBox(p_mapctx, p_mapctx.imgbuffer, currlayer, responsejson, that.styles, p_scrx, p_scry, Info.infobox_pick, Info.expand_image, ctx, that.max_textlines_height);
 						that.ibox.infoclear();
@@ -641,7 +641,7 @@ export class Info {
 
 			ret = true;
 
-			const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+			const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 			const currlayer = p_mapctx.tocmgr.getLayer(p_layerkey);
 
 			const data = {};
@@ -764,7 +764,7 @@ export class OverlayMgr {
 
 		this.is_active = false;
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 
 		const mapdims = [];
 		p_mapctx.renderingsmgr.getCanvasDims(mapdims);
@@ -782,7 +782,7 @@ export class OverlayMgr {
 	drawImage(p_mapctx, p_imageobj) {
 
 		this.is_active = true;
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 
 		ctx.save();
 

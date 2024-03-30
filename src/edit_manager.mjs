@@ -276,7 +276,7 @@ export class EditingMgr extends MapPrintInRect {
 			return;
 		}
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 		ctx.save();
 
 		let edited_featcount, mapdims = [];

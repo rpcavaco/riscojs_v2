@@ -123,7 +123,7 @@
 			let dims = [];
 			this.getCanvasDims(dims);
 
-			const gfctx = this.getDrwCtx(ck, '2d');
+			const gfctx = this.getDrwCtx(ck);
 			// console.log("clear ck:", ck);
 			gfctx.clearRect(0, 0, ...dims); 
 		}		
@@ -175,7 +175,7 @@
 		const canvaskeys = ['base', 'normal', 'label', 'temporary'], dims=[];
 		this.getCanvasDims(dims);
 		for (let ctx, i=0; i<canvaskeys.length; i++) {
-			ctx = this.canvases[canvaskeys[i]].getContext('2d');
+			ctx = this.getDrwCtx(canvaskeys[i]);
 			try {
 				out_dict[canvaskeys[i]] = ctx.getImageData(0, 0, ...dims);
 			} catch(e) {
@@ -196,7 +196,7 @@
 		let ctx;
 		const dims=[];
 		for (const key in p_imgdata_dict) {
-			ctx = this.canvases[key].getContext('2d');
+			ctx = this.getDrwCtx(key);
 			if (opt_img_dims) {
 				ctx.clearRect(...p_pt_ins_scrcoords, ...opt_img_dims); 
 			} else {
@@ -217,7 +217,7 @@
 		let ctx, x, y;
 		const dims=[];
 		for (const key in p_imgdata_dict) {
-			ctx = this.canvases[key].getContext('2d');
+			ctx = this.getDrwCtx(key);
 			this.getCanvasDims(dims);
 			ctx.clearRect(0, 0, ...dims); 
 			if (p_scale != null) {
@@ -261,7 +261,7 @@
 		let ret_promise = null, ctx=null;
 
 		try {
-			ctx = this.canvases[p_canvas_key].getContext('2d');
+			ctx = this.getDrwCtx(p_canvas_key);
 			ctx.save();
 			// _GLOBAL_SAVE_RESTORE_CTR++;
 			p_symb.drawSimpleSymb(p_ctx, p_rendering_coords_pt, opt_dim);
@@ -294,8 +294,7 @@
 		let ret_promise = null, ctx="";
 
 		try {
-
-			ctx = this.canvases[p_canvas_key].getContext('2d');
+			ctx = this.getDrwCtx(p_canvas_key);
 			ctx.save();
 
 			ret_promise = new Promise((resolve, reject) => {

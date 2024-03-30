@@ -168,7 +168,7 @@ export class EditCtrlBox extends ControlsBox {
 
 							/*if (this.changeToggleFlag(ctrl_key, ret)) {
 								
-								const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+								const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 								ctx.save();
 						
 								try {
@@ -412,7 +412,7 @@ export class AdvTabletModeEditCtrlBox extends ControlsBox {
 
 							/*if (this.changeToggleFlag(ctrl_key, ret)) {
 								
-								const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+								const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 								ctx.save();
 						
 								try {

@@ -124,7 +124,7 @@ export class AnalysisMgr extends MapPrintInRect {
 
 		const icondim = GlobalConst.CONTROLS_STYLES.AM_ICONDIM;
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 		ctx.save();
 
 		this.preCalcDims(p_mapctx)
@@ -586,7 +586,7 @@ export class SelectionsNavigator extends MapPrintInRect {
 
 	_print(p_mapctx) {
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 		ctx.save();
 
 		this.preCalcDims(p_mapctx)

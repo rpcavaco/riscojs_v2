@@ -114,7 +114,7 @@ export class TOC  extends MapPrintInRect {
 
 	_print(p_mapctx) {
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 		ctx.save();
 
 		// cal width
@@ -520,7 +520,7 @@ export class TOC  extends MapPrintInRect {
 
 		let ctx = null, varstyles_groups_found=[];
 		if (SHOWROWS) {
-			ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+			ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 			ctx.save();
 			ctx.fillStyle = "cyan";	
 			ctx.strokeStyle = "cyan";	

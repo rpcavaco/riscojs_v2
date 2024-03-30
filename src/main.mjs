@@ -508,7 +508,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		this.renderingsmgr.getCanvasDims(mapdims);
 
 		const center_pt = this.getCenterPoint(mapdims);
-		const gfctx = this.renderingsmgr.getDrwCtx(canvaslayer, '2d');
+		const gfctx = this.renderingsmgr.getDrwCtx(canvaslayer);
 
 		gfctx.save();
 		gfctx.strokeStyle = "white";
@@ -648,7 +648,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		try {
 
-			ctx = this.renderingsmgr.getDrwCtx(p_canvaslayer, '2d');
+			ctx = this.renderingsmgr.getDrwCtx(p_canvaslayer);
 			this.renderingsmgr.getCanvasDims(canvas_dims);
 			ctx.clearRect(0, 0, ...canvas_dims); 	
 

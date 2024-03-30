@@ -253,7 +253,7 @@ export class PopupBox {
 
 function clearFeatureHover(p_mapctx, p_canvas_key) {
 	
-	const gfctx = p_mapctx.renderingsmgr.getDrwCtx(p_canvas_key, '2d');
+	const gfctx = p_mapctx.renderingsmgr.getDrwCtx(p_canvas_key);
 	const canvas_dims = [];		
 
 	p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
@@ -263,7 +263,7 @@ function clearFeatureHover(p_mapctx, p_canvas_key) {
 
 function featureHover(p_mapctx, p_box, p_layer_key, p_feat_id, p_canvas_key) {
 	
-	const gfctx = p_mapctx.renderingsmgr.getDrwCtx(p_canvas_key, '2d');
+	const gfctx = p_mapctx.renderingsmgr.getDrwCtx(p_canvas_key);
 	gfctx.save();
 	const slack = GlobalConst.CONTROLS_STYLES.FST_SEPSELBOXFROMCLASSBOX;
 	let realbox;

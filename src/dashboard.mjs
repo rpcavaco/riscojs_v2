@@ -110,7 +110,7 @@ export class DashboardPanel {
 
 	drawPagenavItems(p_mapctx) {
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 
 		ctx.save();
 
@@ -186,7 +186,7 @@ export class DashboardPanel {
 
 	drawCtrlButtons(p_mapctx) {
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 
 		try {
 			ctx.save();
@@ -298,7 +298,7 @@ export class DashboardPanel {
 
 		let counterfont, counterfntsize, txtfont, txtsize, gaugeStyle, gaugelinewidth;
 
-		ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 
 		for (let current_data of this.data) {
 
@@ -333,7 +333,7 @@ export class DashboardPanel {
 					centerx = left + width / 2.0;
 					centery = top + height / 2.0;
 
-					ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+					ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 					ctx.save();
 
 					if (p_mapctx.cfgvar["basic"]["style_override"] !== undefined && p_mapctx.cfgvar["basic"]["style_override"]["dash_counterfont"] !== undefined) {
@@ -551,7 +551,7 @@ export class DashboardPanel {
 		this.clear(p_mapctx);
 		this.calcDims(p_mapctx);
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 
 		ctx.save();
 		
@@ -613,7 +613,7 @@ export class DashboardPanel {
 		// data_viz layer intended for 'singletons',lets clear the whole lot
 		const dims=[];
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 		p_mapctx.getCanvasDims(dims);
 		ctx.clearRect(0, 0, ...dims); 
 	}

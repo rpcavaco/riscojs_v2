@@ -53,7 +53,7 @@ class MousecoordsPrint extends PermanentMessaging {
 
 		p_mapctx.transformmgr.getTerrainPt([px, py], terr_pt);
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 		ctx.save();
 
 		try {
@@ -143,7 +143,7 @@ class MapScalePrint extends PermanentMessaging {
 	print(p_mapctx) {
 
 		const canvas_dims = [];
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 		ctx.save();
 
 		try {
@@ -293,7 +293,7 @@ class AttributionPrint extends PermanentMessaging {
 	print(p_mapctx) {
 
 		const canvas_dims = [];
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 		ctx.save();
 
 		try {
@@ -345,7 +345,7 @@ class LoadingPrint extends LoadingMessaging {
 	print(p_mapctx, p_msg) {
 
 		const canvas_dims = [];
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 		ctx.save();
 
 		try {
@@ -908,7 +908,7 @@ class BasicCtrlBox extends ControlsBox {
 							
 							/*if (this.changeToggleFlag(ctrl_key, ret)) {
 								
-								const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+								const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 								ctx.save();
 						
 								try {
@@ -1022,7 +1022,7 @@ class BasemapCtrlBox extends MapPrintInRect {
 
 		const bx = this.itemBox(p_idx);
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 		ctx.save();
 
 		try {
@@ -1063,7 +1063,7 @@ class BasemapCtrlBox extends MapPrintInRect {
 
 	printSelFilter(p_mapctx) {
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 		ctx.save();
 
 		try {
@@ -1118,7 +1118,7 @@ class BasemapCtrlBox extends MapPrintInRect {
 
 	printSelBasemap(p_mapctx) {
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 		ctx.save();
 
 		try {

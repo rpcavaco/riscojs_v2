@@ -179,7 +179,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		// _gfctx has underscore to protect from automatic attribute collection from config files
 		if (b_forlabel) {
 			try {
-				this._gfctxlbl = p_mapctx.renderingsmgr.getDrwCtx(canvaskeyLabels, '2d');
+				this._gfctxlbl = p_mapctx.renderingsmgr.getDrwCtx(canvaskeyLabels);
 				// Requires definition of global var _GLOBAL_SAVE_RESTORE_CTRLbl
 				// _GLOBAL_SAVE_RESTORE_CTRLbl++;
 				this._gfctxlbl.save();
@@ -190,7 +190,7 @@ export const canvasVectorMethodsMixin = (Base) => class extends Base {
 		} else {
 			try {
 				//console.log("grabbed", this.key);
-				this._gfctx = p_mapctx.renderingsmgr.getDrwCtx(canvaskey, '2d');
+				this._gfctx = p_mapctx.renderingsmgr.getDrwCtx(canvaskey);
 				// _GLOBAL_SAVE_RESTORE_CTR++;
 				this._gfctx.save();
 			} catch(e) {

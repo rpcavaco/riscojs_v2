@@ -140,7 +140,7 @@ async function genImage(p_mapctx, p_ctx, p_icon_func_dict, p_graphicbox_entry, p
 
 function classHover(p_mapctx, p_box) {
 	
-	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transientviz", '2d');
+	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transientviz");
 	gfctx.save();
 	const slack = GlobalConst.CONTROLS_STYLES.SEG_SEPSELBOXFROMCLASSBOX;
 	let realbox;
@@ -169,7 +169,7 @@ function classHover(p_mapctx, p_box) {
 
 function cmdHover(p_mapctx, p_box) {
 	
-	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transientviz", '2d');
+	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transientviz");
 	gfctx.save();
 
 	const canvas_dims = [];		
@@ -190,7 +190,7 @@ function cmdHover(p_mapctx, p_box) {
 
 function clearHover(p_mapctx) {
 	
-	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transientviz", '2d');
+	const gfctx = p_mapctx.renderingsmgr.getDrwCtx("transientviz");
 	const canvas_dims = [];		
 
 	p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
@@ -312,7 +312,7 @@ export class SlicingPanel {
 
 	drawTreemapPagenavItems(p_mapctx) {
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 
 		ctx.save();
 
@@ -388,7 +388,7 @@ export class SlicingPanel {
 
 	drawCtrlButtons(p_mapctx) {
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 
 		try {
 			ctx.save();
@@ -643,7 +643,7 @@ export class SlicingPanel {
 
 		// console.log(response);
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 
 		const ost = GlobalConst.CONTROLS_STYLES.SEG_SEPFROMCLASSBOUNDARY;
 		let color, boxw, boxh, tm0=null, tm1, tm2, tm3, tm4, perc, proptxt, origx, top, limh, limw, largeh=false, allowed_lines, lbl;
@@ -1018,7 +1018,7 @@ export class SlicingPanel {
 		this.clear(p_mapctx);
 		this.calcDims(p_mapctx);
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 
 		ctx.save();
 		
@@ -1145,7 +1145,7 @@ export class SlicingPanel {
 		// data_viz layer intended for 'singletons',lets clear the whole lot
 		const dims=[];
 
-		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer, '2d');
+		const ctx = p_mapctx.renderingsmgr.getDrwCtx(this.canvaslayer);
 		p_mapctx.getCanvasDims(dims);
 		ctx.clearRect(0, 0, ...dims); 
 

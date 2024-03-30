@@ -152,7 +152,7 @@ const canvasRasterMethodsMixin = (Base) => class extends Base {
 		const that = this;
 		p_img.onload = function() {
 
-			const gfctx = pp_mapctxt.renderingsmgr.getDrwCtx(p_lyr.canvasKey, '2d'); //, true);
+			const gfctx = pp_mapctxt.renderingsmgr.getDrwCtx(p_lyr.canvasKey); //, true);
 
 			gfctx.save();
 			// Requires definition of global var _GLOBAL_SAVE_RESTORE_CTR
