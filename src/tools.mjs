@@ -883,6 +883,11 @@ class SelectElemsTool extends BaseTool {
 
 						out_id_list.forEach(item => this.selection_list.add(item));
 
+						const canvas_layers = {'normal': 'temporary', 'label': 'temporary' };
+						const hlStyleDict = p_mapctx.getHighlightStyleDict("NORMAL", this.lyrkey);
+
+						p_mapctx.featureCollection.featuresdraw(this.lyrkey, canvas_layers, hlStyleDict, out_id_list)
+
 						this.rect = null;
 					}
 					break;

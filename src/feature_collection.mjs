@@ -499,7 +499,7 @@ export class FeatureCollection {
 	}	
 
 
-	featuresdrawNext(p_layerkey, p_featidlist, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
+	featuresdrawNext(p_layerkey, p_featidlist, opt_alt_canvaskey, opt_symbs) {
 
 		const feat_id = p_featidlist.shift();
 		const that = this;
@@ -511,12 +511,10 @@ export class FeatureCollection {
 			} else {
 				try {
 
-					// featuredraw(p_layerkey, p_featid, p_alt_canvaskey, opt_symbs, opt_checkfeatattrsfunc, opt_terrain_env) {
-
-					that.featuredraw(p_layerkey, feat_id, opt_alt_canvaskey, opt_symbs, that.layers[p_layerkey].isFeatureInsideFilter.bind(that.layers[p_layerkey]), opt_terrain_env).then(
+					that.featuredraw(p_layerkey, feat_id, opt_alt_canvaskey, opt_symbs, that.layers[p_layerkey].isFeatureInsideFilter.bind(that.layers[p_layerkey])).then(
 						(feat) => { 
 							// console.log(":: 336 ::", feat);
-							that.featuresdrawNext(p_layerkey, p_featidlist, opt_alt_canvaskey, opt_symbs, opt_terrain_env).then(
+							that.featuresdrawNext(p_layerkey, p_featidlist, opt_alt_canvaskey, opt_symbs).then(
 								() => { 
 									console.assert(p_featidlist.length == 0, `featuresdrawNext, promise resolved with non-zero worklist: ${JSON.stringify(p_featidlist)}`); 
 									resolve();
@@ -537,31 +535,36 @@ export class FeatureCollection {
 
 	}
 	
-	featuresdraw(p_layerkey, opt_alt_canvaskey, opt_symbs, opt_terrain_env) {
+	featuresdraw(p_layerkey, opt_alt_canvaskey, opt_symbs, opt_fids_list) {
 
 		let featidlist=[];
-
-		// console.log(":::: 341 featuresdraw", p_layerkey);
-
 
 		if (this.featList[p_layerkey] === undefined) {
 			throw new Error(`layer '${p_layerkey}' was not set through 'setLayer' method`);
 		}
 
-		for (let id in this.featList[p_layerkey]) {
-			if (this.featList[p_layerkey].hasOwnProperty(id)) {
-				featidlist.push(id);
-				// if (this.layers[p_layerkey].isFeatureInsideFilter(feat.a)) {
-				//	this.layers[p_layerkey].refreshitem(this.mapctx, feat.g, feat.a, feat.l, id, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
-				//}
-			}
+		if (opt_fids_list) {
+			for (let id of opt_fids_list) {
+				if (this.featList[p_layerkey].hasOwnProperty(id)) {
+					featidlist.push(id);
+				}
+			}	
+		} else {
+			for (let id in this.featList[p_layerkey]) {
+				if (this.featList[p_layerkey].hasOwnProperty(id)) {
+					featidlist.push(id);
+					// if (this.layers[p_layerkey].isFeatureInsideFilter(feat.a)) {
+					//	this.layers[p_layerkey].refreshitem(this.mapctx, feat.g, feat.a, feat.l, id, opt_alt_canvaskey, opt_symbs, opt_terrain_env);
+					//}
+				}
+			}	
 		}
-
+		
 		const that = this;
 
 		return new Promise((resolve, reject) => {
 			if (featidlist.length > 0) {
-				that.featuresdrawNext(p_layerkey, featidlist, opt_alt_canvaskey, opt_symbs, opt_terrain_env).then(
+				that.featuresdrawNext(p_layerkey, featidlist, opt_alt_canvaskey, opt_symbs).then(
 					() => { 
 						resolve(); 
 					}
@@ -583,18 +586,13 @@ export class FeatureCollection {
 
 		const that = this;
 
-		// console.log(":::: 394 :::::", lyrkey, JSON.stringify(p_work_layerkeys));
-
-
 		if (lyrkey) {
 
 			this.featuresdraw(lyrkey).then(
 				(x) => {
-					// console.log(":::: 401 :::::", x, lyrkey, JSON.stringify(p_work_layerkeys));
 					that.redrawAllVectorLayersNext(p_work_layerkeys);
 				}
 			).catch((e) => {
-				// console.log(":::: ERR 405 :::::", e);
 				console.error(e);
 			});
 

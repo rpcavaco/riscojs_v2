@@ -581,12 +581,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		}
 	}
 
-	drawSingleFeature(p_layer_key, p_obj_id, b_is_sel, opt_geomtype_keyed_symbdict, opt_alt_canvaskeys_dict) {
-
-		// opt_alt_canvaskeys_dict  example: {'normal': 'temporary', 'label': 'temporary' }
-
-		let symb, classkey;
-		let lsymb = new GrSymbol();
+	drawSingleFeature(p_layer_key, p_obj_id, b_is_sel, opt_symbdict, opt_alt_canvaskeys_dict) {
 
 		const ly = this.tocmgr.getLayer(p_layer_key);
 
@@ -596,58 +591,18 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		if (ly != null && ly.layervisible) {
 
-			if (opt_geomtype_keyed_symbdict!=null && opt_geomtype_keyed_symbdict[ly.geomtype] === undefined) {
-				console.error("==== opt_geomtype_keyed_symbdict ====");
-				console.error(opt_geomtype_keyed_symbdict);
-				throw new Error(`opt_geomtype_keyed_symbdict has no ${ly.geomtype} content`);
-			}
-
-			if (b_is_sel && ly.default_sel_symbol!='none') {
-				Object.assign(lsymb, ly.default_sel_symbol);
-			} else {
-				Object.assign(lsymb, ly.default_symbol);
-			}
-
-			if (ly.geomtype == "point") {
-				if (opt_geomtype_keyed_symbdict != null && opt_geomtype_keyed_symbdict[ly.geomtype].marker !== undefined) {
-					// opt_geomtype_keyed_symbdict[ly.geomtype] is symbol config dictionary
-					classkey = opt_geomtype_keyed_symbdict[ly.geomtype].marker;					
-				} else {
-					// symb is symbol object
-					if (b_is_sel && ly.default_sel_symbol!='none') {
-						symb = ly.default_sel_symbol;
-					} else {
-						symb = ly.default_symbol;
-					}
-					classkey = symb.marker;					
-				}
-			} else {
-				classkey = ly.geomtype;
-			}
-			
-			if (opt_geomtype_keyed_symbdict != null) {
-
-				symb = new DynamicSymbol(this.tocmgr.mode, classkey);
-				Object.assign(symb, opt_geomtype_keyed_symbdict[ly.geomtype]);
-				if (opt_geomtype_keyed_symbdict['label'] !== undefined) {
-					Object.assign(lsymb, opt_geomtype_keyed_symbdict['label']);
-				}
-			}
-
-			console.assert(symb != null, `drawSingleFeature, no 'symb' defined for ${p_layer_key}, on selections:${b_is_sel}`);
-
-			if (GlobalConst.getDebug("DRAWASSELECTED")) {
-				console.log(`[DBG:DRAWASSELECTED] drawSingleFeature graphicsymb: ${JSON.stringify(symb)}, label: ${JSON.stringify(lsymb)}`);
+			if (b_is_sel && GlobalConst.getDebug("DRAWASSELECTED")) {
+				console.log(`[DBG:DRAWASSELECTED] drawSingleFeature symbdict: ${JSON.stringify(opt_symbdict)}`);
 				console.log(`[DBG:DRAWASSELECTED] drawSingleFeature lkey:${p_layer_key}, oid:${p_obj_id}, canvaskeys:${JSON.stringify(opt_alt_canvaskeys_dict)}`);
 			}
 
 			return new Promise((resolve,reject) => {
 				const env = [];
 				this.getMapBounds(env);
-				this.featureCollection.featuredraw(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict, { "graphic": symb, 'label': lsymb }, null, env ).then(
+				this.featureCollection.featuredraw(p_layer_key, p_obj_id, opt_alt_canvaskeys_dict, opt_symbdict, null, env ).then(
 					(feat) => { 
 
-						if (GlobalConst.getDebug("DRAWASSELECTED")) {
+						if (b_is_sel && GlobalConst.getDebug("DRAWASSELECTED")) {
 							console.log(`[DBG:DRAWASSELECTED] drawSingleFeature featuredraw, feat!=null: ${feat!=null}`);
 						}
 
@@ -746,18 +701,11 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		}
 	}
 
-	// opt_alt_canvaskeys_dict: {'normal': 'temporary', 'label': 'temporary' }
-	drawFeatureAsMouseSelected(p_layer_key, p_obj_id, p_mode, opt_alt_canvaskeys_dict) {
+	getHighlightStyleDict(p_mode, p_layer_key, b_is_sel) {
 
 		let hlStyles, basestyle, layercfgkey;
-
-		if (!p_obj_id) {
-			throw new Error(`drawFeatureAsMouseSelected, null obj_id`);
-		}		
-
-		if (GlobalConst.getDebug("DRAWASSELECTED")) {
-			console.trace(`[DBG:DRAWASSELECTED]`);
-		}
+		let symb, classkey;
+		let lsymb = new GrSymbol();
 
 		switch (p_mode) {
 
@@ -780,7 +728,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			default:
 				throw new Error(`drawFeatureAsMouseSelected, invalid mode: ${p_mode}`);
 
-		}
+		}	
 
 		if (layercfgkey != "vertexmove") {
 			if (this.cfgvar['basic']['featmousesel_highlight'] !== undefined) {
@@ -799,7 +747,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		const ly = this.tocmgr.getLayer(p_layer_key);
 
 		if (!ly) {
-			throw new Error(`drawFeatureAsMouseSelected: layer '${p_layer_key}' is missing in TOC Manager`);
+			throw new Error(`getHighlightStyleDict: layer '${p_layer_key}' is missing in TOC Manager`);
 		}
 
 		if (ly[layercfgkey] !== undefined) {
@@ -808,8 +756,65 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			mergeDeep(hlStyles[ly.geomtype], d);
 		}
 
+		if (hlStyles==null || hlStyles[ly.geomtype] === undefined) {
+			console.error("==== getHighlightStyleDict ====");
+			console.error(hlStyles);
+		}
+
+		//return hlStyles[ly.geomtype];
+
+		if (b_is_sel && ly.default_sel_symbol!='none') {
+			Object.assign(lsymb, ly.default_sel_symbol);
+		} else {
+			Object.assign(lsymb, ly.default_symbol);
+		}
+
+		if (ly.geomtype == "point") {
+			if (hlStyles[ly.geomtype].marker !== undefined) {
+				// opt_geomtype_keyed_symbdict[ly.geomtype] is symbol config dictionary
+				classkey = hlStyles[ly.geomtype].marker;					
+			} else {
+				// symb is symbol object
+				if (b_is_sel && ly.default_sel_symbol!='none') {
+					symb = ly.default_sel_symbol;
+				} else {
+					symb = ly.default_symbol;
+				}
+				classkey = symb.marker;					
+			}
+		} else {
+			classkey = ly.geomtype;
+		}
+		
+		if (hlStyles[ly.geomtype] !== undefined) {
+
+			symb = new DynamicSymbol(this.tocmgr.mode, classkey);
+			Object.assign(symb, hlStyles[ly.geomtype]);
+			if (hlStyles[ly.geomtype]['label'] !== undefined) {
+				Object.assign(lsymb, hlStyles[ly.geomtype]['label']);
+			}
+		}
+
+		console.assert(symb != null, `drawSingleFeature, no 'symb' defined for ${p_layer_key}, on selections:${b_is_sel}`);		
+
+		return { "graphic": symb, 'label': lsymb };
+	}
+
+	// opt_alt_canvaskeys_dict: {'normal': 'temporary', 'label': 'temporary' }
+	drawFeatureAsMouseSelected(p_layer_key, p_obj_id, p_mode, opt_alt_canvaskeys_dict) {
+
+		if (!p_obj_id) {
+			throw new Error(`drawFeatureAsMouseSelected, null obj_id`);
+		}		
+
 		if (GlobalConst.getDebug("DRAWASSELECTED")) {
-			console.log(`[DBG:DRAWASSELECTED] drawFeatureAsMouseSelected hstyles: ${JSON.stringify(hlStyles)}`);
+			console.trace(`[DBG:DRAWASSELECTED]`);
+		}
+
+		let hlStyle = this.getHighlightStyleDict(p_mode, p_layer_key);
+
+		if (GlobalConst.getDebug("DRAWASSELECTED")) {
+			console.log(`[DBG:DRAWASSELECTED] drawFeatureAsMouseSelected hstyles: ${JSON.stringify(hlStyle)}`);
 			const f = this.featureCollection.get(p_layer_key, p_obj_id);
 			console.log("  feature, layer:", p_layer_key, ", id:", p_obj_id, ", content:", JSON.stringify(f));
 		}
@@ -818,7 +823,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 
 		// p_layer_key, p_obj_id, b_is_sel, opt_geomtype_keyed_symbdict, opt_alt_canvaskeys_dict
 
-		return this.drawSingleFeature(p_layer_key, p_obj_id, true, hlStyles, opt_alt_canvaskeys_dict);
+		return this.drawSingleFeature(p_layer_key, p_obj_id, true, hlStyle, opt_alt_canvaskeys_dict);
 	}
 
 	transformsChanged(b_dodraw) {
