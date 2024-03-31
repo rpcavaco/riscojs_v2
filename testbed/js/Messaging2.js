@@ -136,7 +136,7 @@ let MessagesController2 = {
 				msgsdiv.style.left = '30%';
 			}
 			if (!topchange) {
-				if (p_type == "TEXT" || p_type == "NUMBER" || p_type.startsWith("SELECT")) {
+				if (p_type.startsWith("TEXT") || p_type == "NUMBER" || p_type.startsWith("SELECT")) {
 					msgsdiv.style.top = '40%';
 				} else {
 					msgsdiv.style.top = '10%';
@@ -154,7 +154,7 @@ let MessagesController2 = {
 			} else if (p_type == "INFO") {
 				this.persist = false;
 				iconimg.src = this.media_root + "media/info-3-32.png";
-			} else if (p_type == "YESNO" || p_type == "YESNOCANCEL" || p_type == "OKCANCEL" || p_type == "SELECT" || p_type == "TEXT" || p_type == "NUMBER") {
+			} else if (p_type == "YESNO" || p_type == "YESNOCANCEL" || p_type == "OKCANCEL" || p_type.startsWith("SELECT") || p_type.startsWith("TEXT")|| p_type == "NUMBER") {
 				this.persist = true;
 				iconimg.src = this.media_root + "media/q-32.png";
 			}
@@ -163,21 +163,28 @@ let MessagesController2 = {
 
 			if (typeof this.messageText == "string") {
 
-				if (p_type == "TEXT") {
+				let prev_p = null;
+				if (p_type.startsWith("TEXT")) {
+					prev_p = document.createElement("p");
+					prev_p.insertAdjacentHTML('afterbegin', this.messageText);
 					contentelem = document.createElement("input");
 					contentelem.setAttribute('type', 'text');
-					contentelem.value = this.messageText;
-					initialvalue = contentelem.value;
+					//contentelem.value = this.messageText;
+					//initialvalue = contentelem.value;
 					if (opt_constraintitems) {
-						if (opt_constraintitems['pattern'] !== undefined) {
-							contentelem.setAttribute('pattern',opt_constraintitems['pattern']);
+						for (let item of ['placeholder', 'pattern']) {
+							if (opt_constraintitems[item] !== undefined) {
+								contentelem.setAttribute(item, opt_constraintitems[item]);
+							}
 						}
 					}
 				} else if (p_type == "NUMBER") {
+					prev_p = document.createElement("p");
+					prev_p.insertAdjacentHTML('afterbegin', this.messageText);
 					contentelem = document.createElement("input");
 					contentelem.setAttribute('type', 'number');
-					contentelem.value = this.messageText;
-					initialvalue = contentelem.value;
+					//contentelem.value = this.messageText;
+					//initialvalue = contentelem.value;
 					if (opt_constraintitems) {
 						for (let item of ['min', 'max', 'step', 'pattern']) {
 							if (opt_constraintitems[item] !== undefined) {
@@ -191,7 +198,11 @@ let MessagesController2 = {
 				} else {
 					contentelem = document.createElement("p");
 					contentelem.insertAdjacentHTML('afterbegin', this.messageText);
-					initialvalue = this.messageText;
+					//initialvalue = this.messageText;
+				}
+
+				if (prev_p) {
+					msgsdiv.appendChild(prev_p);
 				}
 				msgsdiv.appendChild(contentelem);
 
@@ -205,7 +216,7 @@ let MessagesController2 = {
 					return;
 				}
 
-				if (p_type == "TEXT" || p_type == "NUMBER") {
+				if (p_type.startsWith("TEXT") || p_type == "NUMBER") {
 					console.assert(this.messageText.length > 0 && this.messageText.length < 4, "array of messages for TEXT_xx mode must have 1,2 or 3 lines (just caption; caption, initial textbox content; caption, textbox prefix, initial textbox content)");
 				}
 
@@ -218,11 +229,11 @@ let MessagesController2 = {
 				msgsdiv.appendChild(innercontentdiv);
 				
 				for (let i=1; i<this.messageText.length; i++) {
-					if (i > 1 && !p_type == "TEXT") {
+					if (i > 1) {
 						br = document.createElement("br");
 						innercontentdiv.appendChild(br);	
 					}
-					if (p_type == "TEXT" && ((i==1 && this.messageText.length == 2) || (i==2 && this.messageText.length == 3))) {
+					if (p_type.startsWith("TEXT") && ((i==1 && this.messageText.length == 2) || (i==2 && this.messageText.length == 3))) {
 
 						contentelem = document.createElement("input");
 						contentelem.setAttribute('type', 'text');
@@ -281,19 +292,22 @@ let MessagesController2 = {
 					ctrldiv.style.float = "right";
 					innercontentdiv.appendChild(ctrldiv);
 
-					if (p_type == "YESNO" || p_type == "YESNOCANCEL" || p_type.endsWith("OKCANCEL") || p_type == "TEXT" || p_type == "NUMBER") {
+					if (p_type == "YESNO" || p_type == "YESNOCANCEL" || p_type.endsWith("OKCANCEL") || p_type.startsWith("TEXT") || p_type == "NUMBER") {
 
 						btn1 = document.createElement("button");
 						const btn2 = document.createElement("button");
 						let btn3 = null;
 						btn1.setAttribute("type", "button");
 						btn2.setAttribute("type", "button");
-						if (p_type.startsWith("YESNO")) {
+						if (p_type.indexOf("YESNO") >= 0) {
 							btn1.insertAdjacentHTML('afterBegin', this.i18nMsg("Y", true));
 							btn2.insertAdjacentHTML('afterBegin', this.i18nMsg("N", true));
 							if (p_type.endsWith("CANCEL")) {
 								btn3 = document.createElement("button");
 								btn3.insertAdjacentHTML('afterBegin', this.i18nMsg("C", true));
+							}
+							if (p_type.startsWith("TEXT")) {
+								btn1.disabled = true;
 							}
 						} else if (p_type.endsWith("OKCANCEL") || p_type == "TEXT" || p_type == "NUMBER") {
 							btn1.insertAdjacentHTML('afterBegin', "Ok");
@@ -306,7 +320,11 @@ let MessagesController2 = {
 							ctrldiv.appendChild(btn3);
 						}
 
-						// Activation of OK button when effective content change happens 
+						if (!!initialvalue) {
+							initialvalue = "";
+						}
+
+						// Activation of OK/YES button when effective content change happens 
 						(function(p_init_value, p_content_elem, p_btn) {
 							['change', 'keypress'].forEach(evttype => {
 								p_content_elem.addEventListener(evttype, function(ev) {
@@ -519,9 +537,16 @@ let MessagesController2 = {
 		this._setMessage(p_msg_txt, false, "SELECTDIRECT", p_callback, p_value_text_pairs, opt_constraint_items);
 	},		
 
-	textInputMessage: function(p_msg_txt, p_callback, opt_constraint_items) {
+	textInputMessage: function(p_msg_txt, p_callback, opt_constraint_items, opt_yes_no_cancel) {
 
-		this._setMessage(p_msg_txt, false, "TEXT", p_callback, null, opt_constraint_items);
+		let type;
+		if (opt_yes_no_cancel) {
+			type = 'TEXTYESNOCANCEL';
+		} else {
+			type = 'TEXT';
+		}
+
+		this._setMessage(p_msg_txt, false, type, p_callback, null, opt_constraint_items);
 	},
 	
 	numberInputMessage: function(p_msg_txt, p_callback, opt_constraint_items) {

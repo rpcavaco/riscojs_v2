@@ -708,7 +708,8 @@ class SelectElemsTool extends BaseTool {
 	rect;
 	featureCollection;
 	selection_list;
-	lyrkey = null;
+	lyrkey;
+	gisid_fieldname;
 
 	constructor(p_mapctx) {
 		super(p_mapctx, true, false); // part of general toggle group, default in toogle
@@ -716,8 +717,9 @@ class SelectElemsTool extends BaseTool {
 		this.editmanager = null;
 		this.rect = null;
 		this.featureCollection = p_mapctx.featureCollection;
-		this.selection_list = new Set();
+		this.selection_list = new Map();
 		this.lyrkey = null;
+		this.gisid_fieldname = null;
 	}
 
 	incompatibleWithPan() {
@@ -737,6 +739,25 @@ class SelectElemsTool extends BaseTool {
 			throw new Error("SelectElemsTool setEditingManager, no edit manager passed");
 		}
 	}
+
+	getSelectionList() {
+		return [...this.selection_list.values()];
+	}
+
+	setGisIdFieldname(p_name) {
+		this.gisid_fieldname = p_name;
+	}
+
+	/*
+	setSelectionFromGisIdList(p_gisid_list) {
+
+		for(let gisid of p_gisid_list) {
+
+		}
+
+		find(this.gisid_fieldname, "EQ", p_name_value_dict, out_id_list)
+	}
+	*/
 
 	prepare(p_mapctx) {
 
@@ -787,13 +808,14 @@ class SelectElemsTool extends BaseTool {
 
 			this.lyrkey = lyrks[0];
 
-		}		
-
+		}	
+		
+		this.rect = null;
+		this.selection_list.clear();
 	}
 
 	clearCanvas(p_mapctx) {
 
-		let gfctx;
 		const canvas_dims = [];		
 		p_mapctx.renderingsmgr.getCanvasDims(canvas_dims);
 		p_mapctx.renderingsmgr.clearAll(this.canvaslayers);
@@ -869,19 +891,19 @@ class SelectElemsTool extends BaseTool {
 						terrain_bb[2] = pt[0];
 						terrain_bb[3] = pt[1];
 
-						const out_id_list = [];
-						this.featureCollection.fetchWithRect(this.lyrkey, "INSIDE", terrain_bb, out_id_list);
+						const out_id_list_pairs = [];
+						this.featureCollection.fetchWithRect(this.lyrkey, "INSIDE", terrain_bb, out_id_list_pairs, this.gisid_fieldname);
 
 						stsz = this.selection_list.size;
 
-						if (out_id_list.length == 0) {
+						if (out_id_list_pairs.length == 0) {
 
 							this.selection_list.clear();
 
 						} else {
 
-							for (let v of out_id_list) {
-								if (this.selection_list.has(v)) {
+							for (let v of out_id_list_pairs) {
+								if (this.selection_list.has(v[0])) {
 									found++;
 								} else {
 									newids.push(v);
@@ -889,12 +911,12 @@ class SelectElemsTool extends BaseTool {
 							}
 	
 							if (newids.length == 0) {
-								for (let v of out_id_list) {
-									this.selection_list.delete(v);
+								for (let v of out_id_list_pairs) {
+									this.selection_list.delete(v[0]);
 								}
 							} else {
 								for (let v of newids) {
-									this.selection_list.add(v);
+									this.selection_list.set(v[0], v[1]);
 								}
 							}	
 						}						
@@ -904,7 +926,7 @@ class SelectElemsTool extends BaseTool {
 						
 						if (stsz != this.selection_list.size) {
 							p_mapctx.renderingsmgr.clearAll(['temporary']);						
-							p_mapctx.featureCollection.featuresdraw(this.lyrkey, canvas_layers, hlStyleDict, this.selection_list);	
+							p_mapctx.featureCollection.featuresdraw(this.lyrkey, canvas_layers, hlStyleDict, this.selection_list.keys());	
 						}
 
 						this.rect = null;
@@ -945,13 +967,20 @@ class SelectElemsTool extends BaseTool {
 		
 	}	
 
-	cleanUp(p_mapctx) {
+	_cleanUp() {
 
 		console.info("[INFO] SelectElemsTool cleanup");
 
 		this.rect = null;
 		this.selection_list.clear();
 		this.lyrkey = null;
+	}
+
+	cleanUp(p_mapctx) {
+
+		console.info("[INFO] SelectElemsTool cleanup");
+
+		this._cleanUp();
 	}	
 }
 

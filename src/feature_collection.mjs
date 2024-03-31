@@ -352,12 +352,12 @@ export class FeatureCollection {
 		return (out_id_list.length > 0);
 	}
 
-	fetchWithRect(p_layerkey, p_op, p_bbox_list, out_id_list) {
+	fetchWithRect(p_layerkey, p_op, p_bbox_list, out_id_list, opt_gisid_field) {
 
 		out_id_list.length = 0;
 
 
-		let feat, found;
+		let feat, found, gisid;
 		if (this.featList[p_layerkey] !== undefined) {
 
 			for (let id in this.featList[p_layerkey]) {
@@ -373,13 +373,19 @@ export class FeatureCollection {
 					}
 				}
 
+				if (opt_gisid_field) {
+					gisid = feat.a[opt_gisid_field];
+				} else {
+					gisid = id;
+				}
+
 				if (found) {
 					if (p_op == "INSIDE") {
-						out_id_list.push(id);
+						out_id_list.push([id, gisid]);
 					}
 				} else {
 					if (p_op == "OUTSIDE") {
-						out_id_list.push(id);
+						out_id_list.push([id, gisid]);
 					}
 				}
 
