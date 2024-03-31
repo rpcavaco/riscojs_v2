@@ -247,6 +247,16 @@ export class ControlsBox extends MapPrintInRect {
 		}
 	}
 
+	changeEnableFlag(p_key, p_status) {
+		let has_changed = false;
+
+		if (this.controls_state[p_key].disabled != !p_status) {
+			has_changed = true;
+			this.controls_state[p_key].disabled = !p_status;
+		}
+		return has_changed;
+	}	
+
 	changeToggleFlag(p_key, p_toggle_status) {
 		let has_changed = false;
 

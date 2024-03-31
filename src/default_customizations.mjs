@@ -1467,7 +1467,7 @@ export class MapCustomizations {
 				sfem = this.mapctx.cfgvar["basic"]["single_feat_editing_mode"]; 
 			}
 
-			const em = new EditingMgr(this.mapctx, editable_layers, [toc], sfem)
+			const em = new EditingMgr(this.mapctx, editable_layers, [toc], sfem);
 			this.instances["editing"] = em;
 
 			toc.addWidgetToHideOnCollapse(em);

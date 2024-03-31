@@ -1062,7 +1062,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 			ic.setEditingEnabled(this, p_editing_is_enabled);
 		}
 	}
-
+	
 	getEditingManager() {
 
 		let ret = null;
@@ -1080,5 +1080,13 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		return ret;
 	}
 
+	hideEditingManager(p_mapctx) {
+
+		const em = this.getEditingManager();
+		if (em) {
+			em.hide(p_mapctx, true);
+		}
+
+	}	
 }
 
