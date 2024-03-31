@@ -748,16 +748,26 @@ class SelectElemsTool extends BaseTool {
 		this.gisid_fieldname = p_name;
 	}
 
-	/*
-	setSelectionFromGisIdList(p_gisid_list) {
+	setAndDrawSelectionFromGisIdList(p_mapctx, p_gisid_list) {
+
+		const out_ids = [];
+		let dict;
 
 		for(let gisid of p_gisid_list) {
 
+			out_ids.length = 0;
+			dict = {};
+			dict[this.gisid_fieldname] = gisid;
+
+			if (this.featureCollection.find(this.lyrkey, "EQ", dict, out_ids)) {
+				this.selection_list.set(out_ids[0], gisid);
+			}
+
 		}
 
-		find(this.gisid_fieldname, "EQ", p_name_value_dict, out_id_list)
+		this.drawSelection(p_mapctx);
+
 	}
-	*/
 
 	prepare(p_mapctx) {
 
@@ -845,11 +855,23 @@ class SelectElemsTool extends BaseTool {
 		return ret;
 	}
 
+	drawSelection(p_mapctx) {
+
+		const canvas_layers = {'normal': 'temporary', 'label': 'temporary' };
+		const hlStyleDict = p_mapctx.getHighlightStyleDict("NORMAL", this.lyrkey);
+
+		if (this.selection_list.size > 0) {
+			p_mapctx.renderingsmgr.clearAll(['temporary']);						
+			p_mapctx.featureCollection.featuresdraw(this.lyrkey, canvas_layers, hlStyleDict, this.selection_list.keys());	
+		}
+
+	}
+
 	async onEvent(p_mapctx, p_evt) {
 
-		let maxv, ret = false; 
+		let stsz, maxv, ret = false; 
 		const terrain_bb = [], pt = [];
-		let stsz, found = 0, newids = [];
+		let found = 0, newids = [];
 
 		try {
 	
@@ -919,15 +941,19 @@ class SelectElemsTool extends BaseTool {
 									this.selection_list.set(v[0], v[1]);
 								}
 							}	
-						}						
+						}
+						
+						if (stsz != this.selection_list.size) {
+							this.drawSelection(p_mapctx);
+						}
 
-						const canvas_layers = {'normal': 'temporary', 'label': 'temporary' };
+						/*const canvas_layers = {'normal': 'temporary', 'label': 'temporary' };
 						const hlStyleDict = p_mapctx.getHighlightStyleDict("NORMAL", this.lyrkey);
 						
 						if (stsz != this.selection_list.size) {
 							p_mapctx.renderingsmgr.clearAll(['temporary']);						
 							p_mapctx.featureCollection.featuresdraw(this.lyrkey, canvas_layers, hlStyleDict, this.selection_list.keys());	
-						}
+						}*/
 
 						this.rect = null;
 					}
