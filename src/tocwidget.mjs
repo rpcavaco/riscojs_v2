@@ -392,7 +392,7 @@ export class TOC  extends MapPrintInRect {
 						if (!lyr.layervisible) {
 							ctx.save();
 							ctx.strokeStyle = GlobalConst.CONTROLS_STYLES.TOC_STRIKETHROUGH_FILL;
-							ctx.lineWidth = 12;
+							ctx.lineWidth = GlobalConst.CONTROLS_STYLES.TOC_STRIKETHROUGH_WIDTH;
 							ctx.beginPath();
 							ctx.moveTo(txleft,cota-5);
 							ctx.lineTo(this.left + this.boxw[this.collapsedstate] - this.margin_offset, cota-4);
@@ -599,10 +599,17 @@ export class TOC  extends MapPrintInRect {
 									if (varstyles_groups_found.indexOf(vs["vsgroup"]) < 0) {
 										varstyles_groups_found.push(vs["vsgroup"]);
 										
-										prev += step;
+										//prev += step;
+										prev += this.margin_offset/4.0 + 1.6 * step;
+
 									}
 								}
-								next = prev + step;
+
+								if (vi == lyr["varstyles_symbols"].length-1) {
+									next = prev + 1.2 * step;
+								} else {
+									next = prev + step;
+								}
 
 								// use prev, next
 								if (ctx) {
