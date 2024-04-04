@@ -70,7 +70,7 @@ export class BaseTool {
 
 }
 
-export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_event, opt_actonselfeat_dict, opt_clickonemptyspace, opt_hoveronemptyspace) {
+export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdist, p_is_end_event, opt_actonselfeat_dict, opt_clickonemptyspace, opt_hoveronemptyspace, opt_prevent_marking_selections) {
 	
 	let spixly = null, ref_x, ref_y, max_y, col, row, maxrow, sqrid;
 
@@ -258,7 +258,11 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 				}
 
 				if (spixly.layervisible && (p_maxdist == null || p_maxdist >=  findings[lyrk].dist)) {
-					p_mapctx.renderingsmgr.clearAll(['temporary','transientmap']);
+					if (opt_prevent_marking_selections) {
+						p_mapctx.renderingsmgr.clearAll(['transientmap']);
+					} else {
+						p_mapctx.renderingsmgr.clearAll(['temporary','transientmap']);
+					}
 					break;
 				}
 			}

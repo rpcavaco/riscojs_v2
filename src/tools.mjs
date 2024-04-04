@@ -11,6 +11,9 @@ class MultiTool extends BaseTool {
 	imgs_dict;
 	wheelevtctrlr;
 	_isworking_timeout;
+	selection_list;
+	selection_layerkey;
+	selection_gisid_fieldname;
 	pan_enabled;
 
 	constructor(p_mapctx) {
@@ -20,6 +23,9 @@ class MultiTool extends BaseTool {
 		this.imgs_dict={};		
 		this.wheelevtctrlr = new wheelEventCtrller();
 		//this.touchevtctrlr = new TouchController();
+		this.selection_list = [];
+		this.selection_layerkey = null;
+		this.selection_gisidfname = null;
 		this._isworking_timeout = null;
 		this.pan_enabled = true;
 	}
@@ -33,17 +39,17 @@ class MultiTool extends BaseTool {
 		this.pan_enabled = b_doenable;
 	}
 
-	finishPan(p_transfmgr, p_x, p_y, opt_origin) {
+	finishPan(p_mapctx, p_x, p_y, opt_origin) {
 
 		if (this._isworking_timeout) {
 			
 			clearTimeout(this._isworking_timeout);
 
-			(function(p_this, pp_transfmgr, pp_x, pp_y, oopt_origin, p_delay_msecs) {
+			(function(p_this, pp_x, pp_y, oopt_origin, p_delay_msecs) {
 				p_this._isworking_timeout = setTimeout(function() {
-					p_this.finishPan(pp_transfmgr, pp_x, pp_y, oopt_origin);
+					p_this.finishPan(p_mapctx, pp_x, pp_y, oopt_origin);
 				}, p_delay_msecs);
-			})(this, p_transfmgr, p_transfmgr, p_x, p_y, opt_origin, 700);
+			})(this, p_mapctx, p_x, p_y, opt_origin, 700);
 
 		} else {
 
@@ -62,28 +68,36 @@ class MultiTool extends BaseTool {
 				console.log("[DBG:INTERACTIONCLICKEND] MULTITOOL finishPan, deltascr:", deltascrx, deltascry, "dx_dy:", dx, dy);
 			}
 
+			const that = this;
+
+			p_mapctx.tocmgr.addAfterRefreshProcedure(() => {
+				that.drawSelection(p_mapctx);
+			});					
+
 			if (deltascrx > dx || deltascry > dy) {		
-				p_transfmgr.doPan(this.start_screen, [p_x, p_y], true);
+				p_mapctx.transformmgr.doPan(this.start_screen, [p_x, p_y], true);
 			}
+
+
 
 		}
 	}
 
-	finishZoomTo(p_transfmgr, p_x, p_y, p_scalingf) {
+	finishZoomTo(p_mapctx, p_x, p_y, p_scalingf) {
 
 		if (this._isworking_timeout) {
 			
 			clearTimeout(this._isworking_timeout);
 
-			(function(p_this, pp_transfmgr, pp_x, pp_y, pp_scalingf, p_delay_msecs) {
+			(function(p_this, pp_mapctx, pp_x, pp_y, pp_scalingf, p_delay_msecs) {
 				p_this._isworking_timeout = setTimeout(function() {
-					p_this.finishZoomTo(pp_transfmgr, pp_x, pp_y, pp_scalingf);
+					p_this.finishZoomTo(pp_mapctx, pp_x, pp_y, pp_scalingf);
 				}, p_delay_msecs);
-			})(this, p_transfmgr, p_x, p_y, p_scalingf, 700);
+			})(this, p_mapctx, p_x, p_y, p_scalingf, 700);
 
 		} else {
 
-			const cs = p_transfmgr.getReadableCartoScale();
+			const cs = p_mapctx.transformmgr.getReadableCartoScale();
 			const newscale = p_scalingf * cs;
 
 			this.imgs_dict={};
@@ -91,8 +105,12 @@ class MultiTool extends BaseTool {
 			if (GlobalConst.getDebug("INTERACTION")) {
 				console.log("[DBG:INTERACTION] finishZoomTo, scale, x, y:", newscale, [p_x, p_y]);
 			}
-		
-			p_transfmgr.setScaleCenteredAtScrPoint(newscale, [p_x, p_y], true);
+	
+			p_mapctx.tocmgr.addAfterRefreshProcedure(() => {
+				this.drawSelection(p_mapctx);
+			});			
+	
+			p_mapctx.transformmgr.setScaleCenteredAtScrPoint(newscale, [p_x, p_y], true);
 	
 		}
 
@@ -104,7 +122,7 @@ class MultiTool extends BaseTool {
 
 		if (this.pending_pinch) {
 
-			this.finishZoomTo(p_mapctx.transformmgr, this.pending_pinch.centerx, this.pending_pinch.centery, this.pending_pinch.scale)
+			this.finishZoomTo(p_mapctx, this.pending_pinch.centerx, this.pending_pinch.centery, this.pending_pinch.scale)
 			this.pending_pinch = null;
 
 			this.wheelevtctrlr.clear();
@@ -120,7 +138,7 @@ class MultiTool extends BaseTool {
 				orig = "mouse";
 			}
 
-			this.finishPan(p_mapctx.transformmgr, p_evt.offsetX, p_evt.offsetY, orig);	
+			this.finishPan(p_mapctx, p_evt.offsetX, p_evt.offsetY, orig);	
 
 			//}
 			this.imgs_dict={};
@@ -210,7 +228,7 @@ class MultiTool extends BaseTool {
 
 						// never do pan on mouseout or mouseleave events
 						//if (["mouseleave", "mouseout"].indexOf(p_evt.type) < 0) {
-							this.finishPan(p_mapctx.transformmgr, p_evt.offsetX, p_evt.offsetY, orig);	
+							this.finishPan(p_mapctx, p_evt.offsetX, p_evt.offsetY, orig);	
 						//}
 						this.imgs_dict={};
 						this.start_screen = null;
@@ -255,6 +273,45 @@ class MultiTool extends BaseTool {
 
 		
 	}	
+
+	drawSelection(p_mapctx) {
+
+		const canvas_layers = {'normal': 'temporary', 'label': 'temporary' };
+		const hlStyleDict = p_mapctx.getHighlightStyleDict("NORMAL", this.selection_layerkey);
+
+		if (this.selection_list.length > 0) {
+
+			const out_ids = [];
+			let dict;
+			let selmap = new Map();
+	
+			for(let gisid of this.selection_list) {
+	
+				out_ids.length = 0;
+				dict = {};
+				dict[this.selection_gisidfname] = gisid;
+	
+				if (p_mapctx.featureCollection.find(this.selection_layerkey, "EQ", dict, out_ids)) {
+					selmap.set(out_ids[0], gisid);
+
+					// gisid should be painted as label, that's the reason for it being fetched here
+				}
+	
+			}
+
+			p_mapctx.renderingsmgr.clearAll(['temporary']);						
+			p_mapctx.featureCollection.featuresdraw(this.selection_layerkey, canvas_layers, hlStyleDict, selmap.keys());	
+		}
+
+	}
+
+	setGisIdListForDrawingSelectionAfterRefresh(p_mapctx, p_layer_key, p_gisid_fieldname, p_gisid_list) {
+
+		this.selection_gisidfname = p_gisid_fieldname;
+		this.selection_list = [ ... p_gisid_list ];
+		this.selection_layerkey = p_layer_key;
+
+	}	
 }
 
 class InfoTool extends BaseTool {
@@ -267,6 +324,12 @@ class InfoTool extends BaseTool {
 		this.pickpanel_active = false;
 		this.fixedtippanel_active = false;
 		this.toc_collapsed = false;
+		this.prevent_marking_selections = false;
+	}
+
+	// when enable this flag allows info and maptip to not mark graphic features with selected symbology
+	setPreventGraphicMarkingSelections(p_doprevent_marking) {
+		this.prevent_marking_selections = p_doprevent_marking;
 	}
 
 	static mouseselMaxdist(p_mapctx) {
@@ -301,6 +364,7 @@ class InfoTool extends BaseTool {
 		}
 
 		const ic = ci.instances["infoclass"];
+		ic.setPreventGraphicMarkingSelections(this.prevent_marking_selections);
 
 		try {
 
@@ -402,7 +466,8 @@ class InfoTool extends BaseTool {
 		
 							mxdist = this.constructor.mouseselMaxdist(p_mapctx);
 							// console.log(":: 389 :: type:", p_evt.type, p_evt.offsetX, p_evt.offsetY);
-							ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, false, {"hover": ic.hover.bind(ic)}, ic.clearinfo.bind(ic));
+
+							ret = interactWithSpindexLayer(p_mapctx, p_evt.offsetX, p_evt.offsetY, mxdist, false, {"hover": ic.hover.bind(ic)}, ic.clearinfo.bind(ic), null, this.prevent_marking_selections);
 						} else {
 							console.warn(`infoclass customization unavailable, cannot hover / maptip feature`);			
 						}	
@@ -748,31 +813,14 @@ class SelectElemsTool extends BaseTool {
 		this.gisid_fieldname = p_name;
 	}
 
-	setAndDrawSelectionFromGisIdList(p_mapctx, p_gisid_list) {
-
-		const out_ids = [];
-		let dict;
-
-		for(let gisid of p_gisid_list) {
-
-			out_ids.length = 0;
-			dict = {};
-			dict[this.gisid_fieldname] = gisid;
-
-			if (this.featureCollection.find(this.lyrkey, "EQ", dict, out_ids)) {
-				this.selection_list.set(out_ids[0], gisid);
-			}
-
-		}
-
-		this.drawSelection(p_mapctx);
-
-	}
-
-	prepare(p_mapctx) {
+	defineLayerkey(p_mapctx) {
 
 		if (this.editmanager == null) {
-			throw new Error("SelectElemsTool, mandatory previous use of 'setEditingManager' has not happened");
+			throw new Error("SelectElemsTool, _defineLayerkey, mandatory previous use of 'setEditingManager' has not happened");
+		}
+
+		if (!!this.lyrkey) {
+			return;
 		}
 
 		const editables = [];
@@ -819,6 +867,89 @@ class SelectElemsTool extends BaseTool {
 			this.lyrkey = lyrks[0];
 
 		}	
+		
+	}
+
+	setAndDrawSelectionFromGisIdList(p_mapctx, p_gisid_list) {
+
+		const out_ids = [];
+		let dict;
+
+		if (!this.lyrkey) {
+			this.defineLayerkey(p_mapctx);
+
+		}
+
+		for(let gisid of p_gisid_list) {
+
+			out_ids.length = 0;
+			dict = {};
+			dict[this.gisid_fieldname] = gisid;
+
+			if (this.featureCollection.find(this.lyrkey, "EQ", dict, out_ids)) {
+				this.selection_list.set(out_ids[0], gisid);
+			}
+
+		}
+
+		this.drawSelection(p_mapctx);
+
+	}
+
+	prepare(p_mapctx) {
+
+		if (this.editmanager == null) {
+			throw new Error("SelectElemsTool, mandatory previous use of 'setEditingManager' has not happened");
+		}
+
+
+
+		/*const editables = [];
+		let constraints = null;
+
+		this.editmanager.getEditableLayers(p_mapctx, editables);
+
+		const lyrks = Object.keys(editables);
+		const sz = lyrks.length;
+
+		if (sz == 0) {
+
+			console.error("SelectElemsTool init: no editable layers, check all layer 'layereditable' attribute in layer config");
+
+		} else if (sz > 1) {
+
+			if (this.editmanager.editingLayerKey) {
+				constraints = {
+					"selected": this.editmanager.editingLayerKey
+				}
+			}
+
+			(function(p_this, pp_mapctx, p_editables, p_constraints) {
+
+				pp_mapctx.getCustomizationObject().messaging_ctrlr.selectInputMessage(
+					pp_mapctx.i18n.msg('CHOOSESELLYR', true), 
+					p_editables,
+					(evt, p_result, p_value) => { 
+						if (p_result) {
+							if (p_value) {
+								p_this.lyrkey = p_value;
+							} 
+						} else {
+							pp_mapctx.toolmgr.enableTool(pp_mapctx, p_this.constructor.name, false);
+						}
+					},
+					p_constraints
+				);
+
+			})(this, p_mapctx, editables, constraints);
+			
+		} else {
+
+			this.lyrkey = lyrks[0];
+
+		}	
+		*/
+		this.defineLayerkey(p_mapctx);
 		
 		this.rect = null;
 		this.selection_list.clear();

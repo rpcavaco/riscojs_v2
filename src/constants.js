@@ -19,7 +19,7 @@ var GlobalConst = {
 	FEATMOUSESEL_MAXDIST_1K: 2, // Max distance of graphic selection with mouse, meters at 1:1000 scale
 	MARKERSIZE_SCALEFACTOR: 10.0,
 	IMGRELOAD_TIMEOUT_MSEC: 2000,  // Image loading time after which original request is discarded and a new image load is attempted 
-	MINSCALE: 100,
+	MINSCALE: 50,
 	SCALEINOUT_STEP: 150,
 	MAXSCALE: 1000000,
 	MINSCALEDIFF: 1,

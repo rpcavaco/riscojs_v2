@@ -401,6 +401,7 @@ export class Info {
 	styles;
 	mapctx;
 	max_textlines_height;
+	prevent_marking_selections;
 
 	constructor(p_mapctx, p_styles, opt_max_textlines_height) {
 		this.styles = p_styles;
@@ -408,6 +409,7 @@ export class Info {
 		this.ibox = null;
 		this.mapctx = p_mapctx;
 		this.max_textlines_height = opt_max_textlines_height;
+		this.prevent_marking_selections = false;
 	}
 
 	// mouse pick inside info box and over any of its items
@@ -424,6 +426,12 @@ export class Info {
 		if (p_column_idx == 1 && p_info_box.urls[p_fldname] !== undefined) {
 			window.open(p_info_box.urls[p_fldname], "_blank");
 		}
+	}
+
+
+	// when enable this flag allows info and maptip to not mark graphic features with selected symbology
+	setPreventGraphicMarkingSelections(p_doprevent_marking) {
+		this.prevent_marking_selections = p_doprevent_marking;
 	}
 
 	static expand_image(p_image_obj) {
@@ -445,7 +453,7 @@ export class Info {
 		const layerklist = Object.keys(p_feature_dict);
 		const ret = this._showCallout(p_feature_dict, p_scrx, p_scry, true);
 
-		if (ret) {
+		if (ret && !this.prevent_marking_selections) {
 			p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "NORMAL", {'normal': 'temporary', 'label': 'temporary' })
 		}
 
@@ -485,7 +493,7 @@ export class Info {
 			ret = this.pickfeature(p_mapctx, layerklist[0], feat, p_scrx, p_scry)
 		}
 
-		if (ret) {
+		if (ret && !this.prevent_marking_selections) {
 			p_mapctx.drawFeatureAsMouseSelected(layerklist[0], p_feature_dict[layerklist[0]][0].id, "NORMAL", {'normal': 'temporary', 'label': 'temporary' })
 		}
 
@@ -737,7 +745,7 @@ export class Info {
 				}
 			}
 			//console.trace("clear all temporary");
-			p_mapctx.renderingsmgr.clearAll(['transientmap', 'transientviz', 'temporary']);
+			p_mapctx.renderingsmgr.clearAll(['transientmap', 'transientviz']);
 
 
 		}
