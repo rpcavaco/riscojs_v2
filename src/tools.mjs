@@ -277,6 +277,11 @@ class MultiTool extends BaseTool {
 	drawSelection(p_mapctx) {
 
 		const canvas_layers = {'normal': 'temporary', 'label': 'temporary' };
+
+		if (!this.selection_layerkey) {
+			return;
+		}
+		
 		const hlStyleDict = p_mapctx.getHighlightStyleDict("NORMAL", this.selection_layerkey);
 
 		if (this.selection_list.length > 0) {
