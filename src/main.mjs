@@ -891,6 +891,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 		this.tocmgr.addAfterRefreshProcedure(() => {
 
 			let lastk = null, lastid = null;
+
 			for (let k in p_featids_per_layerkey_dict) {
 				for (let id of p_featids_per_layerkey_dict[k]) {
 					this.drawFeatureAsMouseSelected(k, id, "NORMAL", opt_alt_canvaskeys_dict);
@@ -899,7 +900,7 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				lastk = k;
 			}
 
-			if (lastk !== null && lastid != null) {
+			if (lastk !== null && lastid != null && b_open_info) {
 
 				const ci = this.getCustomizationObject();
 				if (ci == null) {
@@ -919,14 +920,12 @@ s 	 * @param {object} p_evt - Event (user event expected)
 				} else {
 					this.transformmgr.getScrPt(lpt, spt);
 				}
-			
+
 				// abrir info
-				if (b_open_info) {
-					const ic = ci.instances["infoclass"];
-					if (ic) {
-						ic.pickfeature(this, lastk, the_feat, ...spt);
-					}	
-				}
+				const ic = ci.instances["infoclass"];
+				if (ic) {
+					ic.pickfeature(this, lastk, the_feat, ...spt);
+				}	
 		
 			}
 
