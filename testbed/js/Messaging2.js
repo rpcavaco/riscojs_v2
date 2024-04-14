@@ -306,9 +306,9 @@ let MessagesController2 = {
 								btn3 = document.createElement("button");
 								btn3.insertAdjacentHTML('afterBegin', this.i18nMsg("C", true));
 							}
-							if (p_type.startsWith("TEXT")) {
+							/*if (p_type.startsWith("TEXT")) {
 								btn1.disabled = true;
-							}
+							}*/
 						} else if (p_type.endsWith("OKCANCEL") || p_type == "TEXT" || p_type == "NUMBER") {
 							btn1.insertAdjacentHTML('afterBegin', "Ok");
 							btn1.disabled = true;

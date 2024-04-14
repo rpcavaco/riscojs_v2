@@ -281,7 +281,7 @@ class MultiTool extends BaseTool {
 		if (!this.selection_layerkey) {
 			return;
 		}
-		
+
 		const hlStyleDict = p_mapctx.getHighlightStyleDict("NORMAL", this.selection_layerkey);
 
 		if (this.selection_list.length > 0) {
@@ -1101,16 +1101,16 @@ class SelectElemsTool extends BaseTool {
 							maxv = this.rect[0] + this.rect[2];
 							this.rect[0] = p_evt.offsetX;
 							this.rect[2] = (maxv - p_evt.offsetX);
-						}
-						if (p_evt.offsetX > (this.rect[0] + this.rect[2])) {
+						} else {
+						//if (p_evt.offsetX > (this.rect[0] + this.rect[2])) {
 							this.rect[2] = (p_evt.offsetX-this.rect[0]);
 						} 
 						if (p_evt.offsetY < this.rect[1]) {
 							maxv = this.rect[1] + this.rect[3];
 							this.rect[1] = p_evt.offsetY;
 							this.rect[3] = (maxv - p_evt.offsetY);
-						} 
-						if (p_evt.offsetY > (this.rect[1] + this.rect[3])) {
+						} else {
+						//if (p_evt.offsetY > (this.rect[1] + this.rect[3])) {
 							this.rect[3] = (p_evt.offsetY-this.rect[1]);
 						} 					
 						this.drawRect(p_mapctx);
@@ -1568,7 +1568,7 @@ export class ToolManager {
 		}
 	}
 
-	enableTool(p_mapctx, p_classname, p_do_enable) {
+	enableTool(p_mapctx, p_classname, p_do_enable, opt_dont_toggleon) {
 
 		let cb_item, cbs_changed = new Set(), foundtool = this.findTool(p_classname);
 
@@ -1612,7 +1612,7 @@ export class ToolManager {
 
 				// enable chosen tool
 				foundtool.setEnabled(p_mapctx, true);	
-				if (this.ctrl_boxes_for_toolclass[p_classname] !== undefined) {
+				if (this.ctrl_boxes_for_toolclass[p_classname] !== undefined && !opt_dont_toggleon) {
 					cb_item = this.ctrl_boxes_for_toolclass[p_classname];
 					cb_item.ctrl_box.toggleOn(cb_item.cb_key);		
 					cbs_changed.add(cb_item.ctrl_box.constructor.name);		
