@@ -21,7 +21,7 @@ class MultiTool extends BaseTool {
 		this.start_screen = null;
 		this.pending_pinch = null;
 		this.imgs_dict={};		
-		this.wheelevtctrlr = new wheelEventCtrller();
+		this.wheelevtctrlr = new wheelEventCtrller(this);
 		//this.touchevtctrlr = new TouchController();
 		this.selection_list = [];
 		this.selection_layerkey = null;

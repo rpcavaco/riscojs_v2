@@ -88,7 +88,9 @@ export class TOCManager {
 	}	
 
 	addAfterRefreshProcedure(p_paramless_func) {
-		this.after_refresh_procedure_list.push(p_paramless_func);
+		if (p_paramless_func) {
+			this.after_refresh_procedure_list.push(p_paramless_func);
+		}
 	}
 
 	finishedRefreshing() {

@@ -446,11 +446,12 @@ export async function interactWithSpindexLayer(p_mapctx, p_scrx, p_scry, p_maxdi
 
 export class wheelEventCtrller {
 
-	constructor(p_sclval) {
+	constructor(p_parent_tool) {
 		this.wheelevtTmoutID = null; // for deffered setScaleCenteredAtScrPoint after wheel event
 		this.wheelevtTmoutFunc = null;
 		this.wheelscale = -1;
 		this.imgscale = 1.0;
+		this.parent_tool = p_parent_tool;
 	}
 	clear() {
 		if (this.wheelevtTmoutID) {
@@ -522,19 +523,29 @@ export class wheelEventCtrller {
 
 		this.wheelevtTmoutFunc = (function(p_this, pp_mapctx, pp_evt) {
 			return function() {
+
 				//console.log(" ---- timed out", p_this.wheelevtTmoutID)
 				if (p_this.wheelscale < 0) {
 					return;
 				}	
-				
+
 				if (GlobalConst.getDebug("DISENG_WHEEL")) {
 					console.log("[DBG:DISENG_WHEEL] would be firing at scale:", p_this.wheelscale);
 				} else {
+
+					// If the parent tool has a drawSelection method, fire it after refresh
+					if (p_this.parent_tool['drawSelection'] !== undefined) {
+						pp_mapctx.tocmgr.addAfterRefreshProcedure(() => {
+							p_this.parent_tool.drawSelection(pp_mapctx);
+						});
+					}
+
 					if (pp_evt.offsetX == 0) {
 						pp_mapctx.transformmgr.setScaleCenteredAtScrPoint(p_this.wheelscale, [pp_evt.clientX, pp_evt.clientY], true);
 					} else {
 						pp_mapctx.transformmgr.setScaleCenteredAtScrPoint(p_this.wheelscale, [pp_evt.offsetX, pp_evt.offsetY], true);
 					}
+		
 				}
 				p_this.wheelscale = -1;		
 				this.wheelevtTmoutID = null;
