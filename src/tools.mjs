@@ -283,7 +283,7 @@ class MultiTool extends BaseTool {
 		}
 
 		const hlStyleDict = p_mapctx.getHighlightStyleDict("NORMAL", this.selection_layerkey);
-
+		
 		if (this.selection_list.length > 0) {
 
 			const out_ids = [];
@@ -295,7 +295,7 @@ class MultiTool extends BaseTool {
 				out_ids.length = 0;
 				dict = {};
 				dict[this.selection_gisidfname] = gisid;
-	
+
 				if (p_mapctx.featureCollection.find(this.selection_layerkey, "EQ", dict, out_ids)) {
 					selmap.set(out_ids[0], gisid);
 
@@ -779,7 +779,7 @@ class SelectElemsTool extends BaseTool {
 	featureCollection;
 	selection_list;
 	lyrkey;
-	gisid_fieldname;
+	cfgdict;
 
 	constructor(p_mapctx) {
 		super(p_mapctx, true, false); // part of general toggle group, default in toogle
@@ -789,7 +789,13 @@ class SelectElemsTool extends BaseTool {
 		this.featureCollection = p_mapctx.featureCollection;
 		this.selection_list = new Map();
 		this.lyrkey = null;
-		this.gisid_fieldname = null;
+		this.cfgdict = {
+			gisid_fieldname: null,
+			customsymb_trigger_fieldname: null,
+			customsymb_symb_fieldname: null,
+			customsymb_label_fieldname: null,
+			customsymb_label_ordernum: false
+		}
 	}
 
 	incompatibleWithPan() {
@@ -814,8 +820,22 @@ class SelectElemsTool extends BaseTool {
 		return [...this.selection_list.values()];
 	}
 
-	setGisIdFieldname(p_name) {
-		this.gisid_fieldname = p_name;
+	setCfgFromDict(p_dict) {
+
+		const kys = ["gisid_fieldname", "customsymb_trigger_fieldname", "customsymb_trigger_cond", "customsymb_symb_fieldname", "customsymb_label_fieldname", "customsymb_label_ordernum"];
+
+		for (let k in p_dict) {
+			if (kys.indexOf(k) < 0) {
+				console.error(`SdelectElemsTool setCfgFromDict, unknown key: '${k}'`);
+			} else {
+				this.cfgdict[k] = p_dict[k];
+			}
+		}
+
+		if ((this.cfgdict["customsymb_trigger_fieldname"] !== undefined && this.cfgdict["customsymb_trigger_cond"] === undefined) || 
+			(this.cfgdict["customsymb_trigger_fieldname"] === undefined && this.cfgdict["customsymb_trigger_cond"] !== undefined)) {
+				console.error(`SelectElemsTool setCfgFromDict, 'customsymb_trigger_fieldname' or 'customsymb_trigger_cond' partially configured: one is defined the other is not`);
+		}
 	}
 
 	defineLayerkey(p_mapctx) {
@@ -889,7 +909,7 @@ class SelectElemsTool extends BaseTool {
 
 			out_ids.length = 0;
 			dict = {};
-			dict[this.gisid_fieldname] = gisid;
+			dict[this.cfgdict.gisid_fieldname] = gisid;
 
 			if (this.featureCollection.find(this.lyrkey, "EQ", dict, out_ids)) {
 				this.selection_list.set(out_ids[0], gisid);
@@ -1050,7 +1070,7 @@ class SelectElemsTool extends BaseTool {
 						terrain_bb[3] = pt[1];
 
 						const out_id_list_pairs = [];
-						this.featureCollection.fetchWithRect(this.lyrkey, "INSIDE", terrain_bb, out_id_list_pairs, this.gisid_fieldname);
+						this.featureCollection.fetchWithRect(this.lyrkey, "INSIDE", terrain_bb, out_id_list_pairs, this.cfgdict.gisid_fieldname);
 
 						stsz = this.selection_list.size;
 
